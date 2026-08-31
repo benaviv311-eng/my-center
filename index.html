@@ -1,0 +1,51 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"></head><body><div class="app">
+<header><div><h1>המרכז שלי</h1><div class="subtitle">ראיקה · אימון · מוזיקה · שפות · למידה</div></div>
+<div class="top-actions"><button class="icon-btn" title="מועדפים" onclick="showFavorites()">♥</button></div></header>
+<section class="hero"><strong>היום במרכז</strong><p id="today-date"></p><p>שלושה פסוקים, רעיון למאמן, ערבית, מוזיקה, ראיקה ורעיון אחד מהספרייה.</p></section>
+
+<section class="section"><div class="section-head"><h2>📖 שלושת הפסוקים של היום</h2><small>מתחלפים אוטומטית בכל יום</small></div>
+<div id="daily-verses" class="grid grid-3"></div></section>
+
+<section class="section"><div class="section-head"><h2>⚡ ראיקה היום</h2><small>קאנון בלבד</small></div>
+<article class="card"><div class="label raika">מעולם ראיקה</div><h3>נאזו יוקאן</h3>
+<div class="empty-image">לא מוצגת תמונה.<br>תמונה קאנונית תופיע כאן רק לאחר אישור מפורש.</div>
+<p class="meta">האתר מציג טקסט קאנוני בלבד. תמונות דמות או סצנה אינן משויכות לקאנון בלי אישור מפורש.</p>
+<div class="card-actions"><a class="btn small" href="raika.html#characters">לדמויות ←</a><button class="btn small fav" data-id="raika-nazo">♡ שמור</button></div></article></section>
+
+<section class="section"><div class="section-head"><h2>🏐 היום כמאמן</h2><small>רעיון · תרגיל · כוח מתפרץ</small></div>
+<div class="grid grid-3">
+<article class="card coach-mini"><div class="label coach">שיטת אימון</div><b>External Focus</b><span class="meta">כוון את הקשב לתוצאה או להשפעה של התנועה, לא רק לפרטי הגוף.</span><a class="btn small" href="coach.html">פתח</a></article>
+<article class="card coach-mini"><div class="label coach">כדורעף</div><b>קבלה תחת שינוי מטרה</b><span class="meta">שנה את אזור המטרה כדי לחייב הסתגלות וקבלת החלטות.</span><a class="btn small" href="coach.html">פתח</a></article>
+<article class="card coach-mini"><div class="label coach">כוח מתפרץ</div><b>Countermovement Jump</b><span class="meta">3×3 קפיצות איכותיות, מנוחה מלאה, כוונה מקסימלית.</span><a class="btn small" href="coach.html">פתח</a></article>
+</div></section>
+
+<section class="section"><div class="section-head"><h2>🌍 ערבית היום</h2><small>ערבית · תעתיק · עברית</small></div>
+<article class="card"><div class="label lang">מילים חדשות</div><div class="word-list">
+<div class="word"><b>بيت</b><span>בֵּית · בית</span></div><div class="word"><b>طريق</b><span>טַרִיק · דרך</span></div>
+<div class="word"><b>اليوم</b><span>אִלְיוֹם · היום</span></div><div class="word"><b>قريب</b><span>קַרִיבּ · קרוב</span></div>
+</div><details open><summary>משפט שימושי</summary><p><b>وين الطريق؟</b><br>וֵין אֶ־טַרִיק?<br>איפה הדרך?</p></details>
+<div class="card-actions"><a class="btn small" href="languages.html">המשך שיעור ←</a></div></article></section>
+
+<section class="section"><div class="section-head"><h2>🎵 לנגן היום</h2></div><article class="card">
+<div class="music-tabs"><button class="tab active" data-target="oud">עוד</button><button class="tab" data-target="guitar">גיטרה</button></div>
+<div id="oud" class="music-panel active"><div class="label music">מקאם קצר</div><div class="fret">D ----- E♭½ -------- F -------- G</div><p class="meta">נגן לאט למעלה ולמטה, ואז צור משפט קצר שמסתיים על D.</p></div>
+<div id="guitar" class="music-panel"><div class="label music">תרגיל אלתור</div><div class="fret">D — F — G — A — C — D</div><p class="meta">בחר שלושה צלילים בלבד וצור מהם פראזה.</p></div>
+<div class="card-actions"><a class="btn small" href="music.html">לעמוד המוזיקה ←</a></div></article></section>
+
+<section class="section"><div class="section-head"><h2>📚 מתוך הספרייה</h2></div><article class="card">
+<div class="label books">רעיון היום</div><h3>Shaping</h3><p class="meta">התנהגות מורכבת נבנית דרך חיזוק של צעדים קטנים שמתקרבים בהדרגה למטרה.</p>
+<details><summary>איך זה מתחבר לאימון?</summary><p>במקום לחכות לביצוע מושלם, בוחרים קריטריון מעט מעל הרמה הנוכחית, מחזקים הצלחה ואז מעלים את הדרישה.</p></details>
+<div class="card-actions"><a class="btn small" href="library.html">פתח בספרייה ←</a></div></article></section>
+
+<section class="section"><button class="surprise" onclick="surpriseMe()">🎲 הפתע אותי</button><div id="surpriseResult" class="surprise-result"></div></section>
+
+<nav class="bottom-nav"><div class="inner">
+<a class="nav-item active" href="index.html"><span>🏠</span>בית</a>
+<a class="nav-item " href="raika.html"><span>⚡</span>ראיקה</a>
+<a class="nav-item " href="coach.html"><span>🏐</span>מאמן</a>
+<a class="nav-item " href="languages.html"><span>🌍</span>שפות</a>
+<a class="nav-item " href="music.html"><span>🎵</span>מוזיקה</a>
+<a class="nav-item " href="library.html"><span>📚</span>ספרייה</a>
+</div></nav>
+</div><div class="toast" id="toast"></div><script src="app.js"></script></body></html>
