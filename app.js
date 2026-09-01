@@ -2997,6 +2997,7 @@ document.addEventListener('click',async e=>{
         bankState.favorites.add(itemId);
       }else{
         bankState.favorites.delete(itemId);
+      
       }
 
       button.classList.toggle('active',result.favorited);
@@ -3063,6 +3064,3 @@ setToday();
 renderDailyVerses();
 refreshFavs();
 
-אחרי שהדבקת: Commit changes → Commit directly to main → Commit changes.
-
-אחר כך כתוב לי „בוצע” ואני אבדוק מיד אם האתר החי נטען נכון.
