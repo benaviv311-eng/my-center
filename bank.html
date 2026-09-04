@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>הבנק שלי | המרכז שלי</title>
+  <meta name="theme-color" content="#f7f3ea">
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .bank-page-tools{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .bank-select{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:14px;
+      padding:11px;
+      font:inherit;
+    }
+
+    .bank-status{
+      color:var(--muted);
+      font-size:13px;
+      margin:8px 0 14px;
+    }
+
+    @media(max-width:760px){
+      .bank-page-tools{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="back">
+    <a class="btn small" href="index.html">← חזרה לבית</a>
+  </div>
+
+  <div class="page-title">
+    <h1>🏦 הבנק שלי</h1>
+    <div class="subtitle">
+      כל התוכן שנשמר בבנק המרכזי
+    </div>
+  </div>
+
+  <section class="hero">
+    <strong>הבנק המרכזי</strong>
+    <p>
+      כאן נשמרים הפסוקים והתכנים שלך.
+      אפשר לחפש, לשמור למועדפים, להוסיף לתיקיות,
+      לכתוב הערות ולערוך את החיבור לעולם ראיקה.
+    </p>
+  </section>
+
+  <section class="section">
+
+    <div class="bank-page-tools">
+
+      <input
+        id="bank-search"
+        class="search"
+        type="search"
+        placeholder="🔍 חפש בבנק..."
+      >
+
+      <select
+        id="bank-type"
+        class="bank-select"
+      >
+        <option value="">כל הסוגים</option>
+      </select>
+
+    </div>
+
+    <div class="bank-toolbar">
+      <button
+        class="bank-btn"
+        id="bank-folders-btn">
+        📁 התיקיות שלי
+      </button>
+
+      <button
+        class="bank-btn"
+        id="bank-favs-btn">
+        ♥ המועדפים שלי
+      </button>
+
+      <span class="bank-sync">
+        ☁ נשמר בבנק המרכזי
+      </span>
+    </div>
+
+    <div
+      id="bank-status"
+      class="bank-status">
+      טוען את הבנק…
+    </div>
+
+    <div
+      id="bank-list"
+      class="grid grid-2">
+    </div>
+
+  </section>
+
+  <nav class="bottom-nav">
+    <div class="inner">
+
+      <a class="nav-item" href="index.html">
+        <span>🏠</span>
+        בית
+      </a>
+
+      <a class="nav-item" href="raika.html">
+        <span>⚡</span>
+        ראיקה
+      </a>
+
+      <a class="nav-item" href="coach.html">
+        <span>🏐</span>
+        מאמן
+      </a>
+
+      <a class="nav-item" href="languages.html">
+        <span>🌍</span>
+        שפות
+      </a>
+
+      <a class="nav-item" href="music.html">
+        <span>🎵</span>
+        מוזיקה
+      </a>
+
+      <a class="nav-item active" href="library.html">
+        <span>📚</span>
+        ספרייה
+      </a>
+
+    </div>
+  </nav>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+
+<script>
+const bankPageState={
+  items:[],
+  query:'',
+  type:''
+};
+
+function bankTypeName(type){
+  const names={
+    verse:'פסוק',
+    quote:'ציטוט',
+    book:'ספר',
+    idea:'רעיון',
+    scene:'סצנה',
+    character:'דמות',
+    exercise:'תרגיל',
+    language:'שפה',
+    music:'מוזיקה'
+  };
+
+  return names[type]||type||'תוכן';
+}
+
+function bankGenericCard(item,index){
+  const content=item.content||{};
+
+  const text=
+    content.text||
+    content.description||
+    content.summary||
+    content.body||
+    '';
+
+  const favorited=
+    bankState.favorites.has(item.id);
+
+  const note=
+    bankState.notes.get(item.id)||'';
+
+  return `
+    <article
+      class="card"
+      data-bank-id="${bankEsc(item.id)}">
+
+      <div class="label">
+        ${bankEsc(bankTypeName(item.item_type))}
+      </div>
+
+      <h3>
+        ${bankEsc(item.title||'ללא כותרת')}
+      </h3>
+
+      ${
+        text
+        ? `<p class="meta">${bankEsc(text)}</p>`
+        : ''
+      }
+
+      <div class="bank-actions">
+
+        <button
+          class="bank-btn ${favorited?'active':''}"
+          data-bank-action="favorite">
+
+          ${favorited?'♥ מועדף':'♡ מועדף'}
+
+        </button>
+
+        <button
+          class="bank-btn"
+          data-bank-action="folder">
+          📁 תיקייה
+        </button>
+
+      </div>
+
+      <div class="bank-note-row">
+
+        <textarea
+          class="bank-input"
+          rows="2"
+          data-bank-note
+          placeholder="✍️ הערה אישית">${bankEsc(note)}</textarea>
+
+        <div>
+          <button
+            class="bank-btn"
+            data-bank-action="save-note">
+            שמור הערה
+          </button>
+        </div>
+
+      </div>
+
+    </article>
+  `;
+}
+
+function bankPageMatches(item){
+  if(
+    bankPageState.type &&
+    item.item_type!==bankPageState.type
+  ){
+    return false;
+  }
+
+  const q=
+    bankPageState.query
+      .trim()
+      .toLowerCase();
+
+  if(!q) return true;
+
+  const haystack=[
+    item.title,
+    item.slug,
+    item.item_type,
+    JSON.stringify(item.content||{})
+  ]
+  .join(' ')
+  .toLowerCase();
+
+  return haystack.includes(q);
+}
+
+function renderBankPage(){
+  const list=
+    document.getElementById('bank-list');
+
+  const status=
+    document.getElementById('bank-status');
+
+  const filtered=
+    bankPageState.items
+      .filter(bankPageMatches);
+
+  status.textContent=
+    `${filtered.length} פריטים מוצגים מתוך ${bankPageState.items.length}`;
+
+  if(!filtered.length){
+    list.innerHTML=`
+      <article class="card">
+        לא נמצאו פריטים מתאימים.
+      </article>
+    `;
+    return;
+  }
+
+  list.innerHTML=
+    filtered.map((item,index)=>{
+      if(item.item_type==='verse'){
+        return bankRenderCard(item,index);
+      }
+
+      return bankGenericCard(item,index);
+    }).join('');
+}
+
+async function loadBankPage(){
+  ensureBankCss();
+
+  const list=
+    document.getElementById('bank-list');
+
+  try{
+    const url=
+      `${BANK_URL}/rest/v1/content_items`+
+      `?status=eq.published`+
+      `&visibility=eq.public`+
+      `&select=id,item_type,slug,title,content,updated_at,created_at`+
+      `&order=created_at.desc`;
+
+    const response=
+      await fetch(url,{
+        headers:{
+          apikey:BANK_PUBLISHABLE_KEY
+        }
+      });
+
+    if(!response.ok){
+      throw new Error(
+        `קריאת הבנק נכשלה (${response.status})`
+      );
+    }
+
+    const items=
+      await response.json();
+
+    bankPageState.items=items;
+    bankState.items=items;
+
+    await bankSnapshot()
+      .catch(()=>{});
+
+    const types=[
+      ...new Set(
+        items
+          .map(x=>x.item_type)
+          .filter(Boolean)
+      )
+    ];
+
+    const select=
+      document.getElementById('bank-type');
+
+    types.forEach(type=>{
+      const option=
+        document.createElement('option');
+
+      option.value=type;
+      option.textContent=
+        bankTypeName(type);
+
+      select.appendChild(option);
+    });
+
+    renderBankPage();
+
+  }catch(err){
+    console.error(err);
+
+    document.getElementById(
+      'bank-status'
+    ).textContent=
+      'לא ניתן כרגע לקרוא את הבנק.';
+
+    list.innerHTML=`
+      <article class="card">
+        הבנק אינו זמין כרגע.
+      </article>
+    `;
+  }
+}
+
+document
+  .getElementById('bank-search')
+  .addEventListener('input',e=>{
+    bankPageState.query=e.target.value;
+    renderBankPage();
+  });
+
+document
+  .getElementById('bank-type')
+  .addEventListener('change',e=>{
+    bankPageState.type=e.target.value;
+    renderBankPage();
+  });
+
+loadBankPage();
+</script>
+
+</body>
+</html>
