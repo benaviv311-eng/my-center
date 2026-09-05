@@ -1,21 +1,1801 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ספרייה | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"></head><body><div class="app">
-<div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-<div class="page-title"><h1>📚 ספריית הלמידה שלי</h1><div class="subtitle">רעיונות מספרים · אימון · פסיכולוגיה של למידה</div></div>
-<section class="section"><div class="section-head"><h2>רעיונות מרכזיים</h2></div><div class="grid grid-2">
-<article class="card"><div class="label books">Don't Shoot the Dog</div><h3>Shaping</h3><p class="meta">בנה התנהגות מורכבת דרך רצף של צעדים קטנים שניתנים להצלחה ולחיזוק.</p></article>
-<article class="card"><div class="label books">Coaching Better Every Season</div><h3>Deliberate Practice</h3><p class="meta">תרגול מכוון סוגר פער ביצוע מסוים, דורש ריכוז ומאמץ, ומאזן בין קושי להתאוששות.</p></article>
-<article class="card"><div class="label books">Coaching Better Every Season</div><h3>Long-Term Athlete Development</h3><p class="meta">העדף התפתחות של מיומנויות, ביטחון ומוטיבציה לטווח ארוך על ניצחון קצר טווח.</p></article>
-<article class="card"><div class="label books">Coach reflection</div><h3>Personal Mastery</h3><p class="meta">שיפור מקצועי הוא תהליך מתמשך: סקרנות, משאבים, עבודה עקבית ובחירת פער משמעותי אחד בכל פעם.</p></article>
-</div></section>
-<section class="section"><div class="section-head"><h2>חיבור לעבודה</h2></div><article class="card"><div class="quote">What gets rewarded gets repeated.</div><p class="meta">בדוק אילו התנהגויות אתה מחזק בפועל באימון — לא רק אילו התנהגויות אתה מבקש במילים.</p></article></section>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<nav class="bottom-nav"><div class="inner">
-<a class="nav-item " href="index.html"><span>🏠</span>בית</a>
-<a class="nav-item " href="raika.html"><span>⚡</span>ראיקה</a>
-<a class="nav-item " href="coach.html"><span>🏐</span>מאמן</a>
-<a class="nav-item " href="languages.html"><span>🌍</span>שפות</a>
-<a class="nav-item " href="music.html"><span>🎵</span>מוזיקה</a>
-<a class="nav-item active" href="library.html"><span>📚</span>ספרייה</a>
-</div></nav>
-</div><div class="toast" id="toast"></div><script src="app.js"></script></body></html>
+  <title>ספריית הלמידה שלי | המרכז שלי</title>
+  <meta name="theme-color" content="#f7f3ea">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .library-tabs{
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      padding:4px 0 12px;
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:rgba(247,243,234,.96);
+      backdrop-filter:blur(10px);
+    }
+
+    .library-tab{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:999px;
+      padding:9px 13px;
+      white-space:nowrap;
+      cursor:pointer;
+      font:inherit;
+    }
+
+    .library-tab.active{
+      background:#26231f;
+      color:#fff;
+      border-color:#26231f;
+    }
+
+    .daily-books{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .daily-book,
+    .book-card,
+    .feed-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+    }
+
+    .daily-book{
+      cursor:pointer;
+    }
+
+    .daily-book strong{
+      display:block;
+      margin:5px 0;
+    }
+
+    .feed{
+      display:grid;
+      gap:12px;
+    }
+
+    .feed-card h3{
+      margin:3px 0 9px;
+    }
+
+    .feed-card p{
+      line-height:1.7;
+      margin:0;
+    }
+
+    .book-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .book-card h3{
+      margin:4px 0 8px;
+    }
+
+    .category{
+      display:inline-flex;
+      font-size:11px;
+      font-weight:700;
+      background:#f4efdf;
+      color:var(--books);
+      border-radius:999px;
+      padding:5px 9px;
+    }
+
+    .feed-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:13px;
+    }
+
+    .feed-fav.active{
+      background:#ffe8ec;
+      border-color:#f1bcc5;
+    }
+
+    .load-more{
+      width:100%;
+      margin-top:14px;
+      padding:16px;
+      border:0;
+      border-radius:18px;
+      background:#26231f;
+      color:#fff;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    .library-view.hidden{
+      display:none;
+    }
+
+    .library-empty{
+      background:var(--card);
+      border:1px dashed var(--line);
+      border-radius:18px;
+      padding:28px 15px;
+      text-align:center;
+      color:var(--muted);
+    }
+
+    .history-day{
+      margin-bottom:10px;
+    }
+
+    .history-day summary{
+      cursor:pointer;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:13px;
+      font-weight:700;
+    }
+
+    .history-books{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+      padding:10px 4px;
+    }
+
+    .history-pill{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:999px;
+      padding:7px 10px;
+      cursor:pointer;
+    }
+
+    .library-modal{
+      position:fixed;
+      inset:0;
+      z-index:70;
+      background:rgba(25,23,20,.48);
+      display:flex;
+      justify-content:center;
+      align-items:flex-end;
+    }
+
+    .library-modal.hidden{
+      display:none;
+    }
+
+    .library-modal-card{
+      width:min(760px,100%);
+      max-height:90vh;
+      overflow:auto;
+      background:var(--card);
+      border-radius:26px 26px 0 0;
+      padding:20px;
+    }
+
+    .library-modal-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .library-modal-head h2{
+      margin:7px 0 0;
+    }
+
+    .library-close{
+      width:38px;
+      height:38px;
+      border:0;
+      border-radius:50%;
+      background:#eee7dc;
+      cursor:pointer;
+      font-size:21px;
+    }
+
+    .library-modal-section{
+      margin-top:17px;
+      padding-top:14px;
+      border-top:1px solid var(--line);
+    }
+
+    .library-modal-section h3{
+      margin:0 0 9px;
+    }
+
+    .library-modal-section ul{
+      margin:0;
+      padding-right:21px;
+      line-height:1.85;
+    }
+
+    .library-note{
+      width:100%;
+      min-height:100px;
+      resize:vertical;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:11px;
+      font:inherit;
+    }
+
+    #library-status{
+      margin:10px 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    @media(max-width:760px){
+      .daily-books{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .book-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:460px){
+      .daily-books{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="back">
+    <a class="btn small" href="index.html">← חזרה לבית</a>
+  </div>
+
+  <div class="page-title">
+    <h1>📚 פיד הלמידה שלי</h1>
+    <div class="subtitle">
+      4 ספרים בכל יום · פיד מתחדש · כל מה שלמדנו נשמר
+    </div>
+  </div>
+
+  <div class="library-tabs">
+    <button class="library-tab active" data-library-view="today">
+      🏠 היום
+    </button>
+
+    <button class="library-tab" data-library-view="books">
+      📚 כל הספרים
+    </button>
+
+    <button class="library-tab" data-library-view="archive">
+      🗄️ כל החומר
+    </button>
+
+    <button class="library-tab" data-library-view="favorites">
+      ♥ מועדפים
+    </button>
+  </div>
+
+  <input
+    id="library-search"
+    class="search"
+    type="search"
+    placeholder="🔍 חפש ספר, רעיון או נושא..."
+  >
+
+  <div id="library-status">טוען את הספרייה…</div>
+
+
+  <!-- היום -->
+  <section
+    id="library-view-today"
+    class="library-view"
+  >
+
+    <section class="hero">
+      <strong>ארבעת הספרים של היום</strong>
+      <p>
+        בכל יום נבחרים ארבעה ספרים שונים.
+        מכל ספר עולים כמה רעיונות לפיד.
+        שום חומר לא נעלם.
+      </p>
+    </section>
+
+    <div
+      id="daily-books"
+      class="daily-books"
+    ></div>
+
+    <section class="section">
+
+      <div class="section-head">
+        <h2>הפיד של היום</h2>
+        <small id="library-date"></small>
+      </div>
+
+      <div
+        id="daily-feed"
+        class="feed"
+      ></div>
+
+      <button
+        id="library-load-more"
+        class="load-more"
+      >
+        טען עוד מהבנק
+      </button>
+
+    </section>
+
+  </section>
+
+
+  <!-- כל הספרים -->
+  <section
+    id="library-view-books"
+    class="library-view hidden"
+  >
+
+    <div class="section-head">
+      <h2>כל הספרים</h2>
+      <small id="library-book-count"></small>
+    </div>
+
+    <div
+      id="library-books-grid"
+      class="book-grid"
+    ></div>
+
+  </section>
+
+
+  <!-- ארכיון -->
+  <section
+    id="library-view-archive"
+    class="library-view hidden"
+  >
+
+    <div class="section-head">
+      <h2>כל החומר שאי פעם הוצג</h2>
+      <small>הארכיון המצטבר שלך</small>
+    </div>
+
+    <div id="library-history"></div>
+
+    <section class="section">
+
+      <div class="section-head">
+        <h2>כל הרעיונות מהספרים שכבר הופיעו</h2>
+      </div>
+
+      <div
+        id="library-archive-feed"
+        class="feed"
+      ></div>
+
+    </section>
+
+  </section>
+
+
+  <!-- מועדפים -->
+  <section
+    id="library-view-favorites"
+    class="library-view hidden"
+  >
+
+    <div class="section-head">
+      <h2>המועדפים שלי</h2>
+    </div>
+
+    <div
+      id="library-favorites-feed"
+      class="feed"
+    ></div>
+
+  </section>
+
+</div>
+
+
+<!-- חלון ספר -->
+<div
+  id="library-modal"
+  class="library-modal hidden"
+>
+
+  <div class="library-modal-card">
+
+    <div class="library-modal-head">
+
+      <div>
+        <span
+          id="library-modal-category"
+          class="category"
+        ></span>
+
+        <h2 id="library-modal-title"></h2>
+      </div>
+
+      <button
+        id="library-modal-close"
+        class="library-close"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="library-modal-section">
+      <h3>📖 תקציר</h3>
+      <p id="library-modal-summary"></p>
+    </div>
+
+
+    <div class="library-modal-section">
+      <h3>💡 רעיונות מרכזיים</h3>
+      <ul id="library-modal-ideas"></ul>
+    </div>
+
+
+    <div class="library-modal-section">
+      <h3>🗺️ מפת נושאים / ראשי פרקים ללמידה</h3>
+      <ul id="library-modal-topics"></ul>
+    </div>
+
+
+    <div class="library-modal-section">
+      <h3>🕘 היסטוריה</h3>
+      <div id="library-modal-history"></div>
+    </div>
+
+
+    <div class="library-modal-section">
+
+      <h3>✍️ ההערה שלי</h3>
+
+      <textarea
+        id="library-modal-note"
+        class="library-note"
+        placeholder="חיבור לאימון, מחשבה, רעיון שתרצה לזכור..."
+      ></textarea>
+
+      <div class="feed-actions">
+        <button
+          id="library-save-note"
+          class="btn"
+        >
+          שמור הערה
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  class="toast"
+  id="toast"
+></div>
+
+
+<nav class="bottom-nav">
+  <div class="inner">
+
+    <a
+      class="nav-item"
+      href="index.html"
+    >
+      <span>🏠</span>
+      בית
+    </a>
+
+    <a
+      class="nav-item"
+      href="raika.html"
+    >
+      <span>⚡</span>
+      ראיקה
+    </a>
+
+    <a
+      class="nav-item"
+      href="coach.html"
+    >
+      <span>🏐</span>
+      מאמן
+    </a>
+
+    <a
+      class="nav-item"
+      href="languages.html"
+    >
+      <span>🌍</span>
+      שפות
+    </a>
+
+    <a
+      class="nav-item"
+      href="music.html"
+    >
+      <span>🎵</span>
+      מוזיקה
+    </a>
+
+    <a
+      class="nav-item active"
+      href="library.html"
+    >
+      <span>📚</span>
+      ספרייה
+    </a>
+
+  </div>
+</nav>
+
+
+<script>
+
+const LIBRARY_API =
+  'https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/library-feed?json=1';
+
+
+const libraryState = {
+
+  books: [],
+  daily: [],
+  history: [],
+
+  view: 'today',
+
+  extraShown: 0,
+
+  currentBook: null
+
+};
+
+
+const libraryFavKey =
+  'my-center-library-favorites';
+
+const libraryNotesKey =
+  'my-center-library-notes';
+
+
+let libraryFavorites =
+  new Set(
+    JSON.parse(
+      localStorage.getItem(libraryFavKey) || '[]'
+    )
+  );
+
+
+let libraryNotes =
+  JSON.parse(
+    localStorage.getItem(libraryNotesKey) || '{}'
+  );
+
+
+function libraryEsc(value){
+
+  return String(
+    value == null ? '' : value
+  ).replace(
+    /[&<>"']/g,
+    char => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    })[char]
+  );
+
+}
+
+
+function libraryToast(message){
+
+  const el =
+    document.getElementById('toast');
+
+  if(!el) return;
+
+  el.textContent = message;
+
+  el.classList.add('show');
+
+  setTimeout(
+    () => el.classList.remove('show'),
+    1400
+  );
+
+}
+
+
+function libraryContent(book){
+
+  return book && book.content
+    ? book.content
+    : {};
+
+}
+
+
+function libraryMaterials(book){
+
+  const content =
+    libraryContent(book);
+
+  const ideas =
+    Array.isArray(content.ideas)
+      ? content.ideas
+      : [];
+
+  const topics =
+    Array.isArray(content.topics)
+      ? content.topics
+      : [];
+
+
+  return [
+
+    {
+      key:book.slug + '|summary',
+      type:'📖 תקציר',
+      text:content.summary || ''
+    },
+
+    {
+      key:book.slug + '|idea|0',
+      type:'💡 רעיון',
+      text:ideas[0] || ''
+    },
+
+    {
+      key:book.slug + '|idea|1',
+      type:'🧠 רעיון נוסף',
+      text:ideas[1] || ''
+    },
+
+    {
+      key:book.slug + '|topics',
+      type:'🗺️ מפת נושאים',
+      text:topics.join(' · ')
+    }
+
+  ].filter(
+    item => item.text
+  );
+
+}
+
+
+function libraryFeedCard(
+  book,
+  material
+){
+
+  const active =
+    libraryFavorites.has(material.key);
+
+
+  const searchText =
+    (
+      book.title +
+      ' ' +
+      (libraryContent(book).category || '') +
+      ' ' +
+      material.text
+    ).toLowerCase();
+
+
+  return `
+
+    <article
+      class="feed-card"
+      data-library-search="${libraryEsc(searchText)}"
+    >
+
+      <span class="label books">
+        ${libraryEsc(material.type)}
+      </span>
+
+      <h3>
+        ${libraryEsc(book.title)}
+      </h3>
+
+      <p>
+        ${libraryEsc(material.text)}
+      </p>
+
+      <div class="feed-actions">
+
+        <button
+          class="btn small library-open-book"
+          data-book-id="${libraryEsc(book.id)}"
+        >
+          📚 פתח ספר
+        </button>
+
+        <button
+          class="btn small feed-fav ${active ? 'active' : ''}"
+          data-library-favorite="${libraryEsc(material.key)}"
+        >
+          ${active ? '♥ נשמר' : '♡ שמור'}
+        </button>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+function libraryBookCard(book){
+
+  const content =
+    libraryContent(book);
+
+
+  const searchText =
+    (
+      book.title +
+      ' ' +
+      (content.category || '') +
+      ' ' +
+      (content.summary || '')
+    ).toLowerCase();
+
+
+  return `
+
+    <article
+      class="book-card"
+      data-library-search="${libraryEsc(searchText)}"
+    >
+
+      <span class="category">
+        ${libraryEsc(content.category || 'ספר')}
+      </span>
+
+      <h3>
+        ${libraryEsc(book.title)}
+      </h3>
+
+      <p class="meta">
+        ${libraryEsc(content.summary || '')}
+      </p>
+
+      <button
+        class="btn small library-open-book"
+        data-book-id="${libraryEsc(book.id)}"
+      >
+        פתח ספר
+      </button>
+
+    </article>
+
+  `;
+
+}
+
+
+function libraryHash(text){
+
+  let hash = 2166136261;
+
+  for(
+    let i = 0;
+    i < text.length;
+    i++
+  ){
+
+    hash ^= text.charCodeAt(i);
+
+    hash =
+      Math.imul(
+        hash,
+        16777619
+      );
+
+  }
+
+  return hash >>> 0;
+
+}
+
+
+function libraryDailyBooks(){
+
+  const byId =
+    new Map(
+      libraryState.books.map(
+        book => [book.id,book]
+      )
+    );
+
+
+  return libraryState.daily
+    .slice()
+    .sort(
+      (a,b) =>
+        a.position - b.position
+    )
+    .map(
+      row => byId.get(row.item_id)
+    )
+    .filter(Boolean);
+
+}
+
+
+function renderLibraryToday(){
+
+  const books =
+    libraryDailyBooks();
+
+
+  document.getElementById(
+    'daily-books'
+  ).innerHTML =
+
+    books.map(
+      book => {
+
+        const content =
+          libraryContent(book);
+
+        return `
+
+          <article
+            class="daily-book library-open-book"
+            data-book-id="${libraryEsc(book.id)}"
+          >
+
+            <span class="category">
+              ${libraryEsc(content.category || 'ספר')}
+            </span>
+
+            <strong>
+              ${libraryEsc(book.title)}
+            </strong>
+
+            <span class="meta">
+              פתח תקציר ורעיונות
+            </span>
+
+          </article>
+
+        `;
+
+      }
+    ).join('');
+
+
+  const cards = [];
+
+
+  for(
+    let round = 0;
+    round < 4;
+    round++
+  ){
+
+    books.forEach(
+      book => {
+
+        const material =
+          libraryMaterials(book)[round];
+
+        if(material){
+
+          cards.push(
+            libraryFeedCard(
+              book,
+              material
+            )
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  document.getElementById(
+    'daily-feed'
+  ).innerHTML =
+    cards.join('');
+
+
+  libraryState.extraShown = 0;
+
+  updateLibraryLoadMore();
+
+}
+
+
+function libraryExtraPool(){
+
+  const todayIds =
+    new Set(
+      libraryDailyBooks()
+        .map(book => book.id)
+    );
+
+
+  const pool = [];
+
+
+  libraryState.books
+    .filter(
+      book =>
+        !todayIds.has(book.id)
+    )
+    .forEach(
+      book => {
+
+        libraryMaterials(book)
+          .forEach(
+            material => {
+
+              pool.push({
+                book,
+                material
+              });
+
+            }
+          );
+
+      }
+    );
+
+
+  return pool.sort(
+    (a,b) =>
+      libraryHash(
+        libraryState.today +
+        a.material.key
+      ) -
+      libraryHash(
+        libraryState.today +
+        b.material.key
+      )
+  );
+
+}
+
+
+function updateLibraryLoadMore(){
+
+  const pool =
+    libraryExtraPool();
+
+  const button =
+    document.getElementById(
+      'library-load-more'
+    );
+
+
+  button.classList.toggle(
+    'hidden',
+    libraryState.extraShown >=
+      pool.length
+  );
+
+}
+
+
+function loadMoreLibrary(){
+
+  const pool =
+    libraryExtraPool()
+      .slice(
+        libraryState.extraShown,
+        libraryState.extraShown + 12
+      );
+
+
+  document.getElementById(
+    'daily-feed'
+  ).insertAdjacentHTML(
+    'beforeend',
+    pool
+      .map(
+        item =>
+          libraryFeedCard(
+            item.book,
+            item.material
+          )
+      )
+      .join('')
+  );
+
+
+  libraryState.extraShown +=
+    pool.length;
+
+
+  updateLibraryLoadMore();
+
+  applyLibrarySearch();
+
+}
+
+
+function renderLibraryBooks(){
+
+  document.getElementById(
+    'library-book-count'
+  ).textContent =
+    libraryState.books.length +
+    ' ספרים';
+
+
+  document.getElementById(
+    'library-books-grid'
+  ).innerHTML =
+    libraryState.books
+      .map(libraryBookCard)
+      .join('');
+
+}
+
+
+function libraryHistoryMap(){
+
+  const map =
+    new Map();
+
+
+  libraryState.history
+    .forEach(
+      row => {
+
+        if(
+          !map.has(row.feed_date)
+        ){
+
+          map.set(
+            row.feed_date,
+            []
+          );
+
+        }
+
+        map
+          .get(row.feed_date)
+          .push(row);
+
+      }
+    );
+
+
+  return map;
+
+}
+
+
+function renderLibraryArchive(){
+
+  const byId =
+    new Map(
+      libraryState.books.map(
+        book => [book.id,book]
+      )
+    );
+
+
+  const history =
+    libraryHistoryMap();
+
+
+  document.getElementById(
+    'library-history'
+  ).innerHTML =
+
+    [...history.entries()]
+      .map(
+        ([date,rows],index) => {
+
+          const books =
+            rows
+              .sort(
+                (a,b) =>
+                  a.position -
+                  b.position
+              )
+              .map(
+                row =>
+                  byId.get(row.item_id)
+              )
+              .filter(Boolean);
+
+
+          return `
+
+            <details
+              class="history-day"
+              ${index === 0 ? 'open' : ''}
+            >
+
+              <summary>
+                ${libraryEsc(date)}
+                ·
+                ${books.length}
+                ספרים
+              </summary>
+
+              <div class="history-books">
+
+                ${books.map(
+                  book => `
+
+                    <button
+                      class="history-pill library-open-book"
+                      data-book-id="${libraryEsc(book.id)}"
+                    >
+                      ${libraryEsc(book.title)}
+                    </button>
+
+                  `
+                ).join('')}
+
+              </div>
+
+            </details>
+
+          `;
+
+        }
+      )
+      .join('');
+
+
+  const appearedIds =
+    new Set(
+      libraryState.history.map(
+        row => row.item_id
+      )
+    );
+
+
+  const cards = [];
+
+
+  libraryState.books
+    .filter(
+      book =>
+        appearedIds.has(book.id)
+    )
+    .forEach(
+      book => {
+
+        libraryMaterials(book)
+          .forEach(
+            material => {
+
+              cards.push(
+                libraryFeedCard(
+                  book,
+                  material
+                )
+              );
+
+            }
+          );
+
+      }
+    );
+
+
+  document.getElementById(
+    'library-archive-feed'
+  ).innerHTML =
+
+    cards.length
+      ? cards.join('')
+      : `
+        <div class="library-empty">
+          הארכיון מתחיל להצטבר מהיום.
+        </div>
+      `;
+
+}
+
+
+function renderLibraryFavorites(){
+
+  const cards = [];
+
+
+  libraryState.books
+    .forEach(
+      book => {
+
+        libraryMaterials(book)
+          .forEach(
+            material => {
+
+              if(
+                libraryFavorites.has(
+                  material.key
+                )
+              ){
+
+                cards.push(
+                  libraryFeedCard(
+                    book,
+                    material
+                  )
+                );
+
+              }
+
+            }
+          );
+
+      }
+    );
+
+
+  document.getElementById(
+    'library-favorites-feed'
+  ).innerHTML =
+
+    cards.length
+      ? cards.join('')
+      : `
+        <div class="library-empty">
+          עדיין לא שמרת חומר למועדפים.
+        </div>
+      `;
+
+}
+
+
+function openLibraryBook(id){
+
+  const book =
+    libraryState.books.find(
+      item => item.id === id
+    );
+
+
+  if(!book) return;
+
+
+  libraryState.currentBook =
+    book;
+
+
+  const content =
+    libraryContent(book);
+
+
+  document.getElementById(
+    'library-modal-category'
+  ).textContent =
+    content.category || 'ספר';
+
+
+  document.getElementById(
+    'library-modal-title'
+  ).textContent =
+    book.title;
+
+
+  document.getElementById(
+    'library-modal-summary'
+  ).textContent =
+    content.summary || '';
+
+
+  document.getElementById(
+    'library-modal-ideas'
+  ).innerHTML =
+
+    (
+      Array.isArray(content.ideas)
+        ? content.ideas
+        : []
+    )
+      .map(
+        idea =>
+          `<li>${libraryEsc(idea)}</li>`
+      )
+      .join('');
+
+
+  document.getElementById(
+    'library-modal-topics'
+  ).innerHTML =
+
+    (
+      Array.isArray(content.topics)
+        ? content.topics
+        : []
+    )
+      .map(
+        topic =>
+          `<li>${libraryEsc(topic)}</li>`
+      )
+      .join('');
+
+
+  const dates =
+    [...new Set(
+      libraryState.history
+        .filter(
+          row =>
+            row.item_id === book.id
+        )
+        .map(
+          row => row.feed_date
+        )
+    )];
+
+
+  document.getElementById(
+    'library-modal-history'
+  ).innerHTML =
+
+    dates.length
+      ? dates
+          .map(
+            date =>
+              `<span class="pill">${libraryEsc(date)}</span>`
+          )
+          .join(' ')
+      : `
+        <span class="meta">
+          הספר עדיין לא הופיע בפיד היומי.
+        </span>
+      `;
+
+
+  document.getElementById(
+    'library-modal-note'
+  ).value =
+    libraryNotes[book.slug] || '';
+
+
+  document.getElementById(
+    'library-modal'
+  ).classList.remove('hidden');
+
+}
+
+
+function switchLibraryView(view){
+
+  libraryState.view =
+    view;
+
+
+  document.querySelectorAll(
+    '.library-tab'
+  ).forEach(
+    button => {
+
+      button.classList.toggle(
+        'active',
+        button.dataset.libraryView === view
+      );
+
+    }
+  );
+
+
+  [
+    'today',
+    'books',
+    'archive',
+    'favorites'
+  ].forEach(
+    name => {
+
+      document.getElementById(
+        'library-view-' + name
+      ).classList.toggle(
+        'hidden',
+        name !== view
+      );
+
+    }
+  );
+
+
+  if(
+    view === 'favorites'
+  ){
+
+    renderLibraryFavorites();
+
+  }
+
+
+  applyLibrarySearch();
+
+}
+
+
+function applyLibrarySearch(){
+
+  const query =
+    document.getElementById(
+      'library-search'
+    )
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const view =
+    document.getElementById(
+      'library-view-' +
+      libraryState.view
+    );
+
+
+  view.querySelectorAll(
+    '[data-library-search]'
+  ).forEach(
+    element => {
+
+      element.classList.toggle(
+        'hidden',
+        query &&
+        !element.dataset.librarySearch
+          .includes(query)
+      );
+
+    }
+  );
+
+}
+
+
+function refreshLibraryFavoriteButtons(){
+
+  document.querySelectorAll(
+    '[data-library-favorite]'
+  ).forEach(
+    button => {
+
+      const key =
+        button.dataset.libraryFavorite;
+
+
+      const active =
+        libraryFavorites.has(key);
+
+
+      button.classList.toggle(
+        'active',
+        active
+      );
+
+
+      button.textContent =
+        active
+          ? '♥ נשמר'
+          : '♡ שמור';
+
+    }
+  );
+
+}
+
+
+async function loadLibrary(){
+
+  const status =
+    document.getElementById(
+      'library-status'
+    );
+
+
+  try{
+
+    const response =
+      await fetch(
+        LIBRARY_API,
+        {
+          cache:'no-store'
+        }
+      );
+
+
+    if(
+      !response.ok
+    ){
+
+      throw new Error(
+        'HTTP ' +
+        response.status
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    libraryState.today =
+      data.today;
+
+    libraryState.books =
+      Array.isArray(data.books)
+        ? data.books
+        : [];
+
+    libraryState.daily =
+      Array.isArray(data.daily)
+        ? data.daily
+        : [];
+
+    libraryState.history =
+      Array.isArray(data.history)
+        ? data.history
+        : [];
+
+
+    document.getElementById(
+      'library-date'
+    ).textContent =
+      libraryState.today;
+
+
+    status.textContent =
+      libraryState.books.length +
+      ' ספרים בבנק · ' +
+      libraryState.history.length +
+      ' רשומות בארכיון';
+
+
+    renderLibraryToday();
+
+    renderLibraryBooks();
+
+    renderLibraryArchive();
+
+    renderLibraryFavorites();
+
+  }
+  catch(error){
+
+    console.error(error);
+
+
+    status.textContent =
+      'לא ניתן כרגע לטעון את ספריית הלמידה.';
+
+
+    document.getElementById(
+      'daily-feed'
+    ).innerHTML = `
+      <div class="library-empty">
+        הבנק לא זמין כרגע.
+      </div>
+    `;
+
+  }
+
+}
+
+
+document.addEventListener(
+  'click',
+  event => {
+
+    const tab =
+      event.target.closest(
+        '[data-library-view]'
+      );
+
+
+    if(tab){
+
+      switchLibraryView(
+        tab.dataset.libraryView
+      );
+
+      return;
+
+    }
+
+
+    const open =
+      event.target.closest(
+        '.library-open-book'
+      );
+
+
+    if(open){
+
+      openLibraryBook(
+        open.dataset.bookId
+      );
+
+      return;
+
+    }
+
+
+    const favorite =
+      event.target.closest(
+        '[data-library-favorite]'
+      );
+
+
+    if(favorite){
+
+      const key =
+        favorite.dataset.libraryFavorite;
+
+
+      if(
+        libraryFavorites.has(key)
+      ){
+
+        libraryFavorites.delete(key);
+
+        libraryToast(
+          'הוסר מהמועדפים'
+        );
+
+      }
+      else{
+
+        libraryFavorites.add(key);
+
+        libraryToast(
+          'נשמר במועדפים'
+        );
+
+      }
+
+
+      localStorage.setItem(
+        libraryFavKey,
+        JSON.stringify(
+          [...libraryFavorites]
+        )
+      );
+
+
+      refreshLibraryFavoriteButtons();
+
+
+      if(
+        libraryState.view ===
+        'favorites'
+      ){
+
+        renderLibraryFavorites();
+
+      }
+
+    }
+
+  }
+);
+
+
+document.getElementById(
+  'library-load-more'
+).addEventListener(
+  'click',
+  loadMoreLibrary
+);
+
+
+document.getElementById(
+  'library-search'
+).addEventListener(
+  'input',
+  applyLibrarySearch
+);
+
+
+document.getElementById(
+  'library-modal-close'
+).addEventListener(
+  'click',
+  () => {
+
+    document.getElementById(
+      'library-modal'
+    ).classList.add('hidden');
+
+  }
+);
+
+
+document.getElementById(
+  'library-modal'
+).addEventListener(
+  'click',
+  event => {
+
+    if(
+      event.target.id ===
+      'library-modal'
+    ){
+
+      event.currentTarget
+        .classList.add('hidden');
+
+    }
+
+  }
+);
+
+
+document.getElementById(
+  'library-save-note'
+).addEventListener(
+  'click',
+  () => {
+
+    const book =
+      libraryState.currentBook;
+
+
+    if(!book) return;
+
+
+    libraryNotes[book.slug] =
+      document.getElementById(
+        'library-modal-note'
+      ).value;
+
+
+    localStorage.setItem(
+      libraryNotesKey,
+      JSON.stringify(
+        libraryNotes
+      )
+    );
+
+
+    libraryToast(
+      'ההערה נשמרה'
+    );
+
+  }
+);
+
+
+loadLibrary();
+
+</script>
+
+</body>
+</html>
