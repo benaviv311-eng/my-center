@@ -34,7 +34,7 @@
 
     .library-tab.active{
       background:#26231f;
-      color:#fff;
+      color:white;
       border-color:#26231f;
     }
 
@@ -46,12 +46,11 @@
     }
 
     .daily-book,
-    .book-card,
-    .feed-card{
+    .book-card{
       background:var(--card);
       border:1px solid var(--line);
       border-radius:var(--radius);
-      padding:16px;
+      padding:15px;
       box-shadow:var(--shadow);
     }
 
@@ -62,30 +61,7 @@
     .daily-book strong{
       display:block;
       margin:5px 0;
-    }
-
-    .feed{
-      display:grid;
-      gap:12px;
-    }
-
-    .feed-card h3{
-      margin:3px 0 9px;
-    }
-
-    .feed-card p{
-      line-height:1.7;
-      margin:0;
-    }
-
-    .book-grid{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px;
-    }
-
-    .book-card h3{
-      margin:4px 0 8px;
+      font-size:15px;
     }
 
     .category{
@@ -98,10 +74,53 @@
       padding:5px 9px;
     }
 
+    /* הפיד – בסגנון פוסטים קצרים */
+    .feed{
+      display:grid;
+      gap:18px;
+      max-width:720px;
+      margin-inline:auto;
+    }
+
+    .feed-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+
+    .feed-card .label{
+      background:transparent;
+      padding:0;
+      margin:0 0 5px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:650;
+    }
+
+    .feed-card h3{
+      margin:0 0 10px;
+      font-size:17px;
+    }
+
+    .feed-card p{
+      margin:0;
+      font-size:16px;
+      line-height:1.8;
+
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:4;
+      overflow:hidden;
+    }
+
     .feed-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      border-top:1px solid var(--line);
+      padding-top:11px;
       margin-top:13px;
     }
 
@@ -110,14 +129,29 @@
       border-color:#f1bcc5;
     }
 
+    .book-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+    }
+
+    .book-card h3{
+      margin:6px 0 8px;
+    }
+
+    .book-card p{
+      margin:0 0 12px;
+      line-height:1.6;
+    }
+
     .load-more{
       width:100%;
-      margin-top:14px;
+      margin-top:15px;
       padding:16px;
       border:0;
       border-radius:18px;
       background:#26231f;
-      color:#fff;
+      color:white;
       font-size:16px;
       cursor:pointer;
     }
@@ -161,6 +195,12 @@
       border-radius:999px;
       padding:7px 10px;
       cursor:pointer;
+    }
+
+    #library-status{
+      margin:10px 0;
+      color:var(--muted);
+      font-size:13px;
     }
 
     .library-modal{
@@ -227,17 +267,11 @@
       width:100%;
       min-height:100px;
       resize:vertical;
-      background:#fff;
+      background:white;
       border:1px solid var(--line);
       border-radius:14px;
       padding:11px;
       font:inherit;
-    }
-
-    #library-status{
-      margin:10px 0;
-      color:var(--muted);
-      font-size:13px;
     }
 
     @media(max-width:760px){
@@ -254,6 +288,10 @@
       .daily-books{
         grid-template-columns:1fr;
       }
+
+      .feed-card{
+        padding:16px;
+      }
     }
   </style>
 </head>
@@ -269,7 +307,7 @@
   <div class="page-title">
     <h1>📚 פיד הלמידה שלי</h1>
     <div class="subtitle">
-      4 ספרים בכל יום · פיד מתחדש · כל מה שלמדנו נשמר
+      4 ספרים בכל יום · פוסטים קצרים · כל מה שלמדנו נשמר
     </div>
   </div>
 
@@ -298,7 +336,9 @@
     placeholder="🔍 חפש ספר, רעיון או נושא..."
   >
 
-  <div id="library-status">טוען את הספרייה…</div>
+  <div id="library-status">
+    טוען את הספרייה…
+  </div>
 
 
   <!-- היום -->
@@ -309,10 +349,11 @@
 
     <section class="hero">
       <strong>ארבעת הספרים של היום</strong>
+
       <p>
         בכל יום נבחרים ארבעה ספרים שונים.
-        מכל ספר עולים כמה רעיונות לפיד.
-        שום חומר לא נעלם.
+        הפיד מציג רעיונות קצרים כמו פוסטים,
+        וכל מה שכבר הופיע נשמר בארכיון.
       </p>
     </section>
 
@@ -364,7 +405,7 @@
   </section>
 
 
-  <!-- ארכיון -->
+  <!-- כל החומר -->
   <section
     id="library-view-archive"
     class="library-view hidden"
@@ -380,7 +421,7 @@
     <section class="section">
 
       <div class="section-head">
-        <h2>כל הרעיונות מהספרים שכבר הופיעו</h2>
+        <h2>כל הפוסטים מהספרים שכבר הופיעו</h2>
       </div>
 
       <div
@@ -473,7 +514,7 @@
       <textarea
         id="library-modal-note"
         class="library-note"
-        placeholder="חיבור לאימון, מחשבה, רעיון שתרצה לזכור..."
+        placeholder="חיבור לאימון, מחשבה או משהו שתרצה לזכור..."
       ></textarea>
 
       <div class="feed-actions">
@@ -501,50 +542,32 @@
 <nav class="bottom-nav">
   <div class="inner">
 
-    <a
-      class="nav-item"
-      href="index.html"
-    >
+    <a class="nav-item" href="index.html">
       <span>🏠</span>
       בית
     </a>
 
-    <a
-      class="nav-item"
-      href="raika.html"
-    >
+    <a class="nav-item" href="raika.html">
       <span>⚡</span>
       ראיקה
     </a>
 
-    <a
-      class="nav-item"
-      href="coach.html"
-    >
+    <a class="nav-item" href="coach.html">
       <span>🏐</span>
       מאמן
     </a>
 
-    <a
-      class="nav-item"
-      href="languages.html"
-    >
+    <a class="nav-item" href="languages.html">
       <span>🌍</span>
       שפות
     </a>
 
-    <a
-      class="nav-item"
-      href="music.html"
-    >
+    <a class="nav-item" href="music.html">
       <span>🎵</span>
       מוזיקה
     </a>
 
-    <a
-      class="nav-item active"
-      href="library.html"
-    >
+    <a class="nav-item active" href="library.html">
       <span>📚</span>
       ספרייה
     </a>
@@ -560,17 +583,13 @@ const LIBRARY_API =
 
 
 const libraryState = {
-
-  books: [],
-  daily: [],
-  history: [],
-
-  view: 'today',
-
-  extraShown: 0,
-
-  currentBook: null
-
+  today:'',
+  books:[],
+  daily:[],
+  history:[],
+  view:'today',
+  extraShown:0,
+  currentBook:null
 };
 
 
@@ -620,12 +639,14 @@ function libraryToast(message){
 
   if(!el) return;
 
-  el.textContent = message;
+  el.textContent =
+    message;
 
   el.classList.add('show');
 
   setTimeout(
-    () => el.classList.remove('show'),
+    () =>
+      el.classList.remove('show'),
     1400
   );
 
@@ -661,7 +682,7 @@ function libraryMaterials(book){
 
     {
       key:book.slug + '|summary',
-      type:'📖 תקציר',
+      type:'📖 תקציר קצר',
       text:content.summary || ''
     },
 
@@ -673,13 +694,13 @@ function libraryMaterials(book){
 
     {
       key:book.slug + '|idea|1',
-      type:'🧠 רעיון נוסף',
+      type:'🧠 עוד מחשבה',
       text:ideas[1] || ''
     },
 
     {
       key:book.slug + '|topics',
-      type:'🗺️ מפת נושאים',
+      type:'🗺️ נושאים',
       text:topics.join(' · ')
     }
 
@@ -696,14 +717,19 @@ function libraryFeedCard(
 ){
 
   const active =
-    libraryFavorites.has(material.key);
+    libraryFavorites.has(
+      material.key
+    );
 
 
   const searchText =
     (
       book.title +
       ' ' +
-      (libraryContent(book).category || '') +
+      (
+        libraryContent(book).category ||
+        ''
+      ) +
       ' ' +
       material.text
     ).toLowerCase();
@@ -716,9 +742,9 @@ function libraryFeedCard(
       data-library-search="${libraryEsc(searchText)}"
     >
 
-      <span class="label books">
+      <div class="label books">
         ${libraryEsc(material.type)}
-      </span>
+      </div>
 
       <h3>
         ${libraryEsc(book.title)}
@@ -802,37 +828,16 @@ function libraryBookCard(book){
 }
 
 
-function libraryHash(text){
-
-  let hash = 2166136261;
-
-  for(
-    let i = 0;
-    i < text.length;
-    i++
-  ){
-
-    hash ^= text.charCodeAt(i);
-
-    hash =
-      Math.imul(
-        hash,
-        16777619
-      );
-
-  }
-
-  return hash >>> 0;
-
-}
-
-
 function libraryDailyBooks(){
 
   const byId =
     new Map(
       libraryState.books.map(
-        book => [book.id,book]
+        book =>
+          [
+            book.id,
+            book
+          ]
       )
     );
 
@@ -841,10 +846,14 @@ function libraryDailyBooks(){
     .slice()
     .sort(
       (a,b) =>
-        a.position - b.position
+        a.position -
+        b.position
     )
     .map(
-      row => byId.get(row.item_id)
+      row =>
+        byId.get(
+          row.item_id
+        )
     )
     .filter(Boolean);
 
@@ -883,7 +892,7 @@ function renderLibraryToday(){
             </strong>
 
             <span class="meta">
-              פתח תקציר ורעיונות
+              פתח את הספר
             </span>
 
           </article>
@@ -894,7 +903,7 @@ function renderLibraryToday(){
     ).join('');
 
 
-  const cards = [];
+  const posts = [];
 
 
   for(
@@ -911,7 +920,7 @@ function renderLibraryToday(){
 
         if(material){
 
-          cards.push(
+          posts.push(
             libraryFeedCard(
               book,
               material
@@ -929,7 +938,7 @@ function renderLibraryToday(){
   document.getElementById(
     'daily-feed'
   ).innerHTML =
-    cards.join('');
+    posts.join('');
 
 
   libraryState.extraShown = 0;
@@ -939,12 +948,43 @@ function renderLibraryToday(){
 }
 
 
+function libraryHash(text){
+
+  let hash =
+    2166136261;
+
+
+  for(
+    let i = 0;
+    i < text.length;
+    i++
+  ){
+
+    hash ^=
+      text.charCodeAt(i);
+
+    hash =
+      Math.imul(
+        hash,
+        16777619
+      );
+
+  }
+
+
+  return hash >>> 0;
+
+}
+
+
 function libraryExtraPool(){
 
   const todayIds =
     new Set(
       libraryDailyBooks()
-        .map(book => book.id)
+        .map(
+          book => book.id
+        )
     );
 
 
@@ -992,13 +1032,14 @@ function libraryExtraPool(){
 
 function updateLibraryLoadMore(){
 
-  const pool =
-    libraryExtraPool();
-
   const button =
     document.getElementById(
       'library-load-more'
     );
+
+
+  const pool =
+    libraryExtraPool();
 
 
   button.classList.toggle(
@@ -1024,15 +1065,14 @@ function loadMoreLibrary(){
     'daily-feed'
   ).insertAdjacentHTML(
     'beforeend',
-    pool
-      .map(
-        item =>
-          libraryFeedCard(
-            item.book,
-            item.material
-          )
-      )
-      .join('')
+
+    pool.map(
+      item =>
+        libraryFeedCard(
+          item.book,
+          item.material
+        )
+    ).join('')
   );
 
 
@@ -1060,7 +1100,9 @@ function renderLibraryBooks(){
     'library-books-grid'
   ).innerHTML =
     libraryState.books
-      .map(libraryBookCard)
+      .map(
+        libraryBookCard
+      )
       .join('');
 
 }
@@ -1077,7 +1119,9 @@ function libraryHistoryMap(){
       row => {
 
         if(
-          !map.has(row.feed_date)
+          !map.has(
+            row.feed_date
+          )
         ){
 
           map.set(
@@ -1087,8 +1131,11 @@ function libraryHistoryMap(){
 
         }
 
+
         map
-          .get(row.feed_date)
+          .get(
+            row.feed_date
+          )
           .push(row);
 
       }
@@ -1105,7 +1152,11 @@ function renderLibraryArchive(){
   const byId =
     new Map(
       libraryState.books.map(
-        book => [book.id,book]
+        book =>
+          [
+            book.id,
+            book
+          ]
       )
     );
 
@@ -1124,6 +1175,7 @@ function renderLibraryArchive(){
 
           const books =
             rows
+              .slice()
               .sort(
                 (a,b) =>
                   a.position -
@@ -1131,7 +1183,9 @@ function renderLibraryArchive(){
               )
               .map(
                 row =>
-                  byId.get(row.item_id)
+                  byId.get(
+                    row.item_id
+                  )
               )
               .filter(Boolean);
 
@@ -1178,19 +1232,23 @@ function renderLibraryArchive(){
 
   const appearedIds =
     new Set(
-      libraryState.history.map(
-        row => row.item_id
-      )
+      libraryState.history
+        .map(
+          row =>
+            row.item_id
+        )
     );
 
 
-  const cards = [];
+  const posts = [];
 
 
   libraryState.books
     .filter(
       book =>
-        appearedIds.has(book.id)
+        appearedIds.has(
+          book.id
+        )
     )
     .forEach(
       book => {
@@ -1199,7 +1257,7 @@ function renderLibraryArchive(){
           .forEach(
             material => {
 
-              cards.push(
+              posts.push(
                 libraryFeedCard(
                   book,
                   material
@@ -1217,20 +1275,20 @@ function renderLibraryArchive(){
     'library-archive-feed'
   ).innerHTML =
 
-    cards.length
-      ? cards.join('')
+    posts.length
+      ? posts.join('')
       : `
-        <div class="library-empty">
-          הארכיון מתחיל להצטבר מהיום.
-        </div>
-      `;
+          <div class="library-empty">
+            הארכיון מתחיל להצטבר מהיום.
+          </div>
+        `;
 
 }
 
 
 function renderLibraryFavorites(){
 
-  const cards = [];
+  const posts = [];
 
 
   libraryState.books
@@ -1247,7 +1305,7 @@ function renderLibraryFavorites(){
                 )
               ){
 
-                cards.push(
+                posts.push(
                   libraryFeedCard(
                     book,
                     material
@@ -1267,13 +1325,13 @@ function renderLibraryFavorites(){
     'library-favorites-feed'
   ).innerHTML =
 
-    cards.length
-      ? cards.join('')
+    posts.length
+      ? posts.join('')
       : `
-        <div class="library-empty">
-          עדיין לא שמרת חומר למועדפים.
-        </div>
-      `;
+          <div class="library-empty">
+            עדיין לא שמרת פוסטים למועדפים.
+          </div>
+        `;
 
 }
 
@@ -1282,7 +1340,8 @@ function openLibraryBook(id){
 
   const book =
     libraryState.books.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
 
@@ -1300,7 +1359,8 @@ function openLibraryBook(id){
   document.getElementById(
     'library-modal-category'
   ).textContent =
-    content.category || 'ספר';
+    content.category ||
+    'ספר';
 
 
   document.getElementById(
@@ -1315,15 +1375,18 @@ function openLibraryBook(id){
     content.summary || '';
 
 
+  const ideas =
+    Array.isArray(
+      content.ideas
+    )
+      ? content.ideas
+      : [];
+
+
   document.getElementById(
     'library-modal-ideas'
   ).innerHTML =
-
-    (
-      Array.isArray(content.ideas)
-        ? content.ideas
-        : []
-    )
+    ideas
       .map(
         idea =>
           `<li>${libraryEsc(idea)}</li>`
@@ -1331,15 +1394,18 @@ function openLibraryBook(id){
       .join('');
 
 
+  const topics =
+    Array.isArray(
+      content.topics
+    )
+      ? content.topics
+      : [];
+
+
   document.getElementById(
     'library-modal-topics'
   ).innerHTML =
-
-    (
-      Array.isArray(content.topics)
-        ? content.topics
-        : []
-    )
+    topics
       .map(
         topic =>
           `<li>${libraryEsc(topic)}</li>`
@@ -1352,10 +1418,12 @@ function openLibraryBook(id){
       libraryState.history
         .filter(
           row =>
-            row.item_id === book.id
+            row.item_id ===
+            book.id
         )
         .map(
-          row => row.feed_date
+          row =>
+            row.feed_date
         )
     )];
 
@@ -1372,21 +1440,25 @@ function openLibraryBook(id){
           )
           .join(' ')
       : `
-        <span class="meta">
-          הספר עדיין לא הופיע בפיד היומי.
-        </span>
-      `;
+          <span class="meta">
+            הספר עדיין לא הופיע בפיד היומי.
+          </span>
+        `;
 
 
   document.getElementById(
     'library-modal-note'
   ).value =
-    libraryNotes[book.slug] || '';
+    libraryNotes[
+      book.slug
+    ] || '';
 
 
   document.getElementById(
     'library-modal'
-  ).classList.remove('hidden');
+  ).classList.remove(
+    'hidden'
+  );
 
 }
 
@@ -1404,7 +1476,9 @@ function switchLibraryView(view){
 
       button.classList.toggle(
         'active',
-        button.dataset.libraryView === view
+
+        button.dataset.libraryView ===
+        view
       );
 
     }
@@ -1420,7 +1494,8 @@ function switchLibraryView(view){
     name => {
 
       document.getElementById(
-        'library-view-' + name
+        'library-view-' +
+        name
       ).classList.toggle(
         'hidden',
         name !== view
@@ -1431,7 +1506,8 @@ function switchLibraryView(view){
 
 
   if(
-    view === 'favorites'
+    view ===
+    'favorites'
   ){
 
     renderLibraryFavorites();
@@ -1455,20 +1531,21 @@ function applyLibrarySearch(){
       .toLowerCase();
 
 
-  const view =
+  const current =
     document.getElementById(
       'library-view-' +
       libraryState.view
     );
 
 
-  view.querySelectorAll(
+  current.querySelectorAll(
     '[data-library-search]'
   ).forEach(
     element => {
 
       element.classList.toggle(
         'hidden',
+
         query &&
         !element.dataset.librarySearch
           .includes(query)
@@ -1492,7 +1569,9 @@ function refreshLibraryFavoriteButtons(){
 
 
       const active =
-        libraryFavorites.has(key);
+        libraryFavorites.has(
+          key
+        );
 
 
       button.classList.toggle(
@@ -1548,7 +1627,7 @@ async function loadLibrary(){
 
 
     libraryState.today =
-      data.today;
+      data.today || '';
 
     libraryState.books =
       Array.isArray(data.books)
@@ -1732,7 +1811,9 @@ document.getElementById(
 
     document.getElementById(
       'library-modal'
-    ).classList.add('hidden');
+    ).classList.add(
+      'hidden'
+    );
 
   }
 );
@@ -1750,7 +1831,9 @@ document.getElementById(
     ){
 
       event.currentTarget
-        .classList.add('hidden');
+        .classList.add(
+          'hidden'
+        );
 
     }
 
@@ -1771,7 +1854,9 @@ document.getElementById(
     if(!book) return;
 
 
-    libraryNotes[book.slug] =
+    libraryNotes[
+      book.slug
+    ] =
       document.getElementById(
         'library-modal-note'
       ).value;
