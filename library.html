@@ -1,299 +1,295 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>ספריית הלמידה שלי | המרכז שלי</title>
-  <meta name="theme-color" content="#f7f3ea">
+<title>ספריית הלמידה שלי | המרכז שלי</title>
+<meta name="theme-color" content="#f7f3ea">
 
-  <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css">
 
-  <style>
-    .library-tabs{
-      display:flex;
-      gap:8px;
-      overflow-x:auto;
-      padding:4px 0 12px;
-      position:sticky;
-      top:0;
-      z-index:10;
-      background:rgba(247,243,234,.96);
-      backdrop-filter:blur(10px);
-    }
+<style>
+.library-tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 0 12px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(247,243,234,.96);
+  backdrop-filter:blur(10px)
+}
 
-    .library-tab{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:999px;
-      padding:9px 13px;
-      white-space:nowrap;
-      cursor:pointer;
-      font:inherit;
-    }
+.library-tab{
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:999px;
+  padding:9px 13px;
+  white-space:nowrap;
+  cursor:pointer;
+  font:inherit
+}
 
-    .library-tab.active{
-      background:#26231f;
-      color:white;
-      border-color:#26231f;
-    }
+.library-tab.active{
+  background:#26231f;
+  color:#fff;
+  border-color:#26231f
+}
 
-    .daily-books{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:10px;
-      margin-top:12px;
-    }
+.daily-books{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px
+}
 
-    .daily-book,
-    .book-card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:15px;
-      box-shadow:var(--shadow);
-    }
+.daily-book,
+.book-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:15px;
+  box-shadow:var(--shadow)
+}
 
-    .daily-book{
-      cursor:pointer;
-    }
+.daily-book{
+  cursor:pointer
+}
 
-    .daily-book strong{
-      display:block;
-      margin:5px 0;
-      font-size:15px;
-    }
+.daily-book strong{
+  display:block;
+  margin:5px 0;
+  font-size:15px
+}
 
-    .category{
-      display:inline-flex;
-      font-size:11px;
-      font-weight:700;
-      background:#f4efdf;
-      color:var(--books);
-      border-radius:999px;
-      padding:5px 9px;
-    }
+.category{
+  display:inline-flex;
+  font-size:11px;
+  font-weight:700;
+  background:#f4efdf;
+  color:var(--books);
+  border-radius:999px;
+  padding:5px 9px
+}
 
-    /* הפיד – בסגנון פוסטים קצרים */
-    .feed{
-      display:grid;
-      gap:18px;
-      max-width:720px;
-      margin-inline:auto;
-    }
+/* פיד בסגנון פוסטים */
+.feed{
+  display:grid;
+  gap:18px;
+  max-width:720px;
+  margin-inline:auto
+}
 
-    .feed-card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:18px;
-      box-shadow:var(--shadow);
-    }
+.feed-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:var(--shadow)
+}
 
-    .feed-card .label{
-      background:transparent;
-      padding:0;
-      margin:0 0 5px;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:650;
-    }
+.feed-card .label{
+  background:transparent;
+  padding:0;
+  margin:0 0 5px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:650
+}
 
-    .feed-card h3{
-      margin:0 0 10px;
-      font-size:17px;
-    }
+.feed-card h3{
+  margin:0 0 10px;
+  font-size:17px
+}
 
-    .feed-card p{
-      margin:0;
-      font-size:16px;
-      line-height:1.8;
+.feed-card p{
+  margin:0;
+  font-size:16px;
+  line-height:1.8;
 
-      display:-webkit-box;
-      -webkit-box-orient:vertical;
-      -webkit-line-clamp:4;
-      overflow:hidden;
-    }
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:4;
+  overflow:hidden
+}
 
-    .feed-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      border-top:1px solid var(--line);
-      padding-top:11px;
-      margin-top:13px;
-    }
+.feed-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  border-top:1px solid var(--line);
+  padding-top:11px;
+  margin-top:13px
+}
 
-    .feed-fav.active{
-      background:#ffe8ec;
-      border-color:#f1bcc5;
-    }
+.feed-fav.active{
+  background:#ffe8ec;
+  border-color:#f1bcc5
+}
 
-    .book-grid{
-      display:grid;
-      grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:12px;
-    }
+.book-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px
+}
 
-    .book-card h3{
-      margin:6px 0 8px;
-    }
+.book-card h3{
+  margin:6px 0 8px
+}
 
-    .book-card p{
-      margin:0 0 12px;
-      line-height:1.6;
-    }
+.book-card p{
+  margin:0 0 12px;
+  line-height:1.6
+}
 
-    .load-more{
-      width:100%;
-      margin-top:15px;
-      padding:16px;
-      border:0;
-      border-radius:18px;
-      background:#26231f;
-      color:white;
-      font-size:16px;
-      cursor:pointer;
-    }
+.load-more{
+  width:100%;
+  margin-top:15px;
+  padding:16px;
+  border:0;
+  border-radius:18px;
+  background:#26231f;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer
+}
 
-    .library-view.hidden{
-      display:none;
-    }
+.hidden{
+  display:none!important
+}
 
-    .library-empty{
-      background:var(--card);
-      border:1px dashed var(--line);
-      border-radius:18px;
-      padding:28px 15px;
-      text-align:center;
-      color:var(--muted);
-    }
+.library-empty{
+  background:var(--card);
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:28px 15px;
+  text-align:center;
+  color:var(--muted)
+}
 
-    .history-day{
-      margin-bottom:10px;
-    }
+.history-day{
+  margin-bottom:10px
+}
 
-    .history-day summary{
-      cursor:pointer;
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:15px;
-      padding:13px;
-      font-weight:700;
-    }
+.history-day summary{
+  cursor:pointer;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:13px;
+  font-weight:700
+}
 
-    .history-books{
-      display:flex;
-      gap:7px;
-      flex-wrap:wrap;
-      padding:10px 4px;
-    }
+.history-books{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:10px 4px
+}
 
-    .history-pill{
-      border:1px solid var(--line);
-      background:var(--card);
-      border-radius:999px;
-      padding:7px 10px;
-      cursor:pointer;
-    }
+.history-pill{
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:999px;
+  padding:7px 10px;
+  cursor:pointer
+}
 
-    #library-status{
-      margin:10px 0;
-      color:var(--muted);
-      font-size:13px;
-    }
+#library-status{
+  margin:10px 0;
+  color:var(--muted);
+  font-size:13px
+}
 
-    .library-modal{
-      position:fixed;
-      inset:0;
-      z-index:70;
-      background:rgba(25,23,20,.48);
-      display:flex;
-      justify-content:center;
-      align-items:flex-end;
-    }
+.library-modal{
+  position:fixed;
+  inset:0;
+  z-index:70;
+  background:rgba(25,23,20,.48);
+  display:flex;
+  justify-content:center;
+  align-items:flex-end
+}
 
-    .library-modal.hidden{
-      display:none;
-    }
+.library-modal-card{
+  width:min(760px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:var(--card);
+  border-radius:26px 26px 0 0;
+  padding:20px
+}
 
-    .library-modal-card{
-      width:min(760px,100%);
-      max-height:90vh;
-      overflow:auto;
-      background:var(--card);
-      border-radius:26px 26px 0 0;
-      padding:20px;
-    }
+.library-modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px
+}
 
-    .library-modal-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-    }
+.library-modal-head h2{
+  margin:7px 0 0
+}
 
-    .library-modal-head h2{
-      margin:7px 0 0;
-    }
+.library-close{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:50%;
+  background:#eee7dc;
+  cursor:pointer;
+  font-size:21px
+}
 
-    .library-close{
-      width:38px;
-      height:38px;
-      border:0;
-      border-radius:50%;
-      background:#eee7dc;
-      cursor:pointer;
-      font-size:21px;
-    }
+.library-modal-section{
+  margin-top:17px;
+  padding-top:14px;
+  border-top:1px solid var(--line)
+}
 
-    .library-modal-section{
-      margin-top:17px;
-      padding-top:14px;
-      border-top:1px solid var(--line);
-    }
+.library-modal-section h3{
+  margin:0 0 9px
+}
 
-    .library-modal-section h3{
-      margin:0 0 9px;
-    }
+.library-modal-section ul{
+  margin:0;
+  padding-right:21px;
+  line-height:1.85
+}
 
-    .library-modal-section ul{
-      margin:0;
-      padding-right:21px;
-      line-height:1.85;
-    }
+.library-note{
+  width:100%;
+  min-height:100px;
+  resize:vertical;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:11px;
+  font:inherit
+}
 
-    .library-note{
-      width:100%;
-      min-height:100px;
-      resize:vertical;
-      background:white;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:11px;
-      font:inherit;
-    }
+@media(max-width:760px){
+  .daily-books{
+    grid-template-columns:1fr 1fr
+  }
 
-    @media(max-width:760px){
-      .daily-books{
-        grid-template-columns:1fr 1fr;
-      }
+  .book-grid{
+    grid-template-columns:1fr
+  }
+}
 
-      .book-grid{
-        grid-template-columns:1fr;
-      }
-    }
+@media(max-width:460px){
+  .daily-books{
+    grid-template-columns:1fr
+  }
 
-    @media(max-width:460px){
-      .daily-books{
-        grid-template-columns:1fr;
-      }
-
-      .feed-card{
-        padding:16px;
-      }
-    }
-  </style>
+  .feed-card{
+    padding:16px
+  }
+}
+</style>
 </head>
 
 <body>
@@ -301,78 +297,117 @@
 <div class="app">
 
   <div class="back">
-    <a class="btn small" href="index.html">← חזרה לבית</a>
+    <a class="btn small" href="index.html">
+      ← חזרה לבית
+    </a>
   </div>
 
   <div class="page-title">
-    <h1>📚 פיד הלמידה שלי</h1>
+
+    <h1>
+      📚 פיד הלמידה שלי
+    </h1>
+
     <div class="subtitle">
-      4 ספרים בכל יום · פוסטים קצרים · כל מה שלמדנו נשמר
+      4 ספרים בכל יום · קטעי קריאה קצרים · כל מה שלמדנו נשמר
     </div>
+
   </div>
 
+
   <div class="library-tabs">
-    <button class="library-tab active" data-library-view="today">
+
+    <button
+      class="library-tab active"
+      data-library-view="today"
+    >
       🏠 היום
     </button>
 
-    <button class="library-tab" data-library-view="books">
+    <button
+      class="library-tab"
+      data-library-view="books"
+    >
       📚 כל הספרים
     </button>
 
-    <button class="library-tab" data-library-view="archive">
+    <button
+      class="library-tab"
+      data-library-view="archive"
+    >
       🗄️ כל החומר
     </button>
 
-    <button class="library-tab" data-library-view="favorites">
+    <button
+      class="library-tab"
+      data-library-view="favorites"
+    >
       ♥ מועדפים
     </button>
+
   </div>
+
 
   <input
     id="library-search"
     class="search"
     type="search"
-    placeholder="🔍 חפש ספר, רעיון או נושא..."
+    placeholder="🔍 חפש ספר, קטע או נושא..."
   >
+
 
   <div id="library-status">
     טוען את הספרייה…
   </div>
 
 
+
   <!-- היום -->
+
   <section
     id="library-view-today"
     class="library-view"
   >
 
     <section class="hero">
-      <strong>ארבעת הספרים של היום</strong>
+
+      <strong>
+        ארבעת הספרים של היום
+      </strong>
 
       <p>
         בכל יום נבחרים ארבעה ספרים שונים.
-        הפיד מציג רעיונות קצרים כמו פוסטים,
+        מכל ספר עולים קטעי קריאה קצרים לפיד,
         וכל מה שכבר הופיע נשמר בארכיון.
       </p>
+
     </section>
+
 
     <div
       id="daily-books"
       class="daily-books"
     ></div>
 
+
     <section class="section">
 
       <div class="section-head">
-        <h2>הפיד של היום</h2>
+
+        <h2>
+          הפיד של היום
+        </h2>
+
         <small id="library-date"></small>
+
       </div>
+
 
       <div
         id="daily-feed"
         class="feed"
       ></div>
+
 
       <button
         id="library-load-more"
@@ -386,16 +421,24 @@
   </section>
 
 
+
   <!-- כל הספרים -->
+
   <section
     id="library-view-books"
     class="library-view hidden"
   >
 
     <div class="section-head">
-      <h2>כל הספרים</h2>
+
+      <h2>
+        כל הספרים
+      </h2>
+
       <small id="library-book-count"></small>
+
     </div>
+
 
     <div
       id="library-books-grid"
@@ -405,24 +448,40 @@
   </section>
 
 
-  <!-- כל החומר -->
+
+  <!-- ארכיון -->
+
   <section
     id="library-view-archive"
     class="library-view hidden"
   >
 
     <div class="section-head">
-      <h2>כל החומר שאי פעם הוצג</h2>
-      <small>הארכיון המצטבר שלך</small>
+
+      <h2>
+        כל החומר שאי פעם הוצג
+      </h2>
+
+      <small>
+        הארכיון המצטבר שלך
+      </small>
+
     </div>
 
+
     <div id="library-history"></div>
+
 
     <section class="section">
 
       <div class="section-head">
-        <h2>כל הפוסטים מהספרים שכבר הופיעו</h2>
+
+        <h2>
+          כל הקטעים מהספרים שכבר הופיעו
+        </h2>
+
       </div>
+
 
       <div
         id="library-archive-feed"
@@ -434,15 +493,22 @@
   </section>
 
 
+
   <!-- מועדפים -->
+
   <section
     id="library-view-favorites"
     class="library-view hidden"
   >
 
     <div class="section-head">
-      <h2>המועדפים שלי</h2>
+
+      <h2>
+        המועדפים שלי
+      </h2>
+
     </div>
+
 
     <div
       id="library-favorites-feed"
@@ -454,7 +520,9 @@
 </div>
 
 
+
 <!-- חלון ספר -->
+
 <div
   id="library-modal"
   class="library-modal hidden"
@@ -465,13 +533,16 @@
     <div class="library-modal-head">
 
       <div>
+
         <span
           id="library-modal-category"
           class="category"
         ></span>
 
         <h2 id="library-modal-title"></h2>
+
       </div>
+
 
       <button
         id="library-modal-close"
@@ -483,33 +554,60 @@
     </div>
 
 
+
     <div class="library-modal-section">
-      <h3>📖 תקציר</h3>
+
+      <h3>
+        📖 תקציר
+      </h3>
+
       <p id="library-modal-summary"></p>
+
     </div>
 
 
+
     <div class="library-modal-section">
-      <h3>💡 רעיונות מרכזיים</h3>
+
+      <h3>
+        💡 רעיונות מרכזיים
+      </h3>
+
       <ul id="library-modal-ideas"></ul>
+
     </div>
 
 
+
     <div class="library-modal-section">
-      <h3>🗺️ מפת נושאים / ראשי פרקים ללמידה</h3>
+
+      <h3>
+        🗺️ מפת נושאים / ראשי פרקים ללמידה
+      </h3>
+
       <ul id="library-modal-topics"></ul>
+
     </div>
 
 
+
     <div class="library-modal-section">
-      <h3>🕘 היסטוריה</h3>
+
+      <h3>
+        🕘 היסטוריה
+      </h3>
+
       <div id="library-modal-history"></div>
+
     </div>
+
 
 
     <div class="library-modal-section">
 
-      <h3>✍️ ההערה שלי</h3>
+      <h3>
+        ✍️ ההערה שלי
+      </h3>
 
       <textarea
         id="library-modal-note"
@@ -517,13 +615,16 @@
         placeholder="חיבור לאימון, מחשבה או משהו שתרצה לזכור..."
       ></textarea>
 
+
       <div class="feed-actions">
+
         <button
           id="library-save-note"
           class="btn"
         >
           שמור הערה
         </button>
+
       </div>
 
     </div>
@@ -533,47 +634,70 @@
 </div>
 
 
+
 <div
   class="toast"
   id="toast"
 ></div>
 
 
+
 <nav class="bottom-nav">
+
   <div class="inner">
 
-    <a class="nav-item" href="index.html">
+    <a
+      class="nav-item"
+      href="index.html"
+    >
       <span>🏠</span>
       בית
     </a>
 
-    <a class="nav-item" href="raika.html">
+    <a
+      class="nav-item"
+      href="raika.html"
+    >
       <span>⚡</span>
       ראיקה
     </a>
 
-    <a class="nav-item" href="coach.html">
+    <a
+      class="nav-item"
+      href="coach.html"
+    >
       <span>🏐</span>
       מאמן
     </a>
 
-    <a class="nav-item" href="languages.html">
+    <a
+      class="nav-item"
+      href="languages.html"
+    >
       <span>🌍</span>
       שפות
     </a>
 
-    <a class="nav-item" href="music.html">
+    <a
+      class="nav-item"
+      href="music.html"
+    >
       <span>🎵</span>
       מוזיקה
     </a>
 
-    <a class="nav-item active" href="library.html">
+    <a
+      class="nav-item active"
+      href="library.html"
+    >
       <span>📚</span>
       ספרייה
     </a>
 
   </div>
+
 </nav>
+
 
 
 <script>
@@ -582,42 +706,62 @@ const LIBRARY_API =
   'https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/library-feed?json=1';
 
 
+
 const libraryState = {
+
   today:'',
+
   books:[],
+
   daily:[],
+
   history:[],
+
   view:'today',
+
   extraShown:0,
+
   currentBook:null
+
 };
+
 
 
 const libraryFavKey =
   'my-center-library-favorites';
 
+
 const libraryNotesKey =
   'my-center-library-notes';
+
 
 
 let libraryFavorites =
   new Set(
     JSON.parse(
-      localStorage.getItem(libraryFavKey) || '[]'
+      localStorage.getItem(
+        libraryFavKey
+      ) || '[]'
     )
   );
 
 
+
 let libraryNotes =
   JSON.parse(
-    localStorage.getItem(libraryNotesKey) || '{}'
+    localStorage.getItem(
+      libraryNotesKey
+    ) || '{}'
   );
+
 
 
 function libraryEsc(value){
 
   return String(
-    value == null ? '' : value
+    value == null
+      ? ''
+      : value
   ).replace(
     /[&<>"']/g,
     char => ({
@@ -632,48 +776,115 @@ function libraryEsc(value){
 }
 
 
+
 function libraryToast(message){
 
   const el =
-    document.getElementById('toast');
+    document.getElementById(
+      'toast'
+    );
+
 
   if(!el) return;
+
 
   el.textContent =
     message;
 
-  el.classList.add('show');
+
+  el.classList.add(
+    'show'
+  );
+
 
   setTimeout(
     () =>
-      el.classList.remove('show'),
+      el.classList.remove(
+        'show'
+      ),
     1400
   );
 
 }
 
 
+
 function libraryContent(book){
 
-  return book && book.content
+  return book &&
+         book.content
     ? book.content
     : {};
 
 }
 
 
+
+/*
+  חשוב:
+  הפיד לוקח עכשיו feed_posts.
+  התקציר נשאר רק בתוך "פתח ספר".
+*/
+
 function libraryMaterials(book){
 
   const content =
     libraryContent(book);
 
+
+  const posts =
+    Array.isArray(
+      content.feed_posts
+    )
+      ? content.feed_posts.filter(Boolean)
+      : [];
+
+
+  if(
+    posts.length
+  ){
+
+    return posts
+      .slice(
+        0,
+        4
+      )
+      .map(
+        (text,index) => ({
+
+          key:
+            book.slug +
+            '|post|' +
+            index,
+
+          type:
+            '📖 קטע לקריאה',
+
+          text
+
+        })
+      );
+
+  }
+
+
+
+  /*
+    גיבוי לספר שעדיין אין לו feed_posts
+  */
+
   const ideas =
-    Array.isArray(content.ideas)
+    Array.isArray(
+      content.ideas
+    )
       ? content.ideas
       : [];
 
+
   const topics =
-    Array.isArray(content.topics)
+    Array.isArray(
+      content.topics
+    )
       ? content.topics
       : [];
 
@@ -681,34 +892,65 @@ function libraryMaterials(book){
   return [
 
     {
-      key:book.slug + '|summary',
-      type:'📖 תקציר קצר',
-      text:content.summary || ''
+      key:
+        book.slug +
+        '|summary',
+
+      type:
+        '📖 תקציר קצר',
+
+      text:
+        content.summary ||
+        ''
     },
 
     {
-      key:book.slug + '|idea|0',
-      type:'💡 רעיון',
-      text:ideas[0] || ''
+      key:
+        book.slug +
+        '|idea|0',
+
+      type:
+        '💡 רעיון',
+
+      text:
+        ideas[0] ||
+        ''
     },
 
     {
-      key:book.slug + '|idea|1',
-      type:'🧠 עוד מחשבה',
-      text:ideas[1] || ''
+      key:
+        book.slug +
+        '|idea|1',
+
+      type:
+        '🧠 עוד מחשבה',
+
+      text:
+        ideas[1] ||
+        ''
     },
 
     {
-      key:book.slug + '|topics',
-      type:'🗺️ נושאים',
-      text:topics.join(' · ')
+      key:
+        book.slug +
+        '|topics',
+
+      type:
+        '🗺️ נושאים',
+
+      text:
+        topics.join(
+          ' · '
+        )
     }
 
   ].filter(
-    item => item.text
+    item =>
+      item.text
   );
 
 }
+
 
 
 function libraryFeedCard(
@@ -727,12 +969,15 @@ function libraryFeedCard(
       book.title +
       ' ' +
       (
-        libraryContent(book).category ||
+        libraryContent(book)
+          .category ||
         ''
       ) +
       ' ' +
       material.text
-    ).toLowerCase();
+    )
+    .toLowerCase();
+
 
 
   return `
@@ -754,6 +999,7 @@ function libraryFeedCard(
         ${libraryEsc(material.text)}
       </p>
 
+
       <div class="feed-actions">
 
         <button
@@ -762,6 +1008,7 @@ function libraryFeedCard(
         >
           📚 פתח ספר
         </button>
+
 
         <button
           class="btn small feed-fav ${active ? 'active' : ''}"
@@ -779,6 +1026,7 @@ function libraryFeedCard(
 }
 
 
+
 function libraryBookCard(book){
 
   const content =
@@ -789,10 +1037,18 @@ function libraryBookCard(book){
     (
       book.title +
       ' ' +
-      (content.category || '') +
+      (
+        content.category ||
+        ''
+      ) +
       ' ' +
-      (content.summary || '')
-    ).toLowerCase();
+      (
+        content.summary ||
+        ''
+      )
+    )
+    .toLowerCase();
+
 
 
   return `
@@ -806,13 +1062,16 @@ function libraryBookCard(book){
         ${libraryEsc(content.category || 'ספר')}
       </span>
 
+
       <h3>
         ${libraryEsc(book.title)}
       </h3>
 
+
       <p class="meta">
         ${libraryEsc(content.summary || '')}
       </p>
+
 
       <button
         class="btn small library-open-book"
@@ -828,36 +1087,41 @@ function libraryBookCard(book){
 }
 
 
+
 function libraryDailyBooks(){
 
   const byId =
     new Map(
       libraryState.books.map(
-        book =>
-          [
-            book.id,
-            book
-          ]
+        book => [
+          book.id,
+          book
+        ]
       )
     );
 
 
   return libraryState.daily
+
     .slice()
+
     .sort(
       (a,b) =>
         a.position -
         b.position
     )
+
     .map(
       row =>
         byId.get(
           row.item_id
         )
     )
+
     .filter(Boolean);
 
 }
+
 
 
 function renderLibraryToday(){
@@ -866,41 +1130,42 @@ function renderLibraryToday(){
     libraryDailyBooks();
 
 
+
   document.getElementById(
     'daily-books'
   ).innerHTML =
 
     books.map(
-      book => {
+      book => `
 
-        const content =
-          libraryContent(book);
+        <article
+          class="daily-book library-open-book"
+          data-book-id="${libraryEsc(book.id)}"
+        >
 
-        return `
+          <span class="category">
+            ${libraryEsc(
+              libraryContent(book)
+                .category ||
+              'ספר'
+            )}
+          </span>
 
-          <article
-            class="daily-book library-open-book"
-            data-book-id="${libraryEsc(book.id)}"
-          >
 
-            <span class="category">
-              ${libraryEsc(content.category || 'ספר')}
-            </span>
+          <strong>
+            ${libraryEsc(book.title)}
+          </strong>
 
-            <strong>
-              ${libraryEsc(book.title)}
-            </strong>
 
-            <span class="meta">
-              פתח את הספר
-            </span>
+          <span class="meta">
+            פתח את הספר
+          </span>
 
-          </article>
+        </article>
 
-        `;
-
-      }
+      `
     ).join('');
+
 
 
   const posts = [];
@@ -916,9 +1181,14 @@ function renderLibraryToday(){
       book => {
 
         const material =
-          libraryMaterials(book)[round];
+          libraryMaterials(
+            book
+          )[round];
 
-        if(material){
+
+        if(
+          material
+        ){
 
           posts.push(
             libraryFeedCard(
@@ -935,17 +1205,22 @@ function renderLibraryToday(){
   }
 
 
+
   document.getElementById(
     'daily-feed'
   ).innerHTML =
     posts.join('');
 
 
-  libraryState.extraShown = 0;
+
+  libraryState.extraShown =
+    0;
+
 
   updateLibraryLoadMore();
 
 }
+
 
 
 function libraryHash(text){
@@ -963,6 +1238,7 @@ function libraryHash(text){
     hash ^=
       text.charCodeAt(i);
 
+
     hash =
       Math.imul(
         hash,
@@ -977,13 +1253,15 @@ function libraryHash(text){
 }
 
 
+
 function libraryExtraPool(){
 
   const todayIds =
     new Set(
       libraryDailyBooks()
         .map(
-          book => book.id
+          book =>
+            book.id
         )
     );
 
@@ -992,24 +1270,30 @@ function libraryExtraPool(){
 
 
   libraryState.books
+
     .filter(
       book =>
-        !todayIds.has(book.id)
+        !todayIds.has(
+          book.id
+        )
     )
+
     .forEach(
       book => {
 
-        libraryMaterials(book)
-          .forEach(
-            material => {
+        libraryMaterials(
+          book
+        )
+        .forEach(
+          material => {
 
-              pool.push({
-                book,
-                material
-              });
+            pool.push({
+              book,
+              material
+            });
 
-            }
-          );
+          }
+        );
 
       }
     );
@@ -1017,10 +1301,14 @@ function libraryExtraPool(){
 
   return pool.sort(
     (a,b) =>
+
       libraryHash(
         libraryState.today +
         a.material.key
-      ) -
+      )
+
+      -
+
       libraryHash(
         libraryState.today +
         b.material.key
@@ -1028,6 +1316,7 @@ function libraryExtraPool(){
   );
 
 }
+
 
 
 function updateLibraryLoadMore(){
@@ -1044,11 +1333,13 @@ function updateLibraryLoadMore(){
 
   button.classList.toggle(
     'hidden',
+
     libraryState.extraShown >=
-      pool.length
+    pool.length
   );
 
 }
+
 
 
 function loadMoreLibrary(){
@@ -1087,11 +1378,13 @@ function loadMoreLibrary(){
 }
 
 
+
 function renderLibraryBooks(){
 
   document.getElementById(
     'library-book-count'
   ).textContent =
+
     libraryState.books.length +
     ' ספרים';
 
@@ -1099,6 +1392,7 @@ function renderLibraryBooks(){
   document.getElementById(
     'library-books-grid'
   ).innerHTML =
+
     libraryState.books
       .map(
         libraryBookCard
@@ -1108,38 +1402,40 @@ function renderLibraryBooks(){
 }
 
 
+
 function libraryHistoryMap(){
 
   const map =
     new Map();
 
 
-  libraryState.history
-    .forEach(
-      row => {
+  libraryState.history.forEach(
+    row => {
 
-        if(
-          !map.has(
-            row.feed_date
-          )
-        ){
+      if(
+        !map.has(
+          row.feed_date
+        )
+      ){
 
-          map.set(
-            row.feed_date,
-            []
-          );
-
-        }
-
-
-        map
-          .get(
-            row.feed_date
-          )
-          .push(row);
+        map.set(
+          row.feed_date,
+          []
+        );
 
       }
-    );
+
+
+      map
+        .get(
+          row.feed_date
+        )
+        .push(
+          row
+        );
+
+    }
+  );
 
 
   return map;
@@ -1147,22 +1443,23 @@ function libraryHistoryMap(){
 }
 
 
+
 function renderLibraryArchive(){
 
   const byId =
     new Map(
       libraryState.books.map(
-        book =>
-          [
-            book.id,
-            book
-          ]
+        book => [
+          book.id,
+          book
+        ]
       )
     );
 
 
   const history =
     libraryHistoryMap();
+
 
 
   document.getElementById(
@@ -1174,20 +1471,25 @@ function renderLibraryArchive(){
         ([date,rows],index) => {
 
           const books =
+
             rows
               .slice()
+
               .sort(
                 (a,b) =>
                   a.position -
                   b.position
               )
+
               .map(
                 row =>
                   byId.get(
                     row.item_id
                   )
               )
+
               .filter(Boolean);
+
 
 
           return `
@@ -1203,6 +1505,7 @@ function renderLibraryArchive(){
                 ${books.length}
                 ספרים
               </summary>
+
 
               <div class="history-books">
 
@@ -1230,13 +1533,13 @@ function renderLibraryArchive(){
       .join('');
 
 
+
   const appearedIds =
     new Set(
-      libraryState.history
-        .map(
-          row =>
-            row.item_id
-        )
+      libraryState.history.map(
+        row =>
+          row.item_id
+      )
     );
 
 
@@ -1244,31 +1547,36 @@ function renderLibraryArchive(){
 
 
   libraryState.books
+
     .filter(
       book =>
         appearedIds.has(
           book.id
         )
     )
+
     .forEach(
       book => {
 
-        libraryMaterials(book)
-          .forEach(
-            material => {
+        libraryMaterials(
+          book
+        )
+        .forEach(
+          material => {
 
-              posts.push(
-                libraryFeedCard(
-                  book,
-                  material
-                )
-              );
+            posts.push(
+              libraryFeedCard(
+                book,
+                material
+              )
+            );
 
-            }
-          );
+          }
+        );
 
       }
     );
+
 
 
   document.getElementById(
@@ -1276,7 +1584,9 @@ function renderLibraryArchive(){
   ).innerHTML =
 
     posts.length
+
       ? posts.join('')
+
       : `
           <div class="library-empty">
             הארכיון מתחיל להצטבר מהיום.
@@ -1286,39 +1596,42 @@ function renderLibraryArchive(){
 }
 
 
+
 function renderLibraryFavorites(){
 
   const posts = [];
 
 
-  libraryState.books
-    .forEach(
-      book => {
+  libraryState.books.forEach(
+    book => {
 
-        libraryMaterials(book)
-          .forEach(
-            material => {
+      libraryMaterials(
+        book
+      )
+      .forEach(
+        material => {
 
-              if(
-                libraryFavorites.has(
-                  material.key
-                )
-              ){
+          if(
+            libraryFavorites.has(
+              material.key
+            )
+          ){
 
-                posts.push(
-                  libraryFeedCard(
-                    book,
-                    material
-                  )
-                );
+            posts.push(
+              libraryFeedCard(
+                book,
+                material
+              )
+            );
 
-              }
+          }
 
-            }
-          );
+        }
+      );
 
-      }
-    );
+    }
+  );
+
 
 
   document.getElementById(
@@ -1326,14 +1639,17 @@ function renderLibraryFavorites(){
   ).innerHTML =
 
     posts.length
+
       ? posts.join('')
+
       : `
           <div class="library-empty">
-            עדיין לא שמרת פוסטים למועדפים.
+            עדיין לא שמרת קטעים למועדפים.
           </div>
         `;
 
 }
+
 
 
 function openLibraryBook(id){
@@ -1345,7 +1661,9 @@ function openLibraryBook(id){
     );
 
 
-  if(!book) return;
+  if(
+    !book
+  ) return;
 
 
   libraryState.currentBook =
@@ -1353,26 +1671,36 @@ function openLibraryBook(id){
 
 
   const content =
-    libraryContent(book);
+    libraryContent(
+      book
+    );
+
 
 
   document.getElementById(
     'library-modal-category'
   ).textContent =
+
     content.category ||
     'ספר';
+
 
 
   document.getElementById(
     'library-modal-title'
   ).textContent =
+
     book.title;
+
 
 
   document.getElementById(
     'library-modal-summary'
   ).textContent =
-    content.summary || '';
+
+    content.summary ||
+    '';
+
 
 
   const ideas =
@@ -1386,12 +1714,12 @@ function openLibraryBook(id){
   document.getElementById(
     'library-modal-ideas'
   ).innerHTML =
-    ideas
-      .map(
-        idea =>
-          `<li>${libraryEsc(idea)}</li>`
-      )
-      .join('');
+
+    ideas.map(
+      idea =>
+        `<li>${libraryEsc(idea)}</li>`
+    ).join('');
+
 
 
   const topics =
@@ -1405,27 +1733,32 @@ function openLibraryBook(id){
   document.getElementById(
     'library-modal-topics'
   ).innerHTML =
-    topics
-      .map(
-        topic =>
-          `<li>${libraryEsc(topic)}</li>`
-      )
-      .join('');
+
+    topics.map(
+      topic =>
+        `<li>${libraryEsc(topic)}</li>`
+    ).join('');
+
 
 
   const dates =
     [...new Set(
+
       libraryState.history
+
         .filter(
           row =>
             row.item_id ===
             book.id
         )
+
         .map(
           row =>
             row.feed_date
         )
+
     )];
+
 
 
   document.getElementById(
@@ -1433,12 +1766,12 @@ function openLibraryBook(id){
   ).innerHTML =
 
     dates.length
-      ? dates
-          .map(
-            date =>
-              `<span class="pill">${libraryEsc(date)}</span>`
-          )
-          .join(' ')
+
+      ? dates.map(
+          date =>
+            `<span class="pill">${libraryEsc(date)}</span>`
+        ).join(' ')
+
       : `
           <span class="meta">
             הספר עדיין לא הופיע בפיד היומי.
@@ -1446,12 +1779,15 @@ function openLibraryBook(id){
         `;
 
 
+
   document.getElementById(
     'library-modal-note'
   ).value =
+
     libraryNotes[
       book.slug
     ] || '';
+
 
 
   document.getElementById(
@@ -1463,10 +1799,12 @@ function openLibraryBook(id){
 }
 
 
+
 function switchLibraryView(view){
 
   libraryState.view =
     view;
+
 
 
   document.querySelectorAll(
@@ -1476,13 +1814,13 @@ function switchLibraryView(view){
 
       button.classList.toggle(
         'active',
-
         button.dataset.libraryView ===
         view
       );
 
     }
   );
+
 
 
   [
@@ -1505,6 +1843,7 @@ function switchLibraryView(view){
   );
 
 
+
   if(
     view ===
     'favorites'
@@ -1515,9 +1854,11 @@ function switchLibraryView(view){
   }
 
 
+
   applyLibrarySearch();
 
 }
+
 
 
 function applyLibrarySearch(){
@@ -1526,9 +1867,10 @@ function applyLibrarySearch(){
     document.getElementById(
       'library-search'
     )
-      .value
-      .trim()
-      .toLowerCase();
+    .value
+    .trim()
+    .toLowerCase();
+
 
 
   const current =
@@ -1536,6 +1878,7 @@ function applyLibrarySearch(){
       'library-view-' +
       libraryState.view
     );
+
 
 
   current.querySelectorAll(
@@ -1546,15 +1889,20 @@ function applyLibrarySearch(){
       element.classList.toggle(
         'hidden',
 
-        query &&
-        !element.dataset.librarySearch
-          .includes(query)
+        Boolean(
+          query &&
+          !element.dataset.librarySearch
+            .includes(
+              query
+            )
+        )
       );
 
     }
   );
 
 }
+
 
 
 function refreshLibraryFavoriteButtons(){
@@ -1589,6 +1937,7 @@ function refreshLibraryFavoriteButtons(){
   );
 
 }
+
 
 
 async function loadLibrary(){
@@ -1626,36 +1975,52 @@ async function loadLibrary(){
       await response.json();
 
 
+
     libraryState.today =
-      data.today || '';
+      data.today ||
+      '';
+
 
     libraryState.books =
-      Array.isArray(data.books)
+      Array.isArray(
+        data.books
+      )
         ? data.books
         : [];
 
+
     libraryState.daily =
-      Array.isArray(data.daily)
+      Array.isArray(
+        data.daily
+      )
         ? data.daily
         : [];
 
+
     libraryState.history =
-      Array.isArray(data.history)
+      Array.isArray(
+        data.history
+      )
         ? data.history
         : [];
+
 
 
     document.getElementById(
       'library-date'
     ).textContent =
+
       libraryState.today;
 
 
+
     status.textContent =
+
       libraryState.books.length +
       ' ספרים בבנק · ' +
       libraryState.history.length +
       ' רשומות בארכיון';
+
 
 
     renderLibraryToday();
@@ -1667,9 +2032,12 @@ async function loadLibrary(){
     renderLibraryFavorites();
 
   }
+
   catch(error){
 
-    console.error(error);
+    console.error(
+      error
+    );
 
 
     status.textContent =
@@ -1679,9 +2047,11 @@ async function loadLibrary(){
     document.getElementById(
       'daily-feed'
     ).innerHTML = `
+
       <div class="library-empty">
         הבנק לא זמין כרגע.
       </div>
+
     `;
 
   }
@@ -1689,8 +2059,10 @@ async function loadLibrary(){
 }
 
 
+
 document.addEventListener(
   'click',
+
   event => {
 
     const tab =
@@ -1699,7 +2071,9 @@ document.addEventListener(
       );
 
 
-    if(tab){
+    if(
+      tab
+    ){
 
       switchLibraryView(
         tab.dataset.libraryView
@@ -1710,13 +2084,16 @@ document.addEventListener(
     }
 
 
+
     const open =
       event.target.closest(
         '.library-open-book'
       );
 
 
-    if(open){
+    if(
+      open
+    ){
 
       openLibraryBook(
         open.dataset.bookId
@@ -1727,38 +2104,52 @@ document.addEventListener(
     }
 
 
+
     const favorite =
       event.target.closest(
         '[data-library-favorite]'
       );
 
 
-    if(favorite){
+    if(
+      favorite
+    ){
 
       const key =
         favorite.dataset.libraryFavorite;
 
 
+
       if(
-        libraryFavorites.has(key)
+        libraryFavorites.has(
+          key
+        )
       ){
 
-        libraryFavorites.delete(key);
+        libraryFavorites.delete(
+          key
+        );
+
 
         libraryToast(
           'הוסר מהמועדפים'
         );
 
       }
+
       else{
 
-        libraryFavorites.add(key);
+        libraryFavorites.add(
+          key
+        );
+
 
         libraryToast(
           'נשמר במועדפים'
         );
 
       }
+
 
 
       localStorage.setItem(
@@ -1769,7 +2160,9 @@ document.addEventListener(
       );
 
 
+
       refreshLibraryFavoriteButtons();
+
 
 
       if(
@@ -1787,12 +2180,14 @@ document.addEventListener(
 );
 
 
+
 document.getElementById(
   'library-load-more'
 ).addEventListener(
   'click',
   loadMoreLibrary
 );
+
 
 
 document.getElementById(
@@ -1803,10 +2198,12 @@ document.getElementById(
 );
 
 
+
 document.getElementById(
   'library-modal-close'
 ).addEventListener(
   'click',
+
   () => {
 
     document.getElementById(
@@ -1819,10 +2216,12 @@ document.getElementById(
 );
 
 
+
 document.getElementById(
   'library-modal'
 ).addEventListener(
   'click',
+
   event => {
 
     if(
@@ -1841,25 +2240,32 @@ document.getElementById(
 );
 
 
+
 document.getElementById(
   'library-save-note'
 ).addEventListener(
   'click',
+
   () => {
 
     const book =
       libraryState.currentBook;
 
 
-    if(!book) return;
+    if(
+      !book
+    ) return;
+
 
 
     libraryNotes[
       book.slug
     ] =
+
       document.getElementById(
         'library-modal-note'
       ).value;
+
 
 
     localStorage.setItem(
@@ -1870,12 +2276,14 @@ document.getElementById(
     );
 
 
+
     libraryToast(
       'ההערה נשמרה'
     );
 
   }
 );
+
 
 
 loadLibrary();
