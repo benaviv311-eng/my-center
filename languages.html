@@ -3,57 +3,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>שפות | המרכז שלי</title>
+  <title>פיד שפות | המרכז שלי</title>
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
+  <link rel="stylesheet" href="languages-feed.css?v=1">
 </head>
 <body>
-<div class="app">
+<div class="app language-feed-page">
   <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-  <div class="page-title">
-    <h1>🌍 שפות</h1>
-    <div class="subtitle">ערבית · איטלקית · רוסית · ספרדית</div>
+
+  <section class="hero feed-hero">
+    <div>
+      <h1>🌍 פיד השפות שלי</h1>
+      <p>מילים, משפטים, בדיחות, סיפורים, שיחות ואתגרים — ארבע השפות מתערבבות בפיד אחד.</p>
+    </div>
+    <div class="language-progress-line">
+      <strong id="languages-daily-progress">0/4 שפות הושלמו היום</strong>
+      <span id="feed-mode-label">כל ארבע השפות מעורבבות</span>
+    </div>
+  </section>
+
+  <section class="feed-toolbar" aria-label="סינון וכלי הפיד">
+    <div class="feed-filters" role="group" aria-label="בחר שפה בפיד">
+      <button id="feed-filter-all" class="feed-filter active" type="button" data-feed-filter="all" aria-pressed="true">✨ הכול</button>
+      <button id="feed-filter-ar" class="feed-filter" type="button" data-feed-filter="ar" aria-pressed="false">AR · ערבית</button>
+      <button id="feed-filter-it" class="feed-filter" type="button" data-feed-filter="it" aria-pressed="false">IT · איטלקית</button>
+      <button id="feed-filter-ru" class="feed-filter" type="button" data-feed-filter="ru" aria-pressed="false">RU · רוסית</button>
+      <button id="feed-filter-es" class="feed-filter" type="button" data-feed-filter="es" aria-pressed="false">ES · ספרדית</button>
+    </div>
+    <div class="feed-tools">
+      <div class="feed-tools-group">
+        <button id="feed-refresh" class="btn small" type="button">↻ רענן פיד</button>
+      </div>
+      <div id="feed-context-links" class="feed-quick-links" aria-label="קיצורי דרך ללימוד"></div>
+    </div>
+  </section>
+
+  <main id="language-feed" class="language-feed" aria-live="polite"></main>
+
+  <div class="feed-load-wrap">
+    <button id="feed-load-more" class="feed-load-more" type="button">↓ תן לי עוד</button>
+    <div id="feed-status" class="feed-status" aria-live="polite"></div>
   </div>
-
-  <section class="hero">
-    <strong>הלימוד היומי שלי</strong>
-    <p id="languages-daily-progress">0/4 שפות הושלמו היום</p>
-    <p>בחר שפה אחת. נפתח רק אותה בדף לימוד ארוך ואינטראקטיבי.</p>
-  </section>
-
-  <section class="section">
-    <div class="section-head"><h2>בחר שפה</h2><small>כל שפה נפתחת בנפרד</small></div>
-    <div class="language-overview-grid">
-      <article class="card language-overview-card">
-        <div class="language-card-head"><span class="language-code">AR</span><div><h2>ערבית</h2><small>العربية · תעתיק עברי</small></div></div>
-        <p class="meta">המילה הראשית והתרגילים מוצגים בתעתיק עברי. הכתב הערבי נשאר משני.</p>
-        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=ar&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=ar">נושאים</a><a class="btn small" href="language-archive.html?lang=ar">מאגר וחזרות</a></div>
-      </article>
-      <article class="card language-overview-card">
-        <div class="language-card-head"><span class="language-code">IT</span><div><h2>איטלקית</h2><small>Italiano</small></div></div>
-        <p class="meta">מילים, משפטים, הרכבת משפטים, שאלות ותרגום בדף גלילה אחד.</p>
-        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=it&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=it">נושאים</a><a class="btn small" href="language-archive.html?lang=it">מאגר וחזרות</a></div>
-      </article>
-      <article class="card language-overview-card">
-        <div class="language-card-head"><span class="language-code">RU</span><div><h2>רוסית</h2><small>Русский · תעתיק לטיני</small></div></div>
-        <p class="meta">התעתיק הלטיני הוא התצוגה הראשית. הקירילית נשארת כתצוגה משנית.</p>
-        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=ru&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=ru">נושאים</a><a class="btn small" href="language-archive.html?lang=ru">מאגר וחזרות</a></div>
-      </article>
-      <article class="card language-overview-card">
-        <div class="language-card-head"><span class="language-code">ES</span><div><h2>ספרדית</h2><small>Español</small></div></div>
-        <p class="meta">תרגול יומי ארוך עם רענון עצמאי לכל סוג תרגיל.</p>
-        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=es&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=es">נושאים</a><a class="btn small" href="language-archive.html?lang=es">מאגר וחזרות</a></div>
-      </article>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="grid grid-2">
-      <article class="card"><div class="label lang">נושאים</div><h3>בחר על מה ללמוד</h3><p class="meta">הנושא נפרד ממבנה התרגילים. אותו דף אינטראקטיבי עובד על כל נושא.</p><div class="card-actions"><a class="btn small" href="language-topics.html?lang=ar">פתח נושאים ←</a></div></article>
-      <article class="card"><div class="label lang">מאגר וחזרות</div><h3>כל מה שכבר למדת</h3><p class="meta">חיפוש, סטטוס מילים, טעויות וחזרה ממוקדת.</p><div class="card-actions"><a class="btn small" href="language-archive.html?lang=ar">פתח מאגר ←</a></div></article>
-    </div>
-  </section>
 
   <nav class="bottom-nav"><div class="inner">
     <a class="nav-item" href="index.html"><span>🏠</span>בית</a>
@@ -66,6 +58,8 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="app.js?v=3"></script>
+<script src="language-feed-model.js?v=1"></script>
+<script src="languages-feed.js?v=1"></script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
