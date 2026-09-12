@@ -9,7 +9,8 @@ assert.ok(fs.existsSync(audioPath), 'language-audio.js should exist');
 const audio = fs.readFileSync(audioPath, 'utf8');
 assert.ok(audio.includes('speechSynthesis'), 'audio helper should use browser speech synthesis');
 assert.ok(audio.includes('SpeechSynthesisUtterance'), 'audio helper should create speech utterances');
-['ar','it-IT','ru-RU','es-ES'].forEach(locale => assert.ok(audio.includes(locale), `audio helper should include ${locale}`));
+['ar-SA','it-IT','ru-RU','es-ES'].forEach(locale => assert.ok(audio.includes(locale), `audio helper should include ${locale}`));
+assert.ok(audio.includes('voiceschanged'), 'audio helper should wait for asynchronously loaded browser voices');
 assert.ok(audio.includes('data-audio-text'), 'audio helper should listen for delegated audio buttons');
 assert.ok(audio.includes('cancel()'), 'audio helper should stop previous playback before starting a new one');
 assert.ok(audio.includes('LanguageCore'), 'audio helper should resolve original target text from lesson data when only transliteration is visible');
@@ -22,7 +23,7 @@ assert.ok(audio.includes("if((lang==='ar'||lang==='ru')&&!resolved)return''"), '
 const pages = ['languages.html','language-vocabulary.html','language-study.html','four-languages.html'];
 pages.forEach(file => {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
-  assert.ok(html.includes('language-audio.js'), `${file} should load the shared audio helper`);
+  assert.ok(html.includes('language-audio.js?v=2'), `${file} should load the current shared audio helper without stale caching`);
 });
 
 const four = fs.readFileSync(path.join(root, 'four-languages.js'), 'utf8');
