@@ -19,11 +19,14 @@ assert.ok(audio.includes('LanguageCore'), 'audio helper should resolve original 
 });
 assert.ok(audio.includes('.target'), 'audio helper should speak original target-language text, not learner transliteration');
 assert.ok(audio.includes("if((lang==='ar'||lang==='ru')&&!resolved)return''"), 'Arabic/Russian audio must never fall back to visible transliteration');
+assert.ok(audio.includes('ARABIC_REMOTE_AUDIO'), 'Arabic should have an audio path independent of installed system voices');
+assert.ok(audio.includes('new Audio('), 'Arabic fallback should use browser audio playback');
+assert.ok(audio.includes('remoteAudio.onerror'), 'Arabic fallback should handle remote audio playback errors');
 
 const pages = ['languages.html','language-vocabulary.html','language-study.html','four-languages.html'];
 pages.forEach(file => {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
-  assert.ok(html.includes('language-audio.js?v=2'), `${file} should load the current shared audio helper without stale caching`);
+  assert.ok(html.includes('language-audio.js?v=3'), `${file} should load the independent Arabic audio helper without stale caching`);
 });
 
 const four = fs.readFileSync(path.join(root, 'four-languages.js'), 'utf8');
