@@ -1,0 +1,22 @@
+name: Language JavaScript Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'language-*.js'
+      - 'language-*.html'
+      - 'languages.html'
+      - '.github/workflows/language-check.yml'
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check language JavaScript syntax
+        run: |
+          node --check language-core.js
+          node --check language-study.js
+          node --check language-topics.js
+          node --check language-archive.js
