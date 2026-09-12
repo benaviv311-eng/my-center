@@ -3,7 +3,7 @@
 
   const LOCALES={ar:'ar',it:'it-IT',ru:'ru-RU',es:'es-ES'};
   const CODE_TO_LANG={AR:'ar',IT:'it',RU:'ru',ES:'es'};
-  const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
+  const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-example strong','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
   let activeButton=null;
   let observer=null;
   let decorateQueued=false;
@@ -71,10 +71,11 @@
   }
   function nearbySecondary(el,lang){
     if(lang!=='ar'&&lang!=='ru')return'';
-    const hosts=['.vocab-word','.vocab-card','.four-card','.four-study-lang','.quiz-card','.translation-row','.feed-line','.feed-card'];
+    const hosts=['.vocab-word','.vocab-card','.four-card','.four-study-lang','.quiz-card','.translation-row','.feed-line','.feed-card','.dialogue-bubble'];
     const host=hosts.map(selector=>el.closest(selector)).find(Boolean);
     if(!host)return'';
     if(host.classList.contains('four-study-lang'))return cleanText(host.querySelector('small'));
+    if(host.classList.contains('dialogue-bubble'))return cleanText(host.querySelector('small'));
     const candidates=[...host.querySelectorAll('.vocab-word-secondary,.vocab-secondary,.four-secondary,.feed-secondary')].filter(node=>node!==el);
     if(candidates.length===1)return cleanText(candidates[0]);
     return'';
@@ -115,6 +116,14 @@
     return true;
   }
 
+  function placeButton(el,btn){
+    if(el.classList.contains('dialogue-bubble')){el.appendChild(btn);return;}
+    const wrapper=document.createElement(/^(SPAN|STRONG)$/i.test(el.tagName)?'span':'div');
+    wrapper.className='language-audio-inline';
+    el.parentNode.insertBefore(wrapper,el);
+    wrapper.appendChild(el);
+    wrapper.appendChild(btn);
+  }
   function decorateElement(el){
     if(!el||el.dataset.audioDecorated==='1'||el.closest('.language-audio-btn'))return;
     const lang=findLang(el);if(!lang)return;
@@ -124,7 +133,7 @@
     btn.dataset.audioLang=lang;btn.dataset.audioText=text;
     btn.setAttribute('aria-label','השמע הגייה');btn.title='השמע הגייה';
     el.dataset.audioDecorated='1';
-    el.insertAdjacentElement('afterend',btn);
+    placeButton(el,btn);
   }
   function decorate(scope=document){
     SELECTORS.forEach(selector=>{
@@ -140,7 +149,7 @@
   function installStyle(){
     if(document.getElementById('language-audio-style'))return;
     const style=document.createElement('style');style.id='language-audio-style';
-    style.textContent='.language-audio-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;margin-inline-start:7px;border:1px solid var(--line,#d8d2c7);border-radius:999px;background:#fff;cursor:pointer;font-size:16px;line-height:1;vertical-align:middle;flex:0 0 auto}.language-audio-btn:hover{background:#f5f1e8}.language-audio-btn.is-speaking{background:#22313e;color:#fff;border-color:#22313e}.vocab-word-primary+.language-audio-btn,.vocab-primary+.language-audio-btn,.four-primary+.language-audio-btn,.quiz-prompt+.language-audio-btn,.feed-primary+.language-audio-btn{margin-bottom:4px}@media(max-width:520px){.language-audio-btn{width:32px;height:32px;font-size:15px}}';
+    style.textContent='.language-audio-inline{display:inline-flex;align-items:center;gap:7px;max-width:100%;flex-wrap:wrap}.language-audio-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line,#d8d2c7);border-radius:999px;background:#fff;cursor:pointer;font-size:16px;line-height:1;vertical-align:middle;flex:0 0 auto}.language-audio-btn:hover{background:#f5f1e8}.language-audio-btn.is-speaking{background:#22313e;color:#fff;border-color:#22313e}.dialogue-bubble .language-audio-btn{margin-inline-start:7px;width:30px;height:30px;font-size:14px}@media(max-width:520px){.language-audio-btn{width:32px;height:32px;font-size:15px}}';
     document.head.appendChild(style);
   }
   function init(){
