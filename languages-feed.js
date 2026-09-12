@@ -4,6 +4,7 @@
 
   const STORAGE_KEY='my-center-language-feed-v1';
   const TYPE_LABELS={word:'מילה',sentence:'משפט',joke:'בדיחה',story:'סיפור קצר',dialogue:'מיני־דיאלוג',challenge:'אתגר מהיר',culture:'תרבות ושפה'};
+  const GAME_LABELS={flashcards:['🃏','כרטיסיות'],'memory':['🧠','זיכרון'],matching:['🔗','התאמת זוגות'],'sentence-builder':['🧩','הרכבת משפט'],recall:['👀','זיכרון רצף'],speed:['⏱️','אתגר בזק'],'four-languages':['🌍','4 שפות']};
   const $=id=>document.getElementById(id);
   const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
@@ -38,24 +39,16 @@
     </div>`;
   }
   function linesHtml(lang,lines,revealTranslations){
-    return `<div class="feed-lines">${lines.map((row,i)=>{const d=itemDisplay(lang,row);return `<div class="feed-line">${displayBlock(d,false)}<div class="feed-line-translation ${revealTranslations?'feed-hidden':''}" data-translation>${esc(d.translation)}</div></div>`;}).join('')}</div>`;
+    return `<div class="feed-lines">${lines.map(row=>{const d=itemDisplay(lang,row);return `<div class="feed-line">${displayBlock(d,false)}<div class="feed-line-translation ${revealTranslations?'feed-hidden':''}" data-translation>${esc(d.translation)}</div></div>`;}).join('')}</div>`;
   }
   function revealButton(label='הצג תרגום'){
     return `<div class="feed-reveal-row"><button class="feed-reveal" type="button" data-feed-reveal>${label}</button></div>`;
   }
   function bodyFor(card){
-    if(card.type==='word'||card.type==='sentence'){
-      return displayBlock(M.getDisplay(card.item),true);
-    }
-    if(card.type==='joke'){
-      return `<h2 class="feed-title">😄 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton()}`;
-    }
-    if(card.type==='story'){
-      return `<h2 class="feed-title">📖 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton()}<div class="feed-question"><strong>${esc(card.question)}</strong><button class="feed-reveal" type="button" data-answer-reveal>הצג תשובה</button><div class="feed-answer feed-hidden" data-answer>${esc(card.answer)}</div></div>`;
-    }
-    if(card.type==='dialogue'){
-      return `<h2 class="feed-title">💬 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton('הצג את השיחה בעברית')}`;
-    }
+    if(card.type==='word'||card.type==='sentence')return displayBlock(M.getDisplay(card.item),true);
+    if(card.type==='joke')return `<h2 class="feed-title">😄 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton()}`;
+    if(card.type==='story')return `<h2 class="feed-title">📖 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton()}<div class="feed-question"><strong>${esc(card.question)}</strong><button class="feed-reveal" type="button" data-answer-reveal>הצג תשובה</button><div class="feed-answer feed-hidden" data-answer>${esc(card.answer)}</div></div>`;
+    if(card.type==='dialogue')return `<h2 class="feed-title">💬 ${esc(card.title)}</h2>${linesHtml(card.lang,card.lines,true)}${revealButton('הצג את השיחה בעברית')}`;
     if(card.type==='culture'){
       const d=itemDisplay(card.lang,card.phrase);
       return `<h2 class="feed-title">🌍 ${esc(card.title)}</h2><p class="feed-copy">${esc(card.body)}</p><div class="feed-line">${displayBlock(d,true)}</div>`;
@@ -87,6 +80,38 @@
     return `<section class="feed-moment"><div><span class="feed-type">סיפור עובר שפה</span><h2>ארבע שורות, ארבע שפות</h2><p class="meta">נסה להבין את הכיוון לפני שאתה מסתכל על התרגום.</p></div><div class="feed-lines">${M.LANGUAGE_CODES.map(lang=>{const d=itemDisplay(lang,picks[lang]);return `<div class="feed-line"><strong>${M.LANGUAGES[lang].code}</strong>${displayBlock(d,false)}<div class="feed-line-translation feed-hidden" data-translation>${esc(d.translation)}</div></div>`;}).join('')}</div>${revealButton('הצג את כל התרגומים')}</section>`;
   }
 
+  function miniGameBody(game){
+    const first=game.items?.[0];
+    if(game.type==='flashcards'){
+      const d=M.getDisplay(first);
+      return `<div class="feed-mini-flash"><div class="feed-primary">${esc(d.primary)}</div>${d.secondary?`<div class="feed-secondary">${esc(d.secondary)}</div>`:''}<div class="feed-translation feed-hidden" data-mini-answer>${esc(d.translation)}</div><button class="feed-reveal" type="button" data-mini-reveal>הצג תשובה</button></div>`;
+    }
+    if(game.type==='memory'){
+      const pair=game.items.slice(0,2);const deck=[{item:pair[0],side:'a'},{item:pair[1],side:'b'},{item:pair[0],side:'b'},{item:pair[1],side:'a'}];
+      return `<div class="feed-mini-memory" data-mini-memory>${deck.map(({item,side})=>{const d=M.getDisplay(item);const value=side==='a'?d.primary:d.translation;return `<button type="button" class="feed-memory-tile" data-mini-memory-card data-key="${item.lang}:${esc(item.id)}" data-value="${esc(value)}">?</button>`;}).join('')}</div><div class="feed-mini-feedback" data-mini-feedback>מצא שני זוגות.</div>`;
+    }
+    if(game.type==='sentence-builder'){
+      return `<div class="feed-mini-sentence" data-mini-sentence data-answer="${esc(game.answer.join(' '))}"><div class="feed-line"><strong>המשמעות:</strong> ${esc(M.getDisplay(game.sentence).translation)}</div><div class="feed-mini-built" data-mini-built></div><div class="feed-mini-chips">${game.words.map(word=>`<button type="button" class="feed-mini-chip" data-mini-word data-word="${esc(word)}">${esc(word)}</button>`).join('')}</div><button class="feed-reveal" type="button" data-mini-check>בדוק משפט</button><div class="feed-mini-feedback" data-mini-feedback></div></div>`;
+    }
+    if(game.type==='recall'){
+      const shown=game.items.slice(0,3), outsider=game.items[3];const opts=[outsider,shown[1],shown[0],shown[2]];
+      return `<div data-mini-recall><div class="feed-mini-recall-list" data-mini-recall-list>${shown.map(item=>`<span>${esc(M.getDisplay(item).primary)}</span>`).join('')}</div><button class="feed-reveal" type="button" data-mini-recall-ready>זכרתי — שאל אותי</button><div class="feed-hidden" data-mini-recall-q><strong>איזו מילה לא הופיעה?</strong><div class="feed-options">${opts.map(item=>`<button class="feed-option" type="button" data-mini-recall-option data-correct="${item===outsider?'1':'0'}">${esc(M.getDisplay(item).primary)}</button>`).join('')}</div></div><div class="feed-mini-feedback" data-mini-feedback></div></div>`;
+    }
+    if(game.type==='four-languages'){
+      return `<div><div class="feed-primary">${esc(game.prompt)}</div><div class="feed-moment-grid">${game.items.map(item=>{const d=M.getDisplay(item);return `<div class="feed-moment-item"><strong>${M.LANGUAGES[item.lang].code}</strong><span>${esc(d.primary)}</span>${d.secondary?`<small>${esc(d.secondary)}</small>`:''}</div>`;}).join('')}</div></div>`;
+    }
+    const d=M.getDisplay(first);const options=game.items.slice(0,4);
+    return `<div class="feed-question"><strong>${game.type==='speed'?'שאלת בזק — מה הפירוש?':'התאם את המילה לתרגום'}</strong>${displayBlock({...d,translation:''},false)}<div class="feed-options">${options.map(item=>`<button class="feed-option" type="button" data-mini-option data-correct="${item.lang===first.lang&&item.id===first.id?'1':'0'}">${esc(M.getDisplay(item).translation)}</button>`).join('')}</div><div class="feed-mini-feedback" data-mini-feedback></div></div>`;
+  }
+
+  function miniGameMoment(type,seed){
+    const game=M.buildMiniGame({type,filter:state.filter,seed});
+    const [icon,label]=GAME_LABELS[type];
+    const langText=game.lang==='all'?'כל השפות':M.LANGUAGES[game.lang].name;
+    const suffix=state.filter==='all'?'':`?lang=${state.filter}`;
+    return `<section class="feed-moment feed-game" data-feed-mini-game="${type}"><div class="feed-game-head"><div><span class="feed-type">${icon} משחק בתוך הפיד</span><h2>${label}</h2><p class="meta">${esc(langText)}</p></div><a class="feed-game-link" href="language-games.html${suffix}">לכל המשחקים ←</a></div>${miniGameBody(game)}</section>`;
+  }
+
   function seedForBatch(n){return `${today()}:home:${state.filter}:${state.refresh}:${n}`;}
   function buildBatch(n,count){return M.buildFeed({filter:state.filter,seed:seedForBatch(n),count});}
   function insertBatch(n,count=12){
@@ -96,7 +121,9 @@
     cards.forEach((card,index)=>{
       html.push(cardHtml(card));
       if(state.filter==='all'&&n===0&&index===3)html.push(fourLanguageMoment(index));
+      if(index===5){const type=M.GAME_TYPES[(state.refresh+n*2)%M.GAME_TYPES.length];html.push(miniGameMoment(type,`${seedForBatch(n)}:game:1`));}
       if(state.filter==='all'&&n===0&&index===8)html.push(travellingStoryMoment());
+      if((count>10&&index===10)||(count<=10&&index===8)){const type=M.GAME_TYPES[(state.refresh+n*2+1)%M.GAME_TYPES.length];html.push(miniGameMoment(type,`${seedForBatch(n)}:game:2`));}
     });
     root.insertAdjacentHTML('beforeend',html.join(''));
     wire(root);
@@ -105,9 +132,9 @@
   function setContextLinks(){
     const root=$('feed-context-links');
     if(state.filter==='all'){
-      root.innerHTML=M.LANGUAGE_CODES.map(code=>`<a class="btn small" href="language-study.html?lang=${code}&topic=basics">${M.LANGUAGES[code].code} · שיעור</a>`).join('');
+      root.innerHTML=`<a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`+M.LANGUAGE_CODES.map(code=>`<a class="btn small" href="language-study.html?lang=${code}&topic=basics">${M.LANGUAGES[code].code} · שיעור</a>`).join('');
     }else{
-      root.innerHTML=`<a class="btn small" href="language-study.html?lang=${state.filter}&topic=basics">שיעור מלא</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
+      root.innerHTML=`<a class="btn small" href="language-games.html?lang=${state.filter}">🎮 משחקים</a><a class="btn small" href="language-study.html?lang=${state.filter}&topic=basics">שיעור מלא</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
     }
   }
   function updateFilters(){
@@ -187,6 +214,12 @@
         if(action==='more')moreLike(article);else toggleReaction(article,action);
       });
     });
+
+    scope.querySelectorAll?.('[data-mini-reveal]:not([data-wired])').forEach(btn=>{btn.dataset.wired='1';btn.addEventListener('click',()=>{const answer=btn.closest('.feed-game').querySelector('[data-mini-answer]');answer.classList.toggle('feed-hidden');btn.textContent=answer.classList.contains('feed-hidden')?'הצג תשובה':'הסתר תשובה';});});
+    scope.querySelectorAll?.('[data-mini-option]:not([data-wired])').forEach(btn=>{btn.dataset.wired='1';btn.addEventListener('click',()=>{const box=btn.closest('.feed-game');if(box.dataset.answered)return;box.dataset.answered='1';box.querySelectorAll('[data-mini-option]').forEach(x=>{x.disabled=true;if(x.dataset.correct==='1')x.classList.add('correct');});if(btn.dataset.correct!=='1')btn.classList.add('wrong');box.querySelector('[data-mini-feedback]').textContent=btn.dataset.correct==='1'?'נכון ✓':'התשובה הנכונה מסומנת.';});});
+    scope.querySelectorAll?.('[data-mini-memory]:not([data-wired])').forEach(board=>{board.dataset.wired='1';let open=[];let matches=0;board.querySelectorAll('[data-mini-memory-card]').forEach(card=>card.addEventListener('click',()=>{if(card.classList.contains('matched')||open.includes(card)||open.length===2)return;card.textContent=card.dataset.value;card.classList.add('open');open.push(card);if(open.length===2){const[a,b]=open;if(a.dataset.key===b.dataset.key){a.classList.add('matched');b.classList.add('matched');open=[];matches++;board.parentElement.querySelector('[data-mini-feedback]').textContent=matches===2?'כל הזוגות נמצאו ✓':'זוג אחד נמצא!';}else setTimeout(()=>{a.textContent='?';b.textContent='?';a.classList.remove('open');b.classList.remove('open');open=[];},600);}}));});
+    scope.querySelectorAll?.('[data-mini-sentence]:not([data-wired])').forEach(box=>{box.dataset.wired='1';const picked=[];box.querySelectorAll('[data-mini-word]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.classList.contains('used'))return;btn.classList.add('used');picked.push(btn.dataset.word);box.querySelector('[data-mini-built]').textContent=picked.join(' ');}));box.querySelector('[data-mini-check]').addEventListener('click',()=>{box.querySelector('[data-mini-feedback]').textContent=picked.join(' ')===box.dataset.answer?'מצוין — המשפט נכון ✓':'עוד לא. נסה לרענן את הפיד או להמשיך למשחק המלא.';});});
+    scope.querySelectorAll?.('[data-mini-recall]:not([data-wired])').forEach(box=>{box.dataset.wired='1';box.querySelector('[data-mini-recall-ready]').addEventListener('click',btn=>{box.querySelector('[data-mini-recall-list]').classList.add('feed-hidden');btn.currentTarget.classList.add('feed-hidden');box.querySelector('[data-mini-recall-q]').classList.remove('feed-hidden');});box.querySelectorAll('[data-mini-recall-option]').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('[data-mini-recall-option]').forEach(x=>x.disabled=true);box.querySelector('[data-mini-feedback]').textContent=btn.dataset.correct==='1'?'נכון — זכרת ✓':'כמעט. במשחק המלא אפשר לנסות שוב.';}));});
   }
 
   document.querySelectorAll('[data-feed-filter]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -204,7 +237,7 @@
   $('feed-load-more').addEventListener('click',()=>{
     batch++;
     insertBatch(batch,10);
-    $('feed-status').textContent='נוספו עוד 10 פוסטים';
+    $('feed-status').textContent='נוספו עוד 10 פוסטים ומשחקים';
   });
 
   updateFilters();
