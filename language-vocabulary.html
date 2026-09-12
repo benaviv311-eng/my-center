@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="language-vocabulary.css?v=1">
+  <link rel="stylesheet" href="language-vocabulary.css?v=2">
 </head>
 <body>
 <div class="app vocabulary-page">
@@ -17,11 +17,11 @@
     <div class="study-title-row">
       <span id="vocab-language-code" class="language-code">AR</span>
       <div>
-        <h1>📚 אוצר מילים לפי נושאים</h1>
+        <h1>📚 אוצר מילים</h1>
         <div id="vocab-language-name" class="subtitle"></div>
       </div>
     </div>
-    <p id="vocab-summary" class="vocab-summary">טוען אוצר מילים…</p>
+    <p id="vocab-summary" class="vocab-summary">מאגר פתוח · טוען…</p>
     <div id="vocab-language-switch" class="sticky-language-switch" aria-label="בחירת שפה"></div>
   </section>
 
@@ -29,12 +29,6 @@
     <article class="card">
       <div class="vocabulary-controls">
         <input id="vocab-search" class="study-input" type="search" placeholder="חפש מילה, תרגום או נושא" aria-label="חיפוש באוצר המילים">
-        <select id="vocab-status" class="language-select" aria-label="סינון לפי מצב לימוד">
-          <option value="all">כל המילים</option>
-          <option value="new">חדש</option>
-          <option value="practice">לתרגול</option>
-          <option value="known">יודע</option>
-        </select>
       </div>
       <div id="vocab-topic-nav" class="vocab-topic-nav" aria-label="קפיצה לנושא"></div>
     </article>
@@ -52,8 +46,11 @@
   </div></nav>
 </div>
 <div class="toast" id="toast"></div>
-<script src="language-core.js?v=1"></script>
-<script src="language-topic-expansion.js?v=1"></script>
-<script src="language-vocabulary.js?v=1"></script>
+<script src="language-vocabulary-data-verbs.js?v=1"></script>
+<script src="language-vocabulary-data-adjectives.js?v=1"></script>
+<script src="language-vocabulary-data-nouns.js?v=1"></script>
+<script src="language-vocabulary-data-places-home.js?v=1"></script>
+<script src="language-vocabulary-bank.js?v=1"></script>
+<script src="language-vocabulary.js?v=2"></script>
 </body>
 </html>
