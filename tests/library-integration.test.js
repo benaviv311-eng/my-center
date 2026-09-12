@@ -1,0 +1,15 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const root = path.join(__dirname,'..');
+const html = fs.readFileSync(path.join(root,'library.html'),'utf8');
+['library-randomize','library-discovery-feed','library-discovery-more','library-book-refresh-all','library-book-random','library-book-dynamic'].forEach(id=>assert.ok(html.includes(`id="${id}"`),`library.html should contain ${id}`));
+['library-discovery.js','library-discovery-ui.js','library-discovery.css'].forEach(file=>{assert.ok(html.includes(file),`library.html should load ${file}`);assert.ok(fs.existsSync(path.join(root,file)),`${file} should exist`)});
+const ui=fs.readFileSync(path.join(root,'library-discovery-ui.js'),'utf8');
+assert.ok(ui.includes('buildRandomFeed'));
+assert.ok(ui.includes('buildBookSections'));
+assert.ok(ui.includes('library-open-book'));
+assert.ok(ui.includes('sourceLabel'));
+assert.ok(ui.includes('data-refresh-section'));
+assert.ok(ui.includes('loadLibrary()'));
+console.log('library discovery integration tests: OK');
