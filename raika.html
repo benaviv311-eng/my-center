@@ -1,5 +1,5 @@
 <!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>עולם ראיקה | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"></head><body><div class="app">
+<title>עולם ראיקה | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css?v=2"></head><body><div class="app">
 <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
 <div class="page-title"><h1>⚡ עולם ראיקה</h1><div class="subtitle">קאנון · סצנות · דמויות · קווי עלילה · חדר הכותבים</div></div>
 <div class="canon-note"><b>כלל קבוע:</b> רעיון יצירתי נשאר 💡 הצעה או 📝 בפיתוח עד אישור מפורש לקאנון. שום תמונה אינה קאנונית ללא אישור מפורש.</div>
@@ -7,17 +7,17 @@
 <section class="raika-hub section">
   <div class="section-head"><h2>מרכז עולם ראיקה</h2><small>מהסיפור המאושר אל הרעיונות הבאים</small></div>
   <div id="raika-stats" class="raika-stats"></div>
-  <div class="raika-section-nav">
-    <a href="#characters">👥 דמויות</a><a href="#scenes">🎬 סצנות</a><a href="#plotlines">🧭 קווי עלילה</a><a href="#history">⏳ עבר והיסטוריה</a><a href="#world">⛩️ עולם ואמונות</a><a href="#relationships">🔗 מערכות יחסים</a><a href="#writers-room">💡 חדר הכותבים</a>
-  </div>
 </section>
 
-<section class="section raika-filter-panel">
-  <div class="section-head"><h2>חיפוש וסינון</h2><button id="clear-raika-filters" class="btn small">נקה</button></div>
+<section class="raika-sticky-tools" aria-label="ניווט וחיפוש בעולם ראיקה">
+  <div class="raika-section-nav" aria-label="נושאים בעולם ראיקה">
+    <a href="#characters">👥 דמויות</a><a href="#scenes">🎬 סצנות</a><a href="#plotlines">🧭 קווי עלילה</a><a href="#history">⏳ עבר והיסטוריה</a><a href="#world">⛩️ עולם ואמונות</a><a href="#relationships">🔗 מערכות יחסים</a><a href="#writers-room">💡 חדר הכותבים</a>
+  </div>
   <div class="raika-filters">
-    <input id="raika-search" class="search" placeholder="חפש דמות, סצנה, נושא, מקום, אמונה...">
-    <select id="raika-status-filter" class="search"><option value="all">כל הסטטוסים</option><option value="canon">✅ קאנון</option><option value="developing">📝 בפיתוח</option><option value="idea">💡 הצעה</option><option value="parked">🗄️ בצד</option></select>
-    <select id="raika-type-filter" class="search"><option value="all">כל הסוגים</option><option value="character">דמות</option><option value="scene">סצנה</option><option value="plotline">קו עלילה</option><option value="history">עבר</option><option value="world">עולם</option><option value="relationship">קשר</option><option value="conversation">שיחה</option><option value="comedy">קומדיה</option><option value="flashback">פלאשבק</option><option value="philosophy">פילוסופיה</option><option value="worldbuilding">אמונה/עולם</option><option value="thought">צורת מחשבה</option><option value="desire">רצון</option><option value="heritage">מורשת</option></select>
+    <input id="raika-search" class="search" placeholder="🔎 חפש דמות, סצנה, נושא, מקום, אמונה..." aria-label="חיפוש בעולם ראיקה">
+    <select id="raika-status-filter" class="search" aria-label="סינון לפי סטטוס"><option value="all">כל הסטטוסים</option><option value="canon">✅ קאנון</option><option value="developing">📝 בפיתוח</option><option value="idea">💡 הצעה</option><option value="parked">🗄️ בצד</option></select>
+    <select id="raika-type-filter" class="search" aria-label="סינון לפי סוג"><option value="all">כל הסוגים</option><option value="character">דמות</option><option value="scene">סצנה</option><option value="plotline">קו עלילה</option><option value="history">עבר</option><option value="world">עולם</option><option value="relationship">קשר</option><option value="conversation">שיחה</option><option value="comedy">קומדיה</option><option value="flashback">פלאשבק</option><option value="philosophy">פילוסופיה</option><option value="worldbuilding">אמונה/עולם</option><option value="thought">צורת מחשבה</option><option value="desire">רצון</option><option value="heritage">מורשת</option></select>
+    <button id="clear-raika-filters" class="btn small" type="button">נקה</button>
   </div>
 </section>
 
@@ -40,4 +40,4 @@
 <a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a>
 <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
 </div></nav>
-</div><div class="toast" id="toast"></div><script src="app.js?v=3"></script><script src="raika-data.js?v=1"></script><script src="raika-app.js?v=2"></script></body></html>
+</div><div class="toast" id="toast"></div><script src="app.js?v=3"></script><script src="raika-data.js?v=1"></script><script src="raika-app.js?v=3"></script></body></html>

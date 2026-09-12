@@ -135,6 +135,17 @@ function getFilterState(){
   return {query,status,type};
 }
 
+function currentRaikaSectionId(sections, scrollY=0, offset=0){
+  if(!sections?.length) return '';
+  const threshold = Number(scrollY || 0) + Number(offset || 0);
+  let current = sections[0].id;
+  for(const section of sections){
+    if(Number(section.top || 0) <= threshold) current = section.id;
+    else break;
+  }
+  return current;
+}
+
 function renderCharacters(data){ renderCollection('characters-grid',data.characters); }
 function renderScenes(data){ renderCollection('scenes-grid',[...data.scenes].sort((a,b)=>(a.order||999)-(b.order||999)),sceneCardHtml); }
 function renderPlotlines(data){ renderCollection('plotlines-grid',data.plotlines); }
@@ -155,6 +166,23 @@ function renderAll(){
   const data=window.RAIKA_DATA;
   if(!data) return;
   renderCharacters(data);renderScenes(data);renderPlotlines(data);renderHistory(data);renderWorld(data);renderRelationships(data);renderIdeas(data);renderStats(data);
+}
+
+function initRaikaSectionNav(){
+  const ids=['characters','scenes','plotlines','history','world','relationships','writers-room'];
+  const links=[...document.querySelectorAll('.raika-section-nav a[href^="#"]')];
+  if(!links.length) return;
+
+  const update=()=>{
+    const sections=ids.map(id=>document.getElementById(id)).filter(Boolean).map(el=>({id:el.id,top:el.offsetTop}));
+    const stickyHeight=document.querySelector('.raika-sticky-tools')?.offsetHeight || 0;
+    const activeId=currentRaikaSectionId(sections,window.scrollY,stickyHeight+24);
+    links.forEach(link=>link.classList.toggle('active',link.getAttribute('href')===`#${activeId}`));
+  };
+
+  window.addEventListener('scroll',update,{passive:true});
+  window.addEventListener('resize',update);
+  update();
 }
 
 function initRaikaWritersRoom(){
@@ -185,6 +213,7 @@ function initRaikaWritersRoom(){
     openFromTarget(event);
   });
   renderAll();
+  initRaikaSectionNav();
 }
 
 if(typeof document !== 'undefined'){
@@ -192,4 +221,4 @@ if(typeof document !== 'undefined'){
   else initRaikaWritersRoom();
 }
 
-if(typeof module !== 'undefined') module.exports={statusMeta,filterItems,itemCardHtml,sceneCardHtml,sceneDetailHtml};
+if(typeof module !== 'undefined') module.exports={statusMeta,filterItems,itemCardHtml,sceneCardHtml,sceneDetailHtml,currentRaikaSectionId};
