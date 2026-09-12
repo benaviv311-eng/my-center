@@ -4,7 +4,10 @@
   const LOCALES={ar:'ar-SA',it:'it-IT',ru:'ru-RU',es:'es-ES'};
   const CODE_TO_LANG={AR:'ar',IT:'it',RU:'ru',ES:'es'};
   const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-example strong','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
-  const ARABIC_REMOTE_AUDIO='https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q=';
+  const ARABIC_REMOTE_AUDIO=[
+    'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q=',
+    'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q='
+  ];
   let activeButton=null;
   let remoteAudio=null;
   let observer=null;
@@ -143,15 +146,22 @@
     utterance.onerror=resetActive;
     root.speechSynthesis.speak(utterance);
   }
-  function playArabicRemote(text,buttonEl){
+  function playArabicRemote(text,buttonEl,index=0){
     stopRemote();
-    const audio=new Audio(ARABIC_REMOTE_AUDIO+encodeURIComponent(text));
+    const source=ARABIC_REMOTE_AUDIO[index];
+    if(!source){
+      resetActive();
+      if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
+      return false;
+    }
+    const audio=new Audio(source+encodeURIComponent(text));
     remoteAudio=audio;
     audio.preload='auto';
     markSpeaking(buttonEl);
     audio.onended=()=>{remoteAudio=null;resetActive();};
     audio.onerror=()=>{
-      remoteAudio=null;
+      if(remoteAudio===audio)remoteAudio=null;
+      if(index+1<ARABIC_REMOTE_AUDIO.length){playArabicRemote(text,buttonEl,index+1);return;}
       resetActive();
       if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
     };
