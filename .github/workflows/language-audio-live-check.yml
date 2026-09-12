@@ -1,0 +1,30 @@
+name: Arabic TTS Live Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/language-audio-live-check.yml'
+      - 'supabase/functions/language-tts/index.ts'
+  workflow_dispatch:
+
+jobs:
+  live-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Arabic audio from deployed edge function
+        env:
+          TTS_URL: https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/language-tts
+          ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZW1seHZqeWhmZnVtemNxcnhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNDE0MTEsImV4cCI6MjEwMzgxNzQxMX0.pHtStP5oPWwJaupLuJxt8n-czurrGyMyzAkojrKF1MA
+        run: |
+          curl --fail --silent --show-error \
+            -D /tmp/tts-headers.txt \
+            -o /tmp/arabic.mp3 \
+            -X POST "$TTS_URL" \
+            -H "Authorization: Bearer $ANON_KEY" \
+            -H "apikey: $ANON_KEY" \
+            -H "Content-Type: application/json" \
+            --data '{"text":"مرحبا كيف حالك؟","lang":"ar"}'
+          grep -qi '^content-type: audio/mpeg' /tmp/tts-headers.txt
+          test "$(wc -c < /tmp/arabic.mp3)" -gt 128
+          echo "Arabic TTS live response: OK ($(wc -c < /tmp/arabic.mp3) bytes)"
