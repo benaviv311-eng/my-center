@@ -8,17 +8,21 @@ const scriptPath = path.join(root, 'language-vocabulary.js');
 const stylePath = path.join(root, 'language-vocabulary.css');
 const bankPath = path.join(root, 'language-vocabulary-bank.js');
 const viewModelPath = path.join(root, 'language-vocabulary-view-model.js');
+const spokenPath = path.join(root, 'language-vocabulary-ar-spoken.js');
 
 assert.ok(fs.existsSync(pagePath), 'language-vocabulary.html should exist');
 assert.ok(fs.existsSync(scriptPath), 'language-vocabulary.js should exist');
 assert.ok(fs.existsSync(stylePath), 'language-vocabulary.css should exist');
 assert.ok(fs.existsSync(bankPath), 'language-vocabulary-bank.js should exist');
 assert.ok(fs.existsSync(viewModelPath), 'language-vocabulary-view-model.js should exist');
+assert.ok(fs.existsSync(spokenPath), 'Palestinian/Levantine Arabic vocabulary resolver should exist');
 
 const html = fs.readFileSync(pagePath, 'utf8');
-['vocab-language-switch','vocab-search','vocab-topic-nav','vocab-sections','vocab-summary'].forEach(id => {
+['vocab-language-switch','vocab-search','vocab-topic-nav','vocab-sections','vocab-summary','vocab-arabic-register'].forEach(id => {
   assert.ok(html.includes(`id="${id}"`), `language-vocabulary.html should contain ${id}`);
 });
+assert.ok(html.includes('language-vocabulary-ar-spoken.js'), 'vocabulary page should load spoken Arabic data');
+assert.ok(html.indexOf('language-vocabulary-ar-spoken.js') < html.indexOf('language-vocabulary-bank.js'), 'spoken Arabic data should load before the vocabulary bank');
 assert.ok(html.includes('language-vocabulary-bank.js'), 'vocabulary page should load the standalone vocabulary bank');
 assert.ok(html.includes('language-vocabulary-view-model.js'), 'vocabulary page should load the lazy view model');
 assert.ok(html.includes('language-audio.js'), 'vocabulary page should load the shared pronunciation helper');
@@ -32,7 +36,10 @@ assert.ok(!js.includes('data-set-status'), 'vocabulary bank should not render pr
 assert.ok(!js.includes('function renderSections()'), 'vocabulary page should not eagerly render every topic');
 assert.ok(js.includes('data-audio-lang'), 'every vocabulary card should expose its language to the audio helper');
 assert.ok(js.includes('data-audio-text'), 'every vocabulary card should bind audio directly to original target text');
-assert.ok(js.includes('entry.word[lang]?.target'), 'vocabulary audio should use original target-language text, not transliteration');
+assert.ok(js.includes('arabicRegister'), 'Arabic vocabulary should track spoken vs MSA register');
+assert.ok(js.includes('word.ar?.spoken'), 'spoken Arabic display/audio should use the spoken target when selected');
+assert.ok(js.includes("entry.word.ar?.target"), 'search should include MSA Arabic even when spoken mode is active');
+assert.ok(js.includes("entry.word.ar?.spoken"), 'search should include spoken Arabic even when MSA mode is active');
 
 const bank = require(bankPath);
 assert.ok(bank && bank.TOPICS && bank.LANGUAGES, 'vocabulary bank should export topics and languages');
@@ -46,8 +53,18 @@ Object.entries(bank.TOPICS).forEach(([topic,data]) => {
     ['ar','it','ru','es'].forEach(code => {
       assert.ok(word[code] && word[code].target, `${topic} word ${index+1} should have ${code} translation`);
     });
+    assert.ok(word.ar.spoken, `${topic} word ${index+1} should expose a spoken Arabic form (or explicit MSA fallback)`);
   });
 });
+const verbByHebrew = Object.fromEntries(bank.TOPICS.verbs.words.map(word => [word.he, word]));
+assert.strictEqual(verbByHebrew['ללכת'].ar.spoken, 'بروح', 'spoken Arabic should default to a useful Palestinian form for ללכת');
+assert.strictEqual(verbByHebrew['לבוא'].ar.spoken, 'بيجي', 'spoken Arabic should use بيجي for לבוא');
+assert.strictEqual(verbByHebrew['לראות'].ar.spoken, 'بشوف', 'spoken Arabic should use بشوف for לראות');
+assert.notStrictEqual(verbByHebrew['ללכת'].ar.spoken, verbByHebrew['ללכת'].ar.target, 'spoken and MSA forms should remain distinct when the dialect differs');
+
+const css = fs.readFileSync(stylePath, 'utf8');
+assert.ok(/\.vocabulary-page\{[^}]*max-width:(?:1[12]\d\d|1[3-9]\d\d|[2-9]\d{3,})px/.test(css), 'vocabulary page should be wider on desktop');
+assert.ok(/\.vocab-topic-nav\{[^}]*flex-wrap:wrap/.test(css), 'topic chips should wrap so all topic emojis stay visible');
 
 const createViewModel = require(viewModelPath);
 const view = createViewModel(bank);
