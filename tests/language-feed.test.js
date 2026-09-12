@@ -1,7 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
-const feed = require('../language-feed-model.js');
+const feed = require('../language-four-feed-model.js');
 
 assert.deepStrictEqual(feed.LANGUAGE_CODES, ['ar','it','ru','es']);
 const mixed = feed.buildFeed({filter:'all', seed:'feed-a', count:16});
@@ -64,6 +64,7 @@ const home = fs.readFileSync(path.join(__dirname,'..','languages.html'),'utf8');
   assert.ok(home.includes(`id="${id}"`), `languages.html should contain ${id}`);
 });
 assert.ok(home.includes('language-feed-model.js'));
+assert.ok(home.includes('language-four-feed-model.js'));
 assert.ok(home.includes('languages-feed.js'));
 assert.ok(home.includes('languages-feed.css'));
 assert.ok(fs.existsSync(path.join(__dirname,'..','languages-feed.js')));
