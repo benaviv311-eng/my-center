@@ -4,12 +4,12 @@
   const LOCALES={ar:'ar-SA',it:'it-IT',ru:'ru-RU',es:'es-ES'};
   const CODE_TO_LANG={AR:'ar',IT:'it',RU:'ru',ES:'es'};
   const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-example strong','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
-  const ARABIC_REMOTE_AUDIO=[
-    'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q=',
-    'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=ar&q='
-  ];
+  const SUPABASE_TTS_ENDPOINT='https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/language-tts';
+  const SUPABASE_PUBLISHABLE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml3ZW1seHZqeWhmZnVtemNxcnhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNDE0MTEsImV4cCI6MjEwMzgxNzQxMX0.pHtStP5oPWwJaupLuJxt8n-czurrGyMyzAkojrKF1MA';
   let activeButton=null;
   let remoteAudio=null;
+  let remoteObjectUrl='';
+  let remoteRequestId=0;
   let observer=null;
   let decorateQueued=false;
 
@@ -98,12 +98,16 @@
   }
 
   function resetActive(){if(activeButton){activeButton.classList.remove('is-speaking');activeButton.textContent='🔊';activeButton=null;}}
+  function revokeRemoteUrl(){if(remoteObjectUrl&&root.URL?.revokeObjectURL){root.URL.revokeObjectURL(remoteObjectUrl);remoteObjectUrl='';}}
   function stopRemote(){
-    if(!remoteAudio)return;
-    remoteAudio.pause();
-    remoteAudio.removeAttribute('src');
-    remoteAudio.load();
-    remoteAudio=null;
+    remoteRequestId+=1;
+    if(remoteAudio){
+      remoteAudio.pause();
+      remoteAudio.removeAttribute('src');
+      remoteAudio.load();
+      remoteAudio=null;
+    }
+    revokeRemoteUrl();
   }
   function pickVoice(locale){
     if(!root.speechSynthesis?.getVoices)return null;
@@ -146,28 +150,49 @@
     utterance.onerror=resetActive;
     root.speechSynthesis.speak(utterance);
   }
-  function playArabicRemote(text,buttonEl,index=0){
+  async function playArabicRemote(text,buttonEl){
     stopRemote();
-    const source=ARABIC_REMOTE_AUDIO[index];
-    if(!source){
+    const requestId=remoteRequestId;
+    markSpeaking(buttonEl);
+    try{
+      const response=await fetch(SUPABASE_TTS_ENDPOINT,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'apikey':SUPABASE_PUBLISHABLE_KEY,
+          'Authorization':`Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+        },
+        body:JSON.stringify({text,lang:'ar'})
+      });
+      if(!response.ok)throw new Error(`Arabic TTS failed: ${response.status}`);
+      const blob=await response.blob();
+      if(!blob.size)throw new Error('Arabic TTS returned empty audio');
+      if(requestId!==remoteRequestId)return false;
+      const objectUrl=root.URL.createObjectURL(blob);
+      remoteObjectUrl=objectUrl;
+      const audio=new Audio(objectUrl);
+      remoteAudio=audio;
+      audio.preload='auto';
+      audio.onended=()=>{
+        if(remoteAudio===audio)remoteAudio=null;
+        revokeRemoteUrl();
+        resetActive();
+      };
+      audio.onerror=()=>{
+        if(remoteAudio===audio)remoteAudio=null;
+        revokeRemoteUrl();
+        resetActive();
+        if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
+      };
+      await audio.play();
+      return true;
+    }catch(error){
+      if(requestId!==remoteRequestId)return false;
+      stopRemote();
       resetActive();
       if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
       return false;
     }
-    const audio=new Audio(source+encodeURIComponent(text));
-    remoteAudio=audio;
-    audio.preload='auto';
-    markSpeaking(buttonEl);
-    audio.onended=()=>{remoteAudio=null;resetActive();};
-    audio.onerror=()=>{
-      if(remoteAudio===audio)remoteAudio=null;
-      if(index+1<ARABIC_REMOTE_AUDIO.length){playArabicRemote(text,buttonEl,index+1);return;}
-      resetActive();
-      if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
-    };
-    const playPromise=audio.play();
-    if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>audio.onerror&&audio.onerror());
-    return true;
   }
   function speak(text,lang,buttonEl){
     const locale=LOCALES[lang];
