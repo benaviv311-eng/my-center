@@ -87,7 +87,9 @@
     if(secondary)return secondary;
     const visible=cleanText(el);
     if(!visible||visible.includes('_____'))return'';
-    return resolveFromCourse(lang,visible)||visible;
+    const resolved=resolveFromCourse(lang,visible);
+    if((lang==='ar'||lang==='ru')&&!resolved)return'';
+    return resolved||visible;
   }
 
   function resetActive(){if(activeButton){activeButton.classList.remove('is-speaking');activeButton.textContent='🔊';activeButton=null;}}
