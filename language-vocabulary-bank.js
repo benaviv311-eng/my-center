@@ -1,6 +1,7 @@
-(function(root,factory){if(typeof module==='object'&&module.exports){module.exports=factory({verbs:require('./language-vocabulary-data-verbs.js'),adjectives:require('./language-vocabulary-data-adjectives.js'),nouns:require('./language-vocabulary-data-nouns.js'),placesHome:require('./language-vocabulary-data-places-home.js')});}else{root.LanguageVocabularyBank=factory(root.LanguageVocabularyParts||{});}})(typeof globalThis!=='undefined'?globalThis:this,function(parts){
+(function(root,factory){if(typeof module==='object'&&module.exports){module.exports=factory({verbs:require('./language-vocabulary-data-verbs.js'),adjectives:require('./language-vocabulary-data-adjectives.js'),nouns:require('./language-vocabulary-data-nouns.js'),placesHome:require('./language-vocabulary-data-places-home.js')},require('./language-vocabulary-ar-spoken.js'));}else{root.LanguageVocabularyBank=factory(root.LanguageVocabularyParts||{},root.LanguageArabicSpokenVocabulary||{});}})(typeof globalThis!=='undefined'?globalThis:this,function(parts,spokenArabic){
 const LANGUAGES={ar:{name:'ערבית',code:'AR'},it:{name:'איטלקית',code:'IT'},ru:{name:'רוסית',code:'RU'},es:{name:'ספרדית',code:'ES'}};
-function make(row,id){return{id,he:row[0],ar:{target:row[1]},it:{target:row[2]},ru:{target:row[3]},es:{target:row[4]}};}
+const spokenResolve=typeof spokenArabic.resolve==='function'?spokenArabic.resolve:(he,msa)=>msa;
+function make(row,id){return{id,he:row[0],ar:{target:row[1],spoken:spokenResolve(row[0],row[1])},it:{target:row[2]},ru:{target:row[3]},es:{target:row[4]}};}
 function makeList(rows,prefix){return rows.map((row,i)=>make(row,prefix+'-'+(i+1)));}
 function range(list,start,count){return Array.from({length:count},(_,i)=>list[(start+i)%list.length]);}
 function mix(prefix,groups){return makeList(groups.flat().slice(0,100),prefix);}
