@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="languages-feed.css?v=1">
+  <link rel="stylesheet" href="languages-feed.css?v=2">
 </head>
 <body>
 <div class="app language-feed-page">
@@ -16,7 +16,7 @@
   <section class="hero feed-hero">
     <div>
       <h1>🌍 פיד השפות שלי</h1>
-      <p>מילים, משפטים, בדיחות, סיפורים, שיחות ואתגרים — ארבע השפות מתערבבות בפיד אחד.</p>
+      <p>מילים, משפטים, בדיחות, סיפורים, שיחות, אתגרים ומשחקים — ארבע השפות מתערבבות בפיד אחד.</p>
     </div>
     <div class="language-progress-line">
       <strong id="languages-daily-progress">0/4 שפות הושלמו היום</strong>
@@ -58,8 +58,8 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="app.js?v=3"></script>
-<script src="language-feed-model.js?v=1"></script>
-<script src="languages-feed.js?v=1"></script>
+<script src="language-feed-model.js?v=2"></script>
+<script src="languages-feed.js?v=2"></script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
