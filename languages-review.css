@@ -1,0 +1,57 @@
+.review-list{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.review-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:15px;
+  background:#fffdf8;
+  display:grid;
+  gap:12px;
+}
+.review-card-head{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
+.review-language-chip{
+  font-size:12px;
+  font-weight:700;
+  border-radius:999px;
+  padding:5px 9px;
+  color:var(--lang);
+  background:#e9f1f8;
+}
+.review-prompt{
+  font-size:24px;
+  line-height:1.35;
+}
+.review-reveal{
+  justify-self:start;
+}
+.review-card-answer{
+  border-top:1px solid var(--line);
+  padding-top:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.review-card-answer.hidden{display:none}
+.review-translation{
+  font-size:18px;
+}
+.review-original-arabic{
+  color:var(--muted);
+  font-size:14px;
+}
+.review-card-answer [data-review-id]{
+  margin-right:auto;
+}
+@media(max-width:760px){
+  .review-list{grid-template-columns:1fr}
+  .review-prompt{font-size:22px}
+}
