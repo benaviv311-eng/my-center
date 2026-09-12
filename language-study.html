@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>שיעור שפה | המרכז שלי</title>
+  <meta name="theme-color" content="#f7f3ea">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="language-pages.css?v=1">
+</head>
+<body>
+<div class="app">
+  <div class="back"><a class="btn small" href="languages.html">← חזרה לשפות</a></div>
+
+  <section class="hero study-hero">
+    <div class="study-hero-top">
+      <div class="study-title-row">
+        <span id="study-language-code" class="language-code">AR</span>
+        <div><h1 id="study-language-name">ערבית</h1><div id="study-language-note" class="subtitle"></div></div>
+      </div>
+      <div class="study-nav">
+        <a id="topics-link" class="btn small" href="language-topics.html">נושאים</a>
+        <a id="archive-link" class="btn small" href="language-archive.html">מאגר וחזרות</a>
+      </div>
+    </div>
+    <div class="study-meta-row"><span id="study-topic-chip" class="study-chip"></span><span id="study-progress-chip" class="study-chip">שיעור אינטראקטיבי ארוך</span></div>
+    <div id="study-language-switch" class="sticky-language-switch"></div>
+  </section>
+
+  <main id="study-sections" class="language-shell">
+    <section class="section study-section" id="vocabulary-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>1. 5 מילים</h2><p class="meta">התחל מהבסיס של הנושא.</p></div><button class="btn small refresh-btn" type="button" data-refresh="vocabulary">↻ רענון</button></div><div id="vocabulary-content"></div></article></section>
+    <section class="section study-section" id="recognition-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>2. זיהוי מהיר</h2><p class="meta">בחר את הפירוש הנכון.</p></div><button class="btn small refresh-btn" type="button" data-refresh="recognition">↻ עוד שאלות</button></div><div id="recognition-content"></div></article></section>
+    <section class="section study-section" id="reverse-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>3. עברית → שפת היעד</h2><p class="meta">הפוך את כיוון החשיבה.</p></div><button class="btn small refresh-btn" type="button" data-refresh="reverse">↻ עוד שאלות</button></div><div id="reverse-content"></div></article></section>
+    <section class="section study-section" id="builder-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>4. הרכבת משפטים</h2><p class="meta">לחץ על המילים לפי הסדר הנכון.</p></div><button class="btn small refresh-btn" type="button" data-refresh="builder">↻ משפטים אחרים</button></div><div id="builder-content"></div></article></section>
+    <section class="section study-section" id="missing-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>5. מילה חסרה</h2><p class="meta">השלם את המשפט.</p></div><button class="btn small refresh-btn" type="button" data-refresh="missing">↻ רענון</button></div><div id="missing-content"></div></article></section>
+    <section class="section study-section" id="truefalse-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>6. נכון או לא נכון</h2><p class="meta">בדוק אם המשמעות מתאימה.</p></div><button class="btn small refresh-btn" type="button" data-refresh="truefalse">↻ רענון</button></div><div id="truefalse-content"></div></article></section>
+    <section class="section study-section" id="situation-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>7. מה אומרים בסיטואציה?</h2><p class="meta">בחר את המשפט שמתאים למצב.</p></div><button class="btn small refresh-btn" type="button" data-refresh="situation">↻ מצבים אחרים</button></div><div id="situation-content"></div></article></section>
+    <section class="section study-section" id="translation-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>8. תרגום קצר</h2><p class="meta">כתוב בעברית את המשמעות.</p></div><button class="btn small refresh-btn" type="button" data-refresh="translation">↻ משפטים אחרים</button></div><div id="translation-content"></div></article></section>
+    <section class="section study-section" id="dialogue-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>9. דיאלוג אינטראקטיבי</h2><p class="meta">בחר תשובה והמשך את השיחה.</p></div><button class="btn small refresh-btn" type="button" data-refresh="dialogue">↻ שיחה חדשה</button></div><div id="dialogue-content"></div></article></section>
+    <section class="section study-section" id="say-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>10. מה היית אומר?</h2><p class="meta">בנה תשובה מתוך המילים.</p></div><button class="btn small refresh-btn" type="button" data-refresh="say">↻ מצב חדש</button></div><div id="say-content"></div></article></section>
+    <section class="section study-section" id="previous-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>11. חומר קודם</h2><p class="meta">מילים שכבר פגשת חוזרות לתרגול.</p></div><button class="btn small refresh-btn" type="button" data-refresh="previous">↻ ערבב מחדש</button></div><div id="previous-content"></div></article></section>
+    <section class="section study-section" id="mistakes-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>12. הטעויות שלי</h2><p class="meta">המערכת אוספת את מה שטעית בו במהלך הלימוד.</p></div><button class="btn small refresh-btn" type="button" data-refresh="mistakes">↻ רענן</button></div><div id="mistakes-content"></div></article></section>
+    <section class="section study-section" id="challenge-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>13. אתגר סוף גלילה</h2><p class="meta">שאלות מעורבות בלי הרבה רמזים.</p></div><button class="btn small refresh-btn" type="button" data-refresh="challenge">↻ אתגר חדש</button></div><div id="challenge-content"></div></article></section>
+    <section class="section"><button id="append-more" class="append-more" type="button">↓ המשך לעוד תרגילים</button><div id="extra-batches" class="language-shell"></div></section>
+    <section class="section"><article class="card"><div class="study-section-head"><div><h2>סיימתי להיום</h2><p class="meta">סמן את השפה כהושלמה להיום.</p></div><button id="complete-language" class="btn study-primary" type="button">סיימתי ✓</button></div></article></section>
+  </main>
+
+  <nav class="bottom-nav"><div class="inner">
+    <a class="nav-item" href="index.html"><span>🏠</span>בית</a>
+    <a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a>
+    <a class="nav-item" href="coach.html"><span>🏐</span>מאמן</a>
+    <a class="nav-item active" href="languages.html"><span>🌍</span>שפות</a>
+    <a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a>
+    <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
+  </div></nav>
+</div>
+<div class="toast" id="toast"></div>
+<script src="app.js?v=3"></script>
+<script src="language-core.js?v=1"></script>
+<script src="language-study.js?v=1"></script>
+</body>
+</html>
