@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="language-games.css?v=1">
+  <link rel="stylesheet" href="language-games.css?v=2">
 </head>
 <body>
 <div class="app games-page">
@@ -16,13 +16,13 @@
   <section class="hero games-hero">
     <div>
       <h1>🎮 משחקים ותרגול</h1>
-      <p>כרטיסיות, זיכרון, התאמות, משפטים ואתגרים — אפשר לערבב את כל השפות או להתמקד באחת.</p>
+      <p>מאגר כרטיסיות, זיכרון, התאמות, משפטים ואתגרים — אפשר לערבב את כל השפות או להתמקד באחת.</p>
     </div>
   </section>
 
   <section class="games-toolbar">
-    <strong>באיזו שפה משחקים?</strong>
-    <div id="games-language-filter" class="games-language-filter" role="group" aria-label="בחירת שפה למשחקים">
+    <strong>באיזו שפה מתרגלים?</strong>
+    <div id="games-language-filter" class="games-language-filter" role="group" aria-label="בחירת שפה לתרגול">
       <button type="button" class="game-lang active" data-game-lang="all" aria-pressed="true">✨ הכול</button>
       <button type="button" class="game-lang" data-game-lang="ar" aria-pressed="false">AR · ערבית</button>
       <button type="button" class="game-lang" data-game-lang="it" aria-pressed="false">IT · איטלקית</button>
@@ -35,7 +35,7 @@
     <div>
       <span class="game-kicker">מסלול קצר</span>
       <h2>⚡ 5 דקות תרגול</h2>
-      <p>רצף מתחלף של כרטיסיות, התאמות, משפטים וזיכרון.</p>
+      <p>רצף מתחלף של התאמות, משפטים, זיכרון ואתגר מהיר — בלי לחזור על אותן מילים עד שהמאגר נגמר.</p>
     </div>
     <button id="daily-mix-start" class="btn" type="button">התחל מסלול</button>
   </section>
@@ -43,23 +43,23 @@
   <section>
     <div class="section-title-row">
       <div>
-        <h2>בחר משחק</h2>
-        <p class="meta">כל משחק משתמש באותו מאגר מילים שלמדת.</p>
+        <h2>בחר תרגול</h2>
+        <p class="meta">משחקי המילים משתמשים במאגר הגדול ומתקדמים בלי חזרות עד לסיום הסבב.</p>
       </div>
     </div>
     <div id="games-grid" class="games-grid">
-      <button class="game-choice" type="button" data-game-type="flashcards"><span>🃏</span><strong>כרטיסיות חכמות</strong><small>הצג תשובה וסמן מה זכרת.</small></button>
+      <button class="game-choice" type="button" data-game-type="flashcards"><span>🃏</span><strong>מאגר כרטיסיות</strong><small>דפדוף חופשי, נושאים, תרגום ואודיו — בלי ניקוד.</small></button>
       <button class="game-choice" type="button" data-game-type="memory"><span>🧠</span><strong>משחק זיכרון</strong><small>מצא זוגות של מילה ותרגום.</small></button>
       <button class="game-choice" type="button" data-game-type="matching"><span>🔗</span><strong>התאמת זוגות</strong><small>חבר בין המילה למשמעות שלה.</small></button>
       <button class="game-choice" type="button" data-game-type="sentence-builder"><span>🧩</span><strong>הרכבת משפט</strong><small>סדר את המילים למשפט נכון.</small></button>
       <button class="game-choice" type="button" data-game-type="recall"><span>👀</span><strong>זיכרון רצף</strong><small>זכור מה הופיע ואז מצא את החריג.</small></button>
-      <button class="game-choice" type="button" data-game-type="speed"><span>⏱️</span><strong>אתגר 60 שניות</strong><small>כמה תשובות נכונות תספיק?</small></button>
+      <button class="game-choice" type="button" data-game-type="speed"><span>⏱️</span><strong>אתגר 60 שניות</strong><small>כמה תשובות נכונות תספיק? כל מילה חדשה עד שהמאגר נגמר.</small></button>
       <button class="game-choice" type="button" data-game-type="four-languages"><span>🌍</span><strong>אותה משמעות ב־4 שפות</strong><small>השווה את אותו רעיון בכל השפות.</small></button>
     </div>
   </section>
 
   <section id="games-stage" class="games-stage" aria-live="polite">
-    <div class="games-stage-empty">בחר משחק למעלה והתרגול ייפתח כאן.</div>
+    <div class="games-stage-empty">בחר תרגול למעלה והוא ייפתח כאן.</div>
   </section>
 
   <nav class="bottom-nav"><div class="inner">
@@ -73,7 +73,14 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="app.js?v=3"></script>
+<script src="language-vocabulary-data-verbs.js?v=1"></script>
+<script src="language-vocabulary-data-adjectives.js?v=1"></script>
+<script src="language-vocabulary-data-nouns.js?v=1"></script>
+<script src="language-vocabulary-data-places-home.js?v=1"></script>
+<script src="language-vocabulary-bank.js?v=1"></script>
+<script src="language-game-pool.js?v=1"></script>
 <script src="language-feed-model.js?v=2"></script>
-<script src="language-games.js?v=1"></script>
+<script src="language-games.js?v=2"></script>
+<script src="language-audio.js?v=3"></script>
 </body>
 </html>
