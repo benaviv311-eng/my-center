@@ -1,0 +1,16 @@
+name: Language Feed Test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'language-feed-model.js'
+      - 'languages-feed.js'
+      - 'languages.html'
+      - 'tests/language-feed.test.js'
+      - '.github/workflows/language-feed-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tests/language-feed.test.js
