@@ -37,7 +37,8 @@
 
   function wordCard(entry,showTopic){
     const d=display(entry.word);
-    return `<article class="vocab-word" data-vocab-word><div class="vocab-word-primary">${esc(d.primary)}</div>${d.secondary?`<div class="vocab-word-secondary">${esc(d.secondary)}</div>`:''}<div class="vocab-word-hebrew">${esc(entry.word.he)}</div>${showTopic?`<div class="vocab-word-topic">${entry.topic.icon} ${esc(entry.topic.name)}</div>`:''}</article>`;
+    const audioTarget=entry.word[lang]?.target||'';
+    return `<article class="vocab-word" data-vocab-word><div class="language-audio-inline"><div class="vocab-word-primary" data-audio-decorated="1">${esc(d.primary)}</div><button class="language-audio-btn" type="button" data-audio-lang="${esc(lang)}" data-audio-text="${esc(audioTarget)}" aria-label="השמע הגייה" title="השמע הגייה">🔊</button></div>${d.secondary?`<div class="vocab-word-secondary">${esc(d.secondary)}</div>`:''}<div class="vocab-word-hebrew">${esc(entry.word.he)}</div>${showTopic?`<div class="vocab-word-topic">${entry.topic.icon} ${esc(entry.topic.name)}</div>`:''}</article>`;
   }
 
   function renderEntryList(entries,title,description,countText,showTopic){
