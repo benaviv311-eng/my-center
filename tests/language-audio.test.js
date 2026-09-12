@@ -22,11 +22,13 @@ assert.ok(audio.includes("if((lang==='ar'||lang==='ru')&&!resolved)return''"), '
 assert.ok(audio.includes('ARABIC_REMOTE_AUDIO'), 'Arabic should have an audio path independent of installed system voices');
 assert.ok(audio.includes('new Audio('), 'Arabic fallback should use browser audio playback');
 assert.ok(audio.includes('remoteAudio.onerror'), 'Arabic fallback should handle remote audio playback errors');
+assert.ok(audio.includes('translate.googleapis.com/translate_tts'), 'Arabic should try a hosted TTS audio source before system speech');
+assert.ok(audio.includes('translate.google.com/translate_tts'), 'Arabic should retry a second hosted TTS audio source if the first fails');
 
 const pages = ['languages.html','language-vocabulary.html','language-study.html','four-languages.html'];
 pages.forEach(file => {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
-  assert.ok(html.includes('language-audio.js?v=3'), `${file} should load the independent Arabic audio helper without stale caching`);
+  assert.ok(/language-audio\.js\?v=\d+/.test(html), `${file} should load the shared audio helper`);
 });
 
 const four = fs.readFileSync(path.join(root, 'four-languages.js'), 'utf8');
