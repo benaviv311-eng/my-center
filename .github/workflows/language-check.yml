@@ -6,6 +6,7 @@ on:
     paths:
       - 'language-*.js'
       - 'language-*.html'
+      - 'language-*.css'
       - 'four-languages.*'
       - 'languages.html'
       - 'tests/language-*.test.js'
@@ -25,6 +26,7 @@ jobs:
           if [ -f language-topic-expansion.js ]; then node --check language-topic-expansion.js; fi
           if [ -f four-languages.js ]; then node --check four-languages.js; fi
           if [ -f four-language-study.js ]; then node --check four-language-study.js; fi
+          if [ -f language-vocabulary-ar-spoken.js ]; then node --check language-vocabulary-ar-spoken.js; fi
           if [ -f language-vocabulary.js ]; then node --check language-vocabulary.js; fi
           if [ -f language-vocabulary-link.js ]; then node --check language-vocabulary-link.js; fi
           if [ -f language-audio.js ]; then node --check language-audio.js; fi
