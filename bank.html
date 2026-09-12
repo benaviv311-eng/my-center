@@ -29,9 +29,85 @@
       margin:8px 0 14px;
     }
 
+    .bank-dashboard{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin:14px 0 24px;
+    }
+
+    .bank-stat{
+      border:1px solid var(--line);
+      background:var(--card);
+      border-radius:18px;
+      padding:14px;
+      text-align:right;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+      font:inherit;
+      color:inherit;
+    }
+
+    .bank-stat:hover{
+      transform:translateY(-1px);
+    }
+
+    .bank-stat.active{
+      outline:2px solid #c9b68c;
+      background:#fff9ec;
+    }
+
+    .bank-stat-number{
+      display:block;
+      font-size:25px;
+      font-weight:800;
+      line-height:1.1;
+      margin-bottom:5px;
+    }
+
+    .bank-stat-label{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .today-bank-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .today-bank-head h2{
+      margin:0;
+    }
+
+    .today-bank-note{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .bank-clear{
+      display:none;
+      margin-bottom:10px;
+    }
+
+    .bank-clear.show{
+      display:inline-flex;
+    }
+
     @media(max-width:760px){
       .bank-page-tools{
         grid-template-columns:1fr;
+      }
+
+      .bank-dashboard{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+
+      .today-bank-head{
+        align-items:flex-start;
+        flex-direction:column;
       }
     }
   </style>
@@ -61,9 +137,39 @@
   </section>
 
   <section class="section">
+    <div class="section-head">
+      <h2>📊 תמונת מצב</h2>
+      <small>לחיצה על קטגוריה מסננת את הבנק</small>
+    </div>
+
+    <div id="bank-dashboard" class="bank-dashboard">
+      <div class="card">טוען נתונים…</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="today-bank-head">
+      <div>
+        <h2>📖 שלושת הפסוקים של היום</h2>
+        <div class="today-bank-note">
+          אותה שלישייה שמופיעה בדף הבית היום
+        </div>
+      </div>
+      <a class="btn small" href="index.html">פתח בדף הבית ←</a>
+    </div>
+
+    <div id="bank-today-verses" class="grid grid-3">
+      <article class="card">טוען פסוקים…</article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>🗄️ כל הבנק</h2>
+      <small>חיפוש, סינון וניהול</small>
+    </div>
 
     <div class="bank-page-tools">
-
       <input
         id="bank-search"
         class="search"
@@ -77,75 +183,41 @@
       >
         <option value="">כל הסוגים</option>
       </select>
-
     </div>
 
-    <div class="bank-toolbar">
+    <button id="bank-clear" class="btn small bank-clear" type="button">
+      ✕ נקה סינון
+    </button>
 
-      <button
-        class="bank-btn"
-        id="bank-folders-btn">
+    <div class="bank-toolbar">
+      <button class="bank-btn" id="bank-folders-btn">
         📁 התיקיות שלי
       </button>
 
-      <button
-        class="bank-btn"
-        id="bank-favs-btn">
+      <button class="bank-btn" id="bank-favs-btn">
         ♥ המועדפים שלי
       </button>
 
       <span class="bank-sync">
         ☁ נשמר בבנק המרכזי
       </span>
-
     </div>
 
-    <div
-      id="bank-status"
-      class="bank-status">
+    <div id="bank-status" class="bank-status">
       טוען את הבנק…
     </div>
 
-    <div
-      id="bank-list"
-      class="grid grid-2">
-    </div>
-
+    <div id="bank-list" class="grid grid-2"></div>
   </section>
 
   <nav class="bottom-nav">
     <div class="inner">
-
-      <a class="nav-item" href="index.html">
-        <span>🏠</span>
-        בית
-      </a>
-
-      <a class="nav-item" href="raika.html">
-        <span>⚡</span>
-        ראיקה
-      </a>
-
-      <a class="nav-item" href="coach.html">
-        <span>🏐</span>
-        מאמן
-      </a>
-
-      <a class="nav-item" href="languages.html">
-        <span>🌍</span>
-        שפות
-      </a>
-
-      <a class="nav-item" href="music.html">
-        <span>🎵</span>
-        מוזיקה
-      </a>
-
-      <a class="nav-item active" href="library.html">
-        <span>📚</span>
-        ספרייה
-      </a>
-
+      <a class="nav-item" href="index.html"><span>🏠</span>בית</a>
+      <a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a>
+      <a class="nav-item" href="coach.html"><span>🏐</span>מאמן</a>
+      <a class="nav-item" href="languages.html"><span>🌍</span>שפות</a>
+      <a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a>
+      <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
     </div>
   </nav>
 
@@ -162,16 +234,20 @@ const bankPageState={
   type:''
 };
 
+const BANK_TYPE_ORDER=[
+  'verse','book','idea','quote','scene','character','exercise','language','music'
+];
+
 function bankTypeName(type){
   const names={
-    verse:'פסוק',
-    quote:'ציטוט',
-    book:'ספר',
-    idea:'רעיון',
-    scene:'סצנה',
-    character:'דמות',
-    exercise:'תרגיל',
-    language:'שפה',
+    verse:'פסוקים',
+    quote:'ציטוטים',
+    book:'ספרים',
+    idea:'רעיונות',
+    scene:'סצנות',
+    character:'דמויות',
+    exercise:'תרגילים',
+    language:'שפות',
     music:'מוזיקה'
   };
 
@@ -195,44 +271,28 @@ function bankGenericCard(item,index){
     bankState.notes.get(item.id)||'';
 
   return `
-    <article
-      class="card"
-      data-bank-id="${bankEsc(item.id)}">
-
+    <article class="card" data-bank-id="${bankEsc(item.id)}">
       <div class="label">
         ${bankEsc(bankTypeName(item.item_type))}
       </div>
 
-      <h3>
-        ${bankEsc(item.title||'ללא כותרת')}
-      </h3>
+      <h3>${bankEsc(item.title||'ללא כותרת')}</h3>
 
-      ${
-        text
-        ? `<p class="meta">${bankEsc(text)}</p>`
-        : ''
-      }
+      ${text ? `<p class="meta">${bankEsc(text)}</p>` : ''}
 
       <div class="bank-actions">
-
         <button
           class="bank-btn ${favorited?'active':''}"
           data-bank-action="favorite">
-
           ${favorited?'♥ מועדף':'♡ מועדף'}
-
         </button>
 
-        <button
-          class="bank-btn"
-          data-bank-action="folder">
+        <button class="bank-btn" data-bank-action="folder">
           📁 תיקייה
         </button>
-
       </div>
 
       <div class="bank-note-row">
-
         <textarea
           class="bank-input"
           rows="2"
@@ -240,32 +300,21 @@ function bankGenericCard(item,index){
           placeholder="✍️ הערה אישית">${bankEsc(note)}</textarea>
 
         <div>
-          <button
-            class="bank-btn"
-            data-bank-action="save-note">
+          <button class="bank-btn" data-bank-action="save-note">
             שמור הערה
           </button>
         </div>
-
       </div>
-
     </article>
   `;
 }
 
 function bankPageMatches(item){
-  if(
-    bankPageState.type &&
-    item.item_type!==bankPageState.type
-  ){
+  if(bankPageState.type && item.item_type!==bankPageState.type){
     return false;
   }
 
-  const q=
-    bankPageState.query
-      .trim()
-      .toLowerCase();
-
+  const q=bankPageState.query.trim().toLowerCase();
   if(!q) return true;
 
   const haystack=[
@@ -273,51 +322,109 @@ function bankPageMatches(item){
     item.slug,
     item.item_type,
     JSON.stringify(item.content||{})
-  ]
-  .join(' ')
-  .toLowerCase();
+  ].join(' ').toLowerCase();
 
   return haystack.includes(q);
 }
 
-function renderBankPage(){
-  const list=
-    document.getElementById('bank-list');
+function bankDayNumber(){
+  const now=new Date();
+  return Math.floor(
+    Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000
+  );
+}
 
-  const status=
-    document.getElementById('bank-status');
+function bankTodayVerses(items){
+  const verses=items
+    .filter(item=>item.item_type==='verse')
+    .slice()
+    .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
 
-  const filtered=
-    bankPageState.items
-      .filter(bankPageMatches);
+  if(!verses.length) return [];
 
-  status.textContent=
-    `${filtered.length} פריטים מוצגים מתוך ${bankPageState.items.length}`;
+  const start=(bankDayNumber()*3)%verses.length;
 
-  if(!filtered.length){
-    list.innerHTML=`
-      <article class="card">
-        לא נמצאו פריטים מתאימים.
-      </article>
-    `;
+  return [0,1,2].map(i=>verses[(start+i)%verses.length]);
+}
+
+function renderTodayVerses(){
+  const wrap=document.getElementById('bank-today-verses');
+  const picked=bankTodayVerses(bankPageState.items);
+
+  if(!picked.length){
+    wrap.innerHTML='<article class="card">אין כרגע פסוקים בבנק.</article>';
     return;
   }
 
-  list.innerHTML=
-    filtered.map((item,index)=>{
-      if(item.item_type==='verse'){
-        return bankRenderCard(item,index);
-      }
+  wrap.innerHTML=picked.map((item,index)=>bankRenderCard(item,index)).join('');
+}
 
-      return bankGenericCard(item,index);
-    }).join('');
+function renderBankDashboard(){
+  const dashboard=document.getElementById('bank-dashboard');
+  const counts={};
+
+  bankPageState.items.forEach(item=>{
+    counts[item.item_type]=(counts[item.item_type]||0)+1;
+  });
+
+  const types=Object.keys(counts).sort((a,b)=>{
+    const ai=BANK_TYPE_ORDER.indexOf(a);
+    const bi=BANK_TYPE_ORDER.indexOf(b);
+    return (ai===-1?999:ai)-(bi===-1?999:bi);
+  });
+
+  const cards=[
+    `<button class="bank-stat ${bankPageState.type===''?'active':''}" data-bank-filter="">
+      <span class="bank-stat-number">${bankPageState.items.length}</span>
+      <span class="bank-stat-label">כל הפריטים</span>
+    </button>`
+  ];
+
+  types.forEach(type=>{
+    cards.push(`
+      <button class="bank-stat ${bankPageState.type===type?'active':''}" data-bank-filter="${bankEsc(type)}">
+        <span class="bank-stat-number">${counts[type]}</span>
+        <span class="bank-stat-label">${bankEsc(bankTypeName(type))}</span>
+      </button>
+    `);
+  });
+
+  dashboard.innerHTML=cards.join('');
+}
+
+function updateClearButton(){
+  const button=document.getElementById('bank-clear');
+  const active=Boolean(bankPageState.type || bankPageState.query.trim());
+  button.classList.toggle('show',active);
+}
+
+function renderBankPage(){
+  const list=document.getElementById('bank-list');
+  const status=document.getElementById('bank-status');
+  const filtered=bankPageState.items.filter(bankPageMatches);
+
+  status.textContent=`${filtered.length} פריטים מוצגים מתוך ${bankPageState.items.length}`;
+  updateClearButton();
+  renderBankDashboard();
+
+  if(!filtered.length){
+    list.innerHTML='<article class="card">לא נמצאו פריטים מתאימים.</article>';
+    return;
+  }
+
+  list.innerHTML=filtered.map((item,index)=>{
+    if(item.item_type==='verse'){
+      return bankRenderCard(item,index);
+    }
+
+    return bankGenericCard(item,index);
+  }).join('');
 }
 
 async function loadBankPage(){
   ensureBankCss();
 
-  const list=
-    document.getElementById('bank-list');
+  const list=document.getElementById('bank-list');
 
   try{
     const url=
@@ -327,81 +434,83 @@ async function loadBankPage(){
       `&select=id,item_type,slug,title,content,updated_at,created_at`+
       `&order=created_at.desc`;
 
-    const response=
-      await fetch(url,{
-        headers:{
-          apikey:BANK_PUBLISHABLE_KEY
-        }
-      });
+    const response=await fetch(url,{
+      headers:{apikey:BANK_PUBLISHABLE_KEY}
+    });
 
     if(!response.ok){
-      throw new Error(
-        `קריאת הבנק נכשלה (${response.status})`
-      );
+      throw new Error(`קריאת הבנק נכשלה (${response.status})`);
     }
 
-    const items=
-      await response.json();
+    const items=await response.json();
 
     bankPageState.items=items;
     bankState.items=items;
 
-    await bankSnapshot()
-      .catch(()=>{});
+    await bankSnapshot().catch(()=>{});
 
-    const types=[
-      ...new Set(
-        items
-          .map(x=>x.item_type)
-          .filter(Boolean)
-      )
-    ];
+    const types=[...new Set(items.map(x=>x.item_type).filter(Boolean))]
+      .sort((a,b)=>{
+        const ai=BANK_TYPE_ORDER.indexOf(a);
+        const bi=BANK_TYPE_ORDER.indexOf(b);
+        return (ai===-1?999:ai)-(bi===-1?999:bi);
+      });
 
-    const select=
-      document.getElementById('bank-type');
+    const select=document.getElementById('bank-type');
 
     types.forEach(type=>{
-      const option=
-        document.createElement('option');
-
+      const option=document.createElement('option');
       option.value=type;
-      option.textContent=
-        bankTypeName(type);
-
+      option.textContent=bankTypeName(type);
       select.appendChild(option);
     });
 
+    renderTodayVerses();
     renderBankPage();
 
   }catch(err){
     console.error(err);
 
-    document.getElementById(
-      'bank-status'
-    ).textContent=
+    document.getElementById('bank-status').textContent=
       'לא ניתן כרגע לקרוא את הבנק.';
 
-    list.innerHTML=`
-      <article class="card">
-        הבנק אינו זמין כרגע.
-      </article>
-    `;
+    document.getElementById('bank-dashboard').innerHTML=
+      '<article class="card">הנתונים אינם זמינים כרגע.</article>';
+
+    document.getElementById('bank-today-verses').innerHTML=
+      '<article class="card">לא ניתן לטעון את פסוקי היום.</article>';
+
+    list.innerHTML='<article class="card">הבנק אינו זמין כרגע.</article>';
   }
 }
 
-document
-  .getElementById('bank-search')
-  .addEventListener('input',e=>{
-    bankPageState.query=e.target.value;
-    renderBankPage();
-  });
+document.getElementById('bank-search').addEventListener('input',e=>{
+  bankPageState.query=e.target.value;
+  renderBankPage();
+});
 
-document
-  .getElementById('bank-type')
-  .addEventListener('change',e=>{
-    bankPageState.type=e.target.value;
-    renderBankPage();
-  });
+document.getElementById('bank-type').addEventListener('change',e=>{
+  bankPageState.type=e.target.value;
+  renderBankPage();
+});
+
+document.getElementById('bank-dashboard').addEventListener('click',e=>{
+  const button=e.target.closest('[data-bank-filter]');
+  if(!button) return;
+
+  bankPageState.type=button.dataset.bankFilter||'';
+  document.getElementById('bank-type').value=bankPageState.type;
+  renderBankPage();
+  document.getElementById('bank-list').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+document.getElementById('bank-clear').addEventListener('click',()=>{
+  bankPageState.type='';
+  bankPageState.query='';
+  document.getElementById('bank-type').value='';
+  document.getElementById('bank-search').value='';
+  renderBankPage();
+});
 
 loadBankPage();
 </script>
