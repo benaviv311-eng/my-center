@@ -20,16 +20,16 @@ const privateScripts=['raika-private-auth.js','raika-private-editor.js','raika-e
 
 function loadFeedModule(){
   assert.equal(exists('raika-feed.js'),true,'raika-feed.js must exist');
+  assert.equal(exists('raika-feed-data.js'),true,'raika-feed-data.js must exist');
   delete require.cache[require.resolve('../raika-feed.js')];
-  return require('../raika-feed.js');
+  delete require.cache[require.resolve('../raika-feed-data.js')];
+  return {...require('../raika-feed.js'),...require('../raika-feed-data.js')};
 }
 
 test('frozen Raika navigation opens topic pages instead of anchors',()=>{
   const html=read('raika.html');
   for(const [page] of sectionPages) assert.match(html,new RegExp(`href=["']${page.replace('.','\\.')}["']`));
-  for(const anchor of ['characters','scenes','plotlines','history','world','relationships','writers-room']){
-    assert.doesNotMatch(html,new RegExp(`href=["']#${anchor}["']`));
-  }
+  for(const anchor of ['characters','scenes','plotlines','history','world','relationships','writers-room']) assert.doesNotMatch(html,new RegExp(`href=["']#${anchor}["']`));
 });
 
 test('all seven Raika topic pages exist with their collection container and shared private assets',()=>{
@@ -51,6 +51,8 @@ test('Raika home is a daily feed with a manual refresh control',()=>{
   assert.match(html,/id=["']raika-daily-feed["']/);
   assert.match(html,/id=["']raika-refresh-feed["']/);
   assert.match(html,/raika-feed\.js/);
+  assert.match(html,/raika-feed-data\.js/);
+  assert.match(html,/raika-feed-state\.js/);
   assert.match(html,/רענן פיד/);
 });
 
@@ -98,9 +100,11 @@ test('feed card target pages map to the correct Raika topic page',()=>{
   assert.equal(targetPageForType('conversation'),'raika-writers-room.html');
 });
 
-test('Raika feed browser script has valid JavaScript syntax',()=>{
-  assert.equal(exists('raika-feed.js'),true,'raika-feed.js must exist');
-  if(!exists('raika-feed.js')) return;
-  const result=spawnSync(process.execPath,['--check','raika-feed.js'],{cwd:root,encoding:'utf8'});
-  assert.equal(result.status,0,result.stderr);
+test('Raika feed browser scripts have valid JavaScript syntax',()=>{
+  for(const file of ['raika-feed.js','raika-feed-data.js','raika-feed-state.js']){
+    assert.equal(exists(file),true,`${file} must exist`);
+    if(!exists(file)) continue;
+    const result=spawnSync(process.execPath,['--check',file],{cwd:root,encoding:'utf8'});
+    assert.equal(result.status,0,`${file}: ${result.stderr}`);
+  }
 });
