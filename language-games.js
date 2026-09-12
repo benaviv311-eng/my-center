@@ -1,16 +1,18 @@
 (function(){
   const M=window.LanguageFeedModel;
-  if(!M)return;
+  const B=window.LanguageVocabularyBank;
+  const P=window.LanguageGamePool;
+  if(!M||!B||!P)return;
 
   const $=id=>document.getElementById(id);
   const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   const LABELS={
-    flashcards:['🃏','כרטיסיות חכמות','הפוך את הכרטיס ונסה לזכור לפני שאתה חושף את התשובה.'],
+    flashcards:['🃏','מאגר כרטיסיות','דפדף במאגר, חשוף את התרגום ושמע את ההגייה בלי ניקוד ובלי לחץ זמן.'],
     memory:['🧠','משחק זיכרון','מצא זוגות של מילה ותרגום.'],
     matching:['🔗','התאמת זוגות','בחר מילה ואז את התרגום שלה.'],
     'sentence-builder':['🧩','הרכבת משפט','בנה את המשפט לפי הסדר הנכון.'],
     recall:['👀','זיכרון רצף','זכור מה ראית ואז מצא את המילה שלא הופיעה.'],
-    speed:['⏱️','אתגר 60 שניות','ענה מהר וצבור כמה שיותר נקודות.'],
+    speed:['⏱️','אתגר 60 שניות','ענה מהר — המילים לא חוזרות עד שהמאגר כולו עובר.'],
     'four-languages':['🌍','אותה משמעות ב־4 שפות','אותו רעיון מופיע בארבע השפות שלך.']
   };
   const params=new URLSearchParams(location.search);
@@ -18,35 +20,65 @@
   let seedCounter=0;
   let speedTimer=null;
   let mixIndex=-1;
-  const mixTypes=['flashcards','matching','sentence-builder','memory','recall'];
+  let cardTopic='all';
+  let cardPool=null;
+  let cardPoolKey='';
+  let cardHistory=[];
+  let cardIndex=-1;
+  const pools=new Map();
+  const mixTypes=['matching','sentence-builder','memory','recall','speed'];
 
-  function display(item){return M.getDisplay(item);}
+  function display(item){return item?.key&&P.display?P.display(item):M.getDisplay(item);}
   function languageName(lang){return lang==='all'?'כל השפות':M.LANGUAGES[lang].name;}
   function shuffle(list){return list.slice().sort(()=>Math.random()-.5);}
+  function normalise(value){return String(value||'').trim().toLowerCase();}
+  function poolFor(purpose,lang=filter,topic='all'){
+    const key=`${purpose}:${lang}:${topic}`;
+    if(!pools.has(key))pools.set(key,P(B,{lang,topic,seed:`${key}:v1`}));
+    return pools.get(key);
+  }
+  function takeDistinct(pool,count){
+    const out=[];
+    const keys=new Set();
+    const meanings=new Set();
+    let attempts=0;
+    const maxAttempts=Math.max(pool.size*2,count*12);
+    while(out.length<count&&attempts<maxAttempts){
+      attempts++;
+      const item=pool.take(1)[0];
+      if(!item||keys.has(item.key))continue;
+      const meaning=normalise(item.he);
+      if(meaning&&meanings.has(meaning))continue;
+      keys.add(item.key);
+      if(meaning)meanings.add(meaning);
+      out.push(item);
+    }
+    while(out.length<count&&attempts<maxAttempts*2){
+      attempts++;
+      const item=pool.take(1)[0];
+      if(!item||keys.has(item.key))continue;
+      keys.add(item.key);
+      out.push(item);
+    }
+    return out;
+  }
   function gameHead(type,game){
     const [icon,title,copy]=LABELS[type];
     return `<div class="game-stage-head"><div><span class="game-kicker">${icon} ${esc(languageName(game.lang))}</span><h2>${esc(title)}</h2><p>${esc(copy)}</p></div><button class="game-btn" type="button" data-new-game>↻ משחק חדש</button></div>`;
   }
-  function displayCard(item,showTranslation=true){
-    const d=display(item);
-    return `<div class="game-primary">${esc(d.primary)}</div>${d.secondary?`<div class="game-secondary">${esc(d.secondary)}</div>`:''}${showTranslation?`<div class="game-translation">${esc(d.translation)}</div>`:''}`;
-  }
 
-  function flashcardsHtml(game){
-    return `<div class="game-board">${game.items.slice(0,4).map((item,i)=>{const d=display(item);return `<button class="flash-card" type="button" data-flash-card><span class="game-kicker">כרטיס ${i+1}</span><span class="game-primary">${esc(d.primary)}</span>${d.secondary?`<span class="game-secondary">${esc(d.secondary)}</span>`:''}<span class="game-translation" data-flash-answer hidden>${esc(d.translation)}</span><small data-flash-hint>לחץ לחשיפת התשובה</small></button>`;}).join('')}</div>`;
-  }
   function memoryHtml(game){
     const items=game.items.slice(0,4);
     const deck=shuffle(items.flatMap(item=>{const d=display(item);return [
-      {key:`${item.lang}:${item.id}`,value:d.primary},
-      {key:`${item.lang}:${item.id}`,value:d.translation}
+      {key:item.key||`${item.lang}:${item.id}`,value:d.primary},
+      {key:item.key||`${item.lang}:${item.id}`,value:d.translation}
     ];}));
     return `<div class="memory-grid" data-memory-board>${deck.map(card=>`<button class="memory-card" type="button" data-memory-card data-key="${esc(card.key)}" data-value="${esc(card.value)}">?</button>`).join('')}</div><div class="game-feedback" data-memory-feedback>מצא ${items.length} זוגות.</div>`;
   }
   function matchingHtml(game){
     const items=game.items.slice(0,5);
     const right=shuffle(items);
-    return `<div class="matching-grid" data-matching-board><div class="matching-column">${items.map(item=>{const d=display(item);return `<button class="matching-chip" type="button" data-match-side="left" data-key="${item.lang}:${esc(item.id)}">${esc(d.primary)}${d.secondary?`<small class="game-secondary">${esc(d.secondary)}</small>`:''}</button>`;}).join('')}</div><div class="matching-column">${right.map(item=>`<button class="matching-chip" type="button" data-match-side="right" data-key="${item.lang}:${esc(item.id)}">${esc(display(item).translation)}</button>`).join('')}</div></div><div class="game-feedback" data-match-feedback>בחר זוג שמתאים.</div>`;
+    return `<div class="matching-grid" data-matching-board><div class="matching-column">${items.map(item=>{const d=display(item);const key=item.key||`${item.lang}:${item.id}`;return `<button class="matching-chip" type="button" data-match-side="left" data-key="${esc(key)}">${esc(d.primary)}${d.secondary?`<small class="game-secondary">${esc(d.secondary)}</small>`:''}</button>`;}).join('')}</div><div class="matching-column">${right.map(item=>{const key=item.key||`${item.lang}:${item.id}`;return `<button class="matching-chip" type="button" data-match-side="right" data-key="${esc(key)}">${esc(display(item).translation)}</button>`;}).join('')}</div></div><div class="game-feedback" data-match-feedback>בחר זוג שמתאים.</div>`;
   }
   function sentenceHtml(game){
     const d=display(game.sentence);
@@ -59,14 +91,13 @@
     return `<div class="game-board" data-recall-board><p><strong>זכור את שלוש המילים:</strong></p><div class="recall-list" data-recall-list>${shown.map(item=>{const d=display(item);return `<div class="recall-item">${esc(d.primary)}${d.secondary?`<small class="game-secondary">${esc(d.secondary)}</small>`:''}</div>`;}).join('')}</div><button class="game-btn primary" type="button" data-recall-ready>זכרתי — שאל אותי</button><div data-recall-question hidden><p><strong>איזו מילה לא הופיעה קודם?</strong></p><div class="word-bank">${options.map(item=>`<button class="word-chip" type="button" data-recall-option data-correct="${item===outsider?'1':'0'}">${esc(display(item).primary)}</button>`).join('')}</div></div><div class="game-feedback" data-recall-feedback></div></div>`;
   }
   function speedHtml(){
-    return `<div class="speed-panel" data-speed-panel><div class="speed-top"><span>⏱️ <span data-speed-time>60</span> שניות</span><span>ניקוד: <span data-speed-score>0</span></span></div><button class="game-btn primary" type="button" data-speed-start>התחל</button><div data-speed-question hidden><div class="game-primary" data-speed-word></div><div class="speed-options" data-speed-options></div></div><div class="game-feedback" data-speed-feedback>כשתלחץ, השעון יתחיל.</div></div>`;
+    return `<div class="speed-panel" data-speed-panel><div class="speed-top"><span>⏱️ <span data-speed-time>60</span> שניות</span><span>ניקוד: <span data-speed-score>0</span></span></div><button class="game-btn primary" type="button" data-speed-start>התחל</button><div data-speed-question hidden><div class="game-primary" data-speed-word></div><div class="game-secondary" data-speed-secondary></div><div class="speed-options" data-speed-options></div></div><div class="game-feedback" data-speed-feedback>כשתלחץ, השעון יתחיל. כל מילה חדשה עד לסיום המאגר.</div></div>`;
   }
   function fourLanguagesHtml(game){
     return `<div class="game-board"><div><span class="game-kicker">הרעיון בעברית</span><div class="game-primary">${esc(game.prompt)}</div></div><div class="four-grid">${game.items.map(item=>{const d=display(item);return `<div class="four-card"><strong>${M.LANGUAGES[item.lang].code} · ${M.LANGUAGES[item.lang].name}</strong><span>${esc(d.primary)}</span>${d.secondary?`<small>${esc(d.secondary)}</small>`:''}</div>`;}).join('')}</div><div class="game-controls"><button class="game-btn" type="button" data-four-hide>כסה שמות שפה</button></div></div>`;
   }
 
   function bodyHtml(type,game){
-    if(type==='flashcards')return flashcardsHtml(game);
     if(type==='memory')return memoryHtml(game);
     if(type==='matching')return matchingHtml(game);
     if(type==='sentence-builder')return sentenceHtml(game);
@@ -74,13 +105,69 @@
     if(type==='speed')return speedHtml(game);
     return fourLanguagesHtml(game);
   }
+  function wordGame(type){
+    const count=type==='memory'?4:type==='matching'?5:type==='recall'?4:6;
+    return{type,lang:filter,items:takeDistinct(poolFor('session'),count)};
+  }
+
+  function ensureCardPool(force=false){
+    const key=`${filter}:${cardTopic}`;
+    if(!force&&cardPool&&cardPoolKey===key)return;
+    seedCounter++;
+    cardPool=P(B,{lang:filter,topic:cardTopic,seed:`cards:${key}:${Date.now()}:${seedCounter}`});
+    cardPoolKey=key;
+    cardHistory=[];
+    cardIndex=-1;
+  }
+  function cardTopicOptions(){
+    const all='<option value="all">כל הנושאים</option>';
+    return all+Object.entries(B.TOPICS).map(([id,topic])=>`<option value="${esc(id)}" ${id===cardTopic?'selected':''}>${topic.icon} ${esc(topic.name)}</option>`).join('');
+  }
+  function currentCard(){
+    ensureCardPool();
+    if(cardIndex<0){cardHistory.push(cardPool.take(1)[0]);cardIndex=0;}
+    return cardHistory[cardIndex];
+  }
+  function cardViewHtml(item){
+    const d=display(item);
+    const language=M.LANGUAGES[item.lang]||B.LANGUAGES[item.lang];
+    return `<div class="card-repository-meta"><span>${esc(language?.code||item.lang.toUpperCase())} · ${esc(language?.name||'')}</span><span>${esc(item.topicName||'')}</span></div><div class="language-audio-inline card-repository-word"><div class="game-primary" data-audio-decorated="1">${esc(d.primary)}</div><button class="language-audio-btn" type="button" data-audio-lang="${esc(item.lang)}" data-audio-text="${esc(item.target)}" aria-label="השמע הגייה" title="השמע הגייה">🔊</button></div>${d.secondary?`<div class="game-secondary">${esc(d.secondary)}</div>`:''}<div class="game-translation" data-card-answer hidden>${esc(d.translation)}</div>`;
+  }
+  function updateCardView(stage){
+    const item=currentCard();
+    stage.querySelector('[data-card-view]').innerHTML=cardViewHtml(item);
+    const count=stage.querySelector('[data-card-count]');
+    if(count)count.textContent=`כרטיס ${cardIndex+1} · ${cardPool.remaining()} נותרו במחזור הנוכחי`;
+    const prev=stage.querySelector('[data-card-prev]');
+    if(prev)prev.disabled=cardIndex<=0;
+    const reveal=stage.querySelector('[data-card-reveal]');
+    if(reveal)reveal.textContent='הצג תרגום';
+  }
+  function renderCardRepository(){
+    if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
+    ensureCardPool();
+    const stage=$('games-stage');
+    stage.innerHTML=`<div class="game-stage-inner"><div class="game-stage-head"><div><span class="game-kicker">🃏 ${esc(languageName(filter))}</span><h2>מאגר כרטיסיות</h2><p>דפדוף חופשי במילים. אפשר לבחור נושא, לערבב, לחשוף תרגום ולשמוע הגייה.</p></div></div><div class="card-repository-toolbar"><label>נושא<select class="game-topic-select" data-card-topic>${cardTopicOptions()}</select></label><button class="game-btn" type="button" data-card-shuffle>↻ ערבב מאגר</button></div><div class="card-repository-card" data-card-view></div><div class="card-repository-count" data-card-count></div><div class="game-controls"><button class="game-btn" type="button" data-card-prev>הקודם</button><button class="game-btn primary" type="button" data-card-reveal>הצג תרגום</button><button class="game-btn" type="button" data-card-next>הבא</button></div></div>`;
+    document.querySelectorAll('.game-choice').forEach(btn=>btn.classList.toggle('active',btn.dataset.gameType==='flashcards'));
+    updateCardView(stage);
+    stage.querySelector('[data-card-topic]').addEventListener('change',event=>{cardTopic=event.target.value;ensureCardPool(true);updateCardView(stage);});
+    stage.querySelector('[data-card-shuffle]').addEventListener('click',()=>{ensureCardPool(true);updateCardView(stage);});
+    stage.querySelector('[data-card-prev]').addEventListener('click',()=>{if(cardIndex>0){cardIndex--;updateCardView(stage);}});
+    stage.querySelector('[data-card-next]').addEventListener('click',()=>{if(cardIndex+1<cardHistory.length)cardIndex++;else{cardHistory.push(cardPool.take(1)[0]);cardIndex++;}updateCardView(stage);});
+    stage.querySelector('[data-card-reveal]').addEventListener('click',event=>{const answer=stage.querySelector('[data-card-answer]');if(!answer)return;answer.hidden=!answer.hidden;event.currentTarget.textContent=answer.hidden?'הצג תרגום':'הסתר תרגום';});
+    stage.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 
   function render(type,{fromMix=false}={}){
+    if(type==='flashcards'){renderCardRepository();return;}
     if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
     seedCounter++;
-    const game=M.buildMiniGame({type,filter,seed:`games:${Date.now()}:${seedCounter}`});
+    let game;
+    if(type==='memory'||type==='matching'||type==='recall')game=wordGame(type);
+    else if(type==='speed')game={type:'speed',lang:filter,items:[]};
+    else game=M.buildMiniGame({type,filter,seed:`games:${Date.now()}:${seedCounter}`});
     const stage=$('games-stage');
-    stage.innerHTML=`<div class="game-stage-inner">${gameHead(type,game)}${bodyHtml(type,game)}${fromMix?`<div class="game-controls"><button class="game-btn primary" type="button" data-mix-next>${mixIndex+1< mixTypes.length?'הבא במסלול ←':'סיום המסלול ✓'}</button><div class="daily-progress">${mixTypes.map((_,i)=>`<i class="${i<=mixIndex?'done':''}"></i>`).join('')}</div></div>`:''}</div>`;
+    stage.innerHTML=`<div class="game-stage-inner">${gameHead(type,game)}${bodyHtml(type,game)}${fromMix?`<div class="game-controls"><button class="game-btn primary" type="button" data-mix-next>${mixIndex+1<mixTypes.length?'הבא במסלול ←':'סיום המסלול ✓'}</button><div class="daily-progress">${mixTypes.map((_,i)=>`<i class="${i<=mixIndex?'done':''}"></i>`).join('')}</div></div>`:''}</div>`;
     document.querySelectorAll('.game-choice').forEach(btn=>btn.classList.toggle('active',btn.dataset.gameType===type));
     wireStage(type,game,fromMix);
     stage.scrollIntoView({behavior:'smooth',block:'start'});
@@ -90,14 +177,9 @@
     const stage=$('games-stage');
     stage.querySelector('[data-new-game]')?.addEventListener('click',()=>render(type,{fromMix}));
     stage.querySelector('[data-mix-next]')?.addEventListener('click',()=>{
-      if(mixIndex>=mixTypes.length-1){mixIndex=-1;stage.innerHTML='<div class="games-stage-empty"><strong>מסלול ה־5 דקות הושלם ✓</strong><br>אפשר לבחור משחק נוסף או להתחיל שוב.</div>';return;}
+      if(mixIndex>=mixTypes.length-1){mixIndex=-1;stage.innerHTML='<div class="games-stage-empty"><strong>מסלול ה־5 דקות הושלם ✓</strong><br>אפשר לבחור תרגול נוסף או להתחיל שוב.</div>';return;}
       mixIndex++;render(mixTypes[mixIndex],{fromMix:true});
     });
-
-    stage.querySelectorAll('[data-flash-card]').forEach(card=>card.addEventListener('click',()=>{
-      const answer=card.querySelector('[data-flash-answer]');const hint=card.querySelector('[data-flash-hint]');
-      answer.hidden=!answer.hidden;hint.textContent=answer.hidden?'לחץ לחשיפת התשובה':'לחץ שוב להסתרה';
-    }));
 
     let memoryOpen=[];let memoryMatches=0;
     stage.querySelectorAll('[data-memory-card]').forEach(card=>card.addEventListener('click',()=>{
@@ -130,27 +212,31 @@
     stage.querySelector('[data-sentence-clear]')?.addEventListener('click',()=>{picked.splice(0);stage.querySelectorAll('[data-sentence-word]').forEach(x=>x.classList.remove('used'));stage.querySelector('[data-sentence-answer]').innerHTML='<span class="meta">המשפט שלך יופיע כאן</span>';stage.querySelector('[data-sentence-feedback]').textContent='';});
     stage.querySelector('[data-sentence-check]')?.addEventListener('click',()=>{const ok=picked.map(x=>x.word).join(' ')===game.answer.join(' ');stage.querySelector('[data-sentence-feedback]').textContent=ok?'מצוין — המשפט נכון ✓':'עוד לא. אפשר לשנות את הסדר ולנסות שוב.';});
 
-    stage.querySelector('[data-recall-ready]')?.addEventListener('click',btn=>{stage.querySelector('[data-recall-list]').hidden=true;btn.currentTarget.hidden=true;stage.querySelector('[data-recall-question]').hidden=false;});
-    stage.querySelectorAll('[data-recall-option]').forEach(btn=>btn.addEventListener('click',()=>{stage.querySelectorAll('[data-recall-option]').forEach(x=>x.disabled=true);stage.querySelector('[data-recall-feedback]').textContent=btn.dataset.correct==='1'?'נכון — זו המילה שלא הופיעה ✓':'כמעט. נסה משחק חדש כדי לבדוק שוב את הזיכרון.';}));
+    stage.querySelector('[data-recall-ready]')?.addEventListener('click',event=>{stage.querySelector('[data-recall-list]').hidden=true;event.currentTarget.hidden=true;stage.querySelector('[data-recall-question]').hidden=false;});
+    stage.querySelectorAll('[data-recall-option]').forEach(btn=>btn.addEventListener('click',()=>{stage.querySelectorAll('[data-recall-option]').forEach(x=>x.disabled=true);stage.querySelector('[data-recall-feedback]').textContent=btn.dataset.correct==='1'?'נכון — זו המילה שלא הופיעה ✓':'כמעט. נסה תרגול חדש כדי לבדוק שוב את הזיכרון.';}));
 
-    stage.querySelector('[data-four-hide]')?.addEventListener('click',btn=>{const cards=stage.querySelectorAll('.four-card strong');const hidden=[...cards].some(x=>!x.hidden);cards.forEach(x=>x.hidden=hidden);btn.currentTarget.textContent=hidden?'הצג שמות שפה':'כסה שמות שפה';});
-
-    stage.querySelector('[data-speed-start]')?.addEventListener('click',btn=>startSpeed(stage,game,btn.currentTarget));
+    stage.querySelector('[data-four-hide]')?.addEventListener('click',event=>{const cards=stage.querySelectorAll('.four-card strong');const hidden=[...cards].some(x=>!x.hidden);cards.forEach(x=>x.hidden=hidden);event.currentTarget.textContent=hidden?'הצג שמות שפה':'כסה שמות שפה';});
+    stage.querySelector('[data-speed-start]')?.addEventListener('click',event=>startSpeed(stage,event.currentTarget));
   }
 
-  function startSpeed(stage,game,startBtn){
+  function startSpeed(stage,startBtn){
     startBtn.hidden=true;
     const question=stage.querySelector('[data-speed-question]');question.hidden=false;
     const timeEl=stage.querySelector('[data-speed-time]');const scoreEl=stage.querySelector('[data-speed-score]');const feedback=stage.querySelector('[data-speed-feedback]');
-    let remaining=60,score=0,q=0;feedback.textContent='';
+    let remaining=60,score=0;feedback.textContent='';scoreEl.textContent='0';timeEl.textContent='60';
+    const pool=poolFor('session');
     function next(){
-      const fresh=M.buildMiniGame({type:'speed',filter,seed:`speed:${Date.now()}:${q++}`});
-      const correct=fresh.items[0];const d=display(correct);stage.querySelector('[data-speed-word]').textContent=d.primary;
-      const options=shuffle(fresh.items.slice(0,4));const root=stage.querySelector('[data-speed-options]');root.innerHTML=options.map(item=>`<button class="speed-option" type="button" data-speed-option data-correct="${item.lang===correct.lang&&item.id===correct.id?'1':'0'}">${esc(display(item).translation)}</button>`).join('');
-      root.querySelectorAll('[data-speed-option]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.correct==='1'){score++;scoreEl.textContent=score;feedback.textContent='✓';}else feedback.textContent='נסה שוב';next();}));
+      const options=takeDistinct(pool,4);
+      const correct=options[0];
+      const d=display(correct);
+      stage.querySelector('[data-speed-word]').textContent=d.primary;
+      stage.querySelector('[data-speed-secondary]').textContent=d.secondary||'';
+      const root=stage.querySelector('[data-speed-options]');
+      root.innerHTML=shuffle(options).map(item=>`<button class="speed-option" type="button" data-speed-option data-correct="${item.key===correct.key?'1':'0'}">${esc(display(item).translation)}</button>`).join('');
+      root.querySelectorAll('[data-speed-option]').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.correct==='1'){score++;scoreEl.textContent=score;feedback.textContent='✓';}else feedback.textContent='לא — ממשיכים';next();}));
     }
     next();
-    speedTimer=setInterval(()=>{remaining--;timeEl.textContent=remaining;if(remaining<=0){clearInterval(speedTimer);speedTimer=null;question.hidden=true;feedback.textContent=`נגמר הזמן — ${score} תשובות נכונות.`;startBtn.hidden=false;startBtn.textContent='שחק שוב';}},1000);
+    speedTimer=setInterval(()=>{remaining--;timeEl.textContent=remaining;if(remaining<=0){clearInterval(speedTimer);speedTimer=null;question.hidden=true;feedback.textContent=`נגמר הזמן — ${score} תשובות נכונות. המילים שכבר הופיעו יישארו מחוץ לסבב עד שהמאגר ייגמר.`;startBtn.hidden=false;startBtn.textContent='שחק שוב';}},1000);
   }
 
   function setFilter(lang){
