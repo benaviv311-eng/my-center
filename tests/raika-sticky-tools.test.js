@@ -3,15 +3,22 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { currentRaikaSectionId } = require('../raika-app.js');
 
-// Sticky topics + search behavior specification. Red first, then implementation.
-test('Raika navigation and search live inside one sticky tools bar', () => {
+test('Raika home sticky tools contain page navigation and feed refresh', () => {
   const html = fs.readFileSync('raika.html','utf8');
   assert.match(html, /class=["'][^"']*raika-sticky-tools[^"']*["']/);
   const stickyStart = html.indexOf('raika-sticky-tools');
   const stickyEnd = html.indexOf('</section>', stickyStart);
   const stickyMarkup = html.slice(stickyStart, stickyEnd);
   assert.match(stickyMarkup, /class=["'][^"']*raika-section-nav[^"']*["']/);
-  assert.match(stickyMarkup, /id=["']raika-search["']/);
+  assert.match(stickyMarkup, /id=["']raika-refresh-feed["']/);
+  assert.match(stickyMarkup, /href=["']raika-characters\.html["']/);
+});
+
+test('topic pages keep search controls below the shared page navigation', () => {
+  const html = fs.readFileSync('raika-characters.html','utf8');
+  assert.match(html, /class=["'][^"']*raika-sticky-tools[^"']*["']/);
+  assert.match(html, /id=["']raika-search["']/);
+  assert.match(html, /href=["']raika-scenes\.html["']/);
 });
 
 test('sticky Raika tools stay fixed during page scrolling and allow horizontal topic scrolling on mobile', () => {

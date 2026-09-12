@@ -65,12 +65,14 @@ function itemCardHtml(item){
     detailsList('סתירות פנימיות', item.contradictions),
     item.thinking ? `<details><summary>צורת חשיבה</summary><p>${esc(item.thinking)}</p></details>` : ''
   ].join('');
+  const openLink = item.feedPage ? `<div class="card-actions"><a class="btn small" href="${esc(item.feedPage)}">פתח עמוד ←</a></div>` : '';
   return `<article class="card writer-card status-${meta.className}" data-status="${esc(item.status)}">
     <div class="writer-card-head"><span class="status-badge status-${meta.className}">${meta.label}</span>${item.order ? `<span class="scene-number">${esc(item.order)}</span>`:''}</div>
     <h3>${esc(item.title)}</h3>
     ${item.summary ? `<p class="meta writer-summary">${esc(item.summary)}</p>`:''}
     ${extra}
     ${tagsHtml(item.tags)}
+    ${openLink}
   </article>`;
 }
 

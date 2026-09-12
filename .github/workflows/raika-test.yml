@@ -5,9 +5,11 @@ on:
     branches:
       - main
       - 'feature/raika-*'
+      - 'raika-*'
   pull_request:
     paths:
-      - 'raika.html'
+      - 'raika*.html'
+      - 'raika-*.js'
       - 'raika-app.js'
       - 'styles.css'
       - 'tests/raika-*.test.js'
