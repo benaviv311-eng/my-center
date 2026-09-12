@@ -74,8 +74,50 @@ function itemCardHtml(item){
   </article>`;
 }
 
+function sceneTextHtml(item){
+  return esc(item.fullText || item.summary || 'טקסט הסצנה יתווסף בהמשך').replace(/\n/g,'<br>');
+}
+
+function sceneDetailHtml(item){
+  const meta = statusMeta(item.status);
+  const imageHtml = item.image
+    ? `<img class="scene-detail-image" src="${esc(item.image)}" alt="${esc(item.title)}" style="display:block;width:100%;height:auto;border-radius:16px;border:1px solid var(--line,#e8dfcf)">`
+    : `<div class="scene-detail-image-placeholder" style="min-height:220px;display:flex;align-items:center;justify-content:center;text-align:center;border:1px dashed #cbbfdc;border-radius:16px;background:#f7f2fc;color:#786d88;font-weight:700">נעלה בהמשך</div>`;
+  return `<div class="scene-detail-dialog" role="dialog" aria-modal="true" aria-label="${esc(item.title)}" style="position:relative;width:min(760px,100%);max-height:90vh;overflow:auto;background:var(--card,#fffdf8);border:1px solid var(--line,#e8dfcf);border-radius:22px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.22)">
+    <button class="scene-detail-close" type="button" aria-label="סגירת סצנה" style="position:absolute;left:14px;top:12px;border:1px solid var(--line,#e8dfcf);background:var(--card,#fffdf8);border-radius:999px;width:36px;height:36px;font-size:24px;cursor:pointer">×</button>
+    <div class="writer-card-head"><span class="status-badge status-${meta.className}">${meta.label}</span>${item.order ? `<span class="scene-number">סצנה ${esc(item.order)}</span>`:''}</div>
+    <h2>${esc(item.title)}</h2>
+    <div class="scene-detail-text" style="margin:16px 0;line-height:1.9;font-size:16px;white-space:normal">${sceneTextHtml(item)}</div>
+    <div class="scene-detail-media" style="margin-top:18px">${imageHtml}</div>
+  </div>`;
+}
+
 function sceneCardHtml(item){
-  return `<div class="scene-entry"><div class="scene-line"></div>${itemCardHtml(item)}</div>`;
+  return `<div class="scene-entry" data-scene-id="${esc(item.id)}" role="button" tabindex="0" aria-label="פתיחת סצנה מלאה: ${esc(item.title)}" style="cursor:pointer"><div class="scene-line"></div>${itemCardHtml(item)}</div>`;
+}
+
+function openSceneDetail(item){
+  document.getElementById('scene-detail-modal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'scene-detail-modal';
+  modal.className = 'scene-detail-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;background:rgba(31,31,31,.58);display:flex;align-items:center;justify-content:center;padding:18px';
+  modal.innerHTML = sceneDetailHtml(item);
+  document.body.appendChild(modal);
+  document.body.classList.add('scene-detail-open');
+  const previousOverflow=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  const close = () => {
+    document.body.classList.remove('scene-detail-open');
+    document.body.style.overflow=previousOverflow;
+    modal.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = event => { if(event.key === 'Escape') close(); };
+  modal.querySelector('.scene-detail-close')?.addEventListener('click', close);
+  modal.addEventListener('click', event => { if(event.target === modal) close(); });
+  document.addEventListener('keydown', onKey);
+  modal.querySelector('.scene-detail-close')?.focus();
 }
 
 function renderCollection(containerId, items, cardFn=itemCardHtml, emptyText='לא נמצאו פריטים'){
@@ -128,6 +170,20 @@ function initRaikaWritersRoom(){
     if(search) search.value=''; if(status) status.value='all'; if(type) type.value='all';
     renderAll();
   });
+  const scenesGrid=document.getElementById('scenes-grid');
+  const openFromTarget=event=>{
+    if(event.target.closest('a,button')) return;
+    const entry=event.target.closest('[data-scene-id]');
+    if(!entry) return;
+    const item=window.RAIKA_DATA?.scenes?.find(scene=>scene.id===entry.dataset.sceneId);
+    if(item) openSceneDetail(item);
+  };
+  scenesGrid?.addEventListener('click',openFromTarget);
+  scenesGrid?.addEventListener('keydown',event=>{
+    if(event.key!=='Enter' && event.key!==' ') return;
+    event.preventDefault();
+    openFromTarget(event);
+  });
   renderAll();
 }
 
@@ -136,4 +192,4 @@ if(typeof document !== 'undefined'){
   else initRaikaWritersRoom();
 }
 
-if(typeof module !== 'undefined') module.exports={statusMeta,filterItems,itemCardHtml};
+if(typeof module !== 'undefined') module.exports={statusMeta,filterItems,itemCardHtml,sceneCardHtml,sceneDetailHtml};
