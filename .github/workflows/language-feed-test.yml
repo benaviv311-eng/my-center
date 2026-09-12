@@ -5,6 +5,7 @@ on:
     paths:
       - 'language-feed-model.js'
       - 'languages-feed.js'
+      - 'languages-feed.css'
       - 'languages.html'
       - 'tests/language-feed.test.js'
       - '.github/workflows/language-feed-test.yml'
@@ -13,4 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node tests/language-feed.test.js
+      - name: Check feed JavaScript syntax
+        run: |
+          node --check language-feed-model.js
+          node --check languages-feed.js
+      - name: Run feed behavior tests
+        run: node tests/language-feed.test.js
