@@ -13,8 +13,9 @@ function rpLoginPanel(){
 }
 async function rpLogin(e){
   e.preventDefault();const email=document.getElementById('rp-email').value.trim();if(!email)return;
+  try{await fetch(`${BANK_URL}/functions/v1/raika-login-bootstrap`,{method:'POST',headers:{apikey:BANK_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({email})})}catch{}
   const {error}=await RaikaPrivate.client.auth.signInWithOtp({email,options:{shouldCreateUser:false,emailRedirectTo:location.origin+location.pathname}});
-  if(error){rpNotice('לא ניתן לשלוח קישור. ייתכן שהחשבון עדיין לא נוצר.');return}rpNotice('קישור כניסה נשלח למייל.')
+  if(error){rpNotice('לא ניתן לשלוח קישור כניסה.');return}rpNotice('קישור כניסה נשלח למייל.')
 }
 async function rpAuthorize(session){
   RaikaPrivate.user=session?.user||null;RaikaPrivate.authorized=false;document.body.classList.remove('raika-private-authorized');
