@@ -21,7 +21,7 @@ assert.ok(audio.includes('.target'), 'audio helper should speak original target-
 assert.ok(audio.includes("if((lang==='ar'||lang==='ru')&&!resolved)return''"), 'Arabic/Russian audio must never fall back to visible transliteration');
 assert.ok(audio.includes('ARABIC_REMOTE_AUDIO'), 'Arabic should have an audio path independent of installed system voices');
 assert.ok(audio.includes('new Audio('), 'Arabic fallback should use browser audio playback');
-assert.ok(audio.includes('remoteAudio.onerror'), 'Arabic fallback should handle remote audio playback errors');
+assert.ok(audio.includes('audio.onerror'), 'Arabic fallback should handle remote audio playback errors');
 assert.ok(audio.includes('translate.googleapis.com/translate_tts'), 'Arabic should try a hosted TTS audio source before system speech');
 assert.ok(audio.includes('translate.google.com/translate_tts'), 'Arabic should retry a second hosted TTS audio source if the first fails');
 
