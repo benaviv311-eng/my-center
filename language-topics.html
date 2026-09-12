@@ -7,19 +7,23 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
+  <style>
+    .topics-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.topic-vocab{margin:12px 0;border:1px solid var(--line);border-radius:14px;background:#faf7ef;overflow:hidden}.topic-vocab summary{cursor:pointer;padding:11px 12px;font-weight:800}.topic-vocab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 10px 10px}.topic-vocab-item{background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px;display:grid;gap:2px}.topic-vocab-item strong{font-size:17px}.topic-vocab-item small{color:var(--muted)}.topic-vocab-item span{font-size:13px;color:var(--muted)}@media(max-width:620px){.topic-vocab-grid{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <div class="app">
   <div class="back"><a class="btn small" href="languages.html">← חזרה לשפות</a></div>
   <div class="page-title"><div class="study-title-row"><span id="topics-language-code" class="language-code">AR</span><div><h1>נושאים</h1><div id="topics-language-name" class="subtitle"></div></div></div></div>
-  <section class="hero"><strong>בחר נושא</strong><p>הנושא קובע את אוצר המילים והתוכן. מבנה דף הגלילה נשאר אותו מבנה אינטראקטיבי.</p></section>
+  <section class="hero"><strong>בחר נושא</strong><p>לכל נושא יש עכשיו אוצר מילים משלו. פתח את אוצר המילים בתוך הכרטיס, או היכנס לשיעור המלא.</p><div class="topics-actions"><a class="btn small" href="four-languages.html">🌐 מילה ב־4 שפות</a><a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a></div></section>
   <section class="section"><div id="topics-grid" class="topics-grid"></div></section>
-  <section class="section"><article class="card"><h3>איך זה עובד?</h3><p class="meta">אחרי בחירת נושא תעבור לדף השפה הארוך: מילים, שאלות, הרכבת משפטים, תרגום, דיאלוג, טעויות ואתגר.</p></article></section>
+  <section class="section"><article class="card"><h3>איך זה עובד?</h3><p class="meta">אוצר המילים נשמר כחלק מהנושא ומשמש גם בשיעור, בחזרות ובתרגול. אחרי בחירת נושא תעבור לדף השפה הארוך.</p></article></section>
   <nav class="bottom-nav"><div class="inner">
     <a class="nav-item" href="index.html"><span>🏠</span>בית</a><a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a><a class="nav-item" href="coach.html"><span>🏐</span>מאמן</a><a class="nav-item active" href="languages.html"><span>🌍</span>שפות</a><a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a><a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
   </div></nav>
 </div>
 <script src="language-core.js?v=1"></script>
-<script src="language-topics.js?v=1"></script>
+<script src="language-topic-expansion.js?v=1"></script>
+<script src="language-topics.js?v=2"></script>
 </body>
 </html>
