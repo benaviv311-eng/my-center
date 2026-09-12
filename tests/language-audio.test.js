@@ -17,11 +17,23 @@ assert.ok(audio.includes('LanguageCore'), 'audio helper should resolve original 
   assert.ok(audio.includes(selector), `audio helper should decorate ${selector}`);
 });
 assert.ok(audio.includes('.target'), 'audio helper should speak original target-language text, not learner transliteration');
+assert.ok(audio.includes("if((lang==='ar'||lang==='ru')&&!resolved)return''"), 'Arabic/Russian audio must never fall back to visible transliteration');
 
 const pages = ['languages.html','language-vocabulary.html','language-study.html','four-languages.html'];
 pages.forEach(file => {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
   assert.ok(html.includes('language-audio.js'), `${file} should load the shared audio helper`);
 });
+
+const four = fs.readFileSync(path.join(root, 'four-languages.js'), 'utf8');
+assert.ok(four.includes('function audioButton(lang,item)'), 'four-language cards should create explicit audio buttons');
+assert.ok(four.includes('item.target'), 'four-language audio buttons should bind directly to original target text');
+assert.ok(four.includes('audioButton(lang,example)'), 'example sentences should bind audio to the sentence target, not the word target');
+assert.ok(four.includes('audioButton(lang,sentence)'), 'sentence mode should bind audio directly to the sentence target');
+
+const study = fs.readFileSync(path.join(root, 'language-study.js'), 'utf8');
+assert.ok(study.includes('function audioButton(item)'), 'single-language study should create explicit audio buttons for target items');
+assert.ok(study.includes('item.target'), 'single-language study audio should use original target text');
+assert.ok(study.includes('audioButton(s)'), 'single-language sentence views should bind audio directly to sentence target text');
 
 console.log('language audio tests: OK');
