@@ -12,8 +12,10 @@ on:
       - 'book.html'
       - 'book-page.js'
       - 'book-page.css'
+      - 'book-infinite-feed.js'
       - 'tests/library-*.test.js'
       - 'tests/book-page.test.js'
+      - 'tests/book-infinite-feed.test.js'
       - '.github/workflows/library-test.yml'
   pull_request:
     paths:
@@ -24,8 +26,10 @@ on:
       - 'book.html'
       - 'book-page.js'
       - 'book-page.css'
+      - 'book-infinite-feed.js'
       - 'tests/library-*.test.js'
       - 'tests/book-page.test.js'
+      - 'tests/book-infinite-feed.test.js'
 
 jobs:
   test:
@@ -38,7 +42,9 @@ jobs:
       - run: node tests/library-discovery.test.js
       - run: node tests/library-integration.test.js
       - run: node tests/book-page.test.js
+      - run: node tests/book-infinite-feed.test.js
       - run: node --check library-discovery.js
       - run: node --check library-discovery-ui.js
       - run: node --check library-book-links.js
+      - run: node --check book-infinite-feed.js
       - run: node --check book-page.js
