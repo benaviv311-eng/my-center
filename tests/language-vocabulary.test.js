@@ -21,6 +21,7 @@ const html = fs.readFileSync(pagePath, 'utf8');
 });
 assert.ok(html.includes('language-vocabulary-bank.js'), 'vocabulary page should load the standalone vocabulary bank');
 assert.ok(html.includes('language-vocabulary-view-model.js'), 'vocabulary page should load the lazy view model');
+assert.ok(html.includes('language-audio.js'), 'vocabulary page should load the shared pronunciation helper');
 assert.ok(!html.includes('id="vocab-status"'), 'vocabulary bank should not show progress/status filtering');
 
 const js = fs.readFileSync(scriptPath, 'utf8');
@@ -29,6 +30,9 @@ assert.ok(js.includes('LanguageVocabularyViewModel'), 'vocabulary page should us
 assert.ok(!js.includes('wordStatus'), 'vocabulary bank should not depend on learning progress');
 assert.ok(!js.includes('data-set-status'), 'vocabulary bank should not render progress buttons');
 assert.ok(!js.includes('function renderSections()'), 'vocabulary page should not eagerly render every topic');
+assert.ok(js.includes('data-audio-lang'), 'every vocabulary card should expose its language to the audio helper');
+assert.ok(js.includes('data-audio-text'), 'every vocabulary card should bind audio directly to original target text');
+assert.ok(js.includes('entry.word[lang]?.target'), 'vocabulary audio should use original target-language text, not transliteration');
 
 const bank = require(bankPath);
 assert.ok(bank && bank.TOPICS && bank.LANGUAGES, 'vocabulary bank should export topics and languages');
