@@ -62,7 +62,7 @@ for(let i=1;i<a.length;i++){
 
 assert.strictEqual(typeof discovery.buildBookSections, 'function', 'book view should expose a scrolling learning deck');
 const sections = discovery.buildBookSections(books[0], 'book-seed-a');
-['passage','idea','theory','psychology','approach','everyday','application','real-life'].forEach(kind => {
+['passage','idea','theory','psychology','approach','aspect','everyday','application','real-life'].forEach(kind => {
   assert.ok(sections.some(s => s.kind === kind), `book deck should include ${kind}`);
 });
 assert.ok(sections.every(s => s.title && s.text && s.sourceLabel), 'each book section should have title, text and source label');
