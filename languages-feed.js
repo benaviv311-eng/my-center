@@ -15,7 +15,7 @@
     }catch(e){return {filter:'all',refresh:0,reactions:{},more:0};}
   }
   const state=load();
-  if(!['all',...M.LANGUAGE_CODES].includes(state.filter))state.filter='all';
+  if(!['all','four',...M.LANGUAGE_CODES].includes(state.filter))state.filter='all';
   let batch=0;
 
   function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
@@ -36,6 +36,15 @@
       <button class="feed-action ${reaction(card,'save')?'active':''}" type="button" data-feed-action="save">♡ שמור</button>
       <button class="feed-action" type="button" data-feed-action="more">＋ עוד כזה</button>
       <a class="feed-action feed-study-link" href="language-study.html?lang=${card.lang}&topic=basics">לשיעור המלא ←</a>
+    </div>`;
+  }
+  function fourActions(card){
+    return `<div class="feed-actions">
+      <button class="feed-action ${reaction(card,'know')?'active':''}" type="button" data-feed-action="know">✓ ידעתי</button>
+      <button class="feed-action ${reaction(card,'practice')?'active':''}" type="button" data-feed-action="practice">↻ לתרגול</button>
+      <button class="feed-action ${reaction(card,'save')?'active':''}" type="button" data-feed-action="save">♡ שמור</button>
+      <button class="feed-action" type="button" data-feed-action="more">＋ עוד כזה</button>
+      <a class="feed-action feed-study-link" href="four-languages.html">🌐 מילה ב־4 שפות ←</a>
     </div>`;
   }
   function linesHtml(lang,lines,revealTranslations){
@@ -61,6 +70,55 @@
   }
   function cardHtml(card){
     return `<article class="feed-card" data-card-id="${esc(card.id)}" data-card-lang="${card.lang}" data-card-type="${card.type}"><div class="feed-card-inner">${cardHeader(card)}${bodyFor(card)}${actions(card)}</div></article>`;
+  }
+
+  function fourLanguageHeader(card){
+    return `<div class="feed-card-header"><div class="feed-card-language"><span class="feed-lang-code">4×</span><div class="feed-lang-meta"><strong>ארבע השפות יחד</strong><small>ערבית · איטלקית · רוסית · ספרדית</small></div></div><span class="feed-type">${TYPE_LABELS[card.type]||'פוסט'}</span></div>`;
+  }
+  function fourLanguageCell(lang,html){
+    const meta=M.LANGUAGES[lang];
+    return `<section class="feed-moment-item feed-four-cell"><strong>${meta.code} · ${meta.name}</strong>${html}</section>`;
+  }
+  function fourWordOrSentenceBody(card){
+    const cells=M.LANGUAGE_CODES.map(lang=>{
+      const item=card.variants[lang].item;
+      return fourLanguageCell(lang,displayBlock(M.getDisplay(item),false));
+    }).join('');
+    return `<div class="feed-four-hebrew"><small>המשמעות בעברית</small><div class="feed-primary">${esc(card.hebrew)}</div></div><div class="feed-moment-grid feed-four-grid">${cells}</div>`;
+  }
+  function fourLinesBody(card,icon){
+    const cells=M.LANGUAGE_CODES.map(lang=>{
+      const v=card.variants[lang];
+      return fourLanguageCell(lang,`<h3 class="feed-four-title">${icon} ${esc(v.title||'')}</h3>${linesHtml(lang,v.lines||[],false)}`);
+    }).join('');
+    const shared=card.hebrew?`<div class="feed-four-hebrew"><small>עברית</small><div class="feed-translation">${esc(card.hebrew)}</div></div>`:'';
+    return `${shared}<div class="feed-moment-grid feed-four-grid">${cells}</div>`;
+  }
+  function fourCultureBody(card){
+    const cells=M.LANGUAGE_CODES.map(lang=>{
+      const v=card.variants[lang];
+      const d=itemDisplay(lang,v.phrase||['','','']);
+      return fourLanguageCell(lang,`<h3 class="feed-four-title">${esc(v.title||'')}</h3><p class="feed-copy">${esc(v.body||'')}</p>${displayBlock(d,true)}`);
+    }).join('');
+    return `<div class="feed-moment-grid feed-four-grid">${cells}</div>`;
+  }
+  function fourChallengeBody(card){
+    const correct=card.variants.ar.correct;
+    const cells=M.LANGUAGE_CODES.map(lang=>fourLanguageCell(lang,displayBlock({...M.getDisplay(card.variants[lang].correct),translation:''},false))).join('');
+    const options=card.variants.ar.options;
+    return `<div class="feed-question"><strong>מה הפירוש המשותף לארבע המילים?</strong><div class="feed-moment-grid feed-four-grid">${cells}</div><div class="feed-options">${options.map(opt=>`<button class="feed-option" type="button" data-challenge-option data-correct="${opt.id===correct.id?'1':'0'}">${esc(opt.he)}</button>`).join('')}</div><div class="feed-answer" data-challenge-feedback></div></div>`;
+  }
+  function fourLanguageBody(card){
+    if(card.type==='word'||card.type==='sentence')return fourWordOrSentenceBody(card);
+    if(card.type==='joke')return fourLinesBody(card,'😄');
+    if(card.type==='story')return fourLinesBody(card,'📖');
+    if(card.type==='dialogue')return fourLinesBody(card,'💬');
+    if(card.type==='culture')return fourCultureBody(card);
+    if(card.type==='challenge')return fourChallengeBody(card);
+    return fourWordOrSentenceBody(card);
+  }
+  function fourLanguageCardHtml(card){
+    return `<article class="feed-card feed-four-card" data-card-id="${esc(card.id)}" data-card-lang="four" data-card-type="${card.type}"><div class="feed-card-inner">${fourLanguageHeader(card)}${fourLanguageBody(card)}${fourActions(card)}</div></article>`;
   }
 
   function fourLanguageMoment(seed){
@@ -111,14 +169,31 @@
     const suffix=state.filter==='all'?'':`?lang=${state.filter}`;
     return `<section class="feed-moment feed-game" data-feed-mini-game="${type}"><div class="feed-game-head"><div><span class="feed-type">${icon} משחק בתוך הפיד</span><h2>${label}</h2><p class="meta">${esc(langText)}</p></div><a class="feed-game-link" href="language-games.html${suffix}">לכל המשחקים ←</a></div>${miniGameBody(game)}</section>`;
   }
+  function fourLanguageMiniGameMoment(type,seed){
+    const safeType=type==='four-languages'?'flashcards':type;
+    const game=M.buildFourLanguageMiniGame({type:safeType,seed});
+    const [icon,label]=GAME_LABELS[safeType]||['🎮','משחק'];
+    const cells=M.LANGUAGE_CODES.map(lang=>{
+      const variant={type:safeType,...game.variants[lang]};
+      return `<div class="feed-moment-item feed-four-game-cell feed-game"><strong>${M.LANGUAGES[lang].code} · ${M.LANGUAGES[lang].name}</strong>${miniGameBody(variant)}</div>`;
+    }).join('');
+    return `<section class="feed-moment feed-game feed-four-game" data-feed-mini-game="${safeType}"><div class="feed-game-head"><div><span class="feed-type">${icon} משחק ב־4 שפות</span><h2>${label}</h2><p class="meta">אותו סוג תרגול בערבית, איטלקית, רוסית וספרדית.</p></div><a class="feed-game-link" href="language-games.html">לכל המשחקים ←</a></div><div class="feed-moment-grid feed-four-grid">${cells}</div></section>`;
+  }
 
   function seedForBatch(n){return `${today()}:home:${state.filter}:${state.refresh}:${n}`;}
-  function buildBatch(n,count){return M.buildFeed({filter:state.filter,seed:seedForBatch(n),count});}
+  function buildBatch(n,count){return state.filter==='four'?M.buildFourLanguageFeed({seed:seedForBatch(n),count}):M.buildFeed({filter:state.filter,seed:seedForBatch(n),count});}
   function insertBatch(n,count=12){
     const root=$('language-feed');
     const cards=buildBatch(n,count);
     const html=[];
+    const fourGameTypes=M.GAME_TYPES.filter(type=>type!=='four-languages');
     cards.forEach((card,index)=>{
+      if(state.filter==='four'){
+        html.push(fourLanguageCardHtml(card));
+        if(index===5){const type=fourGameTypes[(state.refresh+n*2)%fourGameTypes.length];html.push(fourLanguageMiniGameMoment(type,`${seedForBatch(n)}:four-game:1`));}
+        if((count>10&&index===10)||(count<=10&&index===8)){const type=fourGameTypes[(state.refresh+n*2+1)%fourGameTypes.length];html.push(fourLanguageMiniGameMoment(type,`${seedForBatch(n)}:four-game:2`));}
+        return;
+      }
       html.push(cardHtml(card));
       if(state.filter==='all'&&n===0&&index===3)html.push(fourLanguageMoment(index));
       if(index===5){const type=M.GAME_TYPES[(state.refresh+n*2)%M.GAME_TYPES.length];html.push(miniGameMoment(type,`${seedForBatch(n)}:game:1`));}
@@ -131,7 +206,9 @@
 
   function setContextLinks(){
     const root=$('feed-context-links');
-    if(state.filter==='all'){
+    if(state.filter==='four'){
+      root.innerHTML=`<a class="btn small" href="four-languages.html">🌐 מילה ב־4 שפות</a><a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`;
+    }else if(state.filter==='all'){
       root.innerHTML=`<a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`+M.LANGUAGE_CODES.map(code=>`<a class="btn small" href="language-study.html?lang=${code}&topic=basics">${M.LANGUAGES[code].code} · שיעור</a>`).join('');
     }else{
       root.innerHTML=`<a class="btn small" href="language-games.html?lang=${state.filter}">🎮 משחקים</a><a class="btn small" href="language-study.html?lang=${state.filter}&topic=basics">שיעור מלא</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
@@ -144,7 +221,7 @@
       btn.setAttribute('aria-pressed',active?'true':'false');
     });
     const label=$('feed-mode-label');
-    label.textContent=state.filter==='all'?'כל ארבע השפות מעורבבות':`רק ${M.LANGUAGES[state.filter].name}`;
+    label.textContent=state.filter==='all'?'כל ארבע השפות מעורבבות':state.filter==='four'?'כל פוסט מוצג בארבע השפות + עברית':`רק ${M.LANGUAGES[state.filter].name}`;
     setContextLinks();
   }
   function resetFeed(){
@@ -172,9 +249,9 @@
     const type=article.dataset.cardType;
     state.more++;
     save();
-    const candidates=M.buildFeed({filter:lang,seed:`more:${article.dataset.cardId}:${state.more}`,count:24});
+    const candidates=lang==='four'?M.buildFourLanguageFeed({seed:`more:${article.dataset.cardId}:${state.more}`,count:24}):M.buildFeed({filter:lang,seed:`more:${article.dataset.cardId}:${state.more}`,count:24});
     const card=candidates.find(x=>x.type===type)||candidates[0];
-    article.insertAdjacentHTML('afterend',cardHtml(card));
+    article.insertAdjacentHTML('afterend',lang==='four'?fourLanguageCardHtml(card):cardHtml(card));
     const next=article.nextElementSibling;
     wire(next);
     next?.scrollIntoView({behavior:'smooth',block:'center'});
@@ -237,7 +314,7 @@
   $('feed-load-more').addEventListener('click',()=>{
     batch++;
     insertBatch(batch,10);
-    $('feed-status').textContent='נוספו עוד 10 פוסטים ומשחקים';
+    $('feed-status').textContent=state.filter==='four'?'נוספו עוד 10 פוסטים בארבע שפות':'נוספו עוד 10 פוסטים ומשחקים';
   });
 
   updateFilters();
