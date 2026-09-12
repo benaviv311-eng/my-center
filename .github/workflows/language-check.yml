@@ -24,9 +24,13 @@ jobs:
           node --check language-archive.js
           if [ -f language-topic-expansion.js ]; then node --check language-topic-expansion.js; fi
           if [ -f four-languages.js ]; then node --check four-languages.js; fi
+          if [ -f four-language-study.js ]; then node --check four-language-study.js; fi
           if [ -f language-vocabulary.js ]; then node --check language-vocabulary.js; fi
           if [ -f language-vocabulary-link.js ]; then node --check language-vocabulary-link.js; fi
+          if [ -f language-audio.js ]; then node --check language-audio.js; fi
       - name: Run expanded topics and four-language tests
         run: node tests/language-topics-four.test.js
       - name: Run vocabulary by topic tests
         run: node tests/language-vocabulary.test.js
+      - name: Run language audio tests
+        run: node tests/language-audio.test.js
