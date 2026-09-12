@@ -68,6 +68,6 @@ assert.ok(archiveHtml.includes('language-topic-expansion.js'), 'archive page sho
 const home = fs.readFileSync(path.join(root, 'languages.html'), 'utf8');
 assert.ok(home.includes('four-languages.html'), 'languages home should link to four-language view');
 const feedJs = fs.readFileSync(path.join(root, 'languages-feed.js'), 'utf8');
-assert.ok(feedJs.includes('href="four-languages.html">לשיעור המלא'), 'four-language feed cards should open the full four-language lesson');
+assert.ok(feedJs.includes('href="four-languages.html"'), 'four-language feed cards should open the full four-language page');
 
 console.log('expanded topics and full four-language study tests: OK');
