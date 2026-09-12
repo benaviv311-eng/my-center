@@ -25,6 +25,11 @@ assert.ok(Object.keys(expansion.TOPIC_META).length >= 15, 'should expose at leas
   });
 });
 
+requiredTopics.forEach(topic => {
+  const ids = expansion.COURSES.ar[topic].words.map(w => w[0]);
+  ['it','ru','es'].forEach(lang => assert.deepStrictEqual(expansion.COURSES[lang][topic].words.map(w => w[0]), ids, `${topic} should align concept ids across languages`));
+});
+
 const fourHtml = fs.readFileSync(fourHtmlPath, 'utf8');
 ['four-mode-word','four-mode-sentence','four-topic','four-refresh','four-grid'].forEach(id => {
   assert.ok(fourHtml.includes(`id="${id}"`), `four-languages.html should contain ${id}`);
@@ -32,9 +37,11 @@ const fourHtml = fs.readFileSync(fourHtmlPath, 'utf8');
 assert.ok(fourHtml.includes('language-topic-expansion.js'), 'four-language page should load expanded topics');
 
 const topicsHtml = fs.readFileSync(path.join(root, 'language-topics.html'), 'utf8');
+const topicsJs = fs.readFileSync(path.join(root, 'language-topics.js'), 'utf8');
 const studyHtml = fs.readFileSync(path.join(root, 'language-study.html'), 'utf8');
 const archiveHtml = fs.readFileSync(path.join(root, 'language-archive.html'), 'utf8');
 assert.ok(topicsHtml.includes('language-topic-expansion.js'), 'topics page should load expanded topics');
+assert.ok(topicsJs.includes('topic-vocab'), 'topics page should render vocabulary inside each topic');
 assert.ok(studyHtml.includes('language-topic-expansion.js'), 'study page should load expanded topics');
 assert.ok(archiveHtml.includes('language-topic-expansion.js'), 'archive page should load expanded topics');
 
