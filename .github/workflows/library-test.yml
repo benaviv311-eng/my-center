@@ -1,0 +1,44 @@
+name: Library tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'library.html'
+      - 'library-discovery.js'
+      - 'library-discovery-ui.js'
+      - 'library-book-links.js'
+      - 'book.html'
+      - 'book-page.js'
+      - 'book-page.css'
+      - 'tests/library-*.test.js'
+      - 'tests/book-page.test.js'
+      - '.github/workflows/library-test.yml'
+  pull_request:
+    paths:
+      - 'library.html'
+      - 'library-discovery.js'
+      - 'library-discovery-ui.js'
+      - 'library-book-links.js'
+      - 'book.html'
+      - 'book-page.js'
+      - 'book-page.css'
+      - 'tests/library-*.test.js'
+      - 'tests/book-page.test.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node tests/library-discovery.test.js
+      - run: node tests/library-integration.test.js
+      - run: node tests/book-page.test.js
+      - run: node --check library-discovery.js
+      - run: node --check library-discovery-ui.js
+      - run: node --check library-book-links.js
+      - run: node --check book-page.js
