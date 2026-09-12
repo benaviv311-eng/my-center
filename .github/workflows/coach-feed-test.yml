@@ -1,0 +1,28 @@
+name: Coach Feed Tests
+
+on:
+  push:
+    branches: ['feature/coach-feed-learning']
+  pull_request:
+    paths:
+      - 'coach.html'
+      - 'coach-feed.css'
+      - 'coach-feed.js'
+      - 'coach-feed-data.js'
+      - 'tests/coach-feed.test.js'
+      - '.github/workflows/coach-feed-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run full test suite
+        run: node --test tests/*.test.js
+      - name: Check coach scripts
+        run: |
+          node --check coach-feed-data.js
+          node --check coach-feed.js
