@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>מילה ב־4 שפות | המרכז שלי</title>
+  <meta name="theme-color" content="#f7f3ea">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="language-pages.css?v=1">
+  <style>
+    .four-page{max-width:920px;margin:0 auto}.four-toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:14px}.four-mode{display:flex;gap:6px;padding:4px;border:1px solid var(--line);border-radius:999px;background:#faf7ef}.four-mode button{border:0;background:transparent;border-radius:999px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer}.four-mode button.active{background:#22313e;color:#fff}.four-select{min-height:42px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 10px;font:inherit}.four-focus{text-align:center;padding:28px 18px;border:1px solid var(--line);border-radius:24px;background:#fffdf8;margin-top:16px}.four-focus small{display:block;color:var(--muted);font-weight:800;margin-bottom:7px}.four-hebrew{font-size:clamp(34px,7vw,64px);font-weight:900;line-height:1.15}.four-topic-label{margin-top:8px;color:var(--muted)}.four-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:14px}.four-card{border:1px solid var(--line);border-radius:20px;background:#fffdf8;padding:16px;display:grid;gap:10px}.four-card-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.four-code{display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:42px;border-radius:14px;background:#edf2f6;font-size:12px;font-weight:900}.four-primary{font-size:28px;font-weight:900;line-height:1.35}.four-secondary{color:var(--muted);font-size:15px}.four-example{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:4px}.four-example strong{font-size:17px}.four-example span{color:var(--muted);font-size:14px}.four-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}.four-note{margin-top:10px;text-align:center;color:var(--muted);min-height:20px}@media(max-width:650px){.four-grid{grid-template-columns:1fr}.four-toolbar{display:grid}.four-select{width:100%}.four-mode{justify-content:center}.four-actions{display:grid;grid-template-columns:1fr 1fr}.four-actions .btn{text-align:center}}
+  </style>
+</head>
+<body>
+<div class="app four-page">
+  <div class="back"><a class="btn small" href="languages.html">← חזרה לשפות</a></div>
+
+  <section class="hero">
+    <h1>🌐 מילה ב־4 שפות</h1>
+    <p>אותה משמעות בערבית, איטלקית, רוסית וספרדית — זו לצד זו.</p>
+    <div class="four-toolbar">
+      <div class="four-mode" role="group" aria-label="בחר מצב">
+        <button id="four-mode-word" class="active" type="button" aria-pressed="true">מילה</button>
+        <button id="four-mode-sentence" type="button" aria-pressed="false">משפט</button>
+      </div>
+      <select id="four-topic" class="four-select" aria-label="בחר נושא"></select>
+      <button id="four-refresh" class="btn" type="button">↻ מילה אחרת</button>
+    </div>
+  </section>
+
+  <section class="four-focus">
+    <small id="four-focus-label">המילה בעברית</small>
+    <div id="four-hebrew" class="four-hebrew">טוען…</div>
+    <div id="four-topic-label" class="four-topic-label"></div>
+  </section>
+
+  <main id="four-grid" class="four-grid" aria-live="polite"></main>
+
+  <div class="four-actions">
+    <button id="four-save" class="btn" type="button">♡ שמור</button>
+    <a id="four-practice" class="btn" href="language-games.html">🎮 תרגל</a>
+    <a class="btn" href="language-topics.html?lang=ar">📂 לכל הנושאים</a>
+    <a class="btn" href="languages.html">🌍 חזרה לפיד</a>
+  </div>
+  <div id="four-note" class="four-note" aria-live="polite"></div>
+
+  <nav class="bottom-nav"><div class="inner">
+    <a class="nav-item" href="index.html"><span>🏠</span>בית</a>
+    <a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a>
+    <a class="nav-item" href="coach.html"><span>🏐</span>מאמן</a>
+    <a class="nav-item active" href="languages.html"><span>🌍</span>שפות</a>
+    <a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a>
+    <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
+  </div></nav>
+</div>
+<script src="language-core.js?v=1"></script>
+<script src="language-topic-expansion.js?v=1"></script>
+<script src="four-languages.js?v=1"></script>
+</body>
+</html>
