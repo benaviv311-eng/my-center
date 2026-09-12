@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'language-feed-model.js'
+      - 'language-four-feed-model.js'
       - 'languages-feed.js'
       - 'languages-feed.css'
       - 'languages.html'
@@ -20,6 +21,7 @@ jobs:
       - name: Check feed and games JavaScript syntax
         run: |
           node --check language-feed-model.js
+          node --check language-four-feed-model.js
           node --check languages-feed.js
           node --check language-games.js
       - name: Run feed and games behavior tests
