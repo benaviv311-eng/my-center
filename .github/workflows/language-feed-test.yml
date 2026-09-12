@@ -11,6 +11,9 @@ on:
       - 'language-games.html'
       - 'language-games.js'
       - 'language-games.css'
+      - 'language-game-pool.js'
+      - 'language-vocabulary-bank.js'
+      - 'language-vocabulary-data-*.js'
       - 'tests/language-feed.test.js'
       - '.github/workflows/language-feed-test.yml'
 jobs:
@@ -23,6 +26,7 @@ jobs:
           node --check language-feed-model.js
           node --check language-four-feed-model.js
           node --check languages-feed.js
+          node --check language-game-pool.js
           node --check language-games.js
       - name: Run feed and games behavior tests
         run: node tests/language-feed.test.js
