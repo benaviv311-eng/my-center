@@ -30,10 +30,10 @@ assert.ok(four.includes('function audioButton(lang,item)'), 'four-language cards
 assert.ok(four.includes('item.target'), 'four-language audio buttons should bind directly to original target text');
 assert.ok(four.includes('audioButton(lang,example)'), 'example sentences should bind audio to the sentence target, not the word target');
 assert.ok(four.includes('audioButton(lang,sentence)'), 'sentence mode should bind audio directly to the sentence target');
+assert.ok(four.includes('data-audio-decorated="1"'), 'explicit sentence audio should suppress guessed duplicate audio buttons');
 
 const study = fs.readFileSync(path.join(root, 'language-study.js'), 'utf8');
-assert.ok(study.includes('function audioButton(item)'), 'single-language study should create explicit audio buttons for target items');
-assert.ok(study.includes('item.target'), 'single-language study audio should use original target text');
-assert.ok(study.includes('audioButton(s)'), 'single-language sentence views should bind audio directly to sentence target text');
+assert.ok(study.includes('data-sentence='), 'single-language sentence exercises should expose sentence ids for original-target lookup');
+assert.ok(study.includes('quiz-prompt'), 'single-language sentence prompts should remain available for shared audio decoration');
 
 console.log('language audio tests: OK');
