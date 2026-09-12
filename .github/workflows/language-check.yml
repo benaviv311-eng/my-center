@@ -6,7 +6,9 @@ on:
     paths:
       - 'language-*.js'
       - 'language-*.html'
+      - 'four-languages.*'
       - 'languages.html'
+      - 'tests/language-*.test.js'
       - '.github/workflows/language-check.yml'
 
 jobs:
@@ -20,3 +22,7 @@ jobs:
           node --check language-study.js
           node --check language-topics.js
           node --check language-archive.js
+          if [ -f language-topic-expansion.js ]; then node --check language-topic-expansion.js; fi
+          if [ -f four-languages.js ]; then node --check four-languages.js; fi
+      - name: Run expanded topics and four-language tests
+        run: node tests/language-topics-four.test.js
