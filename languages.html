@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="languages-feed.css?v=2">
+  <link rel="stylesheet" href="languages-feed.css?v=3">
 </head>
 <body>
 <div class="app language-feed-page">
@@ -32,6 +32,7 @@
       <button id="feed-filter-it" class="feed-filter" type="button" data-feed-filter="it" aria-pressed="false">IT · איטלקית</button>
       <button id="feed-filter-ru" class="feed-filter" type="button" data-feed-filter="ru" aria-pressed="false">RU · רוסית</button>
       <button id="feed-filter-es" class="feed-filter" type="button" data-feed-filter="es" aria-pressed="false">ES · ספרדית</button>
+      <a id="feed-vocabulary-tab" class="feed-filter" href="language-vocabulary.html">📚 אוצר מילים</a>
     </div>
     <div class="feed-tools">
       <div class="feed-tools-group">
@@ -63,7 +64,6 @@
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
 <script src="languages-feed.js?v=3"></script>
-<script src="language-vocabulary-link.js?v=2"></script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
