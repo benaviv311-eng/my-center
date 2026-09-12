@@ -44,9 +44,19 @@
 .review-translation{
   font-size:18px;
 }
-.review-original-arabic{
+.review-original-arabic,
+.review-original-russian,
+.russian-original,
+.russian-original-inline{
   color:var(--muted);
   font-size:14px;
+}
+.russian-original{
+  display:block;
+  direction:ltr;
+}
+.russian-original-inline{
+  margin-inline-start:5px;
 }
 .review-card-answer [data-review-id]{
   margin-right:auto;
