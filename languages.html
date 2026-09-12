@@ -6,77 +6,53 @@
   <title>שפות | המרכז שלי</title>
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="languages.css?v=1">
-  <link rel="stylesheet" href="languages-review.css?v=2">
+  <link rel="stylesheet" href="language-pages.css?v=1">
 </head>
 <body>
 <div class="app">
   <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-
-  <div class="page-title language-page-title">
-    <div>
-      <h1>🌍 שפות</h1>
-      <div class="subtitle">ערבית · איטלקית · רוסית · ספרדית</div>
-    </div>
-    <div class="daily-language-progress">
-      <strong id="language-progress-label">0/4 הושלמו היום</strong>
-      <div class="language-progress-track" aria-hidden="true">
-        <span id="language-progress-bar"></span>
-      </div>
-    </div>
+  <div class="page-title">
+    <h1>🌍 שפות</h1>
+    <div class="subtitle">ערבית · איטלקית · רוסית · ספרדית</div>
   </div>
 
-  <section class="section">
-    <div class="section-head">
-      <h2>השיעורים של היום</h2>
-      <small>5 מילים + משפט + תרגיל בכל שפה</small>
-    </div>
-    <div id="language-picker" class="language-picker" aria-label="בחירת שפה"></div>
-  </section>
-
-  <section class="section" id="daily-language-section">
-    <div id="daily-language-unit"></div>
+  <section class="hero">
+    <strong>הלימוד היומי שלי</strong>
+    <p id="languages-daily-progress">0/4 שפות הושלמו היום</p>
+    <p>בחר שפה אחת. נפתח רק אותה בדף לימוד ארוך ואינטראקטיבי.</p>
   </section>
 
   <section class="section">
-    <div class="section-head">
-      <h2>🔁 חזרה מהירה</h2>
-      <small>חומר שכבר פגשת</small>
+    <div class="section-head"><h2>בחר שפה</h2><small>כל שפה נפתחת בנפרד</small></div>
+    <div class="language-overview-grid">
+      <article class="card language-overview-card">
+        <div class="language-card-head"><span class="language-code">AR</span><div><h2>ערבית</h2><small>العربية · תעתיק עברי</small></div></div>
+        <p class="meta">המילה הראשית והתרגילים מוצגים בתעתיק עברי. הכתב הערבי נשאר משני.</p>
+        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=ar&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=ar">נושאים</a><a class="btn small" href="language-archive.html?lang=ar">מאגר וחזרות</a></div>
+      </article>
+      <article class="card language-overview-card">
+        <div class="language-card-head"><span class="language-code">IT</span><div><h2>איטלקית</h2><small>Italiano</small></div></div>
+        <p class="meta">מילים, משפטים, הרכבת משפטים, שאלות ותרגום בדף גלילה אחד.</p>
+        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=it&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=it">נושאים</a><a class="btn small" href="language-archive.html?lang=it">מאגר וחזרות</a></div>
+      </article>
+      <article class="card language-overview-card">
+        <div class="language-card-head"><span class="language-code">RU</span><div><h2>רוסית</h2><small>Русский · תעתיק לטיני</small></div></div>
+        <p class="meta">התעתיק הלטיני הוא התצוגה הראשית. הקירילית נשארת כתצוגה משנית.</p>
+        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=ru&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=ru">נושאים</a><a class="btn small" href="language-archive.html?lang=ru">מאגר וחזרות</a></div>
+      </article>
+      <article class="card language-overview-card">
+        <div class="language-card-head"><span class="language-code">ES</span><div><h2>ספרדית</h2><small>Español</small></div></div>
+        <p class="meta">תרגול יומי ארוך עם רענון עצמאי לכל סוג תרגיל.</p>
+        <div class="language-actions"><a class="btn primary" href="language-study.html?lang=es&topic=basics">פתח שיעור ארוך ←</a><a class="btn small" href="language-topics.html?lang=es">נושאים</a><a class="btn small" href="language-archive.html?lang=es">מאגר וחזרות</a></div>
+      </article>
     </div>
-    <article class="card">
-      <div class="review-toolbar">
-        <select id="review-language" class="language-select" aria-label="שפה לחזרה">
-          <option value="all">כל השפות</option>
-          <option value="ar">ערבית</option>
-          <option value="it">איטלקית</option>
-          <option value="ru">רוסית</option>
-          <option value="es">ספרדית</option>
-        </select>
-        <button id="new-review" class="btn small" type="button">רענן חזרה ↻</button>
-      </div>
-      <div id="review-list" class="review-list"></div>
-    </article>
   </section>
 
   <section class="section">
-    <div class="section-head">
-      <h2>📚 המאגר שלי</h2>
-      <small>נשמר אוטומטית במכשיר הזה</small>
+    <div class="grid grid-2">
+      <article class="card"><div class="label lang">נושאים</div><h3>בחר על מה ללמוד</h3><p class="meta">הנושא נפרד ממבנה התרגילים. אותו דף אינטראקטיבי עובד על כל נושא.</p><div class="card-actions"><a class="btn small" href="language-topics.html?lang=ar">פתח נושאים ←</a></div></article>
+      <article class="card"><div class="label lang">מאגר וחזרות</div><h3>כל מה שכבר למדת</h3><p class="meta">חיפוש, סטטוס מילים, טעויות וחזרה ממוקדת.</p><div class="card-actions"><a class="btn small" href="language-archive.html?lang=ar">פתח מאגר ←</a></div></article>
     </div>
-    <article class="card">
-      <div id="language-stats" class="language-stats"></div>
-      <div class="archive-toolbar">
-        <input id="archive-search" class="search" type="search" placeholder="חפש מילה או תרגום">
-        <select id="archive-language" class="language-select" aria-label="סינון מאגר לפי שפה">
-          <option value="all">כל השפות</option>
-          <option value="ar">ערבית</option>
-          <option value="it">איטלקית</option>
-          <option value="ru">רוסית</option>
-          <option value="es">ספרדית</option>
-        </select>
-      </div>
-      <div id="archive-list" class="archive-list"></div>
-    </article>
   </section>
 
   <nav class="bottom-nav"><div class="inner">
@@ -88,11 +64,10 @@
     <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
   </div></nav>
 </div>
-
 <div class="toast" id="toast"></div>
 <script src="app.js?v=3"></script>
-<script src="languages.js?v=1"></script>
-<script src="languages-review.js?v=1"></script>
-<script src="languages-russian-translit.js?v=1"></script>
+<script>
+(function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
+</script>
 </body>
 </html>
