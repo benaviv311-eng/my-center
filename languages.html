@@ -27,6 +27,7 @@
   <section class="feed-toolbar" aria-label="סינון וכלי הפיד">
     <div class="feed-filters" role="group" aria-label="בחר שפה בפיד">
       <button id="feed-filter-all" class="feed-filter active" type="button" data-feed-filter="all" aria-pressed="true">✨ הכול</button>
+      <button id="feed-filter-four" class="feed-filter" type="button" data-feed-filter="four" aria-pressed="false">🌐 4 שפות</button>
       <button id="feed-filter-ar" class="feed-filter" type="button" data-feed-filter="ar" aria-pressed="false">AR · ערבית</button>
       <button id="feed-filter-it" class="feed-filter" type="button" data-feed-filter="it" aria-pressed="false">IT · איטלקית</button>
       <button id="feed-filter-ru" class="feed-filter" type="button" data-feed-filter="ru" aria-pressed="false">RU · רוסית</button>
@@ -60,7 +61,8 @@
 <div class="toast" id="toast"></div>
 <script src="app.js?v=3"></script>
 <script src="language-feed-model.js?v=2"></script>
-<script src="languages-feed.js?v=2"></script>
+<script src="language-four-feed-model.js?v=1"></script>
+<script src="languages-feed.js?v=3"></script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
