@@ -1,27 +1,18 @@
 <!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>מאמן | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"></head><body><div class="app">
+<title>מאמן | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="coach-feed.css"></head><body><div class="app">
 <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-<div class="page-title"><h1>🏐 מאמן</h1><div class="subtitle">כדורעף · למידה · כוח מתפרץ</div></div>
-<section class="section"><div class="section-head"><h2>עקרונות עבודה</h2></div>
-<div class="grid grid-3">
-<article class="card"><div class="label coach">למידה</div><h3>External Focus</h3><p class="meta">הכוונת הקשב להשפעה של התנועה או למטרה בסביבה, במקום רק לפרטי הגוף.</p></article>
-<article class="card"><div class="label coach">Shaping</div><h3>קריטריון עולה בהדרגה</h3><p class="meta">מחזקים הצלחה שנמצאת מעט מעל הרמה הנוכחית, ואז מעלים את הדרישה.</p></article>
-<article class="card"><div class="label coach">פיתוח לטווח ארוך</div><h3>איכות לפני כמות</h3><p class="meta">מעדיפים חזרות ממוקדות ואיכותיות על צבירת נפח חסר מטרה.</p></article>
-</div></section>
-<section class="section"><div class="section-head"><h2>אימון 1</h2><small>מבנה קאנוני</small></div>
-<article class="card"><ol class="list">
-<li><b>חימום קבוע</b></li>
-<li><b>קבלה בהתקדמות</b> — אחת נותנת כדורים, אחת מקבלת, Split בהתקדמות, החלפה.</li>
-<li><b>פרפר — כניסה ב־Serve</b> — עגלה בכל צד; הצד שמפסיד את הנקודה מוציא סרב.</li>
-<li><b>קבלה → Set</b> — קבלה, Set והנחתה; 2V2 כניסה ב־Serve.</li>
-<li><b>Serve משני הצדדים</b> — קבלה ו־Set, ואז עם התקפה.</li>
-<li><b>הנחתות רגיל מ־4</b>.</li>
-<li><b>Serves</b> — עבודה ממוקדת.</li>
-<li><b>משחקונים</b> — שלשות מתחלפות, כניסה בסרב משני הצדדים.</li>
-</ol></article></section>
-<section class="section"><div class="section-head"><h2>תרגיל מהיר</h2></div>
-<article class="card"><h3>קבלה תחת שינוי מטרה</h3><p class="meta">המאמן משנה את אזור המטרה במהלך הרצף. המטרה היא לחייב זיהוי, הסתגלות וקבלת החלטה — לא רק טכניקה חוזרת.</p>
-<div class="pill-row"><span class="pill">קבלה</span><span class="pill">הסתגלות</span><span class="pill">קבלת החלטות</span></div></article></section>
+<div class="page-title"><h1>🏐 מאמן</h1><div class="subtitle">כדורעף · פסיכולוגיה · תנועה · כוח מתפרץ · שפת אימון</div></div>
+
+<section class="coach-feed-shell" aria-labelledby="coach-feed-heading">
+  <div class="coach-feed-intro">
+    <p class="eyebrow">למידה יומית למאמן</p>
+    <h2 id="coach-feed-heading">פיד המאמן</h2>
+    <p>פסיכולוגיה, תנועה, כוח, שפה ורעיונות לכדורעף — בגלילה אחת. בין הכרטיסים משולבות גם שאלות עם בחירה והסבר.</p>
+  </div>
+  <div class="coach-topic-nav" id="coach-topic-nav" aria-label="תחומי מאמן"></div>
+  <p class="coach-feed-status" id="coach-feed-status" aria-live="polite"></p>
+  <div class="coach-feed" id="coach-feed"></div>
+</section>
 
 <nav class="bottom-nav"><div class="inner">
 <a class="nav-item " href="index.html"><span>🏠</span>בית</a>
@@ -31,4 +22,4 @@
 <a class="nav-item " href="music.html"><span>🎵</span>מוזיקה</a>
 <a class="nav-item " href="library.html"><span>📚</span>ספרייה</a>
 </div></nav>
-</div><div class="toast" id="toast"></div><script src="app.js"></script></body></html>
+</div><div class="toast" id="toast"></div><script src="coach-feed-data.js"></script><script src="coach-feed.js"></script><script src="app.js"></script></body></html>
