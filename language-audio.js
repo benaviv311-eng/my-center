@@ -4,7 +4,9 @@
   const LOCALES={ar:'ar-SA',it:'it-IT',ru:'ru-RU',es:'es-ES'};
   const CODE_TO_LANG={AR:'ar',IT:'it',RU:'ru',ES:'es'};
   const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-example strong','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
+  const ARABIC_REMOTE_AUDIO='https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=ar&q=';
   let activeButton=null;
+  let remoteAudio=null;
   let observer=null;
   let decorateQueued=false;
 
@@ -93,6 +95,13 @@
   }
 
   function resetActive(){if(activeButton){activeButton.classList.remove('is-speaking');activeButton.textContent='🔊';activeButton=null;}}
+  function stopRemote(){
+    if(!remoteAudio)return;
+    remoteAudio.pause();
+    remoteAudio.removeAttribute('src');
+    remoteAudio.load();
+    remoteAudio=null;
+  }
   function pickVoice(locale){
     if(!root.speechSynthesis?.getVoices)return null;
     const voices=root.speechSynthesis.getVoices();
@@ -116,6 +125,12 @@
     else synth.onvoiceschanged=finish;
     setTimeout(finish,500);
   }
+  function markSpeaking(buttonEl){
+    if(!buttonEl)return;
+    activeButton=buttonEl;
+    buttonEl.classList.add('is-speaking');
+    buttonEl.textContent='■';
+  }
   function speakNow(text,lang,buttonEl){
     const locale=LOCALES[lang];
     const utterance=new SpeechSynthesisUtterance(text);
@@ -123,17 +138,41 @@
     utterance.lang=voice?.lang||locale;
     if(voice)utterance.voice=voice;
     utterance.rate=.9;
-    if(buttonEl){activeButton=buttonEl;buttonEl.classList.add('is-speaking');buttonEl.textContent='■';}
+    markSpeaking(buttonEl);
     utterance.onend=resetActive;
     utterance.onerror=resetActive;
     root.speechSynthesis.speak(utterance);
   }
+  function playArabicRemote(text,buttonEl){
+    stopRemote();
+    const audio=new Audio(ARABIC_REMOTE_AUDIO+encodeURIComponent(text));
+    remoteAudio=audio;
+    audio.preload='auto';
+    markSpeaking(buttonEl);
+    audio.onended=()=>{remoteAudio=null;resetActive();};
+    audio.onerror=()=>{
+      remoteAudio=null;
+      resetActive();
+      if(root.speechSynthesis&&typeof root.SpeechSynthesisUtterance==='function')waitForVoices(()=>speakNow(text,'ar',buttonEl));
+    };
+    const playPromise=audio.play();
+    if(playPromise&&typeof playPromise.catch==='function')playPromise.catch(()=>audio.onerror&&audio.onerror());
+    return true;
+  }
   function speak(text,lang,buttonEl){
     const locale=LOCALES[lang];
-    if(!locale||!text||!root.speechSynthesis||typeof root.SpeechSynthesisUtterance!=='function')return false;
-    if(activeButton===buttonEl){root.speechSynthesis.cancel();resetActive();return true;}
-    root.speechSynthesis.cancel();
+    if(!locale||!text)return false;
+    if(activeButton===buttonEl){
+      stopRemote();
+      if(root.speechSynthesis)root.speechSynthesis.cancel();
+      resetActive();
+      return true;
+    }
+    stopRemote();
+    if(root.speechSynthesis)root.speechSynthesis.cancel();
     resetActive();
+    if(lang==='ar')return playArabicRemote(text,buttonEl);
+    if(!root.speechSynthesis||typeof root.SpeechSynthesisUtterance!=='function')return false;
     waitForVoices(()=>speakNow(text,lang,buttonEl));
     return true;
   }
