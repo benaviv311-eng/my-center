@@ -1,7 +1,7 @@
 (function(root){
   'use strict';
 
-  const LOCALES={ar:'ar',it:'it-IT',ru:'ru-RU',es:'es-ES'};
+  const LOCALES={ar:'ar-SA',it:'it-IT',ru:'ru-RU',es:'es-ES'};
   const CODE_TO_LANG={AR:'ar',IT:'it',RU:'ru',ES:'es'};
   const SELECTORS=['.vocab-word-primary','.vocab-primary','.four-primary','.four-example strong','.four-study-lang span','.quiz-prompt','.feed-primary','.dialogue-bubble.user'];
   let activeButton=null;
@@ -101,20 +101,40 @@
     const base=locale.split('-')[0].toLowerCase();
     return voices.find(v=>String(v.lang).toLowerCase().startsWith(base))||null;
   }
+  function waitForVoices(done){
+    const synth=root.speechSynthesis;
+    if(!synth?.getVoices){done();return;}
+    if(synth.getVoices().length){done();return;}
+    let finished=false;
+    const finish=()=>{
+      if(finished)return;
+      finished=true;
+      if(synth.removeEventListener)synth.removeEventListener('voiceschanged',finish);
+      done();
+    };
+    if(synth.addEventListener)synth.addEventListener('voiceschanged',finish,{once:true});
+    else synth.onvoiceschanged=finish;
+    setTimeout(finish,500);
+  }
+  function speakNow(text,lang,buttonEl){
+    const locale=LOCALES[lang];
+    const utterance=new SpeechSynthesisUtterance(text);
+    const voice=pickVoice(locale);
+    utterance.lang=voice?.lang||locale;
+    if(voice)utterance.voice=voice;
+    utterance.rate=.9;
+    if(buttonEl){activeButton=buttonEl;buttonEl.classList.add('is-speaking');buttonEl.textContent='■';}
+    utterance.onend=resetActive;
+    utterance.onerror=resetActive;
+    root.speechSynthesis.speak(utterance);
+  }
   function speak(text,lang,buttonEl){
     const locale=LOCALES[lang];
     if(!locale||!text||!root.speechSynthesis||typeof root.SpeechSynthesisUtterance!=='function')return false;
     if(activeButton===buttonEl){root.speechSynthesis.cancel();resetActive();return true;}
     root.speechSynthesis.cancel();
     resetActive();
-    const utterance=new SpeechSynthesisUtterance(text);
-    utterance.lang=locale;
-    utterance.rate=.9;
-    const voice=pickVoice(locale);if(voice)utterance.voice=voice;
-    if(buttonEl){activeButton=buttonEl;buttonEl.classList.add('is-speaking');buttonEl.textContent='■';}
-    utterance.onend=resetActive;
-    utterance.onerror=resetActive;
-    root.speechSynthesis.speak(utterance);
+    waitForVoices(()=>speakNow(text,lang,buttonEl));
     return true;
   }
 
