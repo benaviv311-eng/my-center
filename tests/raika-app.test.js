@@ -19,13 +19,24 @@ test('filterItems matches Hebrew text and status', () => {
   assert.deepEqual(filterItems(items, 'משפחה', 'canon'), [items[0]]);
 });
 
-test('raika page exposes all writers-room sections', () => {
-  const html = fs.readFileSync('raika.html','utf8');
-  for (const id of ['characters','scenes','plotlines','history','world','relationships','writers-room']) {
-    assert.match(html, new RegExp(`id=["']${id}["']`));
+test('Raika topic pages expose all writers-room collections', () => {
+  const pages={
+    characters:'raika-characters.html',
+    scenes:'raika-scenes.html',
+    plotlines:'raika-plotlines.html',
+    history:'raika-history.html',
+    world:'raika-world.html',
+    relationships:'raika-relationships.html',
+    'writers-room':'raika-writers-room.html'
+  };
+  for (const [id,file] of Object.entries(pages)) {
+    assert.equal(fs.existsSync(file),true,`${file} must exist`);
+    if(!fs.existsSync(file)) continue;
+    const html=fs.readFileSync(file,'utf8');
+    assert.match(html,new RegExp(`id=["']${id}["']`));
+    assert.match(html,/raika-data\.js/);
+    assert.match(html,/raika-app\.js/);
   }
-  assert.match(html, /raika-data\.js/);
-  assert.match(html, /raika-app\.js/);
 });
 
 test('itemCardHtml prints title and status without promoting ideas to canon', () => {
