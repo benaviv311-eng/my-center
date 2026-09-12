@@ -86,4 +86,26 @@ assert.ok(gamesHtml.includes('language-games.css'));
 assert.ok(fs.existsSync(path.join(__dirname,'..','language-games.js')));
 assert.ok(fs.existsSync(path.join(__dirname,'..','language-games.css')));
 
+// The word games must draw from the large vocabulary bank through a non-repeating queue.
+const poolPath = path.join(__dirname,'..','language-game-pool.js');
+assert.ok(fs.existsSync(poolPath), 'language-game-pool.js should exist');
+const createGamePool = require(poolPath);
+const vocabularyBank = require('../language-vocabulary-bank.js');
+const arPool = createGamePool(vocabularyBank,{lang:'ar',seed:'no-repeat-ar'});
+assert.ok(arPool.size > 100, 'Arabic game pool should use the broad vocabulary bank, not the tiny starter list');
+const firstCycle = arPool.take(arPool.size);
+assert.strictEqual(firstCycle.length, arPool.size, 'a complete pool cycle should return every item');
+assert.strictEqual(new Set(firstCycle.map(item=>item.key)).size, firstCycle.length, 'a pool cycle must not repeat words');
+assert.strictEqual(arPool.take(1).length,1,'after exhausting a cycle the pool should start a fresh cycle');
+
+const speedPool = createGamePool(vocabularyBank,{lang:'es',seed:'speed-es'});
+const speedSeen = [];
+for(let i=0;i<10;i++) speedSeen.push(...speedPool.take(4));
+assert.strictEqual(new Set(speedSeen.map(item=>item.key)).size, speedSeen.length, 'speed rounds must not repeat any shown word before the pool is exhausted');
+
+assert.ok(gamesHtml.includes('מאגר כרטיסיות'), 'flashcards should be presented as a study card repository, not a scored game');
+assert.ok(gamesHtml.includes('language-vocabulary-bank.js'), 'games page should load the large vocabulary bank');
+assert.ok(gamesHtml.includes('language-game-pool.js'), 'games page should load the non-repeating word pool');
+assert.ok(gamesHtml.includes('language-audio.js'), 'card repository should support pronunciation audio');
+
 console.log('language feed + games tests: OK');
