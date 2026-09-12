@@ -20,6 +20,20 @@ const types = new Set(mixed.map(x=>x.type));
 const changed = feed.buildFeed({filter:'all', seed:'feed-c', count:16});
 assert.notDeepStrictEqual(changed.map(x=>x.id), mixed.map(x=>x.id));
 
+// Dedicated “4 languages” feed mode: each post carries the same learning slot in all four languages.
+assert.strictEqual(typeof feed.buildFourLanguageFeed, 'function', 'model should expose buildFourLanguageFeed');
+const fourFeed = feed.buildFourLanguageFeed({seed:'four-feed', count:16});
+assert.strictEqual(fourFeed.length,16);
+const fourTypes = new Set(fourFeed.map(x=>x.type));
+['word','sentence','joke','story','dialogue','challenge','culture'].forEach(t=>assert.ok(fourTypes.has(t), `four-language feed should include ${t}`));
+fourFeed.forEach(card => {
+  assert.strictEqual(card.lang, 'four');
+  assert.deepStrictEqual(new Set(Object.keys(card.variants)), new Set(['ar','it','ru','es']));
+});
+const fourWord = fourFeed.find(x=>x.type==='word');
+assert.ok(fourWord.hebrew, 'four-language word should expose a shared Hebrew meaning');
+assert.strictEqual(new Set(Object.values(fourWord.variants).map(x=>x.item.he)).size, 1, 'word variants should share the same Hebrew meaning');
+
 // Learning games: inline feed cards + a dedicated games page.
 assert.ok(Array.isArray(feed.GAME_TYPES), 'model should expose GAME_TYPES');
 ['flashcards','memory','matching','sentence-builder','recall','speed','four-languages'].forEach(type => {
@@ -37,8 +51,16 @@ const sentenceGame = feed.buildMiniGame({type:'sentence-builder', filter:'ru', s
 assert.ok(sentenceGame.words.length >= 2);
 assert.ok(sentenceGame.answer.length >= 2);
 
+assert.strictEqual(typeof feed.buildFourLanguageMiniGame, 'function', 'model should expose buildFourLanguageMiniGame');
+['flashcards','memory','matching','sentence-builder','recall','speed'].forEach(type => {
+  const game = feed.buildFourLanguageMiniGame({type, seed:`four-game-${type}`});
+  assert.strictEqual(game.lang, 'four');
+  assert.strictEqual(game.type, type);
+  assert.deepStrictEqual(new Set(Object.keys(game.variants)), new Set(['ar','it','ru','es']), `${type} should carry all four languages`);
+});
+
 const home = fs.readFileSync(path.join(__dirname,'..','languages.html'),'utf8');
-['feed-filter-all','feed-filter-ar','feed-filter-it','feed-filter-ru','feed-filter-es','feed-refresh','language-feed','feed-load-more'].forEach(id => {
+['feed-filter-all','feed-filter-four','feed-filter-ar','feed-filter-it','feed-filter-ru','feed-filter-es','feed-refresh','language-feed','feed-load-more'].forEach(id => {
   assert.ok(home.includes(`id="${id}"`), `languages.html should contain ${id}`);
 });
 assert.ok(home.includes('language-feed-model.js'));
@@ -46,6 +68,11 @@ assert.ok(home.includes('languages-feed.js'));
 assert.ok(home.includes('languages-feed.css'));
 assert.ok(fs.existsSync(path.join(__dirname,'..','languages-feed.js')));
 assert.ok(fs.existsSync(path.join(__dirname,'..','languages-feed.css')));
+
+const feedJs = fs.readFileSync(path.join(__dirname,'..','languages-feed.js'),'utf8');
+assert.ok(feedJs.includes("state.filter==='four'"), 'feed renderer should handle the dedicated four-language mode');
+assert.ok(feedJs.includes('fourLanguageCardHtml'), 'feed renderer should render four-language cards');
+assert.ok(feedJs.includes('fourLanguageMiniGameMoment'), 'feed renderer should render four-language mini games');
 
 const gamesPage = path.join(__dirname,'..','language-games.html');
 assert.ok(fs.existsSync(gamesPage), 'language-games.html should exist');
