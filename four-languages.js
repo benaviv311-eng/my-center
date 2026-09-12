@@ -24,6 +24,10 @@
     return `${state.mode}:${state.topic}:${item.id}`;
   }
   function display(lang,item){return {primary:C.primary(lang,item),secondary:C.secondary(lang,item)};}
+  function audioButton(lang,item){
+    if(!item?.target)return'';
+    return `<button class="language-audio-btn" type="button" data-audio-lang="${esc(lang)}" data-audio-text="${esc(item.target)}" aria-label="השמע הגייה" title="השמע הגייה">🔊</button>`;
+  }
 
   function renderTopics(){
     $('four-topic').innerHTML=Object.entries(C.TOPIC_META).map(([id,meta])=>`<option value="${id}" ${id===state.topic?'selected':''}>${meta.icon} ${esc(meta.name)}</option>`).join('');
@@ -37,9 +41,9 @@
     const info=C.LANGUAGES[lang];
     return `<article class="four-card">
       <div class="four-card-head"><div><strong>${info.name}</strong><div class="meta">${esc(info.primaryNote)}${info.secondaryNote?' · '+esc(info.secondaryNote)+' משני':''}</div></div><span class="four-code">${info.code}</span></div>
-      <div class="four-primary">${esc(d.primary)}</div>
+      <div class="language-audio-inline"><div class="four-primary" data-audio-decorated="1">${esc(d.primary)}</div>${audioButton(lang,word)}</div>
       ${d.secondary?`<div class="four-secondary">${esc(d.secondary)}</div>`:''}
-      <div class="four-example"><span>משפט לדוגמה</span><strong>${esc(ed.primary)}</strong>${ed.secondary?`<span>${esc(ed.secondary)}</span>`:''}<span>${esc(example.he)}</span></div>
+      <div class="four-example"><span>משפט לדוגמה</span><span class="language-audio-inline"><strong data-audio-decorated="1">${esc(ed.primary)}</strong>${audioButton(lang,example)}</span>${ed.secondary?`<span>${esc(ed.secondary)}</span>`:''}<span>${esc(example.he)}</span></div>
     </article>`;
   }
 
@@ -49,7 +53,7 @@
     const info=C.LANGUAGES[lang];
     return `<article class="four-card">
       <div class="four-card-head"><div><strong>${info.name}</strong><div class="meta">${esc(info.primaryNote)}${info.secondaryNote?' · '+esc(info.secondaryNote)+' משני':''}</div></div><span class="four-code">${info.code}</span></div>
-      <div class="four-primary">${esc(d.primary)}</div>
+      <div class="language-audio-inline"><div class="four-primary" data-audio-decorated="1">${esc(d.primary)}</div>${audioButton(lang,sentence)}</div>
       ${d.secondary?`<div class="four-secondary">${esc(d.secondary)}</div>`:''}
       ${sentence.situation?`<div class="four-example"><span>מתי משתמשים?</span><strong>${esc(sentence.situation)}</strong></div>`:''}
     </article>`;
