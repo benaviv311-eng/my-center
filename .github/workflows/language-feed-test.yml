@@ -7,6 +7,9 @@ on:
       - 'languages-feed.js'
       - 'languages-feed.css'
       - 'languages.html'
+      - 'language-games.html'
+      - 'language-games.js'
+      - 'language-games.css'
       - 'tests/language-feed.test.js'
       - '.github/workflows/language-feed-test.yml'
 jobs:
@@ -14,9 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check feed JavaScript syntax
+      - name: Check feed and games JavaScript syntax
         run: |
           node --check language-feed-model.js
           node --check languages-feed.js
-      - name: Run feed behavior tests
+          node --check language-games.js
+      - name: Run feed and games behavior tests
         run: node tests/language-feed.test.js
