@@ -89,6 +89,7 @@
   };
 
   const TYPE_ORDER=['word','sentence','joke','story','dialogue','challenge','culture','word','sentence','story','challenge','culture'];
+  const GAME_TYPES=['flashcards','memory','matching','sentence-builder','recall','speed','four-languages'];
 
   function hash(text){let h=2166136261;for(const ch of String(text)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
   function pick(list,n){return list[n%list.length];}
@@ -137,5 +138,40 @@
     return cards;
   }
 
-  return {LANGUAGE_CODES,LANGUAGES,BANK,TYPE_ORDER,getDisplay,buildFeed};
+  function shuffle(list,seed){
+    return list.slice().map((value,index)=>({value,key:hash(`${seed}:${index}:${value.id||value}`)})).sort((a,b)=>a.key-b.key).map(x=>x.value);
+  }
+  function wordItemsFor(filter,seed,count=6){
+    const only=LANGUAGE_CODES.includes(filter)?filter:null;
+    if(only)return shuffle(BANK[only].words.map(row=>wordObject(only,row)),seed).slice(0,count);
+    const all=[];
+    LANGUAGE_CODES.forEach(lang=>BANK[lang].words.forEach(row=>all.push(wordObject(lang,row))));
+    return shuffle(all,seed).slice(0,count);
+  }
+  function buildMiniGame({type='flashcards',filter='all',seed='game'}={}){
+    const safeType=GAME_TYPES.includes(type)?type:'flashcards';
+    const only=LANGUAGE_CODES.includes(filter)?filter:null;
+    const chosenLang=only||LANGUAGE_CODES[hash(seed)%LANGUAGE_CODES.length];
+    const id=`game:${safeType}:${filter}:${hash(seed)}`;
+
+    if(safeType==='four-languages'){
+      const concepts=['hello','coffee','friend','today','ball','home','hungry','thanks'];
+      const concept=pick(concepts,hash(seed+':concept'));
+      const items=LANGUAGE_CODES.map(lang=>wordObject(lang,BANK[lang].words.find(row=>row[0]===concept)||BANK[lang].words[0]));
+      return {id,type:safeType,lang:'all',concept,items,prompt:items[0].he};
+    }
+
+    if(safeType==='sentence-builder'){
+      const row=pick(BANK[chosenLang].sentences,hash(seed+':sentence'));
+      const sentence=sentenceObject(chosenLang,row);
+      const display=getDisplay(sentence);
+      const answer=display.primary.split(/\s+/).filter(Boolean);
+      return {id,type:safeType,lang:chosenLang,sentence,answer,words:shuffle(answer,seed+':words')};
+    }
+
+    const items=wordItemsFor(only||'all',seed+':items',safeType==='memory'?4:6);
+    return {id,type:safeType,lang:only||'all',items,prompt:safeType==='recall'?'זכור את המילים ואז בדוק את עצמך':''};
+  }
+
+  return {LANGUAGE_CODES,LANGUAGES,BANK,TYPE_ORDER,GAME_TYPES,getDisplay,buildFeed,buildMiniGame};
 });
