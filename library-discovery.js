@@ -119,7 +119,7 @@
     const c = book && book.content ? book.content : {};
     const concepts = shuffled(matchConcepts(book,8).map(x=>({id:x.id, value:x})), seed+'|concepts').map(x=>x.value);
     const concept = index => concepts[index % Math.max(1,concepts.length)] || LEARNING_CONCEPTS[hash(seed+'|fallback|'+index)%LEARNING_CONCEPTS.length];
-    const c0=concept(0), c1=concept(1), c2=concept(2);
+    const c0=concept(0), c1=concept(1), c2=concept(2), c3=concept(3);
     const passage = pick(c.feed_posts, seed, 'passage') || c.summary || pick(c.ideas,seed,'passage-idea');
     const idea = pick(c.ideas, seed, 'idea') || c.summary || passage;
     const topic = pick(c.topics, seed, 'topic');
@@ -134,6 +134,7 @@
       make('theory',`🧪 תיאוריה: ${c0.title}`,c0.explanation,'מושג מקצועי קשור',{conceptId:c0.id}),
       make('psychology',`🧠 הפסיכולוגיה: ${c1.title}`,c1.explanation,'הרחבה מקצועית',{conceptId:c1.id}),
       make('approach',`🔭 גישה נוספת: ${c2.title}`,c2.explanation,'הרחבה מקצועית',{conceptId:c2.id}),
+      make('aspect',`🔎 היבט נוסף: ${c3.title}`,c3.explanation,'הרחבה מקצועית',{conceptId:c3.id}),
       make('everyday','👀 איך זה מתבטא ביום־יום',c0.example,'יישום של מושג מקצועי',{conceptId:c0.id}),
       make('application','🛠️ יישום מעשי',c1.application,'יישום של מושג מקצועי',{conceptId:c1.id}),
       make('real-life','🌍 דוגמה מהחיים',c2.example,'דוגמה מקצועית',{conceptId:c2.id}),
