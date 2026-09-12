@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { currentRaikaSectionId } = require('../raika-app.js');
 
-// Sticky topics + search behavior specification.
+// Sticky topics + search behavior specification. Red first, then implementation.
 test('Raika navigation and search live inside one sticky tools bar', () => {
   const html = fs.readFileSync('raika.html','utf8');
   assert.match(html, /class=["'][^"']*raika-sticky-tools[^"']*["']/);
