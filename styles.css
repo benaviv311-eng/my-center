@@ -1,4 +1,3 @@
-
 :root{
   --bg:#f7f3ea; --card:#fffdf8; --text:#1f1f1f; --muted:#6d6a63;
   --line:#e8dfcf; --raika:#5c4b8a; --coach:#3d7a5b; --music:#8b5b3d;
@@ -49,8 +48,18 @@ details p{margin:8px 0 0;color:#49463f;line-height:1.55}.card-actions{display:fl
 .timer{display:grid;gap:10px}.timer-screen{font-size:42px;font-weight:800;text-align:center;direction:ltr}.timer-next{text-align:center;color:var(--muted)}.timer-controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .search{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font-size:16px}
 .hidden{display:none!important}
+
+/* Raika Writers Room */
+.raika-hub{background:linear-gradient(135deg,#f7f1ff,#fffaf1);border:1px solid #ded3ed;border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+.raika-stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}.raika-stats span{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px}
+.raika-section-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.raika-section-nav a{text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px;text-align:center;font-size:13px;font-weight:700}
+.raika-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}.raika-filter-panel{position:sticky;top:6px;z-index:8;background:rgba(247,243,234,.94);padding:10px 0;backdrop-filter:blur(8px)}
+.writer-card{position:relative;overflow:hidden}.writer-card:before{content:"";position:absolute;right:0;top:0;bottom:0;width:4px}.writer-card.status-canon:before{background:#3d7a5b}.writer-card.status-idea:before{background:#c28a24}.writer-card.status-developing:before{background:#4e79a7}.writer-card.status-parked:before{background:#8b8178}
+.writer-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.status-badge{font-size:12px;font-weight:800;border-radius:999px;padding:5px 9px}.status-badge.status-canon{background:#e8f4ec;color:#2f684b}.status-badge.status-idea{background:#fff3d6;color:#8a5e0e}.status-badge.status-developing{background:#eaf2fb;color:#35628e}.status-badge.status-parked{background:#efede9;color:#6b625b}.scene-number{font-size:12px;color:var(--muted);background:#f3eee5;border-radius:999px;padding:4px 8px}.writer-summary{font-size:14px;margin:6px 0 10px}.raika-tags{margin-top:12px}.raika-tags .pill{font-size:11px;padding:4px 8px}.raika-links{font-size:12px;color:var(--muted);margin:8px 0}.raika-links a{color:var(--raika);text-decoration:none;font-weight:700}
+.scene-timeline{display:grid;gap:0}.scene-entry{display:grid;grid-template-columns:20px 1fr;gap:10px;position:relative}.scene-line{position:relative}.scene-line:before{content:"";position:absolute;top:0;bottom:0;right:9px;width:2px;background:#ded5c8}.scene-line:after{content:"";position:absolute;top:23px;right:5px;width:10px;height:10px;border-radius:50%;background:var(--raika);box-shadow:0 0 0 4px var(--bg)}.scene-entry:last-child .scene-line:before{bottom:calc(100% - 28px)}.scene-entry .card{margin-bottom:12px}.writers-room{border-top:2px dashed #d7c59e;padding-top:18px}.writers-room-intro{margin-bottom:12px;background:#fff9e9}
+
 @media(max-width:760px){
   .grid-3,.grid-2{grid-template-columns:1fr}.connection{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}
   h1{font-size:26px}.word-list{grid-template-columns:1fr}.bottom-nav .inner{grid-template-columns:repeat(6,1fr)}
-  .nav-item{font-size:10px}.nav-item span{font-size:18px}
+  .nav-item{font-size:10px}.nav-item span{font-size:18px}.raika-section-nav{grid-template-columns:repeat(2,minmax(0,1fr))}.raika-filters{grid-template-columns:1fr}.raika-filter-panel{position:static}.scene-entry{grid-template-columns:14px 1fr}.scene-line:before{right:6px}.scene-line:after{right:2px}
 }
