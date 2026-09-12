@@ -1,139 +1,73 @@
 (function(){
-  const C=window.LanguageCore;
-  if(!C)return;
+  const B=window.LanguageVocabularyBank;
+  if(!B)return;
 
-  const {lang}=C.qs();
-  const language=C.LANGUAGES[lang];
-  const state=C.loadState();
   const $=id=>document.getElementById(id);
   const esc=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  const params=new URLSearchParams(location.search);
+  let lang=B.LANGUAGES[params.get('lang')]?params.get('lang'):'ar';
 
-  function availableTopics(){
-    return Object.entries(C.TOPIC_META).filter(([topic])=>C.COURSES[lang]?.[topic]?.words?.length);
+  const arMap={'ا':'א','أ':'א','إ':'א','آ':'א','ب':'ב','ت':'ת','ث':'ת׳','ج':'ג׳','ح':'ח','خ':'ח׳','د':'ד','ذ':'ד׳','ر':'ר','ز':'ז','س':'ס','ش':'ש','ص':'צ','ض':'ד׳','ط':'ט','ظ':'ז׳','ع':'ע','غ':'ע׳','ف':'פ','ق':'ק','ك':'כ','ل':'ל','م':'מ','ن':'נ','ه':'ה','ة':'ה','و':'ו','ي':'י','ى':'א','ء':'א','ئ':'י','ؤ':'ו'};
+  const ruMap={'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+  function transliterateArabic(text){return String(text).split('').map(ch=>arMap[ch]??ch).join('').replace(/\s+/g,' ').trim();}
+  function transliterateRussian(text){return String(text).split('').map(ch=>{const low=ch.toLowerCase();const out=ruMap[low];if(out===undefined)return ch;return ch===ch.toUpperCase()&&ch!==low?out.charAt(0).toUpperCase()+out.slice(1):out;}).join('');}
+
+  function display(word){
+    const target=word[lang]?.target||'';
+    if(lang==='ar')return{primary:transliterateArabic(target),secondary:target};
+    if(lang==='ru')return{primary:transliterateRussian(target),secondary:target};
+    return{primary:target,secondary:''};
   }
 
-  function allWords(){
-    return availableTopics().flatMap(([topic,meta])=>C.course(lang,topic).words.map(word=>({word,topic,meta})));
-  }
-
-  function statusFor(word){return state.wordStatus[word.id]||'new';}
-
-  function setStatus(wordId,next){
-    state.wordStatus[wordId]=next;
-    C.saveState(state);
-  }
-
-  function displayWord(word){
-    return {
-      primary:C.primary(lang,word),
-      secondary:C.secondary(lang,word),
-      hebrew:word.he
-    };
-  }
-
-  function renderLanguageHeader(){
+  function renderHeader(){
+    const language=B.LANGUAGES[lang];
     document.title=`אוצר מילים · ${language.name}`;
     $('vocab-language-code').textContent=language.code;
-    $('vocab-language-name').textContent=`${language.name} · ${language.primaryNote}${language.secondaryNote?' · '+language.secondaryNote+' משני':''}`;
-    $('vocab-language-switch').innerHTML=Object.entries(C.LANGUAGES).map(([code,item])=>`<a class="study-switch ${code===lang?'active':''}" href="language-vocabulary.html?lang=${code}">${item.code} · ${item.name}</a>`).join('');
+    $('vocab-language-name').textContent=lang==='ar'?`${language.name} · תעתיק עברי + כתב ערבי`:lang==='ru'?`${language.name} · תעתיק לטיני + קירילית`:language.name;
+    $('vocab-language-switch').innerHTML=Object.entries(B.LANGUAGES).map(([code,item])=>`<a class="study-switch ${code===lang?'active':''}" href="language-vocabulary.html?lang=${code}">${item.code} · ${item.name}</a>`).join('');
   }
 
   function renderTopicNav(){
-    $('vocab-topic-nav').innerHTML=availableTopics().map(([topic,meta])=>{
-      const count=C.course(lang,topic).words.length;
-      return `<a class="vocab-topic-chip" href="#vocab-topic-${topic}">${meta.icon} ${esc(meta.name)} · ${count}</a>`;
-    }).join('');
+    $('vocab-topic-nav').innerHTML=Object.entries(B.TOPICS).map(([id,topic])=>`<a class="vocab-topic-chip" href="#vocab-topic-${id}">${topic.icon} ${esc(topic.name)} · ${topic.words.length}</a>`).join('');
   }
 
-  function wordCard(word,topic,meta){
-    const d=displayWord(word);
-    const status=statusFor(word);
-    const search=[d.primary,d.secondary,d.hebrew,meta.name].join(' ').toLowerCase();
-    return `<article class="vocab-word ${status==='known'?'is-known':''} ${status==='practice'?'is-practice':''}" data-vocab-word="${esc(word.id)}" data-vocab-status="${status}" data-vocab-search="${esc(search)}">
-      <div class="vocab-word-primary">${esc(d.primary)}</div>
-      ${d.secondary?`<div class="vocab-word-secondary">${esc(d.secondary)}</div>`:''}
-      <div class="vocab-word-hebrew">${esc(d.hebrew)}</div>
-      <div class="vocab-word-actions">
-        <button class="vocab-word-action ${status==='known'?'active':''}" type="button" data-set-status="known">✓ יודע</button>
-        <button class="vocab-word-action ${status==='practice'?'active':''}" type="button" data-set-status="practice">↻ לתרגול</button>
-        <a class="vocab-word-action" href="language-games.html?lang=${lang}">🎮 תרגל</a>
-      </div>
-    </article>`;
+  function wordCard(word,topic){
+    const d=display(word);
+    const search=[word.he,d.primary,d.secondary,topic.name].join(' ').toLowerCase();
+    return `<article class="vocab-word" data-vocab-word data-vocab-search="${esc(search)}"><div class="vocab-word-primary">${esc(d.primary)}</div>${d.secondary?`<div class="vocab-word-secondary">${esc(d.secondary)}</div>`:''}<div class="vocab-word-hebrew">${esc(word.he)}</div></article>`;
   }
 
   function renderSections(){
-    $('vocab-sections').innerHTML=availableTopics().map(([topic,meta])=>{
-      const words=C.course(lang,topic).words;
-      return `<section id="vocab-topic-${topic}" class="vocab-topic-section" data-vocab-topic="${topic}">
-        <article class="card vocab-topic-card">
-          <div class="vocab-topic-head">
-            <div class="vocab-topic-title"><span class="vocab-topic-icon">${meta.icon}</span><div><h2>${esc(meta.name)}</h2><p>${esc(meta.description)}</p><div class="vocab-topic-count" data-topic-count>${words.length} מילים</div></div></div>
-            <div class="vocab-topic-actions"><a class="btn small" href="language-study.html?lang=${lang}&topic=${topic}">ללמוד את הנושא</a><a class="btn small" href="language-games.html?lang=${lang}">🎮 משחקים</a></div>
-          </div>
-          <div class="vocab-word-grid">${words.map(word=>wordCard(word,topic,meta)).join('')}</div>
-        </article>
-      </section>`;
-    }).join('');
+    $('vocab-sections').innerHTML=Object.entries(B.TOPICS).map(([id,topic])=>`<section id="vocab-topic-${id}" class="vocab-topic-section" data-vocab-topic><article class="card vocab-topic-card"><div class="vocab-topic-head"><div class="vocab-topic-title"><span class="vocab-topic-icon">${topic.icon}</span><div><h2>${esc(topic.name)}</h2><p>${esc(topic.description)}</p><div class="vocab-topic-count" data-topic-count>${topic.words.length} מילים</div></div></div></div><div class="vocab-word-grid">${topic.words.map(word=>wordCard(word,topic)).join('')}</div></article></section>`).join('');
   }
 
   function updateSummary(){
-    const words=allWords().map(x=>x.word);
-    const known=words.filter(w=>statusFor(w)==='known').length;
-    const practice=words.filter(w=>statusFor(w)==='practice').length;
-    $('vocab-summary').textContent=`${words.length} מילים · ${availableTopics().length} נושאים · ${known} יודע · ${practice} לתרגול`;
+    const topics=Object.values(B.TOPICS);
+    const total=topics.reduce((sum,topic)=>sum+topic.words.length,0);
+    $('vocab-summary').textContent=`מאגר פתוח · ${topics.length} נושאים · ${total} פריטי אוצר מילים · 100 בכל נושא`;
   }
 
   function applyFilters(){
     const query=$('vocab-search').value.trim().toLowerCase();
-    const wanted=$('vocab-status').value;
     let visibleTotal=0;
-
     document.querySelectorAll('[data-vocab-topic]').forEach(section=>{
-      let visibleInTopic=0;
+      let visible=0;
       section.querySelectorAll('[data-vocab-word]').forEach(card=>{
-        const matchesText=!query||card.dataset.vocabSearch.includes(query);
-        const matchesStatus=wanted==='all'||card.dataset.vocabStatus===wanted;
-        const show=matchesText&&matchesStatus;
+        const show=!query||card.dataset.vocabSearch.includes(query);
         card.classList.toggle('vocab-hidden',!show);
-        if(show){visibleInTopic++;visibleTotal++;}
+        if(show){visible++;visibleTotal++;}
       });
-      section.classList.toggle('vocab-hidden',visibleInTopic===0);
+      section.classList.toggle('vocab-hidden',visible===0);
       const count=section.querySelector('[data-topic-count]');
-      if(count)count.textContent=query||wanted!=='all'?`${visibleInTopic} תוצאות`:`${section.querySelectorAll('[data-vocab-word]').length} מילים`;
+      if(count)count.textContent=query?`${visible} תוצאות`:`${section.querySelectorAll('[data-vocab-word]').length} מילים`;
     });
-
     let empty=$('vocab-sections').querySelector('.vocab-empty');
-    if(!visibleTotal){
-      if(!empty){empty=document.createElement('div');empty.className='card vocab-empty';empty.textContent='לא נמצאו מילים שמתאימות לחיפוש.';$('vocab-sections').appendChild(empty);}
-    }else empty?.remove();
+    if(!visibleTotal){if(!empty){empty=document.createElement('div');empty.className='card vocab-empty';empty.textContent='לא נמצאו מילים שמתאימות לחיפוש.';$('vocab-sections').appendChild(empty);}}else empty?.remove();
   }
 
-  function refreshWordCard(card,next){
-    card.dataset.vocabStatus=next;
-    card.classList.toggle('is-known',next==='known');
-    card.classList.toggle('is-practice',next==='practice');
-    card.querySelectorAll('[data-set-status]').forEach(btn=>btn.classList.toggle('active',btn.dataset.setStatus===next));
-  }
-
-  function wire(){
-    $('vocab-search').addEventListener('input',applyFilters);
-    $('vocab-status').addEventListener('change',applyFilters);
-    $('vocab-sections').addEventListener('click',event=>{
-      const button=event.target.closest('[data-set-status]');
-      if(!button)return;
-      const card=button.closest('[data-vocab-word]');
-      const requested=button.dataset.setStatus;
-      const next=card.dataset.vocabStatus===requested?'new':requested;
-      setStatus(card.dataset.vocabWord,next);
-      refreshWordCard(card,next);
-      updateSummary();
-      applyFilters();
-    });
-  }
-
-  renderLanguageHeader();
+  renderHeader();
   renderTopicNav();
   renderSections();
   updateSummary();
-  wire();
+  $('vocab-search').addEventListener('input',applyFilters);
 })();
