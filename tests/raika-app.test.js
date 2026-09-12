@@ -46,6 +46,12 @@ test('itemCardHtml prints title and status without promoting ideas to canon', ()
   assert.doesNotMatch(html, /✅ קאנון/);
 });
 
+test('daily feed cards expose a link to their source topic page', () => {
+  const html = itemCardHtml({title:'פחד · ראיקה', status:'canon', summary:'לאכזב', feedPage:'raika-characters.html'});
+  assert.match(html, /href="raika-characters\.html"/);
+  assert.match(html, /פתח עמוד/);
+});
+
 test('styles distinguish canon and idea cards', () => {
   const css = fs.readFileSync('styles.css','utf8');
   assert.match(css, /\.status-canon/);
