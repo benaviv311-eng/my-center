@@ -13,6 +13,7 @@ on:
       - 'coach-hub.css'
       - 'tests/coach-feed.test.js'
       - 'tests/coach-performance-hub.test.js'
+      - 'tests/coach-rich-expansion.test.js'
       - 'tests/coach-volleyball-navigation.test.js'
       - '.github/workflows/coach-feed-test.yml'
 

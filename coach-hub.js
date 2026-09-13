@@ -64,11 +64,23 @@
     return topic?`${topic.icon||''} ${topic.label}`.trim():'מאמן';
   }
 
+  function topicPageForCard(card,topics){
+    const topic=(topics||[]).find(item=>item.id===card.topic);
+    return topic&&topic.page?topic.page:'coach.html';
+  }
+
   function renderTodayItem(card,topics,index){
     if(!card) return '';
     const labels=['עיקרון','רעיון לאימון','שאלה למאמן'];
     const copy=card.question||card.body||card.application||'';
-    return `<article class="coach-today-card"><div class="coach-today-meta"><span>${escapeHtml(labels[index]||'רעיון')}</span><small>${escapeHtml(topicLabel(card,topics))}</small></div><h3>${escapeHtml(card.title||'רעיון למאמן')}</h3><p>${escapeHtml(copy)}</p></article>`;
+    const href=topicPageForCard(card,topics);
+    return `<a class="coach-today-card" href="${escapeHtml(href)}"><div class="coach-today-meta"><span>${escapeHtml(labels[index]||'רעיון')}</span><small>${escapeHtml(topicLabel(card,topics))}</small></div><h3>${escapeHtml(card.title||'רעיון למאמן')}</h3><p>${escapeHtml(copy)}</p><span class="coach-card-link-hint" aria-hidden="true">לפתוח את התחום ←</span></a>`;
+  }
+
+  function renderNextPracticeItem(card,topics){
+    if(!card) return '';
+    const href=topicPageForCard(card,topics);
+    return `<a class="coach-next-practice-link" href="${escapeHtml(href)}"><div class="coach-next-practice-icon" aria-hidden="true">↗</div><div><p>${escapeHtml(topicLabel(card,topics))}</p><strong>${escapeHtml(card.title||'ליישום באימון')}</strong><span>${escapeHtml(card.application)}</span><small class="coach-card-link-hint">לפתוח את התחום ←</small></div></a>`;
   }
 
   function initCoachHub(doc,data){
@@ -83,9 +95,7 @@
     const next=doc.getElementById('coach-next-practice-card');
     if(next){
       const card=selectNextPractice(cards,`${seed}|practice`);
-      if(card){
-        next.innerHTML=`<div class="coach-next-practice-icon" aria-hidden="true">↗</div><div><p>${escapeHtml(topicLabel(card,topics))}</p><strong>${escapeHtml(card.title||'ליישום באימון')}</strong><span>${escapeHtml(card.application)}</span></div>`;
-      }
+      if(card) next.innerHTML=renderNextPracticeItem(card,topics);
     }
   }
 
@@ -97,5 +107,5 @@
     else start();
   }
 
-  return {selectToday,selectNextPractice,initCoachHub};
+  return {selectToday,selectNextPractice,topicPageForCard,renderTodayItem,renderNextPracticeItem,initCoachHub};
 });

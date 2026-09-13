@@ -8,7 +8,7 @@
   const KNOWN_TOPICS=['sport-psychology','coaching-psychology','movement-psychology','explosive-power','coaching-language','volleyball-approaches'];
 
   function normalizeCard(card){
-    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:'',image:'',imageAlt:'',challenge:false},card||{});
+    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:'',image:'',imageAlt:'',challenge:false,deepDive:[]},card||{});
   }
 
   function filterCards(cards,topic){
@@ -100,6 +100,74 @@
     return `הפוך את הרעיון למשימה אחת ברורה, קבע סימן הצלחה שאפשר לראות, וצפה בכמה חזרות לפני שינוי נוסף. ${card.application||''}`.trim();
   }
 
+  function learningSections(card){
+    const item=normalizeCard(card);
+    const custom=Array.isArray(item.deepDive)?item.deepDive.filter(section=>section&&section.title&&section.text):[];
+    if(custom.length>=4) return custom;
+
+    const focus=item.principle||item.explanation||item.body||item.question||item.title||'';
+    const apply=item.application||applicationExpansion(item);
+    const tag=item.tags&&item.tags.length?item.tags[0]:item.title;
+    const title=item.title||'הרעיון';
+
+    const byTopic={
+      'sport-psychology':[
+        {title:'מה העיקרון?',text:focus},
+        {title:'מה לחפש אצל הספורטאי?',text:`חפש שינוי בקשב, בביטחון או בבחירה אחרי הצלחה וטעות סביב ${tag}. המטרה היא לזהות מה משתנה בהתנהגות, לא רק בתוצאה.`},
+        {title:'איך ליישם?',text:apply},
+        {title:'שאלת מאמן',text:`שאל: מה יעזור לך לבצע את הפעולה הבאה בצורה ברורה יותר? השאלה מחזירה את הקשב לצעד הבא במקום להישאר בטעות הקודמת.`},
+        {title:'טעות נפוצה',text:'להוסיף הרבה הסברים דווקא כשהספורטאי מוצף. במצב כזה עדיף מסר קצר, משימה ברורה ומדד הצלחה אחד.'}
+      ],
+      'coaching-psychology':[
+        {title:'עיקרון אימוני',text:focus},
+        {title:'מה המאמן עושה?',text:`צפה בכמה חזרות, בחר התערבות אחת בלבד, ואז תן לספורטאי הזדמנות לנסות את השינוי לפני משוב נוסף.`},
+        {title:'דוגמה באימון',text:apply},
+        {title:'טעות נפוצה',text:'לתת פתרון מלא מהר מדי. זה יכול לפתור את החזרה הקרובה אבל לצמצם עצמאות וקבלת החלטות.'},
+        {title:'בדיקה עצמית למאמן',text:`אחרי ההתערבות שאל את עצמך: האם השחקן מבין טוב יותר את ${title}, או רק מבצע כרגע את מה שאמרתי?`}
+      ],
+      'movement-psychology':[
+        {title:'עיקרון למידה',text:focus},
+        {title:'Cue חיצוני',text:`נסח את ההנחיה דרך המטרה, הכדור או הסביבה. במקום לפרט איברי גוף, תן לספורטאי תוצאה חיצונית ברורה שקשורה ל־${tag}.`},
+        {title:'שינוי תנאים',text:apply},
+        {title:'בדיקת העברה',text:'אחרי כמה חזרות שנה מעט מרחק, קצב, זווית או מידע מוקדם ובדוק אם הפתרון נשמר גם כשהמצב משתנה.'},
+        {title:'טעות נפוצה',text:'להשאיר את התרגיל צפוי מדי לאורך זמן. דיוק חשוב, אבל למידה למשחק דורשת גם הסתגלות וקבלת החלטות.'}
+      ],
+      'explosive-power':[
+        {title:'מטרת האימון',text:focus},
+        {title:'מינון',text:'העדף סטים קצרים ואיכותיים עם מספיק מנוחה כדי לשמור על מהירות, גובה או חדות. הנפח צריך להתאים לרמת הספורטאי ולעומס השבועי.'},
+        {title:'איכות ביצוע',text:`עקוב אחרי סימן איכות פשוט שקשור ל־${tag}: גובה, מהירות, שליטת נחיתה או חדות תנועה. אם האיכות יורדת בבירור, אל תרדוף אחרי עוד חזרות.`},
+        {title:'מנוחה / עצירה',text:'כשקצב הביצוע נופל, הנחיתות נעשות כבדות או הטכניקה מתפרקת, הארך מנוחה, הפחת נפח או סיים את הסט.'},
+        {title:'יישום באימון',text:apply}
+      ],
+      'coaching-language':[
+        {title:'מה לומר',text:`בחר משפט קצר שמכוון לפעולה הבאה. סביב ${title}, העדף Cue אחד שהספורטאי יכול לנסות מיד.`},
+        {title:'מה לא לומר',text:'הימנע מרצף ארוך של תיקונים או מניסוחים שמתארים רק מה אסור לעשות. הם מעמיסים מידע בלי להבהיר את הפעולה הרצויה.'},
+        {title:'מתי לומר',text:'תן את המסר ברגע שבו אפשר לנסות אותו מיד: לפני החזרה, בהפסקה קצרה או אחרי רצף שבו זיהית דפוס ברור.'},
+        {title:'מה לחפש בתגובה',text:'בדוק אם השחקן משנה התנהגות, לא רק אם הוא מהנהן. אם אין שינוי, החלף ניסוח או משימה במקום לחזור על אותו משפט חזק יותר.'},
+        {title:'יישום',text:apply}
+      ],
+      'volleyball-approaches':[
+        {title:'מתי הגישה מתאימה',text:focus},
+        {title:'מבנה תרגיל',text:`הגדר מטרה אחת, אילוץ אחד או שניים, וסיטואציה שמכריחה את השחקנים לפתור את הבעיה הקשורה ל־${tag}.`},
+        {title:'יתרון',text:'הגישה יכולה לחבר טכניקה להחלטה ולסביבה במקום לתרגל פעולה מנותקת בלבד.'},
+        {title:'מגבלה',text:'אם הדרישה מורכבת מדי לרמת הקבוצה, השחקנים עלולים רק לשרוד את התרגיל. במקרה כזה פשט את התנאים ושמור על הכוונה המקצועית.'},
+        {title:'יישום באימון',text:apply}
+      ]
+    };
+
+    return byTopic[item.topic]||[
+      {title:'העיקרון',text:focus},
+      {title:'למה זה חשוב',text:`חבר את ${title} להתנהגות שאפשר לראות באימון ולא רק להסבר תאורטי.`},
+      {title:'איך לבצע',text:apply},
+      {title:'מה לבדוק',text:'בחר מדד פשוט, תן כמה ניסיונות ורק אז שנה את המשימה או את ה־Cue.'}
+    ];
+  }
+
+  function renderLearningGrid(card){
+    const sections=learningSections(card);
+    return `<div class="coach-learning-grid">${sections.map(section=>`<section class="coach-learning-section"><h4>${escapeHtml(section.title)}</h4><p>${escapeHtml(section.text)}</p></section>`).join('')}</div>`;
+  }
+
   function renderApplication(card){
     if(!card.application) return '';
     const panelId=`coach-expand-${escapeHtml(card.id)}-application`;
@@ -108,9 +176,20 @@
         <strong>ליישום באימון</strong><span class="coach-expand-icon" aria-hidden="true">⌄</span>
       </button>
       <p>${escapeHtml(card.application)}</p>
-      <div class="coach-expand-panel" id="${panelId}" hidden>
-        <p><b>הרחבה:</b> ${escapeHtml(applicationExpansion(card))}</p>
-        <p><b>בדיקה באימון:</b> בחר מדד אחד פשוט, תן לשחקן כמה ניסיונות, ורק אז החלט אם לשנות את המשימה או את ה־Cue.</p>
+      <div class="coach-expand-panel coach-rich-expand-panel" id="${panelId}" hidden>
+        ${renderLearningGrid(card)}
+      </div>
+    </div>`;
+  }
+
+  function renderQuestionDeepDive(card){
+    const panelId=`coach-expand-${escapeHtml(card.id)}-deep-dive`;
+    return `<div class="coach-question-deep-dive">
+      <button type="button" class="coach-expand-toggle coach-deep-dive-toggle" data-coach-expand="deep-dive" aria-expanded="false" aria-controls="${panelId}">
+        <strong>להעמקה</strong><span class="coach-expand-icon" aria-hidden="true">⌄</span>
+      </button>
+      <div class="coach-expand-panel coach-rich-expand-panel" id="${panelId}" hidden>
+        ${renderLearningGrid(card)}
       </div>
     </div>`;
   }
@@ -127,6 +206,7 @@
       <p class="coach-question-text">${escapeHtml(card.question)}</p>
       <div class="coach-options">${options}</div>
       <div class="coach-question-feedback" data-question-feedback hidden></div>
+      ${renderQuestionDeepDive(card)}
     </article>`;
   }
 
@@ -260,7 +340,7 @@
     return {renderFeed,appendBatch,getActiveTopic:()=>activeTopic,getCycleIndex:()=>cycleIndex};
   }
 
-  const api={normalizeCard,filterCards,resolveInitialTopic,mixFeed,buildFeedCycle,answerQuestion,renderCard,initCoachFeed};
+  const api={normalizeCard,filterCards,resolveInitialTopic,mixFeed,buildFeedCycle,answerQuestion,learningSections,renderLearningGrid,renderCard,initCoachFeed};
 
   if(typeof document!=='undefined'){
     const boot=()=>initCoachFeed(document,{});
