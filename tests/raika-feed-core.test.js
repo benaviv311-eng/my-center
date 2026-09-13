@@ -10,6 +10,13 @@ test('request count is clamped and unknown actions are rejected', async () => {
   assert.throws(() => c.normalizeFeedRequest({action:'publish'}));
 });
 
+test('recent signatures keep enough content for exact deduplication', async () => {
+  const c = await core();
+  const signature='x'.repeat(700);
+  const out=c.normalizeFeedRequest({action:'generate',recent_signatures:[signature]});
+  assert.equal(out.recent_signatures[0].length,700);
+});
+
 test('generated cards normalize to proposal-safe feed cards', async () => {
   const c = await core();
   const card = c.normalizeGeneratedCard({
