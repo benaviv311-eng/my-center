@@ -25,7 +25,12 @@ assert.ok(ambience.includes("id:'it-1'")&&ambience.includes("id:'it-2'")&&ambien
 assert.ok(ambience.includes("id:'ru-1'")&&ambience.includes("id:'ru-2'")&&ambience.includes("id:'ru-3'"),'Russian should have three music sets');
 assert.ok(ambience.includes("id:'es-1'")&&ambience.includes("id:'es-2'")&&ambience.includes("id:'es-3'"),'Spanish should have three music sets');
 assert.ok(ambience.includes('عود')||ambience.includes('Oud'),'Arabic sets should prominently feature oud');
-assert.ok(ambience.includes('music.volume=0.5'),'background music should default to half volume');
+assert.ok(ambience.includes('music.volume=0.3'),'background music should default to a quieter 30 percent volume');
+assert.ok(!ambience.includes('music.volume=0.5'),'background music should no longer default to half volume');
+assert.ok(ambience.includes('Vesna-Krasna.ogg'),'Russian ambience should include a calm traditional melody');
+assert.ok(ambience.includes('Romance - Rachmaninoff.ogg'),'Russian ambience should include a calm Russian romance');
+assert.ok(!ambience.includes('Kalinka.ogg'),'Russian ambience should not use the energetic Kalinka set');
+assert.ok(!ambience.includes('Korobeiniki.ogg'),'Russian ambience should not use the energetic Korobeiniki set');
 assert.ok(ambience.includes('new Audio('),'ambience should use real media recordings rather than synthesized oscillators');
 assert.ok(ambience.includes('.loop=true'),'ambience recordings should loop');
 assert.ok(!ambience.includes('createOscillator'),'ambience should not synthesize the background music');
