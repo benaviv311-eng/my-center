@@ -28,6 +28,7 @@ jobs:
           if [ -f four-language-study.js ]; then node --check four-language-study.js; fi
           if [ -f language-vocabulary-ar-spoken.js ]; then node --check language-vocabulary-ar-spoken.js; fi
           if [ -f language-vocabulary.js ]; then node --check language-vocabulary.js; fi
+          if [ -f language-ambience.js ]; then node --check language-ambience.js; fi
           if [ -f language-arabic-ambience.js ]; then node --check language-arabic-ambience.js; fi
           if [ -f language-vocabulary-link.js ]; then node --check language-vocabulary-link.js; fi
           if [ -f language-audio.js ]; then node --check language-audio.js; fi
