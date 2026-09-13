@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="language-vocabulary.css?v=4">
+  <link rel="stylesheet" href="language-vocabulary.css?v=5">
 </head>
 <body>
 <div class="app vocabulary-page">
@@ -17,11 +17,12 @@
     <div class="study-title-row">
       <span id="vocab-language-code" class="language-code">AR</span>
       <div>
-        <h1>📚 אוצר מילים</h1>
+        <h1 id="vocab-page-title">📚 אוצר מילים</h1>
         <div id="vocab-language-name" class="subtitle"></div>
       </div>
     </div>
     <p id="vocab-summary" class="vocab-summary">מאגר פתוח · טוען…</p>
+    <div id="arabic-living-moment" class="arabic-living-moment" hidden aria-live="polite"></div>
     <div id="vocab-language-switch" class="sticky-language-switch" aria-label="בחירת שפה"></div>
   </section>
 
@@ -32,8 +33,8 @@
         <div id="vocab-arabic-register" class="vocab-arabic-register" aria-label="סוג הערבית" hidden>
           <span class="vocab-register-label">ערבית:</span>
           <div class="vocab-register-buttons" role="group" aria-label="בחירת ערבית מדוברת או ספרותית">
-            <button type="button" class="vocab-register-btn active" data-arabic-register="spoken" aria-pressed="true">🗣️ מדוברת</button>
-            <button type="button" class="vocab-register-btn" data-arabic-register="msa" aria-pressed="false">📖 ספרותית</button>
+            <button type="button" class="vocab-register-btn active" data-arabic-register="spoken" aria-pressed="true">🗣️ محكي · מדוברת</button>
+            <button type="button" class="vocab-register-btn" data-arabic-register="msa" aria-pressed="false">📖 فصحى · ספרותית</button>
           </div>
         </div>
       </div>
@@ -52,6 +53,7 @@
     <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
   </div></nav>
 </div>
+<button id="arabic-music-toggle" class="arabic-music-toggle" type="button" aria-pressed="false" hidden>🎵 מוזיקה</button>
 <div class="toast" id="toast"></div>
 <script src="language-vocabulary-data-verbs.js?v=1"></script>
 <script src="language-vocabulary-data-adjectives.js?v=1"></script>
@@ -60,7 +62,8 @@
 <script src="language-vocabulary-ar-spoken.js?v=1"></script>
 <script src="language-vocabulary-bank.js?v=2"></script>
 <script src="language-vocabulary-view-model.js?v=1"></script>
-<script src="language-vocabulary.js?v=5"></script>
+<script src="language-vocabulary.js?v=6"></script>
 <script src="language-audio.js?v=3"></script>
+<script src="language-arabic-ambience.js?v=1"></script>
 </body>
 </html>
