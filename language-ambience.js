@@ -16,9 +16,9 @@
       {id:'it-3',title:'מנדולינה איטלקית · Vivaldi',instruments:'Mandolino · concerto',file:'Antonio Vivaldi, Mandolin Concerto in C major, RV 425.ogg',credit:'Antonio Vivaldi · Musopen',license:'Public domain',licenseUrl:'https://creativecommons.org/publicdomain/mark/1.0/',rate:0.9}
     ],
     ru:[
-      {id:'ru-1',title:'שיר עם רוסי · Стенька Разин',instruments:'Russian folk · instrumental',file:'Stenka Rasin 01.ogg',credit:'Roderich Kahn',license:'CC BY-SA 4.0',licenseUrl:'https://creativecommons.org/licenses/by-sa/4.0/',rate:0.9},
-      {id:'ru-2',title:'קורובייניקי · רגוע',instruments:'Violin · accordion · Russian folk',file:'Nikolaj Alekseevič Nekrasov - Korobeiniki.ogg',credit:'Pracchia-78',license:'Public domain',licenseUrl:'https://creativecommons.org/publicdomain/mark/1.0/',rate:0.86},
-      {id:'ru-3',title:'קלינקה · גרסה איטית',instruments:'Accordion · Russian folk',file:'Kalinka.ogg',credit:'Pracchia-78',license:'Public domain',licenseUrl:'https://creativecommons.org/publicdomain/mark/1.0/',rate:0.84}
+      {id:'ru-1',title:'Стенька Разин · גרסה איטית',instruments:'Russian folk · instrumental',file:'Stenka Rasin 01.ogg',credit:'Roderich Kahn',license:'CC BY-SA 4.0',licenseUrl:'https://creativecommons.org/licenses/by-sa/4.0/',rate:0.82},
+      {id:'ru-2',title:'Весна-Красна · מנגינה עממית שקטה',instruments:'Russian folk · soft melody',file:'Vesna-Krasna.ogg',credit:'Divje Drevo · Idolano',license:'CC BY 4.0',licenseUrl:'https://creativecommons.org/licenses/by/4.0/',rate:0.86},
+      {id:'ru-3',title:'רחמנינוב · Romance',instruments:'Piano · Russian romance',file:'Romance - Rachmaninoff.ogg',credit:'Sergei Rachmaninoff · Alton',license:'Public domain',licenseUrl:'https://creativecommons.org/publicdomain/mark/1.0/',rate:0.9}
     ],
     es:[
       {id:'es-1',title:'Recuerdos de la Alhambra',instruments:'Guitarra española · tremolo',file:'Recuerdos de la Alhambra.ogg',credit:'Carlo Alberto Boni · Francisco Tárrega',license:'CC BY-SA 3.0',licenseUrl:'https://creativecommons.org/licenses/by-sa/3.0/',rate:0.96},
@@ -82,7 +82,7 @@
 
   const music=new Audio();
   music.loop=true;
-  music.volume=0.5;
+  music.volume=0.3;
   music.preload='metadata';
   let loading=false;
 
@@ -112,7 +112,7 @@
     music.src=commonsFile(track.file);
     music.playbackRate=track.rate||1;
     music.loop=true;
-    music.volume=0.5;
+    music.volume=0.3;
     music.load();
     loading=false;
     updateButton('idle');
