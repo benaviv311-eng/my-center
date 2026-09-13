@@ -12,7 +12,8 @@ function resolveBook(books){
 }
 
 function sectionHtml(section){
-  return `<article class="book-original-card" data-original-section="${section.number}"><h4 dir="ltr">${esc(section.number+'. '+section.title)}</h4><pre class="book-original-body" dir="ltr">${esc(section.body)}</pre></article>`;
+  const prefix=Number.isFinite(section.number)?`${section.number}. `:'';
+  return `<article class="book-original-card" data-original-section="${esc(section.number==null?section.title:section.number)}"><h4 dir="ltr">${esc(prefix+section.title)}</h4><pre class="book-original-body" dir="ltr">${esc(section.body)}</pre></article>`;
 }
 
 function phaseHtml(part){
