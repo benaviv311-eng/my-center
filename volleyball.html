@@ -15,19 +15,23 @@
 </header>
 
 <section class="vb-population-shell" aria-label="קבוצות איכות">
-  <div class="vb-population-caption"><b>בחר עולם</b><small>הלשונית נשארת איתך בזמן הגלילה</small></div>
+  <div class="vb-population-caption"><b>בחר עולם</b><small>יסודי · נוער · נשים · גברים</small></div>
   <div id="volleyball-population-tabs" class="vb-population-tabs"></div>
 </section>
 
 <section class="section vb-population-world" aria-labelledby="volleyball-population-title">
   <div id="volleyball-population-visual" class="vb-player-visual"></div>
   <div class="vb-world-content">
-    <p class="vb-eyebrow dark">כל המאפיינים בתוך אותה אוכלוסייה</p>
+    <p class="vb-eyebrow dark">עולם מקצועי לפי אוכלוסייה</p>
     <h2 id="volleyball-population-title">כל עולם הכדורעף</h2>
     <p id="volleyball-population-summary" class="vb-world-summary"></p>
-    <div id="volleyball-population-topics" class="vb-topic-map" aria-label="מאפייני כדורעף"></div>
-    <p class="vb-topic-help">לחיצה על מאפיין פותחת העמקה קצרה — הפיד עצמו נשאר מגוון וממשיך לערבב את כל התחומים.</p>
+    <p class="vb-world-note">בחר אוכלוסייה, ואז גלול בפיד שלה בלבד. לשונית המאפיינים נשארת קפואה ומאפשרת לעבור בין תחומי הידע בלי לצאת מהפיד.</p>
   </div>
+</section>
+
+<section id="volleyball-topic-shell" class="vb-topic-shell" aria-label="מאפייני האוכלוסייה">
+  <div class="vb-topic-caption"><b>מאפיינים</b><small id="volleyball-topic-context">כל עולם הכדורעף</small></div>
+  <div id="volleyball-population-topics" class="vb-topic-tabs"></div>
 </section>
 
 <section class="section vb-search-row">
@@ -35,13 +39,13 @@
 </section>
 
 <section class="section vb-discovery-shell" id="volleyball-discovery">
-  <div class="section-head"><h2>גלה משהו</h2><small>רעיונות מכל עולם הכדורעף</small></div>
+  <div class="section-head"><h2>גלה משהו</h2><small>מתוך המסלול והמאפיין שבחרת</small></div>
   <div class="vb-discovery-buttons"><button data-kind="all">🎲 רנדומלי</button><button data-kind="drill">🧪 תרגיל</button><button data-kind="research">🔬 מחקר ומדע</button><button data-kind="myth">🧯 מיתוס</button><button data-kind="question">❓ שאלה</button><button data-kind="scenario">🎬 סיטואציה</button></div>
   <div id="volleyball-discovery-result" class="vb-discovery-result"></div>
 </section>
 
 <section class="section" id="volleyball-feed-section">
-  <div class="section-head"><h2>פיד כדורעף</h2><small id="volleyball-feed-count">טוען...</small></div>
+  <div class="section-head"><h2 id="volleyball-feed-title">פיד כדורעף</h2><small id="volleyball-feed-count">טוען...</small></div>
   <div id="volleyball-feed" class="vb-feed" aria-live="polite"></div>
   <div id="volleyball-feed-sentinel" class="vb-feed-sentinel" aria-label="טעינת תוכן נוסף"><span></span><span></span><span></span></div>
 </section>
