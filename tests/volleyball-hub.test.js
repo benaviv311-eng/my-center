@@ -40,7 +40,7 @@ test('starter feed mixes technique tactics science and population-specific conte
   for(const population of ['elementary','youth-boys','youth-girls','women','men']) assert.ok(VOLLEYBALL_FEED_CARDS.some(x=>x.populations.includes(population)),`missing content for ${population}`);
 });
 
-test('feed filtering combines topic population and level without leakage',()=>{
+test('feed filtering combines population with optional compatibility filters without leakage',()=>{
   const {VOLLEYBALL_FEED_CARDS,filterVolleyballFeed}=loadModules();
   const filtered=filterVolleyballFeed(VOLLEYBALL_FEED_CARDS,{topic:'technique',population:'youth-girls',level:'competitive'});
   assert.ok(filtered.length>0);
@@ -55,10 +55,13 @@ test('discovery pick is deterministic by seed and respects requested kind',()=>{
   assert.equal(a.kind,'drill');
 });
 
-test('volleyball page exposes topic map population tracks filters discovery and feed',()=>{
+test('volleyball page exposes population tabs, population world, discovery and infinite feed',()=>{
   assert.equal(exists('volleyball.html'),true);
   const html=read('volleyball.html');
-  for(const id of ['volleyball-topic-map','volleyball-populations','volleyball-discovery','volleyball-feed','volleyball-topic-filter','volleyball-population-filter','volleyball-level-filter']) assert.match(html,new RegExp(`id=["']${id}["']`));
+  for(const id of ['volleyball-population-tabs','volleyball-population-topics','volleyball-population-visual','volleyball-discovery','volleyball-feed','volleyball-feed-sentinel','volleyball-search']) assert.match(html,new RegExp(`id=["']${id}["']`));
+  assert.doesNotMatch(html,/id=["']volleyball-topic-filter["']/);
+  assert.doesNotMatch(html,/id=["']volleyball-population-filter["']/);
+  assert.doesNotMatch(html,/id=["']volleyball-level-filter["']/);
   assert.match(html,/volleyball\.css/);
   assert.match(html,/volleyball-data\.js/);
   assert.match(html,/volleyball\.js/);
