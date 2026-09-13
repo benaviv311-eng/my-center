@@ -11,6 +11,7 @@ on:
       - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
+      - 'tests/volleyball-professional-expansion.test.js'
       - '.github/workflows/volleyball-test.yml'
   pull_request:
     paths:
@@ -22,6 +23,7 @@ on:
       - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
+      - 'tests/volleyball-professional-expansion.test.js'
 
 jobs:
   test:
@@ -31,4 +33,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/volleyball-hub.test.js tests/volleyball-population-feed.test.js
+      - run: node --test tests/volleyball-hub.test.js tests/volleyball-population-feed.test.js tests/volleyball-professional-expansion.test.js
