@@ -5,8 +5,10 @@ on:
     paths:
       - 'volleyball.html'
       - 'volleyball.css'
+      - 'volleyball-magazine.css'
       - 'volleyball.js'
       - 'volleyball-data.js'
+      - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
       - '.github/workflows/volleyball-test.yml'
@@ -14,8 +16,10 @@ on:
     paths:
       - 'volleyball.html'
       - 'volleyball.css'
+      - 'volleyball-magazine.css'
       - 'volleyball.js'
       - 'volleyball-data.js'
+      - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
 
