@@ -14,9 +14,11 @@ on:
       - 'book-page.css'
       - 'book-feed.css'
       - 'book-infinite-feed.js'
+      - 'book-reading.js'
       - 'tests/library-*.test.js'
       - 'tests/book-page.test.js'
       - 'tests/book-infinite-feed.test.js'
+      - 'tests/book-reading.test.js'
       - '.github/workflows/library-test.yml'
   pull_request:
     paths:
@@ -29,9 +31,12 @@ on:
       - 'book-page.css'
       - 'book-feed.css'
       - 'book-infinite-feed.js'
+      - 'book-reading.js'
       - 'tests/library-*.test.js'
       - 'tests/book-page.test.js'
       - 'tests/book-infinite-feed.test.js'
+      - 'tests/book-reading.test.js'
+      - '.github/workflows/library-test.yml'
 
 jobs:
   test:
@@ -43,10 +48,12 @@ jobs:
           node-version: '24'
       - run: node tests/library-discovery.test.js
       - run: node tests/library-integration.test.js
+      - run: node tests/book-reading.test.js
       - run: node tests/book-page.test.js
       - run: node tests/book-infinite-feed.test.js
       - run: node --check library-discovery.js
       - run: node --check library-discovery-ui.js
       - run: node --check library-book-links.js
+      - run: node --check book-reading.js
       - run: node --check book-infinite-feed.js
       - run: node --check book-page.js
