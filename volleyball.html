@@ -1,16 +1,50 @@
 <!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>כדורעף | המרכז שלי</title><meta name="theme-color" content="#eef8f7"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="volleyball.css"></head><body><div class="app vb-app">
 <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-<header class="vb-hero"><div><p class="vb-eyebrow">VOLLEYBALL KNOWLEDGE HUB</p><h1>🏐 כדורעף</h1><p>טכניקה · טקטיקה · מדע · תרגילים · ניתוח משחק · פיזיולוגיה · התפתחות שחקנים</p></div><div class="vb-hero-badge"><strong>ידע מחובר</strong><span>מהמגע הראשון ועד המשחק השלם</span></div></header>
 
-<section class="vb-quickbar" aria-label="כלי סינון"><input id="volleyball-search" class="search" type="search" placeholder="חפש: קבלה, חסימה, קפיצה, רוטציה..."><select id="volleyball-topic-filter" class="vb-select"></select><select id="volleyball-population-filter" class="vb-select"></select><select id="volleyball-level-filter" class="vb-select"></select></section>
+<header class="vb-hero">
+  <div class="vb-hero-copy">
+    <p class="vb-eyebrow">VOLLEYBALL KNOWLEDGE HUB</p>
+    <h1>🏐 כדורעף</h1>
+    <p>עולם מקצועי אחד של טכניקה, טקטיקה, פיזיולוגיה, מחקר, תרגילים, ניתוח משחק והתפתחות שחקנים — בגלילה שלא נגמרת.</p>
+    <div class="vb-hero-pills"><span>טכניקה</span><span>טקטיקה</span><span>מדע</span><span>פיזיולוגיה</span><span>ניתוח משחק</span></div>
+  </div>
+  <div class="vb-hero-players" aria-label="כדורעף נשים וגברים">
+    <a href="https://www.pexels.com/photo/female-volleyball-player-in-indoor-gym-holding-ball-30446999/" target="_blank" rel="noopener" class="vb-hero-player"><img src="https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg" alt="שחקנית כדורעף באולם" loading="eager"><span>נשים · Pexels</span></a>
+    <a href="https://www.pexels.com/photo/photograph-of-a-man-serving-a-volleyball-6203671/" target="_blank" rel="noopener" class="vb-hero-player"><img src="https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg" alt="שחקן כדורעף מגיש באולם" loading="eager"><span>גברים · Pexels</span></a>
+  </div>
+</header>
 
-<section class="section"><div class="section-head"><h2>מסלולים לפי אוכלוסייה</h2><small>התוכן משתנה לפי שלב ההתפתחות והמשחק</small></div><div id="volleyball-populations" class="vb-populations"></div></section>
+<section class="vb-population-shell" aria-label="קבוצות איכות">
+  <div class="vb-population-caption"><b>בחר עולם</b><small>הלשונית נשארת איתך בזמן הגלילה</small></div>
+  <div id="volleyball-population-tabs" class="vb-population-tabs"></div>
+</section>
 
-<section class="section"><div class="section-head"><h2>מפת הכדורעף</h2><small>בחר תחום וגלוש לכל מה שמתחבר אליו</small></div><div id="volleyball-topic-map" class="vb-topic-map"></div></section>
+<section class="section vb-population-world" aria-labelledby="volleyball-population-title">
+  <div id="volleyball-population-visual" class="vb-player-visual"></div>
+  <div class="vb-world-content">
+    <p class="vb-eyebrow dark">כל המאפיינים בתוך אותה אוכלוסייה</p>
+    <h2 id="volleyball-population-title">כל עולם הכדורעף</h2>
+    <p id="volleyball-population-summary" class="vb-world-summary"></p>
+    <div id="volleyball-population-topics" class="vb-topic-map" aria-label="מאפייני כדורעף"></div>
+    <p class="vb-topic-help">לחיצה על מאפיין פותחת העמקה קצרה — הפיד עצמו נשאר מגוון וממשיך לערבב את כל התחומים.</p>
+  </div>
+</section>
 
-<section class="section vb-discovery-shell" id="volleyball-discovery"><div class="section-head"><h2>גלה משהו</h2><small>כל לחיצה מושכת כיוון אחר מתוך המאגר</small></div><div class="vb-discovery-buttons"><button data-kind="all">🎲 רנדומלי</button><button data-kind="drill">🧪 תרגיל</button><button data-kind="research">🔬 מחקר ומדע</button><button data-kind="myth">🧯 מיתוס</button><button data-kind="question">❓ שאלה</button><button data-kind="scenario">🎬 סיטואציה</button></div><div id="volleyball-discovery-result" class="vb-discovery-result"></div></section>
+<section class="section vb-search-row">
+  <input id="volleyball-search" class="search" type="search" placeholder="חפש בפיד: קבלה, חסימה, קפיצה, רוטציה, כתף..." aria-label="חיפוש בפיד הכדורעף">
+</section>
 
-<section class="section" id="volleyball-feed-section"><div class="section-head"><h2>פיד כדורעף</h2><small id="volleyball-feed-count"></small></div><div id="volleyball-feed" class="vb-feed"></div></section>
+<section class="section vb-discovery-shell" id="volleyball-discovery">
+  <div class="section-head"><h2>גלה משהו</h2><small>רעיונות מכל עולם הכדורעף</small></div>
+  <div class="vb-discovery-buttons"><button data-kind="all">🎲 רנדומלי</button><button data-kind="drill">🧪 תרגיל</button><button data-kind="research">🔬 מחקר ומדע</button><button data-kind="myth">🧯 מיתוס</button><button data-kind="question">❓ שאלה</button><button data-kind="scenario">🎬 סיטואציה</button></div>
+  <div id="volleyball-discovery-result" class="vb-discovery-result"></div>
+</section>
+
+<section class="section" id="volleyball-feed-section">
+  <div class="section-head"><h2>פיד כדורעף</h2><small id="volleyball-feed-count">טוען...</small></div>
+  <div id="volleyball-feed" class="vb-feed" aria-live="polite"></div>
+  <div id="volleyball-feed-sentinel" class="vb-feed-sentinel" aria-label="טעינת תוכן נוסף"><span></span><span></span><span></span></div>
+</section>
 
 <nav class="bottom-nav"><div class="inner"><a class="nav-item" href="index.html"><span>🏠</span>בית</a><a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a><a class="nav-item" href="coach.html"><span>🧠</span>מאמן</a><a class="nav-item active" href="volleyball.html"><span>🏐</span>כדורעף</a><a class="nav-item" href="languages.html"><span>🌍</span>שפות</a><a class="nav-item" href="music.html"><span>🎵</span>מוזיקה</a><a class="nav-item" href="library.html"><span>📚</span>ספרייה</a></div></nav>
 </div><script src="volleyball-data.js"></script><script src="volleyball.js"></script><script src="app.js"></script></body></html>
