@@ -74,6 +74,14 @@ test('every population and every professional topic has enough dedicated content
   }
 });
 
+test('infinite feed does not repeat a card before the filtered pool is exhausted',()=>{
+  const cards=Array.from({length:25},(_,i)=>({id:`unique-${i}`,kind:'concept',topic:'technique',populations:['elementary'],levels:['all'],title:`כותרת ${i}`,text:`טקסט ${i}`,detail:'',tags:[]}));
+  const seen=[];
+  for(let page=0;page<3;page++)seen.push(...buildInfiniteBatch(cards,{population:'elementary',topic:'technique'},'no-repeat',page,8));
+  assert.equal(seen.length,24);
+  assert.equal(new Set(seen.map(card=>card.id)).size,24);
+});
+
 test('generated population content is written for that population rather than cross-labelled',()=>{
   const {buildEnrichedVolleyballCards}=loadRich();
   const cards=buildEnrichedVolleyballCards(data.VOLLEYBALL_FEED_CARDS,data.VOLLEYBALL_POPULATIONS,data.VOLLEYBALL_TOPICS);
