@@ -8,13 +8,29 @@ const VOLLEYBALL_VISUALS={
 
 function filterVolleyballFeed(cards,{topic='all',population='all',level='all',query=''}={}){
   const q=String(query||'').trim().toLowerCase();
-  return cards.filter(card=>{
+  const matches=[];
+  for(const card of cards){
     const topicOk=topic==='all'||card.topic===topic||card.topic==='all';
-    const popOk=population==='all'||card.populations.includes('all')||card.populations.includes(population);
     const levelOk=level==='all'||card.levels.includes('all')||card.levels.includes(level);
     const hay=[card.title,card.text,card.detail,...(card.tags||[])].join(' ').toLowerCase();
-    return topicOk&&popOk&&levelOk&&(!q||hay.includes(q));
-  });
+    const queryOk=!q||hay.includes(q);
+    if(!topicOk||!levelOk||!queryOk)continue;
+
+    if(population==='all'){
+      matches.push(card);
+      continue;
+    }
+
+    if(card.populations.includes(population)){
+      matches.push(card.populations.includes('all')?{...card,populations:[population],contextualPopulation:population}:card);
+      continue;
+    }
+
+    if(card.populations.includes('all')){
+      matches.push({...card,populations:[population],contextualPopulation:population});
+    }
+  }
+  return matches;
 }
 
 function hashSeed(seed){
