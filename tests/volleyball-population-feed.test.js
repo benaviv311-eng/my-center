@@ -8,7 +8,11 @@ const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 function loadModules(){
   delete require.cache[require.resolve('../volleyball-data.js')];
   delete require.cache[require.resolve('../volleyball.js')];
-  return {...require('../volleyball-data.js'),...require('../volleyball.js')};
+  delete require.cache[require.resolve('../volleyball-professional-visuals.js')];
+  const modules={...require('../volleyball-data.js'),...require('../volleyball.js')};
+  const {applyProfessionalFemaleVisuals}=require('../volleyball-professional-visuals.js');
+  applyProfessionalFemaleVisuals(modules.VOLLEYBALL_VISUALS);
+  return modules;
 }
 
 test('top volleyball navigation selects population and topic navigation is a second sticky layer',()=>{
