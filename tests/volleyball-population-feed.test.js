@@ -29,10 +29,27 @@ test('every approved population has a real volleyball visual with attribution',(
   for(const population of VOLLEYBALL_POPULATIONS){
     const visual=VOLLEYBALL_VISUALS[population.id];
     assert.ok(visual,`missing visual for ${population.id}`);
-    assert.match(visual.imageUrl,/^https:\/\/images\.pexels\.com\//);
-    assert.match(visual.creditUrl,/^https:\/\/www\.pexels\.com\//);
+    assert.match(visual.imageUrl,/^https:\/\//);
+    assert.match(visual.creditUrl,/^https:\/\//);
+    assert.ok(visual.credit&&visual.credit.length>2);
     assert.ok(visual.alt.length>10);
   }
+});
+
+test('female population visuals use named professional volleyball players from Wikimedia Commons',()=>{
+  const {VOLLEYBALL_VISUALS}=loadModules();
+  for(const id of ['women','youth-girls']){
+    const visual=VOLLEYBALL_VISUALS[id];
+    assert.equal(visual.professional,true,`${id} must be explicitly professional`);
+    assert.ok(visual.playerName&&visual.playerName.length>4,`${id} needs a named player`);
+    assert.match(visual.creditUrl,/commons\.wikimedia\.org\/wiki\/File/);
+    assert.match(visual.imageUrl,/commons\.wikimedia\.org\/wiki\/Special:Redirect\/file\//);
+    assert.match(`${visual.alt} ${visual.credit}`,new RegExp(visual.playerName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'));
+  }
+  const html=read('volleyball.html');
+  assert.match(html,/Paola Egonu/);
+  assert.match(html,/commons\.wikimedia\.org/);
+  assert.doesNotMatch(html,/female-volleyball-player-in-indoor-gym-holding-ball-30446999/);
 });
 
 test('all professional topics remain available inside every population',()=>{
