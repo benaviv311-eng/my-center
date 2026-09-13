@@ -42,6 +42,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
 });
 assert.ok(html.indexOf('book-reading-body') < html.indexOf('book-infinite-feed'), 'reading body should precede the infinite feed');
 assert.ok(html.includes('עוד מהספר'), 'infinite feed should be framed as supplemental discovery');
+assert.ok(html.includes('editorial-book'), 'book page should opt into the editorial reading design');
 
 const js = fs.readFileSync(path.join(root, 'book-page.js'), 'utf8');
 assert.ok(js.includes('buildReadingChapters'), 'book page should build continuous reading chapters');
@@ -57,6 +58,10 @@ const pageCss = fs.readFileSync(path.join(root, 'book-page.css'), 'utf8');
 ['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section'].forEach(token => {
   assert.ok(pageCss.includes(token), `book-page.css should style ${token}`);
 });
+assert.ok(pageCss.includes('grid-template-areas:"reader toc"'), 'desktop reading layout should keep the table of contents on the physical left');
+assert.ok(pageCss.includes('.book-reading-main{grid-area:reader'), 'reading column should occupy the reader grid area');
+assert.ok(pageCss.includes('.book-reading-toc-wrap{grid-area:toc'), 'table of contents should occupy the left toc grid area');
+assert.ok(pageCss.includes('.editorial-book .book-page-hero'), 'book page should use the Editorial Research visual system');
 
 const links = fs.readFileSync(path.join(root, 'library-book-links.js'), 'utf8');
 assert.ok(links.includes('book.html?book='), 'library clicks should navigate to standalone book pages');
