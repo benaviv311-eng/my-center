@@ -199,3 +199,13 @@ test('topic-page mode resolves a fixed topic instead of the all feed',()=>{
   assert.equal(resolveInitialTopic('sport-psychology'),'sport-psychology');
   assert.equal(resolveInitialTopic('not-a-topic'),'all');
 });
+
+test('application sections render as expandable controls with hidden detail',()=>{
+  const {COACH_FEED_CARDS,COACH_TOPICS,renderCard}=loadModules();
+  const card=COACH_FEED_CARDS.find(item=>item.type!=='question'&&item.application);
+  const html=renderCard(card,COACH_TOPICS);
+  assert.match(html,/data-coach-expand=["']application["']/);
+  assert.match(html,/aria-expanded=["']false["']/);
+  assert.match(html,/coach-expand-panel/);
+  assert.match(html,/hidden/);
+});
