@@ -1,0 +1,38 @@
+name: Home Feed Tests
+
+on:
+  push:
+    branches: ['home-unified-smart-feed', 'main']
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'home-feed-*.js'
+      - 'home-feed.css'
+      - 'tests/home-feed-*.test.js'
+      - '.github/workflows/home-feed-test.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'app.js'
+      - 'home-feed-*.js'
+      - 'home-feed.css'
+      - 'tests/home-feed-*.test.js'
+      - '.github/workflows/home-feed-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run full test suite
+        run: node --test tests/*.test.js
+      - name: Check home feed scripts
+        run: |
+          node --check home-feed-favorites.js
+          node --check home-feed-state.js
+          node --check home-feed-sources.js
+          node --check home-feed-ranking.js
+          node --check home-feed.js
