@@ -23,10 +23,20 @@ function applyProfessionalFemaleVisuals(target){
   return target;
 }
 
-if(typeof window!=='undefined'&&window.VOLLEYBALL_VISUALS){
-  applyProfessionalFemaleVisuals(window.VOLLEYBALL_VISUALS);
+function loadVolleyballMagazineStyles(){
+  if(typeof document==='undefined'||document.querySelector('link[data-volleyball-magazine]'))return;
+  const link=document.createElement('link');
+  link.rel='stylesheet';
+  link.href='volleyball-magazine.css';
+  link.dataset.volleyballMagazine='true';
+  document.head.appendChild(link);
+}
+
+if(typeof window!=='undefined'){
+  if(window.VOLLEYBALL_VISUALS)applyProfessionalFemaleVisuals(window.VOLLEYBALL_VISUALS);
+  loadVolleyballMagazineStyles();
 }
 
 if(typeof module!=='undefined'&&module.exports){
-  module.exports={PROFESSIONAL_FEMALE_VISUALS,applyProfessionalFemaleVisuals};
+  module.exports={PROFESSIONAL_FEMALE_VISUALS,applyProfessionalFemaleVisuals,loadVolleyballMagazineStyles};
 }
