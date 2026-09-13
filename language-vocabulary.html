@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
   <link rel="stylesheet" href="language-vocabulary.css?v=5">
+  <link rel="stylesheet" href="language-ambience.css?v=1">
 </head>
 <body>
 <div class="app vocabulary-page">
@@ -53,7 +54,12 @@
     <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
   </div></nav>
 </div>
-<button id="arabic-music-toggle" class="arabic-music-toggle" type="button" aria-pressed="false" hidden>🎵 מוזיקה</button>
+<div id="language-music-controls" class="language-music-controls" hidden aria-label="מוזיקת אווירה">
+  <button id="language-music-toggle" class="language-music-toggle" type="button" aria-pressed="false">🎵 מוזיקה</button>
+  <button id="language-music-next" class="language-music-next" type="button">⏭️ סט הבא</button>
+  <div id="language-music-label" class="language-music-label" aria-live="polite"></div>
+  <div id="language-music-credit" class="language-music-credit"></div>
+</div>
 <div class="toast" id="toast"></div>
 <script src="language-vocabulary-data-verbs.js?v=1"></script>
 <script src="language-vocabulary-data-adjectives.js?v=1"></script>
@@ -64,6 +70,6 @@
 <script src="language-vocabulary-view-model.js?v=1"></script>
 <script src="language-vocabulary.js?v=6"></script>
 <script src="language-audio.js?v=3"></script>
-<script src="language-arabic-ambience.js?v=2"></script>
+<script src="language-ambience.js?v=1"></script>
 </body>
 </html>
