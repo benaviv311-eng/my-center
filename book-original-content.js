@@ -39,10 +39,10 @@
     for(const line of lines){
       const phase=line.match(/^#\s+(.+)$/);
       if(phase&&!phaseTitle){phaseTitle=phase[1].trim();continue;}
-      const section=line.match(/^##\s+(\d+)\.\s+(.+)$/);
+      const section=line.match(/^##\s+(?:(\d+)\.\s+)?(.+)$/);
       if(section){
         if(current){current.body=current.body.join('\n').trim();sections.push(current);}
-        current={number:Number(section[1]),title:section[2].trim(),body:[]};
+        current={number:section[1]?Number(section[1]):null,title:section[2].trim(),body:[]};
         continue;
       }
       if(current)current.body.push(line);
