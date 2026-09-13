@@ -1,0 +1,24 @@
+const assert=require('assert');
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'language-vocabulary.html'),'utf8');
+const js=fs.readFileSync(path.join(root,'language-vocabulary.js'),'utf8');
+const css=fs.readFileSync(path.join(root,'language-vocabulary.css'),'utf8');
+const ambiencePath=path.join(root,'language-arabic-ambience.js');
+
+assert.ok(html.includes('id="arabic-living-moment"'),'Arabic page should include a living-language moment');
+assert.ok(html.includes('id="arabic-music-toggle"'),'Arabic page should include a music toggle');
+assert.ok(html.includes('language-arabic-ambience.js'),'Arabic page should load its ambience module');
+assert.ok(js.includes("classList.toggle('arabic-vocabulary'"),'Arabic language selection should enable the courtyard theme');
+assert.ok(css.includes('body.arabic-vocabulary'),'Arabic vocabulary should have a dedicated Levantine courtyard theme');
+assert.ok(css.includes('.arabic-living-moment'),'Arabic living-language moment should be styled');
+assert.ok(css.includes('.arabic-music-toggle'),'Arabic music control should be styled');
+assert.ok(fs.existsSync(ambiencePath),'Arabic vocabulary should have a dedicated ambience module');
+const ambience=fs.readFileSync(ambiencePath,'utf8');
+assert.ok(ambience.includes('my-center-arabic-music-muted'),'music preference should persist');
+assert.ok(ambience.includes('AudioContext'),'ambience should generate lightweight music in-browser');
+assert.ok(ambience.includes('pointerdown'),'blocked autoplay should unlock on first interaction');
+assert.ok(ambience.includes('arabic-music-toggle'),'ambience should expose an on/off control');
+assert.ok(ambience.includes('صباح الخير'),'Arabic page should have changing living-language content');
+console.log('Arabic courtyard tests: OK');
