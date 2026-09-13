@@ -125,3 +125,28 @@ test('new coach scripts have valid JavaScript syntax',()=>{
     assert.equal(result.status,0,`${file}: ${result.stderr}`);
   }
 });
+
+test('infinite feed cycle shows every card once before any repeat',()=>{
+  const {COACH_FEED_CARDS,buildFeedCycle}=loadModules();
+  assert.equal(typeof buildFeedCycle,'function');
+  const cycle=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',0);
+  assert.equal(cycle.length,COACH_FEED_CARDS.length);
+  assert.equal(new Set(cycle.map(card=>card.id)).size,COACH_FEED_CARDS.length);
+  assert.deepEqual(new Set(cycle.map(card=>card.id)),new Set(COACH_FEED_CARDS.map(card=>card.id)));
+});
+
+test('later infinite feed cycles reshuffle the full pool without dropping cards',()=>{
+  const {COACH_FEED_CARDS,buildFeedCycle}=loadModules();
+  assert.equal(typeof buildFeedCycle,'function');
+  const first=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',0).map(card=>card.id);
+  const second=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',1).map(card=>card.id);
+  const repeated=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',1).map(card=>card.id);
+  assert.deepEqual(second,repeated,'one cycle must be deterministic for the same seed');
+  assert.notDeepEqual(first,second,'next cycle should use a fresh shuffle');
+  assert.deepEqual(new Set(second),new Set(first),'every cycle must contain the same complete pool');
+});
+
+test('coach page includes an infinite-scroll sentinel',()=>{
+  const html=read('coach.html');
+  assert.match(html,/id=["']coach-feed-sentinel["']/);
+});
