@@ -21,6 +21,19 @@ function buildSceneIdeaPrompt(mode,a='',b='',note=''){
     flashback:'Suggest a flashback scene that adds useful backstory without repeating an existing scene.',
     secret:'Suggest a scene involving a secret, discovery, withheld truth, or reveal that fits canon.',
     family:'Suggest a family scene that reveals affection, tension, routine, history, or a changing family dynamic.',
+    mentor:'Suggest a mentor-student scene where teaching, resistance, trust, or a lesson changes the relationship.',
+    rivalry:'Suggest a rivalry scene driven by comparison, pride, competition, respect, jealousy, or a challenge.',
+    dilemma:'Suggest a moral dilemma scene where the character must choose between two meaningful values or loyalties.',
+    quiet:'Suggest a quiet intimate scene with little external action but a meaningful emotional or relational shift.',
+    training:'Suggest a training scene where something goes wrong, exposes a weakness, or creates a lesson that matters later.',
+    aftermath:'Suggest an aftermath scene following a victory, defeat, rescue, fight, or major event, focused on consequences and emotion.',
+    misunderstanding:'Suggest a character-driven misunderstanding that creates tension or comedy without making anyone act stupidly.',
+    promise:'Suggest a scene centered on a promise, vow, responsibility, or commitment that can matter later in the story.',
+    foreshadow:'Suggest a foreshadowing scene that plants a subtle future clue without revealing the answer too early.',
+    school:'Suggest a school or ordinary-life scene that deepens character, friendship, embarrassment, belonging, or contrast with the larger adventure.',
+    journey:'Suggest a travel or journey scene where the road itself creates conversation, discovery, danger, humor, or bonding.',
+    villain:'Suggest a scene from an antagonist or opposing character perspective that deepens motive without spoiling hidden canon.',
+    legacy:'Suggest a scene about family history, inheritance, memory, tradition, reputation, or what one generation leaves to the next.',
     surprise:'Surprise me with a strong scene idea using these characters and the existing Raika canon.'
   };
   const instruction=instructions[mode]||instructions.related;
