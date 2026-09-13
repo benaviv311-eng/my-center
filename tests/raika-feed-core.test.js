@@ -30,6 +30,14 @@ test('dedupe rejects near-identical cards unless more-like-this is explicit', as
   assert.equal(c.dedupeCards([newer],[old],{allowSeedVariation:true}).length, 1);
 });
 
+test('more-like permits seed similarity but still dedupes its own new batch', async () => {
+  const c = await core();
+  const seed = {title:'ראיקה מבקשת עזרה מאוקנה',body:'ראיקה נאלצת לבקש עזרה מאוקנה',card_type:'relationship',characters:['raika','okane']};
+  const a = {title:'ראיקה מבקשת את עזרת אוקנה',body:'ראיקה נאלצת לבקש מאוקנה עזרה אחרי ויכוח',card_type:'relationship',characters:['raika','okane']};
+  const b = {title:'ראיקה מבקשת עזרה מאוקנה אחרי ויכוח',body:'אחרי ויכוח ראיקה נאלצת לבקש מאוקנה עזרה',card_type:'relationship',characters:['raika','okane']};
+  assert.equal(c.dedupeCards([a,b],[seed],{allowSeedVariation:true}).length, 1);
+});
+
 test('feedback weighting keeps exploration quota', async () => {
   const c = await core();
   const p = c.summarizeFeedback([
