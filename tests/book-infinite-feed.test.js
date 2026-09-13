@@ -22,6 +22,7 @@ assert.ok(feed.LOGICAL_FALLACIES.length >= 10);
   assert.ok(feed.LOGICAL_FALLACIES.some(item => item.id === id), `missing ${id}`);
 });
 assert.strictEqual(typeof feed.buildBookFeedBatch, 'function');
+assert.strictEqual(typeof feed.diversifyOrder, 'function', 'feed should expose a diversity-aware random ordering helper');
 
 const sample = {id:'sample',slug:'sample',title:'Sample',content:{summary:'חשיבה החלטות למידה והרגלים',ideas:['קבלת החלטות'],topics:['חשיבה','למידה'],feed_posts:['רעיון מתוך הספר']}};
 const batch = feed.buildBookFeedBatch(sample, {seed:'test', offset:0, count:40});
@@ -29,5 +30,23 @@ assert.strictEqual(batch.length, 40);
 const kinds = new Set(batch.map(item => item.kind));
 ['question','term','definition','suggestion','fallacy'].forEach(kind => assert.ok(kinds.has(kind), `missing kind ${kind}`));
 assert.ok(batch.some(item => item.kind === 'fallacy' && item.englishTitle));
+
+const sampleItems = [
+  {id:'q1',kind:'question'},
+  {id:'q2',kind:'question'},
+  {id:'q3',kind:'question'},
+  {id:'t1',kind:'term'},
+  {id:'d1',kind:'definition'},
+  {id:'a1',kind:'application'},
+  {id:'s1',kind:'suggestion'}
+];
+const diversified = feed.diversifyOrder(sampleItems,'variety');
+for(let i=1;i<diversified.length;i++){
+  assert.notStrictEqual(diversified[i].kind, diversified[i-1].kind, 'feed should avoid adjacent repeated content types when alternatives exist');
+}
+
+const firstOrder = feed.buildBookFeedBatch(sample,{seed:'entry-one',offset:0,count:12}).map(item=>`${item.kind}:${item.title}`);
+const secondOrder = feed.buildBookFeedBatch(sample,{seed:'entry-two',offset:0,count:12}).map(item=>`${item.kind}:${item.title}`);
+assert.notDeepStrictEqual(firstOrder,secondOrder,'different entry seeds should produce a different feed order');
 
 console.log('book infinite feed tests: OK');
