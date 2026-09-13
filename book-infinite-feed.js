@@ -86,13 +86,42 @@
     if(!pool.length) pool.push(item(book,'question',0,'❓ שאלה ראשונה',`איזה רעיון מרכזי היית רוצה להבין טוב יותר מתוך ${book.title||'הספר'}?`,{typeLabel:'שאלה'}));
     return pool;
   }
+
+  function diversifyOrder(items,seed){
+    const groups=new Map();
+    (items||[]).forEach((entry,index)=>{
+      const kind=str(entry&&entry.kind||'other');
+      if(!groups.has(kind))groups.set(kind,[]);
+      groups.get(kind).push({entry,index});
+    });
+    groups.forEach((entries,kind)=>{
+      entries.sort((a,b)=>hash(`${seed}|${kind}|${a.entry.id}|${a.index}`)-hash(`${seed}|${kind}|${b.entry.id}|${b.index}`));
+    });
+
+    const out=[];
+    let lastKind=null;
+    while(out.length<(items||[]).length){
+      let candidates=[...groups.entries()].filter(([kind,entries])=>entries.length&&kind!==lastKind);
+      if(!candidates.length)candidates=[...groups.entries()].filter(([,entries])=>entries.length);
+      candidates.sort((a,b)=>{
+        const sizeDiff=b[1].length-a[1].length;
+        if(sizeDiff)return sizeDiff;
+        return hash(`${seed}|slot|${out.length}|${a[0]}`)-hash(`${seed}|slot|${out.length}|${b[0]}`);
+      });
+      const [kind,entries]=candidates[0];
+      out.push(entries.shift().entry);
+      lastKind=kind;
+    }
+    return out;
+  }
+
   function buildBookFeedBatch(book,options){
     options=options||{};
     const seed=str(options.seed||'feed'),offset=Math.max(0,Number(options.offset)||0),count=Math.max(1,Number(options.count)||12),filter=str(options.filter||'all');
     let pool=makePool(book,seed);
     if(filter!=='all') pool=pool.filter(x=>x.kind===filter);
     if(!pool.length) pool=makePool(book,seed);
-    const ordered=pool.slice().sort((a,b)=>hash(`${seed}|${a.id}`)-hash(`${seed}|${b.id}`));
+    const ordered=diversifyOrder(pool,seed);
     const out=[];
     for(let i=0;i<count;i++){
       const base=ordered[(offset+i)%ordered.length];
@@ -101,5 +130,5 @@
     return out;
   }
 
-  return {LOGICAL_FALLACIES,buildBookFeedBatch,hash};
+  return {LOGICAL_FALLACIES,buildBookFeedBatch,diversifyOrder,hash};
 });
