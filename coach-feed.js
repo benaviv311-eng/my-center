@@ -5,14 +5,21 @@
 })(typeof window!=='undefined'?window:globalThis,function(browserData){
   'use strict';
 
+  const KNOWN_TOPICS=['sport-psychology','coaching-psychology','movement-psychology','explosive-power','coaching-language','volleyball-approaches'];
+
   function normalizeCard(card){
-    return Object.assign({tags:[],body:'',application:'',source:'',sourceKind:'',evidenceStrength:''},card||{});
+    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:''},card||{});
   }
 
   function filterCards(cards,topic){
     const list=Array.isArray(cards)?cards:[];
     if(!topic||topic==='all') return list.slice();
     return list.filter(card=>card.topic===topic);
+  }
+
+  function resolveInitialTopic(value){
+    const topic=String(value||'').trim();
+    return KNOWN_TOPICS.includes(topic)?topic:'all';
   }
 
   function hashSeed(input){
@@ -47,6 +54,11 @@
     return list.slice(0,max);
   }
 
+  function buildFeedCycle(cards,seed,cycleIndex){
+    const cycle=Number.isInteger(cycleIndex)&&cycleIndex>=0?cycleIndex:0;
+    return mixFeed(cards,`${seed}|cycle:${cycle}`,Array.isArray(cards)?cards.length:0);
+  }
+
   function answerQuestion(card,optionIndex){
     const item=normalizeCard(card);
     if(item.type!=='question'||!Array.isArray(item.options)) throw new TypeError('Question card required');
@@ -78,6 +90,26 @@
     return `<div class="coach-card-meta">${parts.join('')}</div>`;
   }
 
+  function applicationExpansion(card){
+    if(card.applicationDetails) return card.applicationDetails;
+    return `הפוך את הרעיון למשימה אחת ברורה, קבע סימן הצלחה שאפשר לראות, וצפה בכמה חזרות לפני שינוי נוסף. ${card.application||''}`.trim();
+  }
+
+  function renderApplication(card){
+    if(!card.application) return '';
+    const panelId=`coach-expand-${escapeHtml(card.id)}-application`;
+    return `<div class="coach-application">
+      <button type="button" class="coach-expand-toggle" data-coach-expand="application" aria-expanded="false" aria-controls="${panelId}">
+        <strong>ליישום באימון</strong><span class="coach-expand-icon" aria-hidden="true">⌄</span>
+      </button>
+      <p>${escapeHtml(card.application)}</p>
+      <div class="coach-expand-panel" id="${panelId}" hidden>
+        <p><b>הרחבה:</b> ${escapeHtml(applicationExpansion(card))}</p>
+        <p><b>בדיקה באימון:</b> בחר מדד אחד פשוט, תן לשחקן כמה ניסיונות, ורק אז החלט אם לשנות את המשימה או את ה־Cue.</p>
+      </div>
+    </div>`;
+  }
+
   function renderQuestion(card,topics){
     const options=card.options.map((option,index)=>`<button type="button" class="coach-option" data-question-option="${index}">${escapeHtml(option)}</button>`).join('');
     return `<article class="coach-feed-card coach-question-card" data-card-id="${escapeHtml(card.id)}">
@@ -90,12 +122,11 @@
   }
 
   function renderStandard(card,topics){
-    const application=card.application?`<div class="coach-application"><strong>ליישום באימון</strong><p>${escapeHtml(card.application)}</p></div>`:'';
     return `<article class="coach-feed-card" data-card-id="${escapeHtml(card.id)}">
       ${renderMeta(card,topics)}
       <h3>${escapeHtml(card.title)}</h3>
       <p>${escapeHtml(card.body)}</p>
-      ${application}
+      ${renderApplication(card)}
     </article>`;
   }
 
@@ -117,35 +148,69 @@
     const nav=doc.getElementById('coach-topic-nav');
     const feed=doc.getElementById('coach-feed');
     const status=doc.getElementById('coach-feed-status');
+    const sentinel=doc.getElementById('coach-feed-sentinel');
     if(!nav||!feed) return null;
 
-    let activeTopic='all';
+    const bodyTopic=doc.body&&doc.body.getAttribute?doc.body.getAttribute('data-coach-fixed-topic'):'';
+    let activeTopic=resolveInitialTopic((config&&config.fixedTopic)||bodyTopic);
     const baseSeed=(config&&config.seed)||todayKey();
+    const batchSize=(config&&Number.isInteger(config.batchSize)&&config.batchSize>0)?config.batchSize:6;
+    let pool=[];
+    let cycleIndex=0;
+    let cycleCards=[];
+    let cursor=0;
+    let loadedCount=0;
 
     function renderNav(){
-      const items=[{id:'all',label:'הכול',icon:'✨'}].concat(topics);
-      nav.innerHTML=items.map(item=>`<button type="button" class="coach-topic-button${item.id===activeTopic?' active':''}" data-coach-topic="${escapeHtml(item.id)}" aria-pressed="${item.id===activeTopic?'true':'false'}"><span>${escapeHtml(item.icon||'')}</span>${escapeHtml(item.label)}</button>`).join('');
+      const items=[{id:'all',label:'הכול',icon:'✨',page:'coach.html'}].concat(topics);
+      nav.innerHTML=items.map(item=>`<a class="coach-topic-button${item.id===activeTopic?' active':''}" href="${escapeHtml(item.page||'coach.html')}" aria-current="${item.id===activeTopic?'page':'false'}"><span>${escapeHtml(item.icon||'')}</span>${escapeHtml(item.label)}</a>`).join('');
+    }
+
+    function updateStatus(){
+      if(!status) return;
+      const label=activeTopic==='all'?'כל התחומים':topicLabel(activeTopic,topics);
+      status.textContent=`${label} · ${loadedCount} כרטיסים נטענו · גלילה אינסופית`;
+    }
+
+    function startCycle(index){
+      cycleIndex=index;
+      cycleCards=buildFeedCycle(pool,`${baseSeed}|${activeTopic}`,cycleIndex);
+      cursor=0;
+    }
+
+    function appendBatch(){
+      if(!pool.length) return [];
+      if(cursor>=cycleCards.length) startCycle(cycleIndex+1);
+      const next=cycleCards.slice(cursor,cursor+batchSize);
+      cursor+=next.length;
+      loadedCount+=next.length;
+      if(next.length) feed.insertAdjacentHTML('beforeend',next.map(card=>renderCard(card,topics)).join(''));
+      updateStatus();
+      return next;
     }
 
     function renderFeed(){
-      const filtered=filterCards(cards,activeTopic);
-      const mixed=mixFeed(filtered,`${baseSeed}|${activeTopic}`,filtered.length);
-      feed.innerHTML=mixed.map(card=>renderCard(card,topics)).join('');
-      if(status){
-        const label=activeTopic==='all'?'כל התחומים':topicLabel(activeTopic,topics);
-        status.textContent=`${label} · ${mixed.length} כרטיסים`;
-      }
+      pool=filterCards(cards,activeTopic);
+      loadedCount=0;
+      feed.innerHTML='';
+      startCycle(0);
+      appendBatch();
       renderNav();
     }
 
-    nav.addEventListener('click',event=>{
-      const button=event.target.closest('[data-coach-topic]');
-      if(!button) return;
-      activeTopic=button.getAttribute('data-coach-topic')||'all';
-      renderFeed();
-    });
-
     feed.addEventListener('click',event=>{
+      const expandButton=event.target.closest('[data-coach-expand]');
+      if(expandButton){
+        const controls=expandButton.getAttribute('aria-controls');
+        const panel=controls?doc.getElementById(controls):null;
+        if(panel){
+          const opening=panel.hidden;
+          panel.hidden=!opening;
+          expandButton.setAttribute('aria-expanded',opening?'true':'false');
+        }
+        return;
+      }
+
       const option=event.target.closest('[data-question-option]');
       if(!option) return;
       const article=option.closest('[data-card-id]');
@@ -166,11 +231,26 @@
       }
     });
 
+    if(sentinel){
+      const View=doc.defaultView||null;
+      const Observer=(config&&config.IntersectionObserver)||(View&&View.IntersectionObserver)||(typeof IntersectionObserver!=='undefined'?IntersectionObserver:null);
+      if(Observer){
+        const observer=new Observer(entries=>{
+          if(entries.some(entry=>entry.isIntersecting)) appendBatch();
+        },{rootMargin:'500px 0px'});
+        observer.observe(sentinel);
+      }else{
+        sentinel.addEventListener('click',appendBatch);
+        sentinel.classList.add('fallback');
+        sentinel.textContent='טען עוד';
+      }
+    }
+
     renderFeed();
-    return {renderFeed,getActiveTopic:()=>activeTopic};
+    return {renderFeed,appendBatch,getActiveTopic:()=>activeTopic,getCycleIndex:()=>cycleIndex};
   }
 
-  const api={normalizeCard,filterCards,mixFeed,answerQuestion,renderCard,initCoachFeed};
+  const api={normalizeCard,filterCards,resolveInitialTopic,mixFeed,buildFeedCycle,answerQuestion,renderCard,initCoachFeed};
 
   if(typeof document!=='undefined'){
     const boot=()=>initCoachFeed(document,{});

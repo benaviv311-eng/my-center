@@ -17,6 +17,15 @@ const topicLabels=[
   'גישות לכדורעף'
 ];
 
+const topicPages={
+  'sport-psychology':'coach-sport-psychology.html',
+  'coaching-psychology':'coach-coaching-psychology.html',
+  'movement-psychology':'coach-movement-psychology.html',
+  'explosive-power':'coach-explosive-power.html',
+  'coaching-language':'coach-coaching-language.html',
+  'volleyball-approaches':'coach-volleyball-approaches.html'
+};
+
 function loadModules(){
   assert.equal(exists('coach-feed-data.js'),true,'coach-feed-data.js must exist');
   assert.equal(exists('coach-feed.js'),true,'coach-feed.js must exist');
@@ -124,4 +133,79 @@ test('new coach scripts have valid JavaScript syntax',()=>{
     const result=spawnSync(process.execPath,['--check',file],{cwd:root,encoding:'utf8'});
     assert.equal(result.status,0,`${file}: ${result.stderr}`);
   }
+});
+
+test('infinite feed cycle shows every card once before any repeat',()=>{
+  const {COACH_FEED_CARDS,buildFeedCycle}=loadModules();
+  assert.equal(typeof buildFeedCycle,'function');
+  const cycle=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',0);
+  assert.equal(cycle.length,COACH_FEED_CARDS.length);
+  assert.equal(new Set(cycle.map(card=>card.id)).size,COACH_FEED_CARDS.length);
+  assert.deepEqual(new Set(cycle.map(card=>card.id)),new Set(COACH_FEED_CARDS.map(card=>card.id)));
+});
+
+test('later infinite feed cycles reshuffle the full pool without dropping cards',()=>{
+  const {COACH_FEED_CARDS,buildFeedCycle}=loadModules();
+  assert.equal(typeof buildFeedCycle,'function');
+  const first=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',0).map(card=>card.id);
+  const second=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',1).map(card=>card.id);
+  const repeated=buildFeedCycle(COACH_FEED_CARDS,'2026-09-13|all',1).map(card=>card.id);
+  assert.deepEqual(second,repeated,'one cycle must be deterministic for the same seed');
+  assert.notDeepEqual(first,second,'next cycle should use a fresh shuffle');
+  assert.deepEqual(new Set(second),new Set(first),'every cycle must contain the same complete pool');
+});
+
+test('infinite cycles preserve the active topic filter',()=>{
+  const {COACH_FEED_CARDS,filterCards,buildFeedCycle}=loadModules();
+  const topic='explosive-power';
+  const filtered=filterCards(COACH_FEED_CARDS,topic);
+  const cycle=buildFeedCycle(filtered,'2026-09-13|explosive-power',2);
+  assert.equal(cycle.length,filtered.length);
+  assert.ok(cycle.length>0);
+  assert.ok(cycle.every(card=>card.topic===topic));
+});
+
+test('coach page includes an infinite-scroll sentinel',()=>{
+  const html=read('coach.html');
+  assert.match(html,/id=["']coach-feed-sentinel["']/);
+});
+
+test('each coach topic points to its own dedicated page',()=>{
+  const {COACH_TOPICS}=loadModules();
+  for(const topic of COACH_TOPICS){
+    assert.equal(topic.page,topicPages[topic.id],`${topic.id} needs its dedicated page href`);
+  }
+});
+
+test('all six dedicated coach topic pages use the shared infinite feed engine',()=>{
+  for(const [topic,page] of Object.entries(topicPages)){
+    assert.equal(exists(page),true,`${page} must exist`);
+    if(!exists(page)) continue;
+    const html=read(page);
+    assert.match(html,new RegExp(`data-coach-fixed-topic=["']${topic}["']`),`${page} must lock to ${topic}`);
+    assert.match(html,/href=["']coach\.html["']/,'topic page needs a back link to coach');
+    assert.match(html,/id=["']coach-feed["']/);
+    assert.match(html,/id=["']coach-feed-status["']/);
+    assert.match(html,/id=["']coach-feed-sentinel["']/);
+    assert.match(html,/coach-feed-data\.js/);
+    assert.match(html,/coach-feed\.js/);
+  }
+});
+
+test('topic-page mode resolves a fixed topic instead of the all feed',()=>{
+  const {resolveInitialTopic}=loadModules();
+  assert.equal(typeof resolveInitialTopic,'function');
+  assert.equal(resolveInitialTopic('explosive-power'),'explosive-power');
+  assert.equal(resolveInitialTopic('sport-psychology'),'sport-psychology');
+  assert.equal(resolveInitialTopic('not-a-topic'),'all');
+});
+
+test('application sections render as expandable controls with hidden detail',()=>{
+  const {COACH_FEED_CARDS,COACH_TOPICS,renderCard}=loadModules();
+  const card=COACH_FEED_CARDS.find(item=>item.type!=='question'&&item.application);
+  const html=renderCard(card,COACH_TOPICS);
+  assert.match(html,/data-coach-expand=["']application["']/);
+  assert.match(html,/aria-expanded=["']false["']/);
+  assert.match(html,/coach-expand-panel/);
+  assert.match(html,/hidden/);
 });

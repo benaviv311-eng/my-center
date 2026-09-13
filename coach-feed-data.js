@@ -6,12 +6,12 @@
   'use strict';
 
   const COACH_TOPICS=[
-    {id:'sport-psychology',label:'פסיכולוגיה של הספורט',icon:'🧠'},
-    {id:'coaching-psychology',label:'פסיכולוגיית אימון',icon:'🎯'},
-    {id:'movement-psychology',label:'פסיכולוגיה של תנועה',icon:'🌀'},
-    {id:'explosive-power',label:'כוח מתפרץ',icon:'⚡'},
-    {id:'coaching-language',label:'שפת אימון',icon:'💬'},
-    {id:'volleyball-approaches',label:'גישות לכדורעף',icon:'🏐'}
+    {id:'sport-psychology',label:'פסיכולוגיה של הספורט',icon:'🧠',page:'coach-sport-psychology.html'},
+    {id:'coaching-psychology',label:'פסיכולוגיית אימון',icon:'🎯',page:'coach-coaching-psychology.html'},
+    {id:'movement-psychology',label:'פסיכולוגיה של תנועה',icon:'🌀',page:'coach-movement-psychology.html'},
+    {id:'explosive-power',label:'כוח מתפרץ',icon:'⚡',page:'coach-explosive-power.html'},
+    {id:'coaching-language',label:'שפת אימון',icon:'💬',page:'coach-coaching-language.html'},
+    {id:'volleyball-approaches',label:'גישות לכדורעף',icon:'🏐',page:'coach-volleyball-approaches.html'}
   ];
 
   const COACH_FEED_CARDS=[
@@ -40,5 +40,9 @@
     {id:'va-q',topic:'volleyball-approaches',type:'question',title:'איך להפוך תרגיל לחי יותר?',question:'בקבלה כולם יודעים מראש לאן הסרב יגיע והתרגיל נהיה אוטומטי. מה שינוי משחקי יותר?',options:['להאריך את התור','להוסיף עוד הסבר לפני כל כדור','לאפשר למגיש לבחור בין שני אזורי יעד','להוריד את הרשת'],correctOption:2,explanation:'בחירה אמיתית למגיש מחזירה מידע ואי-ודאות שהמקבל צריך לקרוא.',principle:'Perception-action coupling ו-Game-Based Learning',application:'בכדורעף: התחל בשתי אפשרויות והרחב אחרי הצלחה.'}
   ];
 
-  return {COACH_TOPICS,COACH_FEED_CARDS};
+  function resolveInitialTopic(value){
+    return COACH_TOPICS.some(topic=>topic.id===value)?value:'all';
+  }
+
+  return {COACH_TOPICS,COACH_FEED_CARDS,resolveInitialTopic};
 });
