@@ -20,7 +20,13 @@ assert.ok(fs.existsSync(ambiencePath),'Arabic vocabulary should have a dedicated
 const ambience=fs.readFileSync(ambiencePath,'utf8');
 assert.ok(ambience.includes('language-arabic-courtyard.css'),'Arabic ambience should load the courtyard stylesheet only for Arabic');
 assert.ok(ambience.includes('my-center-arabic-music-muted'),'music preference should persist');
-assert.ok(ambience.includes('AudioContext'),'ambience should generate lightweight music in-browser');
+assert.ok(ambience.includes('Solo_Oud_and_Ceramic_Darbuka_-_Arab_Instruments.webm'),'Arabic ambience should use a real oud and darbuka recording');
+assert.ok(ambience.includes('upload.wikimedia.org'),'Arabic ambience should stream its licensed recording from Wikimedia Commons');
+assert.ok(ambience.includes('new Audio('),'Arabic ambience should use a real media recording rather than synthesized oscillators');
+assert.ok(ambience.includes('.loop=true'),'Arabic ambience recording should loop');
+assert.ok(ambience.includes('Arab Instruments'),'Arabic ambience should retain source attribution');
+assert.ok(ambience.includes('creativecommons.org/licenses/by/3.0'),'Arabic ambience should retain the CC BY 3.0 license link');
+assert.ok(!ambience.includes('createOscillator'),'Arabic ambience should no longer synthesize the background music');
 assert.ok(ambience.includes('pointerdown'),'blocked autoplay should unlock on first interaction');
 assert.ok(ambience.includes('arabic-music-toggle'),'ambience should expose an on/off control');
 assert.ok(ambience.includes('صباح الخير'),'Arabic page should have changing living-language content');
