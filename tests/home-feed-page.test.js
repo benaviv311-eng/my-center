@@ -43,6 +43,7 @@ test('index is a unified feed, not the old section mosaic',()=>{
   ['home-feed-toolbar','home-feed-status','home-feed-list','home-feed-sentinel'].forEach(id=>assert.ok(html.includes(`id="${id}"`)));
   ['for-you','all','raika','coach','volleyball','languages','music','library','verses','saved'].forEach(mode=>assert.ok(html.includes(`data-home-filter="${mode}"`)));
   ['home-feed.css','home-feed-favorites.js','home-feed-state.js','home-feed-sources.js','home-feed-ranking.js','home-feed.js'].forEach(file=>assert.ok(html.includes(file)));
+  assert.match(html,/href=["']volleyball\.html["']/);
   assert.equal(html.includes('id="daily-verses"'),false);
   assert.equal(html.includes('⚡ ראיקה היום'),false);
   assert.equal(html.includes('🏐 היום כמאמן'),false);
