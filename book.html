@@ -35,20 +35,33 @@
     <div id="book-original-content" class="book-original-content" aria-live="polite"></div>
   </section>
 
-  <section class="book-page-section">
-    <div class="section-head">
-      <div><h2>מסלול הלמידה</h2><small>כל כרטיס ניתן לרענון בנפרד</small></div>
+  <section class="book-reading-section" aria-label="קריאת הספר">
+    <div class="book-reading-progress" aria-hidden="true"><span id="book-reading-progress"></span></div>
+    <div class="book-reading-layout">
+      <aside class="book-reading-toc-wrap">
+        <div class="book-reading-toc-card">
+          <strong>תוכן עניינים</strong>
+          <nav id="book-reading-toc" aria-label="תוכן עניינים של הספר"></nav>
+        </div>
+      </aside>
+      <main class="book-reading-main">
+        <div id="book-reading-body" class="book-reading-body" aria-live="polite"></div>
+        <section class="book-takeaways-section">
+          <span class="reading-eyebrow">סיכום</span>
+          <h2>מה לקחת מהספר</h2>
+          <ul id="book-takeaways"></ul>
+        </section>
+      </main>
     </div>
-    <div id="book-learning-scroll" class="learning-scroll book-learning-scroll"></div>
   </section>
 
   <section class="book-page-section book-infinite-section">
     <div class="section-head book-feed-head">
       <div>
-        <h2>♾️ הפיד של הספר</h2>
+        <h2>♾️ עוד מהספר</h2>
         <small>מונחים · הגדרות · שאלות · תיאוריות · יישומים · הצעות · כשלים לוגיים · עוד ועוד</small>
       </div>
-      <span class="meta">הפיד ממשיך להיטען בגלילה</span>
+      <span class="meta">אזור גילוי משלים · ממשיך להיטען בגלילה</span>
     </div>
     <div id="book-feed-filters" class="book-feed-filters" aria-label="סינון פיד הספר">
       <button class="book-feed-filter active" data-book-feed-filter="all">הכול</button>
@@ -87,6 +100,7 @@
 </div></nav>
 <script src="library-discovery.js"></script>
 <script src="book-infinite-feed.js"></script>
+<script src="book-reading.js"></script>
 <script src="book-page.js"></script>
 <script src="book-original-content.js"></script>
 <script src="book-original-content-ui.js"></script>
