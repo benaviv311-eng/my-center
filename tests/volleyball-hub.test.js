@@ -62,6 +62,25 @@ test('discovery pick is deterministic by seed and respects requested kind',()=>{
   assert.equal(a.kind,'drill');
 });
 
+test('every feed term opens a half-page expansion and cards use clickable terms instead of a generic deepen button',()=>{
+  const {VOLLEYBALL_FEED_CARDS,buildTermExpansion,renderCard}=loadModules();
+  assert.equal(typeof buildTermExpansion,'function');
+  assert.equal(typeof renderCard,'function');
+  const terms=[...new Set(VOLLEYBALL_FEED_CARDS.flatMap(card=>card.tags||[]))];
+  assert.ok(terms.length>=20,'expected a broad volleyball term set');
+  for(const term of terms){
+    const entry=buildTermExpansion(term,VOLLEYBALL_FEED_CARDS,{population:'all'});
+    assert.equal(entry.term,term);
+    assert.ok(Array.isArray(entry.sections)&&entry.sections.length>=6,`${term} needs structured sections`);
+    const words=entry.sections.map(section=>`${section.title||''} ${section.text||''}`).join(' ').trim().split(/\s+/).filter(Boolean).length;
+    assert.ok(words>=160,`${term} expansion is too short: ${words} words`);
+  }
+  const sample=VOLLEYBALL_FEED_CARDS.find(card=>(card.tags||[]).length);
+  const html=renderCard(sample);
+  assert.match(html,/data-term=/);
+  assert.doesNotMatch(html,/להעמיק|<details/i);
+});
+
 test('volleyball page exposes population selection then sticky topic tabs and infinite feed',()=>{
   assert.equal(exists('volleyball.html'),true);
   const html=read('volleyball.html');
