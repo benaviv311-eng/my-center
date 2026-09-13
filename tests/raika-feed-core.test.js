@@ -58,3 +58,10 @@ test('feed schema requires an array of structured cards', async () => {
   assert.equal(schema.properties.cards.maxItems, 8);
   assert.ok(schema.required.includes('cards'));
 });
+
+test('OpenAI errors preserve HTTP status in a stable code', async () => {
+  const c = await core();
+  assert.equal(c.mapOpenAIError(401),'openai_401');
+  assert.equal(c.mapOpenAIError(429),'openai_429');
+  assert.equal(c.mapOpenAIError(500),'openai_500');
+});
