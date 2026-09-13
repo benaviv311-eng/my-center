@@ -47,6 +47,51 @@
   max-width: none;
 }
 
+.book-original-content {
+  display: grid;
+  gap: 18px;
+}
+
+.book-original-phase {
+  display: grid;
+  gap: 12px;
+}
+
+.book-original-phase > h3 {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #2b2926;
+  color: #fff;
+  font-size: 18px;
+  text-align: left;
+}
+
+.book-original-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.book-original-card h4 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  text-align: left;
+}
+
+.book-original-body {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.75;
+  color: var(--text);
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
 .book-reference {
   display: grid;
   gap: 14px;
@@ -104,5 +149,9 @@
   .book-page-topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .book-original-card {
+    padding: 15px;
   }
 }
