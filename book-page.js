@@ -18,7 +18,7 @@ const state={
 const content=book=>book&&book.content?book.content:{};
 function toast(message){const el=$('toast');if(!el)return;el.textContent=message;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1500)}
 function sourceClass(label){return /ChatGPT|הרחבה|מושג מקצועי|יישום|דוגמה/.test(label)?'ai':'book'}
-function sectionCard(section){return `<article class="learning-card" data-book-section="${esc(section.kind)}"><div class="learning-card-head"><div><h3>${esc(section.title)}</h3></div><button class="learning-refresh" data-refresh-section="${esc(section.kind)}">↻ רענן</button></div><p>${esc(section.text)}</p><div class="source-row"><span class="source-badge ${sourceClass(section.sourceLabel)}">${esc(section.sourceLabel)}</span></div></article>`}
+function sectionCard(section){return `<article class="learning-card" data-book-section="${esc(section.kind)}"><div class="learning-card-head"><div><h3>${esc(section.title)}</h3></div><button class="learning-refresh" data-refresh-section="${esc(section.kind)}">↻ רענן</button></div><p>${esc(section.text)}</p><div class="source-row"><span class="source-badge ${sourceClass(section.sourceLabel)}" data-source-expand role="button" tabindex="0" aria-expanded="false">${esc(section.sourceLabel)}</span></div></article>`}
 function renderLearning(seed){const sections=D.buildBookSections(state.book,seed);$('book-learning-scroll').innerHTML=sections.length?sections.map(sectionCard).join(''):'<div class="book-page-empty">אין עדיין חומר דינמי לספר הזה.</div>'}
 
 function feedCard(item){
@@ -27,7 +27,7 @@ function feedCard(item){
   if(item.example) deepParts.push(`<p><strong>דוגמה:</strong> ${esc(item.example)}</p>`);
   if(item.deepText) deepParts.push(`<p>${esc(item.deepText)}</p>`);
   return `<article class="book-feed-card" data-feed-card="${esc(item.id)}" data-feed-kind="${esc(item.kind)}">
-    <div class="book-feed-card-top"><span class="book-feed-kind">${esc(item.typeLabel||item.kind)}</span><span class="source-badge ${sourceClass(item.sourceLabel)}">${esc(item.sourceLabel||'הרחבה מקצועית')}</span></div>
+    <div class="book-feed-card-top"><span class="book-feed-kind">${esc(item.typeLabel||item.kind)}</span><span class="source-badge ${sourceClass(item.sourceLabel)}" data-source-expand role="button" tabindex="0" aria-expanded="false">${esc(item.sourceLabel||'הרחבה מקצועית')}</span></div>
     <h3>${esc(item.title)}${item.englishTitle?` <small>${esc(item.englishTitle)}</small>`:''}</h3>
     <p>${esc(item.text)}</p>
     <div class="book-feed-deep hidden">${deepParts.length?deepParts.join(''):'<p>נסה לחבר את הרעיון למקרה אמיתי אחד מתוך החיים שלך.</p>'}</div>
@@ -107,7 +107,141 @@ async function loadBook(){
   }catch(error){console.error(error);$('book-status').textContent='שגיאה בטעינת הספר';$('book-learning-scroll').innerHTML='<div class="book-page-empty book-page-error">לא ניתן כרגע לטעון את הספר.</div>'}
 }
 
+
+function sourceExpansion(card,label){
+  const book=state.book||{};
+  const c=content(book);
+  const bookTitle=book.title||'הספר';
+
+  const titleNode=card.querySelector('h3');
+  const title=titleNode?titleNode.textContent.trim():'הנושא';
+
+  const textNode=card.querySelector(':scope > p');
+  const text=textNode?textNode.textContent.trim():'';
+
+  const summary=c.summary||'';
+  const ideas=Array.isArray(c.ideas)?c.ideas:[];
+  const topics=Array.isArray(c.topics)?c.topics:[];
+
+  let sourceTitle='הרחבה על מקור התוכן';
+  let explanation='';
+  let context='';
+
+  if(label.includes('מתוך חומר הספר')){
+    sourceTitle='📖 הרחבה מתוך חומר הספר';
+    explanation=`הכרטיס הזה מבוסס על חומר שכבר משויך ל־${bookTitle}. המטרה כאן היא לפרק את הרעיון, להבין מה עומד מאחוריו ולחבר אותו לשאר הנושאים בספר.`;
+    context=summary
+      ? `בהקשר הרחב של הספר: ${summary}`
+      : `כדאי לקרוא את הרעיון כחלק מהמסר הרחב של ${bookTitle}, ולא כמשפט מבודד.`;
+  }
+  else if(label.includes('מושג מקצועי')){
+    sourceTitle='🧠 הרחבת המושג המקצועי';
+    explanation=`זהו מושג מקצועי אמיתי שמתחבר לנושא של ${bookTitle}. הוא אינו בהכרח מושג שהמחבר משתמש בו במפורש, אלא כלי שעוזר להבין את הרעיון דרך ידע מקצועי נוסף.`;
+    context=`נסה לבדוק כיצד המושג מסביר, מחזק או אפילו מערער את הרעיון שמוצג בכרטיס.`;
+  }
+  else if(label.includes('הרחבה מקצועית')){
+    sourceTitle='🔬 הרחבה מקצועית';
+    explanation=`זהו ידע נוסף שמחובר לנושא של ${bookTitle} כדי להרחיב את הלמידה מעבר לטקסט הבסיסי.`;
+    context=`הערך של ההרחבה הוא בחיבור בין הרעיון שבספר לבין תיאוריה, מחקר, פסיכולוגיה או יישום מהעולם האמיתי.`;
+  }
+  else if(label.includes('ChatGPT')){
+    sourceTitle='✨ הרחבת ההצעה';
+    explanation=`זהו חיבור לימודי שנוצר כדי לפתוח זווית נוספת על ${bookTitle}. הוא אינו מוצג כטענה שהרעיון מופיע במפורש בספר.`;
+    context=`המטרה היא להשתמש ברעיון שבספר כנקודת מוצא ולבדוק לאילו תחומים נוספים אפשר לחבר אותו.`;
+  }
+  else{
+    sourceTitle=`🔎 הרחבה — ${label}`;
+    explanation=`זהו מקור תוכן נוסף שמרחיב את הנושא שמופיע בכרטיס.`;
+    context=`בדוק כיצד התוכן הזה מתחבר לרעיון המרכזי של ${bookTitle}.`;
+  }
+
+  const related=[
+    ...topics,
+    ...ideas
+  ].filter(Boolean).find(x=>{
+    const value=String(x);
+    return value!==text && !text.includes(value) && !value.includes(text);
+  });
+
+  const relatedHtml=related
+    ? `<p><strong>🔗 חיבור נוסף:</strong> ${esc(related)}</p>`
+    : '';
+
+  return `
+    <div class="source-expansion-panel">
+      <div class="source-expansion-head">
+        <strong>${esc(sourceTitle)}</strong>
+        <button class="source-expansion-close" data-source-expansion-close aria-label="סגור הרחבה">×</button>
+      </div>
+
+      <p>${esc(explanation)}</p>
+
+      ${text
+        ? `<p><strong>הרעיון בהרחבה:</strong> ${esc(text)}</p>`
+        : ''
+      }
+
+      <p><strong>הקשר לספר:</strong> ${esc(context)}</p>
+
+      ${relatedHtml}
+
+      <p><strong>🌍 איך זה יכול להתבטא בחיים?</strong>
+      חפש מצב אמיתי שבו הרעיון הזה משפיע על החלטה, התנהגות, למידה, אימון, מערכת יחסים או דרך חשיבה.</p>
+
+      <p><strong>💭 שאלה להעמקה:</strong>
+      מה משתנה בהבנה שלך כאשר מסתכלים על "${esc(title)}" דרך ההרחבה הזאת?</p>
+    </div>
+  `;
+}
+
+function toggleSourceExpansion(badge){
+  const card=badge.closest('.learning-card,.book-feed-card');
+  if(!card)return;
+
+  const current=card.querySelector('.source-expansion-panel');
+
+  if(current){
+    current.remove();
+    badge.setAttribute('aria-expanded','false');
+    return;
+  }
+
+  document.querySelectorAll('.source-expansion-panel').forEach(panel=>{
+    const parent=panel.closest('.learning-card,.book-feed-card');
+    if(parent && parent!==card){
+      const otherBadge=parent.querySelector('[data-source-expand]');
+      if(otherBadge)otherBadge.setAttribute('aria-expanded','false');
+      panel.remove();
+    }
+  });
+
+  card.insertAdjacentHTML(
+    'beforeend',
+    sourceExpansion(card,badge.textContent.trim())
+  );
+
+  badge.setAttribute('aria-expanded','true');
+}
+
 document.addEventListener('click',event=>{
+  const closeExpansion=event.target.closest('[data-source-expansion-close]');
+  if(closeExpansion){
+    const card=closeExpansion.closest('.learning-card,.book-feed-card');
+    if(card){
+      const badge=card.querySelector('[data-source-expand]');
+      const panel=card.querySelector('.source-expansion-panel');
+      if(panel)panel.remove();
+      if(badge)badge.setAttribute('aria-expanded','false');
+    }
+    return;
+  }
+
+  const sourceBadge=event.target.closest('[data-source-expand]');
+  if(sourceBadge){
+    toggleSourceExpansion(sourceBadge);
+    return;
+  }
+
   const refresh=event.target.closest('[data-refresh-section]');if(refresh){refreshSection(refresh.dataset.refreshSection);return}
   const filter=event.target.closest('[data-book-feed-filter]');if(filter){resetFeed(filter.dataset.bookFeedFilter);return}
   const card=event.target.closest('[data-feed-card]');if(!card)return;
@@ -115,6 +249,16 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-feed-more-like]')){moreLike(card);return}
   if(event.target.closest('[data-feed-refresh]')){refreshFeedCard(card);return}
   if(event.target.closest('[data-feed-save]')){toggleFeedSave(card);return}
+});
+
+
+
+document.addEventListener('keydown',event=>{
+  const badge=event.target.closest&&event.target.closest('[data-source-expand]');
+  if(badge && (event.key==='Enter'||event.key===' ')){
+    event.preventDefault();
+    toggleSourceExpansion(badge);
+  }
 });
 
 $('book-refresh-all').addEventListener('click',()=>refreshAll('refresh'));
