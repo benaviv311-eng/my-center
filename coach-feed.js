@@ -47,6 +47,11 @@
     return list.slice(0,max);
   }
 
+  function buildFeedCycle(cards,seed,cycleIndex){
+    const cycle=Number.isInteger(cycleIndex)&&cycleIndex>=0?cycleIndex:0;
+    return mixFeed(cards,`${seed}|cycle:${cycle}`,Array.isArray(cards)?cards.length:0);
+  }
+
   function answerQuestion(card,optionIndex){
     const item=normalizeCard(card);
     if(item.type!=='question'||!Array.isArray(item.options)) throw new TypeError('Question card required');
@@ -117,24 +122,52 @@
     const nav=doc.getElementById('coach-topic-nav');
     const feed=doc.getElementById('coach-feed');
     const status=doc.getElementById('coach-feed-status');
+    const sentinel=doc.getElementById('coach-feed-sentinel');
     if(!nav||!feed) return null;
 
     let activeTopic='all';
     const baseSeed=(config&&config.seed)||todayKey();
+    const batchSize=(config&&Number.isInteger(config.batchSize)&&config.batchSize>0)?config.batchSize:6;
+    let pool=[];
+    let cycleIndex=0;
+    let cycleCards=[];
+    let cursor=0;
+    let loadedCount=0;
 
     function renderNav(){
       const items=[{id:'all',label:'הכול',icon:'✨'}].concat(topics);
       nav.innerHTML=items.map(item=>`<button type="button" class="coach-topic-button${item.id===activeTopic?' active':''}" data-coach-topic="${escapeHtml(item.id)}" aria-pressed="${item.id===activeTopic?'true':'false'}"><span>${escapeHtml(item.icon||'')}</span>${escapeHtml(item.label)}</button>`).join('');
     }
 
+    function updateStatus(){
+      if(!status) return;
+      const label=activeTopic==='all'?'כל התחומים':topicLabel(activeTopic,topics);
+      status.textContent=`${label} · ${loadedCount} כרטיסים נטענו · גלילה אינסופית`;
+    }
+
+    function startCycle(index){
+      cycleIndex=index;
+      cycleCards=buildFeedCycle(pool,`${baseSeed}|${activeTopic}`,cycleIndex);
+      cursor=0;
+    }
+
+    function appendBatch(){
+      if(!pool.length) return [];
+      if(cursor>=cycleCards.length) startCycle(cycleIndex+1);
+      const next=cycleCards.slice(cursor,cursor+batchSize);
+      cursor+=next.length;
+      loadedCount+=next.length;
+      if(next.length) feed.insertAdjacentHTML('beforeend',next.map(card=>renderCard(card,topics)).join(''));
+      updateStatus();
+      return next;
+    }
+
     function renderFeed(){
-      const filtered=filterCards(cards,activeTopic);
-      const mixed=mixFeed(filtered,`${baseSeed}|${activeTopic}`,filtered.length);
-      feed.innerHTML=mixed.map(card=>renderCard(card,topics)).join('');
-      if(status){
-        const label=activeTopic==='all'?'כל התחומים':topicLabel(activeTopic,topics);
-        status.textContent=`${label} · ${mixed.length} כרטיסים`;
-      }
+      pool=filterCards(cards,activeTopic);
+      loadedCount=0;
+      feed.innerHTML='';
+      startCycle(0);
+      appendBatch();
       renderNav();
     }
 
@@ -166,11 +199,26 @@
       }
     });
 
+    if(sentinel){
+      const View=doc.defaultView||null;
+      const Observer=(config&&config.IntersectionObserver)||(View&&View.IntersectionObserver)||(typeof IntersectionObserver!=='undefined'?IntersectionObserver:null);
+      if(Observer){
+        const observer=new Observer(entries=>{
+          if(entries.some(entry=>entry.isIntersecting)) appendBatch();
+        },{rootMargin:'500px 0px'});
+        observer.observe(sentinel);
+      }else{
+        sentinel.addEventListener('click',appendBatch);
+        sentinel.classList.add('fallback');
+        sentinel.textContent='טען עוד';
+      }
+    }
+
     renderFeed();
-    return {renderFeed,getActiveTopic:()=>activeTopic};
+    return {renderFeed,appendBatch,getActiveTopic:()=>activeTopic,getCycleIndex:()=>cycleIndex};
   }
 
-  const api={normalizeCard,filterCards,mixFeed,answerQuestion,renderCard,initCoachFeed};
+  const api={normalizeCard,filterCards,mixFeed,buildFeedCycle,answerQuestion,renderCard,initCoachFeed};
 
   if(typeof document!=='undefined'){
     const boot=()=>initCoachFeed(document,{});
