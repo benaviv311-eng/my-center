@@ -1,0 +1,30 @@
+name: Volleyball Hub Test
+
+on:
+  push:
+    paths:
+      - 'volleyball.html'
+      - 'volleyball.css'
+      - 'volleyball.js'
+      - 'volleyball-data.js'
+      - 'tests/volleyball-hub.test.js'
+      - 'tests/volleyball-population-feed.test.js'
+      - '.github/workflows/volleyball-test.yml'
+  pull_request:
+    paths:
+      - 'volleyball.html'
+      - 'volleyball.css'
+      - 'volleyball.js'
+      - 'volleyball-data.js'
+      - 'tests/volleyball-hub.test.js'
+      - 'tests/volleyball-population-feed.test.js'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/volleyball-hub.test.js tests/volleyball-population-feed.test.js
