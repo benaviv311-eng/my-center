@@ -28,6 +28,14 @@ test('top volleyball navigation selects population and topic navigation is a sec
   assert.doesNotMatch(html,/id=["']volleyball-population-filter["']/);
 });
 
+test('volleyball feed is one magazine-style column for every population and topic',()=>{
+  const css=read('volleyball.css');
+  assert.match(css,/\.vb-feed\s*\{[^}]*grid-template-columns:1fr[^}]*max-width:8\d{2}px[^}]*margin-inline:auto/s);
+  assert.doesNotMatch(css,/\.vb-feed\s*\{[^}]*repeat\(2,minmax\(0,1fr\)\)/s);
+  assert.match(css,/\.vb-feed-card\s*\{[^}]*border-radius:2\dpx[^}]*padding:2\dpx/s);
+  assert.match(css,/\.vb-feed-card h3\s*\{[^}]*font-size:2\dpx/s);
+});
+
 test('every approved population has a real volleyball visual with attribution',()=>{
   const {VOLLEYBALL_POPULATIONS,VOLLEYBALL_VISUALS}=loadModules();
   for(const population of VOLLEYBALL_POPULATIONS){
