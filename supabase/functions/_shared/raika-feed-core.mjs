@@ -67,9 +67,11 @@ export function dedupeCards(cards=[], recentCards=[], {allowSeedVariation=false}
     const card=normalizeGeneratedCard(raw); if(!card) continue;
     card.signature=cardSignature(card);
     const pool=[...recentCards,...accepted];
-    const threshold=allowSeedVariation?0.9:0.72;
-    const duplicate=pool.some(old => old?.signature===card.signature || similarity(old,card) >= threshold);
-    if (!duplicate) accepted.push(card);
+    if (pool.some(old => old?.signature===card.signature)) continue;
+    const tooCloseToRecent=!allowSeedVariation && recentCards.some(old => similarity(old,card)>=0.72);
+    const tooCloseInBatch=accepted.some(old => similarity(old,card)>=0.72);
+    if (tooCloseToRecent || tooCloseInBatch) continue;
+    accepted.push(card);
   }
   return accepted;
 }
