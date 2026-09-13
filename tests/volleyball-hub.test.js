@@ -40,11 +40,18 @@ test('starter feed mixes technique tactics science and population-specific conte
   for(const population of ['elementary','youth-boys','youth-girls','women','men']) assert.ok(VOLLEYBALL_FEED_CARDS.some(x=>x.populations.includes(population)),`missing content for ${population}`);
 });
 
-test('feed filtering combines population with optional compatibility filters without leakage',()=>{
+test('feed filtering combines population and topic without leakage',()=>{
   const {VOLLEYBALL_FEED_CARDS,filterVolleyballFeed}=loadModules();
-  const filtered=filterVolleyballFeed(VOLLEYBALL_FEED_CARDS,{topic:'technique',population:'youth-girls',level:'competitive'});
+  const filtered=filterVolleyballFeed(VOLLEYBALL_FEED_CARDS,{topic:'technique',population:'elementary'});
   assert.ok(filtered.length>0);
-  assert.ok(filtered.every(x=>(x.topic==='technique'||x.topic==='all')&&(x.populations.includes('all')||x.populations.includes('youth-girls'))&&(x.levels.includes('all')||x.levels.includes('competitive'))));
+  assert.ok(filtered.every(x=>(x.topic==='technique'||x.topic==='all')&&(x.populations.includes('all')||x.populations.includes('elementary'))));
+});
+
+test('infinite feed batch respects both selected population and selected topic',()=>{
+  const {VOLLEYBALL_FEED_CARDS,buildInfiniteBatch}=loadModules();
+  const batch=buildInfiniteBatch(VOLLEYBALL_FEED_CARDS,{population:'elementary',topic:'technique'},'seed-elementary',0,8);
+  assert.ok(batch.length>0);
+  assert.ok(batch.every(x=>(x.populations.includes('all')||x.populations.includes('elementary'))&&(x.topic==='technique'||x.topic==='all')));
 });
 
 test('discovery pick is deterministic by seed and respects requested kind',()=>{
@@ -55,10 +62,12 @@ test('discovery pick is deterministic by seed and respects requested kind',()=>{
   assert.equal(a.kind,'drill');
 });
 
-test('volleyball page exposes population tabs, population world, discovery and infinite feed',()=>{
+test('volleyball page exposes population selection then sticky topic tabs and infinite feed',()=>{
   assert.equal(exists('volleyball.html'),true);
   const html=read('volleyball.html');
-  for(const id of ['volleyball-population-tabs','volleyball-population-topics','volleyball-population-visual','volleyball-discovery','volleyball-feed','volleyball-feed-sentinel','volleyball-search']) assert.match(html,new RegExp(`id=["']${id}["']`));
+  const css=read('volleyball.css');
+  for(const id of ['volleyball-population-tabs','volleyball-population-topics','volleyball-topic-shell','volleyball-population-visual','volleyball-discovery','volleyball-feed','volleyball-feed-sentinel','volleyball-search']) assert.match(html,new RegExp(`id=["']${id}["']`));
+  assert.match(css,/\.vb-topic-shell\s*\{[^}]*position:sticky/s);
   assert.doesNotMatch(html,/id=["']volleyball-topic-filter["']/);
   assert.doesNotMatch(html,/id=["']volleyball-population-filter["']/);
   assert.doesNotMatch(html,/id=["']volleyball-level-filter["']/);
