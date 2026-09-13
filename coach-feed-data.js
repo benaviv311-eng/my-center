@@ -15,7 +15,7 @@
   ];
 
   const COACH_FEED_CARDS=[
-    {id:'sp-1',topic:'sport-psychology',type:'concept',title:'מסוגלות עצמית',body:'ביטחון יציב נבנה מחוויות הצלחה שהשחקן יודע לשייך ליכולת שלו.',application:'בכדורעף: בנה שתי הצלחות מדידות לפני העלאת רמת הקושי.',source:'ספריית הלמידה — מסוגלות עצמית',sourceKind:'summary',tags:['ביטחון'],image:'https://images.pexels.com/photos/15589184/pexels-photo-15589184.jpeg?auto=compress&cs=tinysrgb&w=1100',imageAlt:'מאמן משוחח עם ספורטאי על המגרש'},
+    {id:'sp-1',topic:'sport-psychology',type:'concept',title:'מסוגלות עצמית',body:'ביטחון יציב נבנה מחוויות הצלחה שהשחקן יודע לשייך ליכולת שלו.',application:'בכדורעף: בנה שתי הצלחות מדידות לפני העלאת רמת הקושי.',source:'ספריית הלמידה — מסוגלות עצמית',sourceKind:'summary',tags:['ביטחון'],image:'https://images.pexels.com/photos/6767224/pexels-photo-6767224.jpeg?auto=compress&cs=tinysrgb&w=1100',imageAlt:'מאמן כדורסל מדריך שחקנית צעירה באימון אישי'},
     {id:'sp-2',topic:'sport-psychology',type:'application',title:'אחרי טעות: איפוס קצר',body:'המטרה איננה למחוק את הטעות אלא לקצר את הזמן שבו היא ממשיכה לשלוט בקשב.',application:'תרגל נשיפה, מילת מפתח ומבט למטרה הבאה גם באימון.',tags:['לחץ','קשב']},
     {id:'sp-q',topic:'sport-psychology',type:'question',challenge:true,title:'מה עדיף אחרי שתי טעויות?',question:'שחקנית פספסה שתי קבלות ומתחילה להימנע מהכדור. מה עדיף לעשות קודם?',options:['לתת ארבעה תיקונים מיד','לתת משימה פשוטה שמאפשרת הצלחה מהירה','להוציא אותה מהתרגיל','לומר רק אל תפחדי'],correctOption:1,explanation:'משימה ברורה ברמת קושי מתאימה יכולה להחזיר תחושת שליטה ומסוגלות.',principle:'מסוגלות עצמית וויסות לחץ',application:'בכדורעף: הגדל זמנית את אזור המטרה ואז החזר בהדרגה את הדרישה המקורית.'},
 
