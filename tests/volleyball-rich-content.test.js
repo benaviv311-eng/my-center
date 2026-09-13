@@ -14,6 +14,11 @@ function loadRich(){
   return require('../volleyball-rich-content.js');
 }
 
+function loadDrillPriority(){
+  delete require.cache[require.resolve('../volleyball-drill-tab-priority.js')];
+  return require('../volleyball-drill-tab-priority.js');
+}
+
 test('every population receives a sourced drill library from professional organizations',()=>{
   const {VOLLEYBALL_DRILL_LIBRARY}=loadRich();
   for(const population of populations){
@@ -27,6 +32,16 @@ test('every population receives a sourced drill library from professional organi
       assert.ok(trustedHosts.includes(host),`${drill.id} source is not on the trusted list: ${host}`);
       assert.ok(drill.adaptationNote,`${drill.id} must state how the source was adapted for its population`);
     }
+  }
+});
+
+test('drills are pinned first in the characteristic strip for every population',()=>{
+  const {prioritizeDrillTopics}=loadDrillPriority();
+  assert.equal(typeof prioritizeDrillTopics,'function');
+  for(const population of populations){
+    const ordered=prioritizeDrillTopics(data.VOLLEYBALL_TOPICS,population);
+    assert.equal(ordered[0].id,'drills',`${population} should show drills immediately after all`);
+    assert.equal(new Set(ordered.map(item=>item.id)).size,data.VOLLEYBALL_TOPICS.length);
   }
 });
 
@@ -56,22 +71,27 @@ test('generated population content is written for that population rather than cr
   }
 });
 
-test('professional women gallery has rotating licensed action photography',()=>{
+test('professional women gallery has a large rotating set of licensed intense match photography',()=>{
   const {PROFESSIONAL_WOMEN_GALLERY}=loadRich();
-  assert.ok(PROFESSIONAL_WOMEN_GALLERY.length>=6);
+  assert.ok(PROFESSIONAL_WOMEN_GALLERY.length>=14,'gallery should be large enough to avoid repetitive rotation');
+  assert.ok(new Set(PROFESSIONAL_WOMEN_GALLERY.map(image=>image.playerName)).size>=9,'gallery should feature a broad mix of professional players or teams');
+  const intense=/הנחתה|חסימה|הצלה|הגנה|הגשה|קפיצה|מאבק|ראלי|התקפה|רשת/;
+  assert.ok(PROFESSIONAL_WOMEN_GALLERY.filter(image=>intense.test(image.action)).length>=10,'most gallery images should describe intense in-play moments');
   for(const image of PROFESSIONAL_WOMEN_GALLERY){
     assert.equal(image.professional,true);
     assert.match(image.imageUrl,/commons\.wikimedia\.org\/wiki\/Special:Redirect\/file\//);
     assert.match(image.creditUrl,/commons\.wikimedia\.org\/wiki\/File/);
-    assert.match(image.license,/CC BY|CC BY-SA/);
+    assert.match(image.license,/CC BY|CC BY-SA|Public Domain/);
     assert.ok(image.action&&image.playerName);
   }
 });
 
-test('volleyball page loads the enrichment, gallery and full drill-detail layers',()=>{
+test('volleyball page loads the enrichment, gallery, pinned drills and full drill-detail layers',()=>{
   const html=fs.readFileSync(path.join(root,'volleyball.html'),'utf8');
   assert.match(html,/volleyball-rich-content\.js/);
   assert.match(html,/volleyball-rich-content\.css/);
+  assert.match(html,/volleyball-gallery-extension\.js/);
+  assert.match(html,/volleyball-drill-tab-priority\.js/);
   assert.match(html,/volleyball-drill-details\.js/);
   assert.equal(fs.existsSync(path.join(root,'volleyball-drill-details.js')),true);
   const details=fs.readFileSync(path.join(root,'volleyball-drill-details.js'),'utf8');
