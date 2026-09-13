@@ -1,15 +1,64 @@
 <!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>מאמן | המרכז שלי</title><meta name="theme-color" content="#f7f3ea"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="coach-feed.css"></head><body><div class="app">
-<div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-<div class="page-title"><h1>🏐 מאמן</h1><div class="subtitle">כדורעף · פסיכולוגיה · תנועה · כוח מתפרץ · שפת אימון</div></div>
+<title>מאמן | המרכז שלי</title><meta name="theme-color" content="#101512"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="coach-feed.css"><link rel="stylesheet" href="coach-hub.css"></head><body class="coach-hub-page"><div class="app coach-app">
+<div class="back coach-back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
 
-<section class="coach-feed-shell" aria-labelledby="coach-feed-heading">
-  <div class="coach-feed-intro">
-    <p class="eyebrow">למידה יומית למאמן</p>
-    <h2 id="coach-feed-heading">פיד המאמן</h2>
-    <p>פסיכולוגיה, תנועה, כוח, שפה ורעיונות לכדורעף — בגלילה אחת. בין הכרטיסים משולבות גם שאלות עם בחירה והסבר.</p>
-    <p><a class="btn" href="volleyball.html">🏐 כדורעף — מרכז מקצועי</a></p>
+<section class="coach-hero" aria-labelledby="coach-hero-title">
+  <img class="coach-hero-image" src="https://images.pexels.com/photos/13907431/pexels-photo-13907431.jpeg?auto=compress&cs=tinysrgb&w=1800" alt="מאמן מתדרך קבוצת ספורט במהלך אימון" fetchpriority="high" decoding="async">
+  <div class="coach-hero-overlay" aria-hidden="true"></div>
+  <div class="coach-hero-content">
+    <p class="coach-hero-kicker">COACH PERFORMANCE HUB</p>
+    <h1 id="coach-hero-title">מאמן</h1>
+    <p class="coach-hero-line">ללמוד. לראות. להוביל.</p>
+    <p class="coach-hero-copy">פסיכולוגיה, תנועה, ביצועים ותקשורת — כלים למאמן שרוצה להבין טוב יותר את הספורטאי, את האימון ואת הרגע שבו צריך להתערב.</p>
+    <div class="coach-hero-actions">
+      <a class="coach-cta coach-cta-primary" href="#coach-worlds">התחל ללמוד ↓</a>
+      <a class="coach-cta coach-cta-secondary" href="volleyball.html">🏐 מרכז הכדורעף</a>
+    </div>
   </div>
+</section>
+
+<section class="coach-worlds-section" id="coach-worlds" aria-labelledby="coach-worlds-title">
+  <div class="coach-section-heading"><p class="coach-section-kicker">תחומי הליבה</p><h2 id="coach-worlds-title">ששת עולמות המאמן</h2><p>בחר תחום והיכנס לפיד מקצועי שמוקדש רק אליו.</p></div>
+  <div class="coach-world-grid">
+    <a class="coach-world-card" href="coach-sport-psychology.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/6767224/pexels-photo-6767224.jpeg?auto=compress&cs=tinysrgb&w=900" alt="מאמן כדורסל מדריך שחקנית צעירה באימון אישי" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">🧠</span><strong>פסיכולוגיה של הספורט</strong><small>ביטחון, לחץ, קשב, מוטיבציה וחוסן.</small></span>
+    </a>
+    <a class="coach-world-card" href="coach-coaching-psychology.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/6767015/pexels-photo-6767015.jpeg?auto=compress&cs=tinysrgb&w=900" alt="מאמן ושחקנים מנתחים יחד תרגיל באימון" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">🎯</span><strong>פסיכולוגיית אימון</strong><small>משוב, עצמאות, שאלות ולמידה מטעויות.</small></span>
+    </a>
+    <a class="coach-world-card" href="coach-movement-psychology.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/35420838/pexels-photo-35420838.jpeg?auto=compress&cs=tinysrgb&w=900" alt="ספורטאי מבצע שינויי כיוון בין קונוסים" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">🌀</span><strong>פסיכולוגיה של תנועה</strong><small>למידה מוטורית, תפיסה, החלטה והתאמה.</small></span>
+    </a>
+    <a class="coach-world-card" href="coach-explosive-power.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/16966336/pexels-photo-16966336.jpeg?auto=compress&cs=tinysrgb&w=900" alt="ספורטאים באימון כוח עצים בחדר כושר" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">⚡</span><strong>כוח מתפרץ</strong><small>קפיצה, מהירות, פליאומטריקה ואיכות ביצוע.</small></span>
+    </a>
+    <a class="coach-world-card" href="coach-coaching-language.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/6077808/pexels-photo-6077808.jpeg?auto=compress&cs=tinysrgb&w=900" alt="מאמן מתדרך קבוצת ספורט לפני תרגיל" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">💬</span><strong>שפת אימון</strong><small>איך לומר פחות, לדייק יותר ולהוביל פעולה.</small></span>
+    </a>
+    <a class="coach-world-card" href="coach-volleyball-approaches.html">
+      <img class="coach-world-image" src="https://images.pexels.com/photos/6203512/pexels-photo-6203512.jpeg?auto=compress&cs=tinysrgb&w=900" alt="שחקנים מתאמנים בכדורעף באולם" loading="lazy" decoding="async">
+      <span class="coach-world-shade" aria-hidden="true"></span><span class="coach-world-copy"><span class="coach-world-icon">🏐</span><strong>גישות לכדורעף</strong><small>משחק, אילוצים, קבלת החלטות ותכנון אימון.</small></span>
+    </a>
+  </div>
+</section>
+
+<section class="coach-today-section" id="coach-today" aria-labelledby="coach-today-title">
+  <div class="coach-section-heading"><p class="coach-section-kicker">פתיחה יומית</p><h2 id="coach-today-title">מה נלמד היום?</h2><p>שלושה כיוונים קצרים מתוך מאגר המאמן.</p></div>
+  <div class="coach-today-grid" id="coach-today-grid" aria-live="polite"></div>
+</section>
+
+<section class="coach-next-practice" id="coach-next-practice" aria-labelledby="coach-next-practice-title">
+  <div><p class="coach-section-kicker">מהתיאוריה למגרש</p><h2 id="coach-next-practice-title">לקחת לאימון הבא</h2></div>
+  <div class="coach-next-practice-card" id="coach-next-practice-card" aria-live="polite"></div>
+</section>
+
+<section class="coach-feed-shell coach-feed-home" aria-labelledby="coach-feed-heading">
+  <div class="coach-feed-intro coach-feed-intro-premium"><p class="eyebrow">למידה מתמשכת</p><h2 id="coach-feed-heading">פיד המאמן</h2><p>רעיונות, מחקר, תרחישים ושאלות מקצועיות — בגלילה אחת שמתחדשת בלי סוף.</p></div>
   <div class="coach-topic-nav" id="coach-topic-nav" aria-label="תחומי מאמן"></div>
   <p class="coach-feed-status" id="coach-feed-status" aria-live="polite"></p>
   <div class="coach-feed" id="coach-feed"></div>
@@ -25,4 +74,4 @@
 <a class="nav-item " href="music.html"><span>🎵</span>מוזיקה</a>
 <a class="nav-item " href="library.html"><span>📚</span>ספרייה</a>
 </div></nav>
-</div><div class="toast" id="toast"></div><script src="coach-feed-data.js"></script><script src="coach-feed.js"></script><script src="app.js"></script></body></html>
+</div><div class="toast" id="toast"></div><script src="coach-feed-data.js"></script><script src="coach-hub.js"></script><script src="coach-feed.js"></script><script src="app.js"></script></body></html>

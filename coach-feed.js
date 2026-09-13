@@ -8,7 +8,7 @@
   const KNOWN_TOPICS=['sport-psychology','coaching-psychology','movement-psychology','explosive-power','coaching-language','volleyball-approaches'];
 
   function normalizeCard(card){
-    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:''},card||{});
+    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:'',image:'',imageAlt:'',challenge:false},card||{});
   }
 
   function filterCards(cards,topic){
@@ -90,6 +90,11 @@
     return `<div class="coach-card-meta">${parts.join('')}</div>`;
   }
 
+  function renderImage(card){
+    if(!card.image||!card.imageAlt) return '';
+    return `<img class="coach-card-image" src="${escapeHtml(card.image)}" alt="${escapeHtml(card.imageAlt)}" loading="lazy" decoding="async">`;
+  }
+
   function applicationExpansion(card){
     if(card.applicationDetails) return card.applicationDetails;
     return `הפוך את הרעיון למשימה אחת ברורה, קבע סימן הצלחה שאפשר לראות, וצפה בכמה חזרות לפני שינוי נוסף. ${card.application||''}`.trim();
@@ -112,7 +117,11 @@
 
   function renderQuestion(card,topics){
     const options=card.options.map((option,index)=>`<button type="button" class="coach-option" data-question-option="${index}">${escapeHtml(option)}</button>`).join('');
-    return `<article class="coach-feed-card coach-question-card" data-card-id="${escapeHtml(card.id)}">
+    const classes=`coach-feed-card coach-question-card${card.challenge?' coach-challenge-card':''}`;
+    const challenge=card.challenge?'<div class="coach-challenge-eyebrow">Coach Challenge</div>':'';
+    return `<article class="${classes}" data-card-id="${escapeHtml(card.id)}">
+      ${renderImage(card)}
+      ${challenge}
       ${renderMeta(card,topics)}
       <h3>${escapeHtml(card.title)}</h3>
       <p class="coach-question-text">${escapeHtml(card.question)}</p>
@@ -123,6 +132,7 @@
 
   function renderStandard(card,topics){
     return `<article class="coach-feed-card" data-card-id="${escapeHtml(card.id)}">
+      ${renderImage(card)}
       ${renderMeta(card,topics)}
       <h3>${escapeHtml(card.title)}</h3>
       <p>${escapeHtml(card.body)}</p>
@@ -227,7 +237,7 @@
       const feedback=article.querySelector('[data-question-feedback]');
       if(feedback){
         feedback.hidden=false;
-        feedback.innerHTML=`<strong>${result.isCorrect?'נכון':'עדיף לבחור אחרת'}</strong><p class="coach-feedback-explanation">${escapeHtml(result.explanation)}</p><p><b>העיקרון:</b> ${escapeHtml(result.principle)}</p><p><b>בכדורעף:</b> ${escapeHtml(result.application)}</p>`;
+        feedback.innerHTML=`<strong>${result.isCorrect?'נכון':'עדיף לבחור אחרת'}</strong><p class="coach-feedback-explanation">${escapeHtml(result.explanation)}</p><p><b>העיקרון:</b> ${escapeHtml(result.principle)}</p><p><b>ליישום:</b> ${escapeHtml(result.application)}</p>`;
       }
     });
 
