@@ -11,3 +11,28 @@ test('home favorites bridge reuses the existing store and emits changes',()=>{
   assert.ok(js.includes('mycenter:favorites-changed'));
   assert.ok(js.includes('toggle'));
 });
+
+test('home feed renderer exposes source, feedback controls and deep link',()=>{
+  const H=require('../home-feed.js');
+  const html=H.renderCard({id:'coach:x',source:'coach',type:'concept',title:'כותרת',summary:'קצר',fullText:'הרחבה',deepLink:'coach.html',tags:[],expandable:true,metadata:{}},{saved:false,recycled:false});
+  assert.ok(html.includes('data-home-item="coach:x"'));
+  assert.ok(html.includes('data-home-action="more"'));
+  assert.ok(html.includes('data-home-action="less"'));
+  assert.ok(html.includes('data-home-action="hide"'));
+  assert.ok(html.includes('פתח לעומק'));
+});
+
+test('Raika status is preserved as a display badge without promotion',()=>{
+  const H=require('../home-feed.js');
+  const html=H.renderCard({id:'raika:idea:x',source:'raika',type:'idea',title:'רעיון',summary:'טקסט',fullText:'',deepLink:'raika-writers-room.html',expandable:false,metadata:{status:'idea'}},{});
+  assert.ok(html.includes('💡 הצעה'));
+  assert.equal(html.includes('✅ קאנון'),false);
+});
+
+test('controller code uses required infinite-scroll and dwell thresholds',()=>{
+  const js=read('home-feed.js');
+  assert.ok(js.includes("rootMargin:'700px 0px'"));
+  assert.ok(js.includes('intersectionRatio>=0.6'));
+  assert.ok(js.includes('BATCH_SIZE=12'));
+  assert.ok(js.includes('buildRecycleCycle'));
+});
