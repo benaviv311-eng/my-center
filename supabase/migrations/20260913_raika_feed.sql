@@ -43,13 +43,13 @@ create policy "raika feed cards own rows"
   on public.raika_feed_cards
   for all
   to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 drop policy if exists "raika feed feedback own rows" on public.raika_feed_feedback;
 create policy "raika feed feedback own rows"
   on public.raika_feed_feedback
   for all
   to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);

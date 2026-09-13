@@ -13,7 +13,7 @@ test('Raika feed migration defines private card and feedback storage', () => {
   assert.match(sql, /signature text not null/i);
   assert.match(sql, /promoted_item_id text/i);
   assert.match(sql, /enable row level security/i);
-  assert.match(sql, /auth\.uid\(\)\s*=\s*user_id/i);
+  assert.match(sql, /\(select\s+auth\.uid\(\)\)\s*=\s*user_id/i);
   assert.match(sql, /more_like/i);
   assert.match(sql, /converted_scene/i);
 });
