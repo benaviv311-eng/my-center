@@ -28,6 +28,11 @@ function loadExpandedGallery(){
   return gallery;
 }
 
+function loadDeepContent(){
+  delete require.cache[require.resolve('../volleyball-deep-content.js')];
+  return require('../volleyball-deep-content.js');
+}
+
 test('every population receives a sourced drill library from professional organizations',()=>{
   const {VOLLEYBALL_DRILL_LIBRARY}=loadRich();
   for(const population of populations){
@@ -80,6 +85,26 @@ test('generated population content is written for that population rather than cr
   }
 });
 
+test('deep researched feed has at least forty genuinely varied posts for every population',()=>{
+  assert.equal(fs.existsSync(path.join(root,'volleyball-deep-content.js')),true,'deep content file must exist');
+  const {VOLLEYBALL_DEEP_CARDS,applyDeepVolleyballContent}=loadDeepContent();
+  assert.equal(typeof applyDeepVolleyballContent,'function');
+  for(const population of populations){
+    const cards=VOLLEYBALL_DEEP_CARDS.filter(card=>card.populations.length===1&&card.populations[0]===population);
+    assert.ok(cards.length>=40,`${population} needs at least 40 deep posts`);
+    assert.ok(new Set(cards.map(card=>card.title.trim().toLowerCase())).size===cards.length,`${population} titles must be unique`);
+    assert.ok(new Set(cards.map(card=>card.text.trim().toLowerCase())).size===cards.length,`${population} texts must be unique`);
+    assert.ok(new Set(cards.map(card=>card.topic)).size>=10,`${population} needs broad topic variety`);
+    assert.ok(new Set(cards.map(card=>card.kind)).size>=6,`${population} needs varied post formats`);
+    assert.ok(cards.filter(card=>card.sourceUrl).length>=8,`${population} needs multiple sourced posts`);
+    assert.ok(cards.every(card=>card.deepResearch===true));
+  }
+  const base=[...data.VOLLEYBALL_FEED_CARDS,{id:'rich-elementary-technique-1',topic:'technique',populations:['elementary'],title:'template',text:'template',detail:'template',kind:'concept',tags:[],generatedForPopulation:'elementary'}];
+  const applied=applyDeepVolleyballContent(base);
+  assert.equal(applied.some(card=>/^rich-(elementary|youth-boys|youth-girls|women|men)-/.test(card.id)),false,'template population cards should be removed');
+  assert.ok(applied.filter(card=>card.deepResearch).length>=200);
+});
+
 test('professional women gallery has a large rotating set of licensed intense match photography',()=>{
   const gallery=loadExpandedGallery();
   assert.ok(gallery.length>=14,'gallery should be large enough to avoid repetitive rotation');
@@ -95,9 +120,10 @@ test('professional women gallery has a large rotating set of licensed intense ma
   }
 });
 
-test('volleyball page loads the enrichment, gallery, pinned drills and full drill-detail layers',()=>{
+test('volleyball page loads the enrichment, deep feed, gallery, pinned drills and full drill-detail layers',()=>{
   const html=fs.readFileSync(path.join(root,'volleyball.html'),'utf8');
   assert.match(html,/volleyball-rich-content\.js/);
+  assert.match(html,/volleyball-deep-content\.js/);
   assert.match(html,/volleyball-rich-content\.css/);
   assert.match(html,/volleyball-gallery-extension\.js/);
   assert.match(html,/volleyball-drill-tab-priority\.js/);
