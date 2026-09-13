@@ -49,16 +49,36 @@ test('Raika desktop feeds are forced to one column without changing global grids
   assert.match(css,/\.raika-sticky-tools\s*~\s*\.section\s+\.grid-2\s*\{[^}]*grid-template-columns\s*:\s*1fr/s);
 });
 
-test('writers room generator exposes richer scene idea modes',()=>{
+test('writers room generator exposes a broad set of scene idea modes',()=>{
   const ui=fs.readFileSync('raika-generator-ui.js','utf8');
-  for(const mode of ['related','relationship','theme','conflict','comedy','flashback','secret','family','surprise']){
+  for(const mode of ['related','relationship','theme','conflict','comedy','flashback','secret','family','surprise','mentor','rivalry','dilemma','quiet','training','aftermath','misunderstanding','promise','foreshadow','school','journey','villain','legacy']){
     assert.match(ui,new RegExp(`value="${mode}"`));
   }
 });
 
-test('theme and family modes use dedicated scene prompts',()=>{
+test('writers room lets the user ask for 1, 3, or 5 ideas',()=>{
+  const ui=fs.readFileSync('raika-generator-ui.js','utf8');
+  assert.match(ui,/id="rg-count"/);
+  for(const n of ['1','3','5'])assert.match(ui,new RegExp(`value="${n}"`));
+  const actions=fs.readFileSync('raika-generator-actions.js','utf8');
+  assert.match(actions,/rg-count/);
+  assert.match(actions,/distinct/i);
+});
+
+test('additional modes use dedicated scene prompts',()=>{
   assert.match(generator.buildSceneIdeaPrompt('theme','ראיקה','טומו','שייכות'),/theme/i);
   assert.match(generator.buildSceneIdeaPrompt('family','ראיקה','היקארי',''),/family/i);
+  assert.match(generator.buildSceneIdeaPrompt('mentor','ראיקה','ראי',''),/mentor/i);
+  assert.match(generator.buildSceneIdeaPrompt('dilemma','ראיקה','טומו',''),/dilemma/i);
+  assert.match(generator.buildSceneIdeaPrompt('foreshadow','ראיקה','',''),/foreshadow/i);
+});
+
+test('AI failures preserve backend detail and show a persistent generator error',()=>{
+  const ai=fs.readFileSync('raika-ai.js','utf8');
+  assert.match(ai,/j\.detail/);
+  const actions=fs.readFileSync('raika-generator-actions.js','utf8');
+  assert.match(actions,/rg-error/);
+  assert.match(actions,/ai_not_configured/);
 });
 
 test('AI save paths keep items in the saved collection',()=>{
