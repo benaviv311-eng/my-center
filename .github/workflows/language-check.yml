@@ -28,11 +28,14 @@ jobs:
           if [ -f four-language-study.js ]; then node --check four-language-study.js; fi
           if [ -f language-vocabulary-ar-spoken.js ]; then node --check language-vocabulary-ar-spoken.js; fi
           if [ -f language-vocabulary.js ]; then node --check language-vocabulary.js; fi
+          if [ -f language-arabic-ambience.js ]; then node --check language-arabic-ambience.js; fi
           if [ -f language-vocabulary-link.js ]; then node --check language-vocabulary-link.js; fi
           if [ -f language-audio.js ]; then node --check language-audio.js; fi
       - name: Run expanded topics and four-language tests
         run: node tests/language-topics-four.test.js
       - name: Run vocabulary by topic tests
         run: node tests/language-vocabulary.test.js
+      - name: Run Arabic courtyard tests
+        run: node tests/language-arabic-courtyard.test.js
       - name: Run language audio tests
         run: node tests/language-audio.test.js
