@@ -6,12 +6,12 @@
   'use strict';
 
   const COACH_TOPICS=[
-    {id:'sport-psychology',label:'פסיכולוגיה של הספורט',icon:'🧠'},
-    {id:'coaching-psychology',label:'פסיכולוגיית אימון',icon:'🎯'},
-    {id:'movement-psychology',label:'פסיכולוגיה של תנועה',icon:'🌀'},
-    {id:'explosive-power',label:'כוח מתפרץ',icon:'⚡'},
-    {id:'coaching-language',label:'שפת אימון',icon:'💬'},
-    {id:'volleyball-approaches',label:'גישות לכדורעף',icon:'🏐'}
+    {id:'sport-psychology',label:'פסיכולוגיה של הספורט',icon:'🧠',page:'coach-sport-psychology.html'},
+    {id:'coaching-psychology',label:'פסיכולוגיית אימון',icon:'🎯',page:'coach-coaching-psychology.html'},
+    {id:'movement-psychology',label:'פסיכולוגיה של תנועה',icon:'🌀',page:'coach-movement-psychology.html'},
+    {id:'explosive-power',label:'כוח מתפרץ',icon:'⚡',page:'coach-explosive-power.html'},
+    {id:'coaching-language',label:'שפת אימון',icon:'💬',page:'coach-coaching-language.html'},
+    {id:'volleyball-approaches',label:'גישות לכדורעף',icon:'🏐',page:'coach-volleyball-approaches.html'}
   ];
 
   const COACH_FEED_CARDS=[
