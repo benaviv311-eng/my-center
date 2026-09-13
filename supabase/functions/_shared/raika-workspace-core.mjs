@@ -1,3 +1,27 @@
-export function validateAction(value){const allowed=['list','autosave','save','approve','delete','archive','versions','restore'];if(!allowed.includes(value))throw new Error('Unsupported action');return value;}
-export function validateStatus(value){const allowed=['idea','developing','canon','parked','archived'];const status=String(value||'idea');if(!allowed.includes(status))throw new Error('Invalid status');return status;}
-export function sanitizeWorkspacePayload(value={}){const v=value&&typeof value==='object'&&!Array.isArray(value)?value:{};const text=(x,max=12000)=>String(x??'').trim().slice(0,max);return {title:text(v.title,200),summary:text(v.summary),placement:text(v.placement,2000),why:text(v.why,4000),opens:text(v.opens,4000),tags:Array.isArray(v.tags)?v.tags.slice(0,40).map(x=>text(x,100)):[],characters:Array.isArray(v.characters)?v.characters.slice(0,30).map(x=>text(x,100)):[]};}
+export function validateAction(value){
+  const allowed=['list','autosave','save','approve','delete','archive','versions','restore'];
+  if(!allowed.includes(value)) throw new Error('Unsupported action');
+  return value;
+}
+
+export function validateStatus(value){
+  const allowed=['idea','developing','canon','parked','archived'];
+  const status=String(value||'idea');
+  if(!allowed.includes(status)) throw new Error('Invalid status');
+  return status;
+}
+
+export function sanitizeWorkspacePayload(value={}){
+  const v=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  const text=(x,max=12000)=>String(x??'').trim().slice(0,max);
+  return {
+    title:text(v.title,200),
+    summary:text(v.summary),
+    placement:text(v.placement,2000),
+    why:text(v.why,4000),
+    opens:text(v.opens,4000),
+    tags:Array.isArray(v.tags)?v.tags.slice(0,40).map(x=>text(x,100)):[],
+    characters:Array.isArray(v.characters)?v.characters.slice(0,30).map(x=>text(x,100)):[],
+    saved:Boolean(v.saved)
+  };
+}

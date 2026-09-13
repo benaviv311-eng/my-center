@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>שמורים | עולם ראיקה</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="raika-private.css?v=1">
+</head>
+<body>
+<div class="app">
+  <div class="back"><a class="btn small" href="raika.html">← עולם ראיקה</a></div>
+  <div class="page-title"><h1>📌 שמורים</h1><div class="subtitle">כל הדברים שבחרת לשמור בתוך עולם ראיקה</div></div>
+  <div class="canon-note"><b>חשוב:</b> שמור אינו קאנון. רק אישור מפורש הופך פריט לקאנון.</div>
+  <section class="raika-hub section"><div class="section-head"><h2>האוסף שלי</h2><small>שמירה ידנית בלבד</small></div><div id="raika-stats" class="raika-stats"></div></section>
+  <section class="raika-sticky-tools">
+    <div class="raika-section-nav">
+      <a href="raika-characters.html">👥 דמויות</a><a href="raika-scenes.html">🎬 סצנות</a><a href="raika-plotlines.html">🧭 קווי עלילה</a><a href="raika-history.html">⏳ עבר והיסטוריה</a><a href="raika-world.html">⛩️ עולם ואמונות</a><a href="raika-relationships.html">🔗 מערכות יחסים</a><a href="raika-writers-room.html">💡 חדר הכותבים</a><a class="active" href="raika-saved.html">📌 שמורים</a>
+    </div>
+    <div class="raika-filters"><input id="raika-search" class="search" placeholder="🔎 חפש בשמורים"><select id="raika-status-filter" class="search"><option value="all">כל הסטטוסים</option><option value="canon">✅ קאנון</option><option value="developing">📝 בפיתוח</option><option value="idea">💡 הצעה</option><option value="parked">🗄️ בצד</option></select><select id="raika-type-filter" class="search"><option value="all">כל הסוגים</option><option value="character">דמות</option><option value="scene">סצנה</option><option value="idea">רעיון</option></select><button id="clear-raika-filters" class="btn small" type="button">נקה</button></div>
+  </section>
+  <section id="saved" class="section"><div class="section-head"><h2>כל השמורים</h2><small>אפשר לערוך, להסיר או לאשר</small></div><div id="saved-grid" class="grid grid-2"></div></section>
+</div>
+<div class="toast" id="toast"></div>
+<script src="app.js?v=3"></script>
+<script src="raika-data.js?v=1"></script>
+<script src="raika-app.js?v=4"></script>
+<script src="raika-private-auth.js?v=1"></script>
+<script src="raika-workspace.js?v=2"></script>
+<script src="raika-workspace-client.js?v=2"></script>
+<script src="raika-workspace-actions.js?v=1"></script>
+<script src="raika-edit-ui.js?v=2"></script>
+<script src="raika-versions-ui.js?v=1"></script>
+<script src="raika-ai.js?v=1"></script>
+<script src="raika-saved.js?v=1"></script>
+</body></html>

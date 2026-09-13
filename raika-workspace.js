@@ -10,7 +10,7 @@ function mergeWorkspaceOverrides(baseItems=[],overrides=[]){
   return merged;
 }
 function nextDeleteAction(status){return status==='canon'||status==='archived'?'archive':'delete';}
-function editablePayload(item={}){return {title:item.title||'',summary:item.summary||'',placement:item.placement||'',why:item.why||'',opens:item.opens||'',tags:Array.isArray(item.tags)?item.tags:[],characters:Array.isArray(item.characters)?item.characters:[]};}
+function editablePayload(item={}){return {title:item.title||'',summary:item.summary||'',placement:item.placement||'',why:item.why||'',opens:item.opens||'',tags:Array.isArray(item.tags)?item.tags:[],characters:Array.isArray(item.characters)?item.characters:[],saved:Boolean(item.saved)};}
 function buildAutosavePayload(item={}){return {action:'autosave',item_type:item.type||'idea',item_id:item.id||'',status:item.status||'idea',payload:editablePayload(item)};}
 function buildRemovalPayload(item={}){return {action:nextDeleteAction(item.status),item_id:item.id||'',item_type:item.type||'idea'};}
 function createAutosaveScheduler(send,delay=1000){const timers=new Map();return {schedule(id,item){clearTimeout(timers.get(id));timers.set(id,setTimeout(()=>{timers.delete(id);Promise.resolve(send(buildAutosavePayload(item))).catch(()=>{});},delay));},cancel(id){clearTimeout(timers.get(id));timers.delete(id);}};}
