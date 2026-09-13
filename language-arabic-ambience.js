@@ -3,6 +3,14 @@
   const lang=params.get('lang')||'ar';
   if(lang!=='ar')return;
 
+  if(!document.querySelector('link[data-arabic-courtyard]')){
+    const theme=document.createElement('link');
+    theme.rel='stylesheet';
+    theme.href='language-arabic-courtyard.css?v=1';
+    theme.dataset.arabicCourtyard='1';
+    document.head.appendChild(theme);
+  }
+
   const toggle=document.getElementById('arabic-music-toggle');
   const moment=document.getElementById('arabic-living-moment');
   if(toggle)toggle.hidden=false;
