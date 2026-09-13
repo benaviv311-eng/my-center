@@ -1,4 +1,4 @@
-.book-infinite-section{padding-top:6px}.book-feed-head{align-items:flex-end}.book-feed-filters{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin;position:sticky;top:0;z-index:5;background:var(--bg)}.book-feed-filter{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:9px 13px;font:inherit;cursor:pointer}.book-feed-filter.active{border-color:var(--text);font-weight:700}.book-infinite-feed{display:grid;gap:13px}.book-feed-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);scroll-margin-top:70px}.book-feed-card-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.book-feed-kind{font-size:13px;font-weight:700;color:var(--muted)}.book-feed-card h3{margin:0 0 9px;font-size:20px}.book-feed-card h3 small{display:inline-block;font-size:13px;font-weight:500;color:var(--muted);margin-inline-start:6px}.book-feed-card>p,.book-feed-deep p{margin:0;line-height:1.75}.book-feed-deep{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(127,127,127,.08)}.book-feed-deep p+p{margin-top:8px}.book-feed-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.book-feed-actions .btn.active{font-weight:700}.book-feed-sentinel{height:2px;width:100%}#book-feed-more{width:100%;margin-top:12px}@media(max-width:600px){.book-feed-card{padding:15px}.book-feed-actions .btn{flex:1 1 calc(50% - 7px)}}
+.book-infinite-section{max-width:880px;margin:64px auto 0;padding-top:34px;border-top:1px solid var(--line)}.book-feed-head{align-items:flex-end}.book-feed-filters{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin;position:sticky;top:3px;z-index:5;background:var(--bg)}.book-feed-filter{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:9px 13px;font:inherit;cursor:pointer}.book-feed-filter.active{border-color:var(--text);font-weight:700}.book-infinite-feed{display:grid;gap:13px}.book-feed-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:none;scroll-margin-top:70px}.book-feed-card-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.book-feed-kind{font-size:13px;font-weight:700;color:var(--muted)}.book-feed-card h3{margin:0 0 9px;font-size:20px}.book-feed-card h3 small{display:inline-block;font-size:13px;font-weight:500;color:var(--muted);margin-inline-start:6px}.book-feed-card>p,.book-feed-deep p{margin:0;line-height:1.75}.book-feed-deep{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(127,127,127,.08)}.book-feed-deep p+p{margin-top:8px}.book-feed-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.book-feed-actions .btn.active{font-weight:700}.book-feed-sentinel{height:2px;width:100%}#book-feed-more{width:100%;margin-top:12px}@media(max-width:600px){.book-infinite-section{margin-top:44px;padding-top:26px}.book-feed-card{padding:15px}.book-feed-actions .btn{flex:1 1 calc(50% - 7px)}}
 
 /* Clickable source labels + inline expansion */
 .source-badge[data-source-expand]{
@@ -8,17 +8,9 @@
   transition:transform .15s ease,opacity .15s ease;
 }
 
-.source-badge[data-source-expand]:hover{
-  opacity:.78;
-}
-
-.source-badge[data-source-expand]:active{
-  transform:scale(.97);
-}
-
-.source-badge[data-source-expand][aria-expanded="true"]{
-  font-weight:800;
-}
+.source-badge[data-source-expand]:hover{opacity:.78}
+.source-badge[data-source-expand]:active{transform:scale(.97)}
+.source-badge[data-source-expand][aria-expanded="true"]{font-weight:800}
 
 .source-expansion-panel{
   margin-top:16px;
@@ -29,6 +21,12 @@
   line-height:1.8;
 }
 
+.reading-chapter>.source-expansion-panel,
+.reading-support-block>.source-expansion-panel{
+  margin-top:22px;
+  background:var(--card);
+}
+
 .source-expansion-head{
   display:flex;
   align-items:center;
@@ -37,10 +35,7 @@
   margin-bottom:8px;
 }
 
-.source-expansion-panel p{
-  margin:9px 0 0;
-}
-
+.source-expansion-panel p{margin:9px 0 0}
 .source-expansion-close{
   border:0;
   background:transparent;
@@ -52,12 +47,8 @@
   border-radius:8px;
 }
 
-.source-expansion-close:hover{
-  background:rgba(127,127,127,.12);
-}
+.source-expansion-close:hover{background:rgba(127,127,127,.12)}
 
 @media(max-width:600px){
-  .source-expansion-panel{
-    padding:14px;
-  }
+  .source-expansion-panel{padding:14px}
 }
