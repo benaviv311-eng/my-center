@@ -15,6 +15,21 @@
     return typeof content.original_text_asset==='string'&&content.original_text_asset?content.original_text_asset:null;
   }
 
+  function mergeOriginalParts(parts){
+    const merged=[];
+    for(const part of Array.isArray(parts)?parts:[]){
+      if(!part||!Array.isArray(part.sections)||!part.sections.length)continue;
+      const phaseTitle=part.phaseTitle||'';
+      const last=merged[merged.length-1];
+      if(last&&last.phaseTitle===phaseTitle){
+        last.sections.push(...part.sections);
+      }else{
+        merged.push({phaseTitle,sections:[...part.sections]});
+      }
+    }
+    return merged;
+  }
+
   function parseOriginalBookMarkdown(markdown){
     const text=String(markdown||'').replace(/\r\n?/g,'\n').trim();
     const lines=text.split('\n');
@@ -36,5 +51,5 @@
     return {phaseTitle,sections};
   }
 
-  return {getOriginalTextSources,getOriginalTextAsset,parseOriginalBookMarkdown};
+  return {getOriginalTextSources,getOriginalTextAsset,mergeOriginalParts,parseOriginalBookMarkdown};
 });
