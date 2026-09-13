@@ -57,6 +57,19 @@ test('coach hub home script exists, is wired, and has valid syntax',()=>{
   assert.equal(result.status,0,result.stderr);
 });
 
+test('coach hub daily selectors stay unique and practical',()=>{
+  const {COACH_FEED_CARDS}=loadModules();
+  delete require.cache[require.resolve('../coach-hub.js')];
+  const {selectToday,selectNextPractice}=require('../coach-hub.js');
+  const selected=selectToday(COACH_FEED_CARDS,'2026-09-13');
+  assert.equal(selected.length,3);
+  assert.equal(new Set(selected.map(card=>card.id)).size,3);
+  const next=selectNextPractice(COACH_FEED_CARDS,'2026-09-13|practice');
+  assert.ok(next);
+  assert.equal(typeof next.application,'string');
+  assert.ok(next.application.length>0);
+});
+
 test('selected feed cards render contextual lazy images',()=>{
   const {COACH_FEED_CARDS,COACH_TOPICS,renderCard}=loadModules();
   const card=COACH_FEED_CARDS.find(item=>item.image&&item.imageAlt);
@@ -74,4 +87,12 @@ test('coach challenge reuses question behavior with distinct presentation',()=>{
   const html=renderCard(card,COACH_TOPICS);
   assert.match(html,/coach-challenge-card/);
   assert.match(html,/Coach Challenge/);
+});
+
+test('all fixed Coach topic pages inherit the performance-hub visual language',()=>{
+  for(const page of topicPages){
+    const html=read(page);
+    assert.match(html,/coach-feed\.css/);
+    assert.match(html,/coach-hub\.css/);
+  }
 });
