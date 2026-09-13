@@ -19,6 +19,15 @@ function loadDrillPriority(){
   return require('../volleyball-drill-tab-priority.js');
 }
 
+function loadExpandedGallery(){
+  const rich=loadRich();
+  delete require.cache[require.resolve('../volleyball-gallery-extension.js')];
+  const extra=require('../volleyball-gallery-extension.js');
+  const gallery=rich.PROFESSIONAL_WOMEN_GALLERY.slice();
+  extra.extendProfessionalWomenGallery(gallery);
+  return gallery;
+}
+
 test('every population receives a sourced drill library from professional organizations',()=>{
   const {VOLLEYBALL_DRILL_LIBRARY}=loadRich();
   for(const population of populations){
@@ -72,12 +81,12 @@ test('generated population content is written for that population rather than cr
 });
 
 test('professional women gallery has a large rotating set of licensed intense match photography',()=>{
-  const {PROFESSIONAL_WOMEN_GALLERY}=loadRich();
-  assert.ok(PROFESSIONAL_WOMEN_GALLERY.length>=14,'gallery should be large enough to avoid repetitive rotation');
-  assert.ok(new Set(PROFESSIONAL_WOMEN_GALLERY.map(image=>image.playerName)).size>=9,'gallery should feature a broad mix of professional players or teams');
+  const gallery=loadExpandedGallery();
+  assert.ok(gallery.length>=14,'gallery should be large enough to avoid repetitive rotation');
+  assert.ok(new Set(gallery.map(image=>image.playerName)).size>=9,'gallery should feature a broad mix of professional players or teams');
   const intense=/הנחתה|חסימה|הצלה|הגנה|הגשה|קפיצה|מאבק|ראלי|התקפה|רשת/;
-  assert.ok(PROFESSIONAL_WOMEN_GALLERY.filter(image=>intense.test(image.action)).length>=10,'most gallery images should describe intense in-play moments');
-  for(const image of PROFESSIONAL_WOMEN_GALLERY){
+  assert.ok(gallery.filter(image=>intense.test(image.action)).length>=10,'most gallery images should describe intense in-play moments');
+  for(const image of gallery){
     assert.equal(image.professional,true);
     assert.match(image.imageUrl,/commons\.wikimedia\.org\/wiki\/Special:Redirect\/file\//);
     assert.match(image.creditUrl,/commons\.wikimedia\.org\/wiki\/File/);
