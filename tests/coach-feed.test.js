@@ -17,6 +17,15 @@ const topicLabels=[
   'גישות לכדורעף'
 ];
 
+const topicPages={
+  'sport-psychology':'coach-sport-psychology.html',
+  'coaching-psychology':'coach-coaching-psychology.html',
+  'movement-psychology':'coach-movement-psychology.html',
+  'explosive-power':'coach-explosive-power.html',
+  'coaching-language':'coach-coaching-language.html',
+  'volleyball-approaches':'coach-volleyball-approaches.html'
+};
+
 function loadModules(){
   assert.equal(exists('coach-feed-data.js'),true,'coach-feed-data.js must exist');
   assert.equal(exists('coach-feed.js'),true,'coach-feed.js must exist');
@@ -159,4 +168,34 @@ test('infinite cycles preserve the active topic filter',()=>{
 test('coach page includes an infinite-scroll sentinel',()=>{
   const html=read('coach.html');
   assert.match(html,/id=["']coach-feed-sentinel["']/);
+});
+
+test('each coach topic points to its own dedicated page',()=>{
+  const {COACH_TOPICS}=loadModules();
+  for(const topic of COACH_TOPICS){
+    assert.equal(topic.page,topicPages[topic.id],`${topic.id} needs its dedicated page href`);
+  }
+});
+
+test('all six dedicated coach topic pages use the shared infinite feed engine',()=>{
+  for(const [topic,page] of Object.entries(topicPages)){
+    assert.equal(exists(page),true,`${page} must exist`);
+    if(!exists(page)) continue;
+    const html=read(page);
+    assert.match(html,new RegExp(`data-coach-fixed-topic=["']${topic}["']`),`${page} must lock to ${topic}`);
+    assert.match(html,/href=["']coach\.html["']/,'topic page needs a back link to coach');
+    assert.match(html,/id=["']coach-feed["']/);
+    assert.match(html,/id=["']coach-feed-status["']/);
+    assert.match(html,/id=["']coach-feed-sentinel["']/);
+    assert.match(html,/coach-feed-data\.js/);
+    assert.match(html,/coach-feed\.js/);
+  }
+});
+
+test('topic-page mode resolves a fixed topic instead of the all feed',()=>{
+  const {resolveInitialTopic}=loadModules();
+  assert.equal(typeof resolveInitialTopic,'function');
+  assert.equal(resolveInitialTopic('explosive-power'),'explosive-power');
+  assert.equal(resolveInitialTopic('sport-psychology'),'sport-psychology');
+  assert.equal(resolveInitialTopic('not-a-topic'),'all');
 });
