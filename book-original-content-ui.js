@@ -31,8 +31,13 @@ async function loadOriginalText(){
     const asset=O.getOriginalTextAsset(book);
     const sources=O.getOriginalTextSources(book);
     if(!asset&&!sources.length)return;
+    const c=book&&book.content?book.content:{};
+    const heading=$('book-original-heading');
+    const subtitle=$('book-original-subtitle');
+    if(heading)heading.textContent=c.original_text_label||'📚 הטקסט המלא';
+    if(subtitle)subtitle.textContent=c.original_text_subtitle||'טקסט מקור קבוע · ללא שינוי ניסוח או פיסוק';
     wrap.classList.remove('hidden');
-    target.innerHTML='<div class="book-page-empty">טוען את הטקסט המלא…</div>';
+    target.innerHTML='<div class="book-page-empty">טוען את חומר הקריאה…</div>';
     let texts=[];
     if(asset){
       const r=await fetch(asset,{cache:'no-store'});
@@ -54,7 +59,7 @@ async function loadOriginalText(){
   }catch(error){
     console.error(error);
     wrap.classList.remove('hidden');
-    target.innerHTML='<div class="book-page-empty book-page-error">לא ניתן כרגע לטעון את הטקסט המלא.</div>';
+    target.innerHTML='<div class="book-page-empty book-page-error">לא ניתן כרגע לטעון את חומר הקריאה.</div>';
   }
 }
 
