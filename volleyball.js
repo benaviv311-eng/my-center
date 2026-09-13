@@ -44,14 +44,15 @@ function seededShuffle(items,seed){
 
 function buildInfiniteBatch(cards,filters={},seed='volleyball',page=0,size=8){
   const population=filters.population||'all';
+  const topic=filters.topic||'all';
   const query=filters.query||'';
-  const pool=filterVolleyballFeed(cards,{population,query});
+  const pool=filterVolleyballFeed(cards,{population,topic,query});
   if(!pool.length)return [];
   const safeSize=Math.max(1,Math.min(Number(size)||8,pool.length));
   const offset=page*safeSize;
   const cycle=Math.floor(offset/pool.length);
   const start=offset%pool.length;
-  const shuffled=seededShuffle(pool,`${seed}|${population}|${query}|${cycle}`);
+  const shuffled=seededShuffle(pool,`${seed}|${population}|${topic}|${query}|${cycle}`);
   const batch=[];
   for(let i=0;i<safeSize;i++) batch.push(shuffled[(start+i)%pool.length]);
   return batch;
@@ -86,15 +87,19 @@ function initVolleyballHub(){
   const visual=document.getElementById('volleyball-population-visual');
   const worldTitle=document.getElementById('volleyball-population-title');
   const worldSummary=document.getElementById('volleyball-population-summary');
+  const topicShell=document.getElementById('volleyball-topic-shell');
   const topicPanel=document.getElementById('volleyball-population-topics');
+  const topicContext=document.getElementById('volleyball-topic-context');
   const search=document.getElementById('volleyball-search');
   const feed=document.getElementById('volleyball-feed');
+  const feedTitle=document.getElementById('volleyball-feed-title');
   const count=document.getElementById('volleyball-feed-count');
   const sentinel=document.getElementById('volleyball-feed-sentinel');
   const discovery=document.getElementById('volleyball-discovery-result');
   const discoveryShell=document.getElementById('volleyball-discovery');
 
   let population='all';
+  let topic='all';
   let page=0;
   let rendered=0;
   let loading=false;
@@ -110,6 +115,13 @@ function initVolleyballHub(){
     worldSummary.textContent='פיד אחד שמחבר גברים, נשים, נוער ויסודי עם טכניקה, טקטיקה, מדע, פיזיולוגיה, תרגילים, ניתוח משחק, מחקר ועוד.';
   }
 
+  function renderTopicTabs(){
+    const topicOptions=[{id:'all',label:'הכול',icon:'🏐'},...getPopulationTopics(window.VOLLEYBALL_TOPICS,population)];
+    topicPanel.innerHTML=topicOptions.map(item=>`<button type="button" class="vb-topic-tab${item.id===topic?' active':''}" data-topic="${item.id}" aria-pressed="${item.id===topic?'true':'false'}"><span>${item.icon||'•'}</span>${item.label}</button>`).join('');
+    const populationLabel=population==='all'?'כל עולם הכדורעף':labelFor(window.VOLLEYBALL_POPULATIONS,population);
+    topicContext.textContent=populationLabel;
+  }
+
   function renderPopulationWorld(){
     const selected=window.VOLLEYBALL_POPULATIONS.find(item=>item.id===population);
     if(!selected){
@@ -120,24 +132,32 @@ function initVolleyballHub(){
       worldTitle.textContent=selected.label;
       worldSummary.textContent=selected.summary;
     }
-    topicPanel.innerHTML=getPopulationTopics(window.VOLLEYBALL_TOPICS,population).map(topic=>`<button type="button" class="vb-topic" data-topic="${topic.id}"><span>${topic.icon}</span><b>${topic.label}</b></button>`).join('');
+    renderTopicTabs();
   }
 
   function currentPool(){
-    return filterVolleyballFeed(window.VOLLEYBALL_FEED_CARDS,{population,query:search.value});
+    return filterVolleyballFeed(window.VOLLEYBALL_FEED_CARDS,{population,topic,query:search.value});
+  }
+
+  function updateFeedHeading(){
+    const populationLabel=population==='all'?'כל הכדורעף':labelFor(window.VOLLEYBALL_POPULATIONS,population);
+    const topicLabel=topic==='all'?'כל המאפיינים':labelFor(window.VOLLEYBALL_TOPICS,topic);
+    feedTitle.textContent=population==='all'&&topic==='all'?'פיד כדורעף':`פיד ${populationLabel} · ${topicLabel}`;
   }
 
   function appendBatch(){
     if(loading)return;
     loading=true;
-    const batch=buildInfiniteBatch(window.VOLLEYBALL_FEED_CARDS,{population,query:search.value},feedSeed,page,8);
+    const batch=buildInfiniteBatch(window.VOLLEYBALL_FEED_CARDS,{population,topic,query:search.value},feedSeed,page,8);
     if(batch.length){
       feed.insertAdjacentHTML('beforeend',batch.map(renderCard).join(''));
       page+=1;
       rendered+=batch.length;
-      count.textContent=population==='all'?`${rendered} פריטים נטענו · ממשיכים לגלול`:`${rendered} פריטים ב־${labelFor(window.VOLLEYBALL_POPULATIONS,population)} · ממשיכים לגלול`;
+      const populationLabel=population==='all'?'כל הכדורעף':labelFor(window.VOLLEYBALL_POPULATIONS,population);
+      const topicLabel=topic==='all'?'כל המאפיינים':labelFor(window.VOLLEYBALL_TOPICS,topic);
+      count.textContent=`${rendered} פריטים · ${populationLabel} · ${topicLabel}`;
     }else{
-      if(!rendered) feed.innerHTML='<div class="vb-empty">לא נמצאו פריטים לחיפוש הזה.</div>';
+      if(!rendered) feed.innerHTML='<div class="vb-empty">לא נמצאו פריטים למסלול הזה.</div>';
       count.textContent='אין תוצאות נוספות';
     }
     loading=false;
@@ -147,17 +167,31 @@ function initVolleyballHub(){
     page=0;
     rendered=0;
     feed.innerHTML='';
+    updateFeedHeading();
     appendBatch();
   }
 
   function selectPopulation(next){
     population=next;
+    topic='all';
     tabs.querySelectorAll('[data-population]').forEach(btn=>{
       const active=btn.dataset.population===population;
       btn.classList.toggle('active',active);
       btn.setAttribute('aria-pressed',String(active));
     });
+    discovery.innerHTML='';
     renderPopulationWorld();
+    resetFeed();
+  }
+
+  function selectTopic(next){
+    topic=next;
+    topicPanel.querySelectorAll('[data-topic]').forEach(btn=>{
+      const active=btn.dataset.topic===topic;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-pressed',String(active));
+    });
+    discovery.innerHTML='';
     resetFeed();
   }
 
@@ -165,24 +199,23 @@ function initVolleyballHub(){
     const btn=event.target.closest('[data-population]');
     if(!btn)return;
     selectPopulation(btn.dataset.population);
+    topicShell.scrollIntoView({behavior:'smooth',block:'start'});
   });
-
-  search.addEventListener('input',resetFeed);
 
   topicPanel.addEventListener('click',event=>{
     const btn=event.target.closest('[data-topic]');
     if(!btn)return;
-    const pool=currentPool().filter(card=>card.topic===btn.dataset.topic||card.topic==='all');
-    const card=pickDiscovery(pool,'all',`${Date.now()}|${btn.dataset.topic}|${population}`);
-    discovery.innerHTML=card?renderCard(card):'<div class="vb-empty">עוד אין פריט ממוקד בתחום הזה לאוכלוסייה שנבחרה.</div>';
-    discoveryShell.scrollIntoView({behavior:'smooth',block:'center'});
+    selectTopic(btn.dataset.topic);
+    document.getElementById('volleyball-feed-section').scrollIntoView({behavior:'smooth',block:'start'});
   });
+
+  search.addEventListener('input',resetFeed);
 
   discoveryShell.addEventListener('click',event=>{
     const btn=event.target.closest('[data-kind]');
     if(!btn)return;
     const pool=currentPool();
-    const card=pickDiscovery(pool,btn.dataset.kind,`${Date.now()}|${btn.dataset.kind}|${population}`);
+    const card=pickDiscovery(pool,btn.dataset.kind,`${Date.now()}|${btn.dataset.kind}|${population}|${topic}`);
     discovery.innerHTML=card?renderCard(card):'<div class="vb-empty">אין כרגע פריט מהסוג הזה במסלול שנבחר.</div>';
   });
 
