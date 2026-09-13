@@ -13,6 +13,9 @@ on:
       - 'raika-app.js'
       - 'styles.css'
       - 'tests/raika-*.test.js'
+      - 'supabase/functions/raika-feed/**'
+      - 'supabase/functions/_shared/raika-feed-core.mjs'
+      - 'supabase/migrations/20260913_raika_feed*.sql'
 
 jobs:
   test:
