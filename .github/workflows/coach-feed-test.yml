@@ -9,7 +9,9 @@ on:
       - 'coach-feed.css'
       - 'coach-feed.js'
       - 'coach-feed-data.js'
+      - 'coach-hub.js'
       - 'tests/coach-feed.test.js'
+      - 'tests/coach-performance-hub.test.js'
       - 'tests/coach-volleyball-navigation.test.js'
       - '.github/workflows/coach-feed-test.yml'
 
@@ -27,3 +29,4 @@ jobs:
         run: |
           node --check coach-feed-data.js
           node --check coach-feed.js
+          if [ -f coach-hub.js ]; then node --check coach-hub.js; fi
