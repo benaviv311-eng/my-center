@@ -10,6 +10,7 @@ on:
       - 'coach-feed.js'
       - 'coach-feed-data.js'
       - 'tests/coach-feed.test.js'
+      - 'tests/coach-volleyball-navigation.test.js'
       - '.github/workflows/coach-feed-test.yml'
 
 jobs:
