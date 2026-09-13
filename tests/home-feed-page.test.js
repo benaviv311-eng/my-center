@@ -35,4 +35,15 @@ test('controller code uses required infinite-scroll and dwell thresholds',()=>{
   assert.ok(js.includes('intersectionRatio>=0.6'));
   assert.ok(js.includes('BATCH_SIZE=12'));
   assert.ok(js.includes('buildRecycleCycle'));
+  assert.ok(js.includes('restoreCount'));
+});
+
+test('index is a unified feed, not the old section mosaic',()=>{
+  const html=read('index.html');
+  ['home-feed-toolbar','home-feed-status','home-feed-list','home-feed-sentinel'].forEach(id=>assert.ok(html.includes(`id="${id}"`)));
+  ['for-you','all','raika','coach','volleyball','languages','music','library','verses','saved'].forEach(mode=>assert.ok(html.includes(`data-home-filter="${mode}"`)));
+  ['home-feed.css','home-feed-favorites.js','home-feed-state.js','home-feed-sources.js','home-feed-ranking.js','home-feed.js'].forEach(file=>assert.ok(html.includes(file)));
+  assert.equal(html.includes('id="daily-verses"'),false);
+  assert.equal(html.includes('⚡ ראיקה היום'),false);
+  assert.equal(html.includes('🏐 היום כמאמן'),false);
 });
