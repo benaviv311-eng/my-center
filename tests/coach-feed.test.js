@@ -146,6 +146,16 @@ test('later infinite feed cycles reshuffle the full pool without dropping cards'
   assert.deepEqual(new Set(second),new Set(first),'every cycle must contain the same complete pool');
 });
 
+test('infinite cycles preserve the active topic filter',()=>{
+  const {COACH_FEED_CARDS,filterCards,buildFeedCycle}=loadModules();
+  const topic='explosive-power';
+  const filtered=filterCards(COACH_FEED_CARDS,topic);
+  const cycle=buildFeedCycle(filtered,'2026-09-13|explosive-power',2);
+  assert.equal(cycle.length,filtered.length);
+  assert.ok(cycle.length>0);
+  assert.ok(cycle.every(card=>card.topic===topic));
+});
+
 test('coach page includes an infinite-scroll sentinel',()=>{
   const html=read('coach.html');
   assert.match(html,/id=["']coach-feed-sentinel["']/);
