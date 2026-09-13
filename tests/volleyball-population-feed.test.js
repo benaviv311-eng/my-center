@@ -29,9 +29,11 @@ test('top volleyball navigation selects population and topic navigation is a sec
 });
 
 test('volleyball feed is one magazine-style column for every population and topic',()=>{
-  const css=read('volleyball.css');
+  const html=read('volleyball.html');
+  assert.match(html,/volleyball-magazine\.css/);
+  const css=read('volleyball-magazine.css');
   assert.match(css,/\.vb-feed\s*\{[^}]*grid-template-columns:1fr[^}]*max-width:8\d{2}px[^}]*margin-inline:auto/s);
-  assert.doesNotMatch(css,/\.vb-feed\s*\{[^}]*repeat\(2,minmax\(0,1fr\)\)/s);
+  assert.doesNotMatch(css,/repeat\(2,minmax\(0,1fr\)\)/s);
   assert.match(css,/\.vb-feed-card\s*\{[^}]*border-radius:2\dpx[^}]*padding:2\dpx/s);
   assert.match(css,/\.vb-feed-card h3\s*\{[^}]*font-size:2\dpx/s);
 });
