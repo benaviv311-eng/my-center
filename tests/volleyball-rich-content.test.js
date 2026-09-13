@@ -21,6 +21,7 @@ test('every population receives a sourced drill library from professional organi
     assert.ok(drills.length>=3,`${population} needs at least three sourced drills`);
     for(const drill of drills){
       assert.ok(drill.goal&&drill.setup&&drill.execution&&drill.coachingPoints,`${drill.id} needs full coaching structure`);
+      assert.ok(drill.players&&drill.equipment&&drill.commonErrors&&drill.progression,`${drill.id} needs practical drill details`);
       assert.ok(drill.sourceName&&drill.sourceUrl,`${drill.id} needs a source`);
       const host=new URL(drill.sourceUrl).hostname;
       assert.ok(trustedHosts.includes(host),`${drill.id} source is not on the trusted list: ${host}`);
@@ -67,8 +68,12 @@ test('professional women gallery has rotating licensed action photography',()=>{
   }
 });
 
-test('volleyball page loads the enrichment and gallery layers',()=>{
+test('volleyball page loads the enrichment, gallery and full drill-detail layers',()=>{
   const html=fs.readFileSync(path.join(root,'volleyball.html'),'utf8');
   assert.match(html,/volleyball-rich-content\.js/);
   assert.match(html,/volleyball-rich-content\.css/);
+  assert.match(html,/volleyball-drill-details\.js/);
+  assert.equal(fs.existsSync(path.join(root,'volleyball-drill-details.js')),true);
+  const details=fs.readFileSync(path.join(root,'volleyball-drill-details.js'),'utf8');
+  for(const label of ['מספר שחקנים','ציוד','ביצוע','דגשים','טעויות נפוצות','התקדמות'])assert.match(details,new RegExp(label));
 });
