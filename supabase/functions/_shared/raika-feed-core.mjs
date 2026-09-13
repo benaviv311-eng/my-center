@@ -85,6 +85,8 @@ export function summarizeFeedback(rows=[]) {
   return {weights,exploration_ratio:0.2};
 }
 
+export const mapOpenAIError = status => `openai_${Number(status)||500}`;
+
 export function buildFeedSchema(count=8){
   return {
     type:'object', additionalProperties:false, required:['cards'],
