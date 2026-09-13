@@ -11,7 +11,7 @@
   const BATCH_SIZE=12;
   const SOURCE_LABELS={raika:'⚡ ראיקה',coach:'🧠 מאמן',volleyball:'🏐 כדורעף',languages:'🌍 שפות',music:'🎵 מוזיקה',library:'📚 ספרייה',verses:'📖 פסוקים'};
   const STATUS_LABELS={canon:'✅ קאנון',developing:'📝 בפיתוח',idea:'💡 הצעה',parked:'🗄️ בצד'};
-  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));}
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function shortText(value,limit=420){const s=String(value||'').trim();return s.length>limit?`${s.slice(0,limit).trim()}…`:s;}
   function renderCard(item,{saved=false,recycled=false}={}){
     const source=SOURCE_LABELS[item.source]||item.source||'תוכן';
@@ -104,6 +104,7 @@
       const ids=[];
       while(ids.length<count&&items.length){
         if(cursor>=order.length){
+          if(ids.length) break;
           cycleIndex+=1;
           order=Ranking.buildRecycleCycle(items,state,mode,cycleIndex);
           cursor=0;
