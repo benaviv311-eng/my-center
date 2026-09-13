@@ -52,9 +52,15 @@
 
   function renderHeader(){
     const language=B.LANGUAGES[lang];
+    const isArabic=lang==='ar';
+    document.body.classList.toggle('arabic-vocabulary',isArabic);
     document.title=`אוצר מילים · ${language.name}`;
     $('vocab-language-code').textContent=language.code;
-    $('vocab-language-name').textContent=lang==='ar'
+    const pageTitle=$('vocab-page-title');
+    if(pageTitle)pageTitle.innerHTML=isArabic
+      ?'<span class="arabic-title-script" lang="ar" dir="rtl">العربية</span><span class="arabic-title-divider"> · </span><span>ערבית</span>'
+      :'📚 אוצר מילים';
+    $('vocab-language-name').textContent=isArabic
       ?`${language.name} · ${arabicRegister==='spoken'?'מדוברת פלסטינית/לבנטינית':'ספרותית (MSA)'} · תעתיק עברי + כתב ערבי`
       :lang==='ru'?`${language.name} · תעתיק לטיני + קירילית`:language.name;
     $('vocab-language-switch').innerHTML=Object.entries(B.LANGUAGES).map(([code,item])=>`<a class="study-switch ${code===lang?'active':''}" href="${pageHref(code)}">${item.code} · ${item.name}</a>`).join('');
@@ -62,7 +68,7 @@
   }
 
   function renderTopicNav(){
-    $('vocab-topic-nav').innerHTML=Object.entries(B.TOPICS).map(([id,topic])=>`<button class="vocab-topic-chip ${id===activeTopic?'active':''}" type="button" data-vocab-topic-select="${id}" aria-pressed="${id===activeTopic?'true':'false'}">${topic.icon} ${esc(topic.name)} · ${topic.words.length}</button>`).join('');
+    $('vocab-topic-nav').innerHTML=Object.entries(B.TOPICS).map(([id,topic])=>`<button class="vocab-topic-chip ${id===activeTopic?'active':''}" type="button" data-vocab-topic-select="${id}" aria-pressed="${id===activeTopic?'true':'false'}"><span class="vocab-topic-emoji">${topic.icon}</span><span>${esc(topic.name)} · ${topic.words.length}</span></button>`).join('');
   }
 
   function wordCard(entry,showTopic){
