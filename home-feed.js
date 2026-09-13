@@ -11,7 +11,7 @@
   const BATCH_SIZE=12;
   const SOURCE_LABELS={raika:'⚡ ראיקה',coach:'🧠 מאמן',volleyball:'🏐 כדורעף',languages:'🌍 שפות',music:'🎵 מוזיקה',library:'📚 ספרייה',verses:'📖 פסוקים'};
   const STATUS_LABELS={canon:'✅ קאנון',developing:'📝 בפיתוח',idea:'💡 הצעה',parked:'🗄️ בצד'};
-  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));}
   function shortText(value,limit=420){const s=String(value||'').trim();return s.length>limit?`${s.slice(0,limit).trim()}…`:s;}
   function renderCard(item,{saved=false,recycled=false}={}){
     const source=SOURCE_LABELS[item.source]||item.source||'תוכן';
@@ -87,7 +87,7 @@
         const merged=[...existing,...fresh.filter(id=>!existing.includes(id))];
         order=merged;
         if(resetDaily||!state.day.order.length||merged.length!==state.day.order.length){state=State.setDailyOrder(state,merged);persist();}
-        cursor=resetDaily?0:Math.min(Number(state.day.cursor)||0,order.length);
+        cursor=0;
       }else{
         order=Ranking.buildDailyOrder(items,state,mode);
         cursor=0;
@@ -116,15 +116,16 @@
       }
       return ids;
     }
-    function appendBatch(){
+    function appendBatch(options={}){
       if(loading) return [];
+      const mark=options.markShown!==false;
       loading=true;
       const ids=nextIds(BATCH_SIZE);
       const batch=ids.map(currentItem).filter(Boolean);
       if(batch.length){
         listEl.insertAdjacentHTML('beforeend',batch.map(item=>renderCard(item,{saved:favorites.has(item.id),recycled})).join(''));
         listEl.querySelectorAll('.home-feed-card').forEach(observeCard);
-        state=State.markShown(state,batch,new Date());
+        if(mark) state=State.markShown(state,batch,new Date());
         if(mode==='for-you'){state=State.setCursor?State.setCursor(state,cursor):(state.day.cursor=cursor,state);persist();}
       }
       if(statusEl){
@@ -218,7 +219,12 @@
     }
     doc.addEventListener('mycenter:favorites-changed',onFavoriteChange);
 
-    buildOrder(false);appendBatch();
+    const restoreCount=Math.max(0,Number(state.day.cursor)||0);
+    buildOrder(false);
+    if(restoreCount>0){
+      const target=Math.min(restoreCount,order.length);
+      while(cursor<target) appendBatch({markShown:false});
+    }else appendBatch();
     const savedY=state.day.scrollY||0;
     if(savedY>0){const raf=win.requestAnimationFrame||((fn)=>win.setTimeout(fn,0));raf(()=>win.scrollTo(0,savedY));}
 
