@@ -4,7 +4,7 @@
 const LIBRARY_API='https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/library-feed?json=1';
 const O=window.BookOriginalContent;
 const $=id=>document.getElementById(id);
-const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));
 
 function resolveBook(books){
   const key=new URLSearchParams(window.location.search).get('book');
@@ -47,7 +47,7 @@ async function loadOriginalText(){
         return r.text();
       }));
     }
-    const parts=texts.map(O.parseOriginalBookMarkdown);
+    const parts=O.mergeOriginalParts(texts.map(O.parseOriginalBookMarkdown));
     const sections=parts.flatMap(part=>part.sections);
     if(!sections.length)throw new Error('No original sections found');
     target.innerHTML=parts.map(phaseHtml).join('');
