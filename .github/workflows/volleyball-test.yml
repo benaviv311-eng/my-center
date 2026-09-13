@@ -6,26 +6,32 @@ on:
       - 'volleyball.html'
       - 'volleyball.css'
       - 'volleyball-magazine.css'
+      - 'volleyball-rich-content.css'
       - 'volleyball.js'
       - 'volleyball-data.js'
+      - 'volleyball-rich-content.js'
       - 'volleyball-professional-feed.js'
       - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
       - 'tests/volleyball-professional-expansion.test.js'
+      - 'tests/volleyball-rich-content.test.js'
       - '.github/workflows/volleyball-test.yml'
   pull_request:
     paths:
       - 'volleyball.html'
       - 'volleyball.css'
       - 'volleyball-magazine.css'
+      - 'volleyball-rich-content.css'
       - 'volleyball.js'
       - 'volleyball-data.js'
+      - 'volleyball-rich-content.js'
       - 'volleyball-professional-feed.js'
       - 'volleyball-professional-visuals.js'
       - 'tests/volleyball-hub.test.js'
       - 'tests/volleyball-population-feed.test.js'
       - 'tests/volleyball-professional-expansion.test.js'
+      - 'tests/volleyball-rich-content.test.js'
 
 jobs:
   test:
@@ -35,4 +41,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/volleyball-hub.test.js tests/volleyball-population-feed.test.js tests/volleyball-professional-expansion.test.js
+      - run: node --test tests/volleyball-hub.test.js tests/volleyball-population-feed.test.js tests/volleyball-professional-expansion.test.js tests/volleyball-rich-content.test.js
