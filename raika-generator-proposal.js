@@ -1,0 +1,2 @@
+function generatedProposal({mode,title,text,characters=[]}){return {id:`gen-${Date.now()}`,type:'idea',status:'idea',title:title||'רעיון חדש',summary:text||'',placement:'',why:'נוצר בחדר הכותבים מתוך הקאנון הקיים.',opens:'',tags:[mode==='interaction'?'אינטראקציה':'רגש וסצנה','AI'],characters};}
+if(typeof window!=='undefined')window.generatedProposal=generatedProposal;if(typeof module!=='undefined')module.exports={generatedProposal};

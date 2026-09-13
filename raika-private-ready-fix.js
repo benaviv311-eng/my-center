@@ -1,0 +1,1 @@
+(function(){let n=0;const t=setInterval(()=>{n++;if(window.RaikaPrivate&&window.RaikaPrivateAPI){clearInterval(t);if(window.RaikaPrivate.authorized)document.dispatchEvent(new CustomEvent('raika:private-ready'));}else if(n>100)clearInterval(t);},50);})();

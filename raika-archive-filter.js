@@ -1,0 +1,2 @@
+function rafApply(){document.querySelectorAll('#ideas-grid .writer-card').forEach(card=>{const title=card.querySelector('h3')?.textContent?.trim();const item=(window.RAIKA_DATA?.ideas||[]).find(x=>x.title===title);card.classList.toggle('hidden',item?.status==='archived');});}
+document.addEventListener('raika:private-rendered',()=>setTimeout(rafApply,0));document.addEventListener('raika:private-ready',()=>setTimeout(rafApply,0));window.RaikaArchiveFilter={apply:rafApply};

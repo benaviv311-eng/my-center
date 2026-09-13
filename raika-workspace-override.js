@@ -1,0 +1,2 @@
+function rwoInstall(){if(!window.RaikaPrivateAPI||!window.RaikaWorkspaceClient)return;window.RaikaPrivateAPI.save=async function(type,id,status,payload){try{await RaikaWorkspaceClient.save({id,type,status,...(payload||{})});return null;}catch(e){return e;}};}
+document.addEventListener('raika:private-ready',rwoInstall);document.addEventListener('raika:private-rendered',rwoInstall);window.RaikaWorkspaceOverride={install:rwoInstall};

@@ -1,0 +1,3 @@
+function rcaDecorate(){if(!window.RaikaPrivate?.authorized)return;document.querySelectorAll('#ideas-grid .writer-card').forEach(card=>{const bar=card.querySelector('.private-card-actions');if(!bar||bar.querySelector('[data-rca]'))return;bar.insertAdjacentHTML('afterbegin','<button class="btn small" data-rca="save">💾 שמור</button>');bar.insertAdjacentHTML('beforeend','<button class="btn small" data-rca="approve">✅ אשר</button><button class="btn small" data-rca="remove">🗑️ מחק</button>');});}
+document.addEventListener('raika:private-ready',()=>setTimeout(rcaDecorate,0));document.addEventListener('raika:private-rendered',()=>setTimeout(rcaDecorate,0));
+window.RaikaCardActions={decorate:rcaDecorate};

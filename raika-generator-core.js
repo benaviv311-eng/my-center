@@ -1,0 +1,2 @@
+function buildInteractionPrompt(a,b,note=''){return `Suggest an interaction between ${a} and ${b}. ${note} Return a title, each character's goal, the interaction, sample dialogue, story placement, canon fit, and possible canon conflicts. The result is only a proposal.`;}
+if(typeof window!=='undefined')window.buildInteractionPrompt=buildInteractionPrompt;if(typeof module!=='undefined')module.exports={buildInteractionPrompt};
