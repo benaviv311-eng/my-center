@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const data=require('../volleyball-data.js');
-const {buildInfiniteBatch}=require('../volleyball.js');
+const {buildInfiniteBatchNoRepeat:buildInfiniteBatch}=require('../volleyball-feed-cycle.js');
 
 const populations=['elementary','youth-boys','youth-girls','women','men'];
 const trustedHosts=['fivb.com','www.fivb.com','usavolleyball.org','www.usavolleyball.org','volleyball.ca','www.volleyball.ca'];
