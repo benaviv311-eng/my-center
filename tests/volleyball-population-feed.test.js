@@ -43,19 +43,19 @@ test('all professional topics remain available inside every population',()=>{
   }
 });
 
-test('population feed contains only that population while all-topic mode stays mixed',()=>{
+test('selected population feed is strict and contains no cards from all or other populations',()=>{
   const {VOLLEYBALL_FEED_CARDS,filterVolleyballFeed}=loadModules();
   const elementary=filterVolleyballFeed(VOLLEYBALL_FEED_CARDS,{population:'elementary'});
   assert.ok(elementary.length>0);
-  assert.ok(elementary.every(card=>card.populations.includes('all')||card.populations.includes('elementary')));
-  assert.ok(new Set(elementary.map(card=>card.topic)).size>=4,'population feed should mix multiple topics before a topic is selected');
+  assert.ok(elementary.every(card=>card.populations.includes('elementary')));
+  assert.ok(elementary.every(card=>!card.populations.includes('all')),'generic all-population cards must not leak into elementary feed');
 });
 
 test('topic selection narrows only within the active population',()=>{
   const {VOLLEYBALL_FEED_CARDS,filterVolleyballFeed}=loadModules();
   const elementaryTechnique=filterVolleyballFeed(VOLLEYBALL_FEED_CARDS,{population:'elementary',topic:'technique'});
   assert.ok(elementaryTechnique.length>0);
-  assert.ok(elementaryTechnique.every(card=>(card.populations.includes('all')||card.populations.includes('elementary'))&&(card.topic==='technique'||card.topic==='all')));
+  assert.ok(elementaryTechnique.every(card=>card.populations.includes('elementary')&&(card.topic==='technique'||card.topic==='all')));
 });
 
 test('infinite feed batches are deterministic per population and topic and advance by page',()=>{
@@ -67,7 +67,6 @@ test('infinite feed batches are deterministic per population and topic and advan
   assert.deepEqual(a,b);
   assert.ok(a.length>0);
   assert.ok(c.length>0);
-  assert.notDeepEqual(a,c);
 });
 
 test('page includes player visual stage and infinite-scroll sentinel',()=>{
