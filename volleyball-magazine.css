@@ -1,3 +1,10 @@
 .vb-feed{display:grid;grid-template-columns:1fr;gap:18px;max-width:840px;margin-inline:auto;align-items:start}
-.vb-feed-card{position:relative;background:#fffdf8;border:1px solid #e4ded2;border-radius:26px;padding:24px;box-shadow:0 14px 38px rgba(30,54,49,.09)}
+#volleyball-feed-section>.section-head{max-width:840px;margin-inline:auto;margin-bottom:14px}
+.vb-feed-card{--post-accent:var(--vb-teal);position:relative;background:linear-gradient(145deg,#f3faf7 0%,#fffdf8 52%,#fff 100%);border:1px solid #e4ded2;border-radius:26px;padding:24px;box-shadow:0 14px 38px rgba(30,54,49,.09);overflow:hidden}
+.vb-feed-card:before{content:"";position:absolute;right:0;left:0;top:0;bottom:auto;width:auto;height:5px;background:var(--post-accent)}
+.vb-kind-drill{--post-accent:#d96b3b}.vb-kind-research{--post-accent:#315f86}.vb-kind-myth{--post-accent:#a84646}.vb-kind-question{--post-accent:#6f4a8e}.vb-kind-scenario{--post-accent:#24776e}.vb-kind-problem-solution{--post-accent:#aa7a26}
 .vb-feed-card h3{font-size:26px;line-height:1.25;margin:0 0 12px;color:#173033}
+.vb-feed-card>p{font-size:15.5px;line-height:1.86;margin:0;color:#36423f}
+.vb-card-top{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(57,82,74,.10)}
+.vb-kind{background:var(--post-accent);color:#fff;font-weight:850}
+.vb-pop{background:rgba(255,255,255,.78);border:1px solid rgba(118,120,112,.14)}
