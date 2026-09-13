@@ -25,7 +25,7 @@ export function normalizeFeedRequest(input={}) {
     action,
     count: Math.max(1,Math.min(12,count || 1)),
     seed_card_id: text(input.seed_card_id,80),
-    recent_signatures: arr(input.recent_signatures,80),
+    recent_signatures: Array.isArray(input.recent_signatures)?input.recent_signatures.slice(0,80).map(x=>text(x,1400)).filter(Boolean):[],
     base_context: input.base_context && typeof input.base_context === 'object' && !Array.isArray(input.base_context) ? input.base_context : {},
   };
 }
