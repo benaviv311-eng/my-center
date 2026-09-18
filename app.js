@@ -1079,3 +1079,26 @@ document.addEventListener(
 setToday();
 renderDailyVerses();
 refreshFavs();
+
+
+/* ===== SITE-WIDE AI CHAT ===== */
+function loadSiteChat(){
+  if(document.getElementById('site-chat-script')) return;
+  if(!document.querySelector('link[data-site-chat-css]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='site-chat.css?v=1';
+    link.dataset.siteChatCss='1';
+    document.head.appendChild(link);
+  }
+  const script=document.createElement('script');
+  script.id='site-chat-script';
+  script.src='site-chat.js?v=1';
+  script.defer=true;
+  document.body.appendChild(script);
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',loadSiteChat,{once:true});
+}else{
+  loadSiteChat();
+}
