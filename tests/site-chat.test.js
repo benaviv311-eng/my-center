@@ -73,3 +73,13 @@ test('site chat edge function authenticates requests, routes models, uses page a
   assert.match(fn, /page_context/);
   assert.match(fn, /pending_action/);
 });
+
+
+test('every top-level page loads the site chat directly or through app.js', () => {
+  const pages = fs.readdirSync('.').filter(name => name.endsWith('.html'));
+  const missing = pages.filter(name => {
+    const html = read(name);
+    return !/app\.js/.test(html) && !/site-chat\.js/.test(html);
+  });
+  assert.deepEqual(missing, []);
+});
