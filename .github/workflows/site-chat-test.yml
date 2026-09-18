@@ -1,0 +1,27 @@
+name: Site chat tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/site-chat-*'
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'site-chat.js'
+      - 'site-chat.css'
+      - 'memory.html'
+      - 'tests/site-chat.test.js'
+      - 'supabase/functions/site-chat/**'
+      - 'supabase/migrations/20260918_site_chat*.sql'
+      - '.github/workflows/site-chat-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/site-chat.test.js
