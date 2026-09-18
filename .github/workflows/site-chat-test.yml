@@ -13,7 +13,7 @@ on:
       - 'memory.html'
       - 'tests/site-chat.test.js'
       - 'supabase/functions/site-chat/**'
-      - 'supabase/migrations/20260918_site_chat.sql'
+      - 'supabase/migrations/20260918_site_chat*.sql'
       - '.github/workflows/site-chat-test.yml'
 
 jobs:
