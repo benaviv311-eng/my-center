@@ -1,11 +1,14 @@
-const CACHE_NAME = "my-center-pwa-v1";
+const CACHE_NAME = "my-center-pwa-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./home-feed.css?v=1",
   "./app-icon.svg",
-  "./manifest.webmanifest"
+  "./manifest.webmanifest",
+  "./mobile-app-shell.js",
+  "./app-icon-192.png",
+  "./app-icon-512.png"
 ];
 
 self.addEventListener("install", event => {
