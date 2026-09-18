@@ -1,0 +1,22 @@
+{
+  "name": "המרכז שלי",
+  "short_name": "המרכז שלי",
+  "description": "המרכז האישי שלי — ראיקה, אימון, כדורעף, שפות, מוזיקה, ספרים ופסוקים.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f3ea",
+  "theme_color": "#f7f3ea",
+  "categories": ["productivity", "education", "sports"],
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
