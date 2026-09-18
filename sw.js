@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-center-pwa-v2";
+const CACHE_NAME = "my-center-pwa-v3";
 const CORE_ASSETS = [
   "./",
   "./index.html",
