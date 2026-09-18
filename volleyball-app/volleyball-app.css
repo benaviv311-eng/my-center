@@ -1,0 +1,17 @@
+:root{--vb-app:#0b4946;--vb-accent:#e88f2c;--vb-soft:#eef8f7}
+html{scroll-behavior:smooth;scroll-padding-top:82px}
+body{padding-top:env(safe-area-inset-top);background:#eef8f7}
+.vb-standalone-app{max-width:1120px;padding-top:12px;padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+.vb-app-topbar{position:sticky;top:0;z-index:80;margin:0 0 12px;padding:9px 10px;border:1px solid rgba(11,73,70,.14);border-radius:18px;background:rgba(238,248,247,.93);backdrop-filter:blur(16px);box-shadow:0 8px 24px rgba(11,73,70,.08)}
+.vb-app-brand{display:flex;align-items:center;gap:10px}.vb-app-logo{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;background:var(--vb-app);font-size:23px}
+.vb-app-brand div{display:flex;flex-direction:column}.vb-app-brand strong{font-size:17px}.vb-app-brand small{font-size:11px;color:#62706f}
+.vb-app-top-actions{display:flex;gap:7px}.vb-app-action{border:0;border-radius:12px;padding:9px 11px;background:#fff;color:#173c39;font-weight:700;text-decoration:none;cursor:pointer}.vb-app-action.compact{font-size:20px;min-width:42px}
+.vb-app-hero{display:grid;grid-template-columns:minmax(0,1fr) 190px;align-items:center;background:linear-gradient(135deg,#0b4946,#167b74);color:#fff}
+.vb-app-hero .vb-eyebrow,.vb-app-hero p{color:rgba(255,255,255,.82)}.vb-app-hero .vb-hero-pills span{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.2);color:#fff}
+.vb-app-hero-mark{height:170px;border-radius:24px;background:rgba(255,255,255,.1);display:grid;place-items:center;align-content:center;gap:8px}.vb-app-hero-mark span{font-size:72px}.vb-app-hero-mark b{font-size:12px;letter-spacing:2px}
+.vb-app-shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0 18px}.vb-app-shortcuts button{border:1px solid #d8e9e7;background:#fff;border-radius:18px;padding:13px 10px;display:grid;justify-items:center;gap:3px;cursor:pointer;color:#163e3b}.vb-app-shortcuts span{font-size:24px}.vb-app-shortcuts b{font-size:14px}.vb-app-shortcuts small{font-size:10px;color:#71817f}
+.vb-app-search{scroll-margin-top:88px}.vb-app-search label{display:block;font-weight:800;margin:0 0 7px}
+#volleyball-population-shell,#volleyball-discovery,#volleyball-feed-section{scroll-margin-top:88px}
+.vb-app-nav{position:fixed;z-index:100;bottom:0;left:0;right:0;padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:rgba(255,255,255,.96);border-top:1px solid #d8e9e7;backdrop-filter:blur(16px);display:grid;grid-template-columns:repeat(5,1fr);box-shadow:0 -8px 30px rgba(11,73,70,.08)}
+.vb-app-nav button{border:0;background:transparent;padding:5px 2px;color:#637573;font-size:10px;font-weight:700;cursor:pointer}.vb-app-nav button span{display:block;font-size:21px;margin-bottom:1px}.vb-app-nav button.active{color:var(--vb-app)}
+@media(max-width:700px){.vb-standalone-app{padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right))}.vb-app-topbar{border-radius:15px}.vb-app-hero{grid-template-columns:1fr}.vb-app-hero-mark{display:none}.vb-app-shortcuts{grid-template-columns:repeat(2,1fr)}.vb-app-shortcuts button{min-height:86px}.vb-app-action{font-size:11px;padding:8px}.vb-app-brand small{display:none}}
