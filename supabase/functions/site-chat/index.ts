@@ -119,7 +119,7 @@ async function queueAction(userId:string,threadId:string,action:any){
   if(error)throw error;return data;
 }
 
-async function revision(userId:string,actionId:string,entityType:string,entityId:string,before:any,after:any){
+async function revision(userId:string,actionId:string|null,entityType:string,entityId:string,before:any,after:any){
   await admin.from("site_chat_revisions").insert({user_id:userId,action_id:actionId,entity_type:entityType,entity_id:entityId,before_data:before??null,after_data:after??null});
 }
 
@@ -208,7 +208,7 @@ Deno.serve(async(req:Request)=>{
     if(action==="memory_delete"){
       const id=text(b.memory_id,80);if(!id)return out(req,{error:"Memory id required"},400);
       const before=await admin.from("site_chat_memories").select("*").eq("id",id).eq("user_id",user.id).maybeSingle();
-      const q=await admin.from("site_chat_memories").delete().eq("id",id).eq("user_id",user.id);if(q.error)throw q.error;await revision(user.id,"","memory",id,before.data,null);return out(req,{ok:true});
+      const q=await admin.from("site_chat_memories").delete().eq("id",id).eq("user_id",user.id);if(q.error)throw q.error;await revision(user.id,null,"memory",id,before.data,null);return out(req,{ok:true});
     }
     if(action==="approve_action"||action==="cancel_action"){
       const id=text(b.action_id,80);const q=await admin.from("site_chat_actions").select("*").eq("id",id).eq("user_id",user.id).maybeSingle();if(!q.data)return out(req,{error:"Action not found"},404);if(q.data.status!=="pending")return out(req,{ok:true,message:"הפעולה כבר טופלה.",action:q.data});
