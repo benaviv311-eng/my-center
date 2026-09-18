@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>פיד שפות | המרכז שלי</title>
   <meta name="theme-color" content="#f7f3ea">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="המרכז שלי">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="app-icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="app-icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
   <link rel="stylesheet" href="languages-feed.css?v=3">
@@ -68,5 +75,6 @@
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
+<script src="mobile-app-shell.js?v=1"></script>
 </body>
 </html>
