@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>כדורעף שלי</title>
+  <meta name="theme-color" content="#0b4946">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="כדורעף">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="app-icon.svg">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../volleyball.css">
+  <link rel="stylesheet" href="../volleyball-rich-content.css">
+  <link rel="stylesheet" href="volleyball-app.css">
+</head>
+<body>
+<div class="app vb-app vb-standalone-app" id="vb-app-home">
+  <header class="vb-app-topbar">
+    <div class="vb-app-brand">
+      <span class="vb-app-logo">🏐</span>
+      <div><strong>כדורעף שלי</strong><small>מאגר המאמן למגרש</small></div>
+    </div>
+    <div class="vb-app-top-actions">
+      <button id="vb-install-app" class="vb-app-action" type="button" hidden>⬇️ התקנה</button>
+      <a class="vb-app-action compact" href="../index.html" title="המרכז שלי">⌂</a>
+    </div>
+  </header>
+
+  <header class="vb-hero vb-app-hero">
+    <div class="vb-hero-copy">
+      <p class="vb-eyebrow">VOLLEYBALL COACH APP</p>
+      <h1>🏐 כדורעף</h1>
+      <p>טכניקה, טקטיקה, פיזיולוגיה, מחקר, תרגילים, ניתוח משחק והתפתחות שחקנים — באפליקציה אחת למאמן.</p>
+      <div class="vb-hero-pills"><span>טכניקה</span><span>טקטיקה</span><span>מדע</span><span>פיזיולוגיה</span><span>ניתוח משחק</span></div>
+    </div>
+    <div class="vb-app-hero-mark" aria-hidden="true">
+      <span>🏐</span>
+      <b>VOLLEYBALL</b>
+    </div>
+  </header>
+
+  <section class="vb-app-shortcuts" aria-label="קיצורי דרך">
+    <button type="button" data-vb-jump="#volleyball-population-shell"><span>👥</span><b>קבוצות</b><small>בחר אוכלוסייה</small></button>
+    <button type="button" data-vb-jump="#volleyball-discovery"><span>🎲</span><b>גלה</b><small>תרגיל או רעיון</small></button>
+    <button type="button" data-vb-jump="#volleyball-search-section"><span>🔎</span><b>חיפוש</b><small>מצא תוכן מהר</small></button>
+    <button type="button" data-vb-jump="#volleyball-feed-section"><span>📚</span><b>פיד</b><small>לימוד מתמשך</small></button>
+  </section>
+
+  <section id="volleyball-population-shell" class="vb-population-shell" aria-label="קבוצות איכות">
+    <div class="vb-population-caption"><b>בחר עולם</b><small>יסודי · נוער · נשים · גברים</small></div>
+    <div id="volleyball-population-tabs" class="vb-population-tabs"></div>
+  </section>
+
+  <section class="section vb-population-world" aria-labelledby="volleyball-population-title">
+    <div id="volleyball-population-visual" class="vb-player-visual"></div>
+    <div class="vb-world-content">
+      <p class="vb-eyebrow dark">עולם מקצועי לפי אוכלוסייה</p>
+      <h2 id="volleyball-population-title">כל עולם הכדורעף</h2>
+      <p id="volleyball-population-summary" class="vb-world-summary"></p>
+      <p class="vb-world-note">בחר אוכלוסייה, ואז גלול בפיד שלה בלבד. לשונית המאפיינים נשארת קפואה ומסננת בתוך הפיד שבחרת.</p>
+    </div>
+  </section>
+
+  <section id="volleyball-topic-shell" class="vb-topic-shell" aria-label="מאפייני האוכלוסייה">
+    <div class="vb-topic-caption"><b>מאפיינים</b><small id="volleyball-topic-context">כל עולם הכדורעף</small></div>
+    <div id="volleyball-population-topics" class="vb-topic-tabs"></div>
+  </section>
+
+  <section class="section vb-search-row vb-app-search" id="volleyball-search-section">
+    <label for="volleyball-search">חיפוש מהיר</label>
+    <input id="volleyball-search" class="search" type="search" placeholder="קבלה, חסימה, קפיצה, רוטציה, כתף..." aria-label="חיפוש בפיד הכדורעף">
+  </section>
+
+  <section class="section vb-discovery-shell" id="volleyball-discovery">
+    <div class="section-head"><h2>גלה משהו</h2><small>מתוך המסלול והמאפיין שבחרת</small></div>
+    <div class="vb-discovery-buttons"><button data-kind="all">🎲 רנדומלי</button><button data-kind="drill">🧪 תרגיל</button><button data-kind="research">🔬 מחקר ומדע</button><button data-kind="myth">🧯 מיתוס</button><button data-kind="question">❓ שאלה</button><button data-kind="scenario">🎬 סיטואציה</button></div>
+    <div id="volleyball-discovery-result" class="vb-discovery-result"></div>
+  </section>
+
+  <section class="section" id="volleyball-feed-section">
+    <div class="section-head"><h2 id="volleyball-feed-title">פיד כדורעף</h2><small id="volleyball-feed-count">טוען...</small></div>
+    <div id="volleyball-feed" class="vb-feed" aria-live="polite"></div>
+    <div id="volleyball-feed-sentinel" class="vb-feed-sentinel" aria-label="טעינת תוכן נוסף"><span></span><span></span><span></span></div>
+  </section>
+
+  <nav class="vb-app-nav" aria-label="ניווט אפליקציית כדורעף">
+    <button class="active" type="button" data-vb-jump="#vb-app-home"><span>🏠</span>בית</button>
+    <button type="button" data-vb-jump="#volleyball-population-shell"><span>👥</span>קבוצות</button>
+    <button type="button" data-vb-jump="#volleyball-discovery"><span>🎲</span>גלה</button>
+    <button type="button" data-vb-jump="#volleyball-search-section"><span>🔎</span>חיפוש</button>
+    <button type="button" data-vb-jump="#volleyball-feed-section"><span>📚</span>פיד</button>
+  </nav>
+</div>
+
+<script src="../volleyball-data.js"></script>
+<script src="../volleyball-rich-content.js"></script>
+<script src="../volleyball-deep-content.js"></script>
+<script src="../volleyball-gallery-extension.js"></script>
+<script src="../volleyball.js"></script>
+<script src="../volleyball-feed-cycle.js"></script>
+<script src="../volleyball-drill-tab-priority.js"></script>
+<script src="../volleyball-professional-feed.js"></script>
+<script src="../volleyball-drill-details.js"></script>
+<script src="../volleyball-professional-visuals.js"></script>
+<script src="volleyball-app-shell.js"></script>
+</body>
+</html>
