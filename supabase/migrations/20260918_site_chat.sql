@@ -51,6 +51,9 @@ create table if not exists public.site_chat_actions (
   executed_at timestamptz
 );
 
+alter table public.site_chat_messages
+  add column if not exists pending_action_id uuid references public.site_chat_actions(id) on delete set null;
+
 create table if not exists public.site_chat_revisions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
