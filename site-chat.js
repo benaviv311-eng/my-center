@@ -153,11 +153,32 @@ async function sendMessage(e){
   const images=state.pendingImages.map(x=>({...x}));input.value='';
   state.messages.push({role:'user',content:q||'📷 תמונה',attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url,signed_url:x.data_url}))});renderMessages();setBusy(true,'חושב…');
   try{
-    const s=scope();const r=await api({action:'ask',...s,thread_id:state.threadId,message:q,image_attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url})),page_context:pageContext(),consult_only:state.consultOnly});
+    const s=scope();
+    const editorMode=window.SiteEditorUI?.mode?.()||(state.consultOnly?'consult':'edit');
+    const selectedElement=window.SiteEditorUI?.selectedElement?.()||null;
+    const activeRequestId=editorMode==='work'?(window.SiteEditorUI?.activeRequestId?.()||null):null;
+    const r=await api({
+      action:'ask',
+      ...s,
+      thread_id:state.threadId,
+      message:q,
+      image_attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url})),
+      page_context:pageContext(),
+      consult_only:editorMode==='consult',
+      editor_mode:editorMode,
+      selected_element:selectedElement,
+      active_request_id:activeRequestId
+    });
     state.threadId=r.thread_id;state.pendingImages=[];renderImagePreviews();
     const localUser=[...state.messages].reverse().find(m=>m.role==='user'&&m.attachments?.some(a=>a.data_url));
     if(localUser&&r.user_attachments?.length)localUser.attachments=r.user_attachments;
-    state.messages.push({...r.message,pending_action:r.pending_action||null});renderMessages();setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'');
+    state.messages.push({...r.message,pending_action:r.pending_action||null});
+    renderMessages();
+    if(r.site_edit_request){
+      window.SiteEditorUI?.showRequest?.(r.site_edit_request);
+      window.SiteEditorUI?.clearSelectedElement?.();
+    }
+    setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'');
   }catch(err){if(err.name!=='AbortError')state.messages.push({role:'assistant',content:'לא הצלחתי להשלים את הבקשה: '+err.message});renderMessages()}finally{setBusy(false)}
 }
 async function newThread(){if(!state.session)return loginView();const r=await api({action:'new_thread',...scope(),page_context:pageContext()});state.threadId=r.thread_id;state.messages=[];state.pendingImages=[];renderImagePreviews();state.view='chat';renderMessages();setStatus('שיחה חדשה')}
