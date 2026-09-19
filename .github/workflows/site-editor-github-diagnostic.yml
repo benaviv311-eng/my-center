@@ -17,6 +17,8 @@ jobs:
       - name: Check GitHub App connection
         run: |
           set -euo pipefail
-          body="$(curl --fail --silent --show-error https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/site-editor-github-diagnostic)"
-          echo "$body"
+          tmp="$(mktemp)"
+          status="$(curl --silent --show-error --output "$tmp" --write-out "%{http_code}" https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/site-editor-github-diagnostic)"
+          body="$(cat "$tmp")"
+          echo "status=$status body=$body"
           node -e 'const x=JSON.parse(process.argv[1]); if(x.ok!==true) process.exit(1)' "$body"
