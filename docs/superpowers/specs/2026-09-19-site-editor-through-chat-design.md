@@ -178,7 +178,9 @@ It serves files from the edit branch under a preview URL such as:
 
 `/functions/v1/site-preview/<preview-token>/index.html`
 
-The function maps the requested path to the matching file in the branch and returns the correct MIME type.
+The preview function does not hold GitHub write credentials. After validating the preview token, it requests the required branch file through a server-only read route in `site-editor`. That internal request is authenticated with a server-only secret/signature that is never exposed to the browser.
+
+The function maps the requested path to the matching branch file and returns the correct MIME type. It injects a preview base path and rewrites known `/my-center/` root references so CSS/JS/assets stay inside the preview rather than falling through to production.
 
 For preview safety:
 
@@ -186,7 +188,8 @@ For preview safety:
 - preview responses are `no-store`;
 - preview pages are marked `noindex`;
 - the preview token is unguessable;
-- expired/cancelled requests stop serving previews.
+- expired/cancelled requests stop serving previews;
+- preview file reads are read-only and scoped to the request branch.
 
 ### 5.5 GitHub
 
@@ -218,13 +221,14 @@ The exact permission labels must be verified against current GitHub documentatio
 - workflow dispatch or workflow modification only where explicitly needed;
 - metadata: read.
 
-Server-side secrets:
+Server-side secrets/configuration:
 
 - `GITHUB_APP_ID`
 - `GITHUB_APP_INSTALLATION_ID`
 - `GITHUB_APP_PRIVATE_KEY`
 - `GITHUB_REPO_OWNER`
 - `GITHUB_REPO_NAME`
+- `SITE_EDITOR_INTERNAL_SECRET` (used only for server-to-server preview reads)
 
 These values never appear in chat messages, client JavaScript, logs returned to the browser, or database payloads.
 
@@ -578,11 +582,17 @@ Preferred deployment path:
 1. migration is committed to the edit branch;
 2. tests/checks pass;
 3. user reviews preview and migration summary;
-4. explicit publish approval is recorded;
-5. merge to `main`;
-6. a dedicated GitHub Actions workflow applies the exact approved migration using protected GitHub Secrets;
-7. post-deploy Supabase security/performance checks run;
-8. the request is marked deployed only after success.
+4. explicit publish approval is recorded for the exact branch head SHA;
+5. the system verifies the migration is backward-compatible/additive for the current production code;
+6. a protected GitHub Actions workflow applies the exact approved migration from that branch/head SHA using GitHub Secrets;
+7. migration success and Supabase security/performance checks are confirmed;
+8. only then is the code branch merged to `main`;
+9. GitHub Pages deployment is monitored;
+10. the request is marked deployed only after both database and site deployment succeed.
+
+This ordering prevents GitHub Pages from publishing code that expects a schema migration which has not finished yet.
+
+Destructive or non-backward-compatible schema changes use an expand/contract sequence: first add compatible schema, then deploy code that can use both states, and only later remove old schema in a separate high-risk request. V1 must not perform a destructive one-step migration that can break the currently deployed site.
 
 Required privileged Supabase deployment credentials belong in GitHub Secrets, not in browser JavaScript or database rows.
 
