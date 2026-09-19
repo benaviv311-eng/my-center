@@ -70,3 +70,11 @@ test('github helper converts GitHub RSA PEM format', () => {
   assert.match(src,/pkcs1ToPkcs8/);
   assert.match(src,/RSA PRIVATE KEY/);
 });
+
+
+test('site editor supports request revisions for work mode', () => {
+  const src = read('supabase/functions/site-editor/index.ts');
+  assert.match(src,/action==='request_revision'/);
+  assert.match(src,/revision_requested/);
+  assert.match(src,/awaiting_plan_approval/);
+});
