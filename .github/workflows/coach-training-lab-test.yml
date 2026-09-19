@@ -1,0 +1,30 @@
+name: Coach training lab tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/coach-*'
+  pull_request:
+    paths:
+      - 'coach-training-lab.*'
+      - 'coach.html'
+      - 'volleyball.html'
+      - 'tests/coach-training-lab*.test.js'
+      - 'tests/coach-feed.test.js'
+      - 'tests/coach-performance-hub.test.js'
+      - '.github/workflows/coach-training-lab-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/coach-training-lab*.test.js
+      - run: node --test tests/coach-feed.test.js tests/coach-performance-hub.test.js
