@@ -133,3 +133,10 @@ test('image-only messages give the vision model an explicit instruction', () => 
   assert.match(fn, /המשתמש צירף תמונה ללא טקסט/);
   assert.match(fn, /questionForModel/);
 });
+
+
+test('paste handling supports clipboard image items as well as clipboard files', () => {
+  const js = read('site-chat.js');
+  assert.match(js, /clipboardData\?\.items/);
+  assert.match(js, /getAsFile/);
+});
