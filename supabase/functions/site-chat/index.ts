@@ -5,6 +5,7 @@ const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY=Deno.env.get("OPENAI_API_KEY")||"";
 const admin=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
+const SITE_EDITOR_FUNCTION=SUPABASE_URL+"/functions/v1/site-editor";
 const CHAT_IMAGE_BUCKET="site-chat-images";
 const MAX_IMAGE_BYTES=6*1024*1024;
 const MAX_IMAGES_PER_MESSAGE=4;
@@ -150,12 +151,14 @@ async function signature(value:string){
 
 function parseBlocks(raw:string){
   let clean=raw;
-  let action:any=null,memories:any[]=[];
+  let action:any=null,siteEdit:any=null,memories:any[]=[];
   const a=raw.match(/<ACTION_JSON>([\s\S]*?)<\/ACTION_JSON>/i);
   if(a){try{action=JSON.parse(a[1].trim())}catch{}clean=clean.replace(a[0],"")}
+  const s=raw.match(/<SITE_EDIT_JSON>([\s\S]*?)<\/SITE_EDIT_JSON>/i);
+  if(s){try{siteEdit=JSON.parse(s[1].trim())}catch{}clean=clean.replace(s[0],"")}
   const m=raw.match(/<MEMORY_JSON>([\s\S]*?)<\/MEMORY_JSON>/i);
   if(m){try{const parsed=JSON.parse(m[1].trim());if(Array.isArray(parsed))memories=parsed}catch{}clean=clean.replace(m[0],"")}
-  return {answer:clean.trim(),action,memories};
+  return {answer:clean.trim(),action,siteEdit,memories};
 }
 
 async function storeMemories(userId:string,threadId:string,messageId:string,defaultArea:string,items:any[]){
@@ -167,6 +170,30 @@ async function storeMemories(userId:string,threadId:string,messageId:string,defa
     if(!error&&data)kept.push(data);
   }
   return kept;
+}
+
+async function proposeSiteEdit(req:Request,threadId:string,scopeKey:string,question:string,pageContext:Record<string,unknown>,selectedElement:Record<string,unknown>,attachmentIds:string[]){
+  const auth=req.headers.get("authorization")||"";
+  const response=await fetch(SITE_EDITOR_FUNCTION,{
+    method:"POST",
+    headers:{Authorization:auth,apikey:SUPABASE_ANON_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({
+      action:"propose",
+      thread_id:threadId,
+      prompt:question,
+      area:scopeKey,
+      page_context:pageContext,
+      selected_element:selectedElement,
+      attachment_ids:attachmentIds
+    })
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){
+    const code=typeof data?.code==="string"?data.code:"editor_unavailable";
+    if(code==="owner_required")throw new Error("אין הרשאת עריכת אתר.");
+    throw new Error("עורך האתר אינו זמין כרגע.");
+  }
+  return data?.request||null;
 }
 
 const ALLOWED_ACTIONS=new Set(["content_create","content_update","memory_create","memory_update","memory_delete","raika_edit_upsert"]);
@@ -230,10 +257,12 @@ function systemPrompt(scopeKey:string,consultOnly:boolean){
 השתמש קודם בהקשר העמוד, אחר כך בזיכרונות הרלוונטיים ובתוכן האתר שנמצא עבורך. אם חסר מידע, אמור זאת.
 בעולם ראיקה כל רעיון חדש הוא הצעה בלבד עד אישור מפורש לקאנון.
 לעולם אל תטען ששינית את האתר אם לא בוצעה פעולה מאושרת.
-${consultOnly?"מצב ייעוץ בלבד פעיל: אל תציע ACTION_JSON בכלל.":"אם המשתמש מבקש לשמור/לערוך/למחוק תוכן באתר, תן תשובה קצרה שמסבירה מה עומד להשתנות והוסף בסוף ACTION_JSON אחד בלבד. הפעולה חייבת להיות אחת מ: content_create, content_update, memory_create, memory_update, memory_delete, raika_edit_upsert. אין לבצע שינויי קוד מקור מתוך הצ׳אט החי."}
+${consultOnly?"מצב ייעוץ בלבד פעיל: אל תציע ACTION_JSON או SITE_EDIT_JSON בכלל.":"אם הבקשה היא שינוי תוכן שכבר נשמר במסד הנתונים, השתמש ב-ACTION_JSON אחד בלבד מתוך: content_create, content_update, memory_create, memory_update, memory_delete, raika_edit_upsert. אם הבקשה דורשת שינוי HTML/CSS/JavaScript, מבנה עמוד, עיצוב מקור, קוד, פיצ׳ר או תשתית — הסבר בקצרה מה אתה מציע והוסף SITE_EDIT_JSON אחד בלבד עם {\"goal\":\"תיאור מדויק של השינוי\"}. אל תטען שהשינוי כבר בוצע; הוא יעבור הצעה ואישור."}
 בכל תשובה הוסף בסוף בלוק MEMORY_JSON עם מערך JSON של עד 3 זיכרונות ארוכי טווח שעולים במפורש מדברי המשתמש בהודעה הנוכחית בלבד. אל תסיק מידע אישי חדש ואל תשמור שיחת חולין. לכל פריט: {"area":"global או האזור","topic":"נושא","content":"העובדה/ההחלטה","importance":1-5}. אם אין מה לזכור החזר [].
-פורמט פעולה, רק כשצריך:
+פורמט פעולה על תוכן שמור, רק כשצריך:
 <ACTION_JSON>{"kind":"content_update","label":"תיאור ברור בעברית","target":{"item_id":"uuid"},"payload":{"title":"..."}}</ACTION_JSON>
+פורמט עריכת קוד/עיצוב/מבנה, רק כשצריך:
+<SITE_EDIT_JSON>{"goal":"תיאור מדויק של השינוי המבוקש"}</SITE_EDIT_JSON>
 פורמט זיכרון:
 <MEMORY_JSON>[]</MEMORY_JSON>`;
 }
@@ -315,11 +344,16 @@ ${questionForModel}`;
     let model=chooseModel(questionForModel,pageContext),raw:string;
     try{raw=await callOpenAI(model,prompt,images)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
     const parsed=parseBlocks(raw);
-    const queued=consultOnly?null:await queueAction(user.id,thread.id,parsed.action);
+    const queued=consultOnly||parsed.siteEdit?null:await queueAction(user.id,thread.id,parsed.action);
+    let siteEditRequest:any=null;
+    if(!consultOnly&&parsed.siteEdit){
+      const goal=text(parsed.siteEdit?.goal,8000)||questionForModel;
+      siteEditRequest=await proposeSiteEdit(req,thread.id,scopeKey,goal,pageContext,asObject(b.selected_element),userAttachments.map((x:any)=>x.id).filter(Boolean));
+    }
     const assistant=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"assistant",content:parsed.answer||"מוכן.",model,context_snapshot:pageContext,pending_action_id:queued?.id||null}).select("id,role,content,model,created_at,pending_action_id").single();if(assistant.error)throw assistant.error;
     const saved=await storeMemories(user.id,thread.id,inserted.data.id,scopeKey,parsed.memories);
     if(!thread.title||thread.title==="שיחה חדשה")await admin.from("site_chat_threads").update({title:(question||"תמונה").slice(0,72),updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);else await admin.from("site_chat_threads").update({updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);
-    return out(req,{ok:true,thread_id:thread.id,message:assistant.data,user_attachments:userAttachments,pending_action:queued,memory_updates:saved,model});
+    return out(req,{ok:true,thread_id:thread.id,message:assistant.data,user_attachments:userAttachments,pending_action:queued,site_edit_request:siteEditRequest,memory_updates:saved,model});
   }catch(e){
     console.error(e);
     return out(req,{error:e instanceof Error?e.message:"Server error",code:"site_chat_error"},500);
