@@ -50,8 +50,9 @@ jobs:
               p.write_text(s)
           PY
 
+          # The permanent CI workflow is added later via the authorized GitHub connector.
+          rm -f .github/workflows/coach-training-lab-test.yml
           rm -rf .tmp/training-lab-sync .tmp/training-lab-final .tmp/training-lab-final2
-          rm -f .github/workflows/training-lab-sync-temp.yml
 
       - name: Verify implementation
         shell: bash
