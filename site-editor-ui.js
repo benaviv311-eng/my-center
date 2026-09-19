@@ -11,8 +11,28 @@ const EDITOR_ERRORS={
   editor_unavailable:'עורך האתר אינו זמין כרגע.'
 };
 const TERMINAL_STATUSES=new Set(['deployed','failed','cancelled','rolled_back']);
+const STOP_POLL_STATUSES=new Set(['awaiting_plan_approval','preview_ready','awaiting_publish_approval','deployed','failed','cancelled','rolled_back','needs_replan']);
+const STATUS_STAGE={
+  planning:'מנתח',
+  needs_replan:'מוצא קבצים',
+  approved:'מכין שינוי',
+  applying:'שומר Branch',
+  testing:'מריץ בדיקות',
+  repairing:'מריץ בדיקות',
+  preview_ready:'מכין Preview',
+  awaiting_plan_approval:'ממתין לאישור',
+  awaiting_publish_approval:'ממתין לאישור',
+  merging:'מפרסם',
+  deploying:'מפרסם',
+  deployed:'פורסם',
+  failed:'נכשל',
+  cancelled:'בוטל',
+  rolled_back:'הוחזר'
+};
 let currentMode=MODES.includes(localStorage.getItem(MODE_KEY))?localStorage.getItem(MODE_KEY):'edit';
 let activeRequest=null;
+let activeRequestData=null;
+let pollTimer=null;
 let selectedElement=null;
 let inspecting=false;
 let inspectHover=null;
@@ -51,14 +71,17 @@ function renderModeControls(){
       '<button type="button" data-site-editor-mode="consult" aria-pressed="false">🛡️ ייעוץ בלבד</button>',
       '<button type="button" data-site-editor-mode="edit" aria-pressed="false">✏️ עריכה</button>',
       '<button type="button" data-site-editor-mode="work" aria-pressed="false">⚡ עבודה</button>',
-      '<button type="button" class="site-editor-inspect-btn" data-site-editor-inspect>🎯 בחר מהעמוד</button>'
+      '<button type="button" class="site-editor-inspect-btn" data-site-editor-inspect>🎯 בחר מהעמוד</button>',
+      '<button type="button" data-site-editor-history>🧾 שינויים באתר</button>'
     ].join('');
     toolbar.appendChild(host);
     host.addEventListener('click',event=>{
       const modeBtn=event.target.closest('[data-site-editor-mode]');
       if(modeBtn){setMode(modeBtn.dataset.siteEditorMode);return}
       const inspectBtn=event.target.closest('[data-site-editor-inspect]');
-      if(inspectBtn)beginInspect();
+      if(inspectBtn){beginInspect();return}
+      const historyBtn=event.target.closest('[data-site-editor-history]');
+      if(historyBtn)showChanges();
     });
   }
   setMode(currentMode,{persist:false});
@@ -227,7 +250,7 @@ function requestCardMarkup(request){
       <span class="site-edit-risk site-edit-risk-${escapeHtml(request?.risk_level||'low')}">${riskText(request?.risk_level)}</span>
     </div>
     <p class="site-edit-summary">${escapeHtml(request?.summary||'שינוי באתר')}</p>
-    <div class="site-edit-meta">סטטוס: ${escapeHtml(request?.status||'לא ידוע')}</div>
+    <div class="site-edit-meta">סטטוס: ${escapeHtml(request?.status||'לא ידוע')} · ${escapeHtml(STATUS_STAGE[request?.status]||'מנתח')}</div>
     <div class="site-edit-files-title">קבצים מושפעים</div>
     ${fileHtml}
     ${preview}
@@ -269,6 +292,74 @@ async function handleRequestAction(card,request,action){
   }
 }
 
+function clearPoll(){
+  if(pollTimer){clearTimeout(pollTimer);pollTimer=null}
+}
+
+function scheduleRequestPoll(request){
+  clearPoll();
+  if(!request?.id||!request?.status||STOP_POLL_STATUSES.has(request.status)||!ctx.api)return;
+  pollTimer=setTimeout(async()=>{
+    try{
+      const result=await ctx.api({action:'get_request',request_id:request.id});
+      const fresh=result?.request;
+      if(!fresh)return;
+      activeRequestData=fresh;
+      showRequest(fresh,{replace:true,poll:false});
+      scheduleRequestPoll(fresh);
+    }catch{
+      clearPoll();
+    }
+  },3000);
+}
+
+function ensureHistoryPanel(){
+  const drawer=document.getElementById('site-chat-drawer');
+  if(!drawer)return null;
+  let panel=drawer.querySelector('[data-site-editor-history-panel]');
+  if(panel)return panel;
+  panel=document.createElement('section');
+  panel.className='site-editor-history-panel';
+  panel.dataset.siteEditorHistoryPanel='1';
+  panel.hidden=true;
+  panel.innerHTML='<div class="site-editor-history-head"><strong>שינויים באתר</strong><button type="button" data-site-editor-history-close>חזרה לצ׳אט</button></div><div class="site-editor-history-list" data-site-editor-history-list></div>';
+  const head=drawer.querySelector('.site-chat-head');
+  head?.insertAdjacentElement('afterend',panel);
+  panel.querySelector('[data-site-editor-history-close]').onclick=()=>{
+    panel.hidden=true;
+    drawer.classList.remove('site-editor-history-open');
+  };
+  return panel;
+}
+
+async function showChanges(){
+  const panel=ensureHistoryPanel();
+  const drawer=document.getElementById('site-chat-drawer');
+  const list=panel?.querySelector('[data-site-editor-history-list]');
+  if(!panel||!drawer||!list||!ctx.api)return;
+  panel.hidden=false;
+  drawer.classList.add('site-editor-history-open');
+  list.innerHTML='<div class="site-edit-files-empty">טוען שינויים…</div>';
+  try{
+    const result=await ctx.api({action:'list_requests'});
+    const requests=Array.isArray(result?.requests)?result.requests:[];
+    list.innerHTML='';
+    if(!requests.length){
+      list.innerHTML='<div class="site-edit-files-empty">עדיין אין שינויים באתר.</div>';
+      return;
+    }
+    for(const request of requests)renderRequestCard(request,list);
+    const running=requests.find(request=>request?.status&&!STOP_POLL_STATUSES.has(request.status));
+    if(running){
+      activeRequestData=running;
+      setActiveRequestId(running.id);
+      scheduleRequestPoll(running);
+    }
+  }catch(error){
+    list.innerHTML='<div class="site-edit-card-error">'+escapeHtml(editorErrorMessage(error))+'</div>';
+  }
+}
+
 function renderRequestCard(request,host){
   if(!request?.id||!host)return null;
   const wrap=document.createElement('div');
@@ -281,16 +372,21 @@ function renderRequestCard(request,host){
   return card;
 }
 
-function showRequest(request,{replace=false}={}){
+function showRequest(request,{replace=false,poll=true}={}){
   if(!request?.id)return null;
+  activeRequestData=request;
   setActiveRequestId(request.id);
-  const host=document.getElementById('site-chat-body');
+  const historyList=document.querySelector('[data-site-editor-history-list]');
+  const historyOpen=!document.querySelector('[data-site-editor-history-panel]')?.hidden;
+  const host=historyOpen&&historyList?historyList:document.getElementById('site-chat-body');
   if(!host)return null;
   const selector='[data-site-edit-request="'+CSS.escape(String(request.id))+'"]';
   const existing=host.querySelector(selector);
   if(existing&&replace)existing.remove();
-  else if(existing)return existing;
-  return renderRequestCard(request,host);
+  else if(existing){if(poll)scheduleRequestPoll(request);return existing}
+  const card=renderRequestCard(request,host);
+  if(poll)scheduleRequestPoll(request);
+  return card;
 }
 
 function install({chatState,api,pageContext}={}){
@@ -298,6 +394,7 @@ function install({chatState,api,pageContext}={}){
   installed=true;
   renderModeControls();
   renderSelectionChip();
+  ensureHistoryPanel();
   const observer=new MutationObserver(()=>{
     if(!document.querySelector('[data-site-editor-modes]'))renderModeControls();
   });
@@ -320,6 +417,7 @@ window.SiteEditorUI={
   renderRequestCard,
   showRequest,
   editorErrorMessage,
+  showChanges,
   selectedElementContext,
   selectedElement:()=>selectedElement,
   beginInspect,
