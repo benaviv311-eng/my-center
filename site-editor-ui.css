@@ -1,0 +1,32 @@
+.site-editor-modes{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  width:100%;
+  padding-top:4px
+}
+.site-editor-modes button{
+  min-height:34px;
+  border:1px solid #ddd3c4;
+  background:#fffdf8;
+  color:#1f1f1f;
+  border-radius:999px;
+  padding:6px 10px;
+  font:inherit;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer
+}
+.site-editor-modes button.active{
+  background:#1f1f1f;
+  color:#fffdf8;
+  border-color:#1f1f1f
+}
+.site-editor-modes button:focus-visible{
+  outline:2px solid currentColor;
+  outline-offset:2px
+}
+@media(max-width:620px){
+  .site-editor-modes{gap:5px}
+  .site-editor-modes button{flex:1 1 auto;min-height:40px}
+}
