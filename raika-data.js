@@ -58,7 +58,7 @@ const RAIKA_DATA = {
     {id:'saga-night-medoshi',order:130,title:'העבר מוצא את הבית',status:'canon',type:'scene',summary:'בלילה, אחרי שהבית נרדם, מדושי מגיע. היקארי שומעת מספיק כדי להבין שהעבר חזר. היא שואלת למה שוב ולמה ילדה; ראי משיב: "גורל."',characters:['medoshi','rai','hikari'],tags:['לילה','עבר','גורל','משפחה']},
     {id:'saga-last-day',order:131,title:'יום אחרון של שקט',status:'canon',type:'scene',summary:'ראי אינו שולח את ראיקה מיד. המשפחה מקבלת יום אחד אחרון של מנוחה יחד לפני שהכול משתנה.',characters:['raika','rai','hikari','raiko','raigo'],tags:['משפחה','פרידה','שקט']},
     {id:'saga-cemetery',order:132,title:'השקיעה בבית העלמין',status:'canon',type:'scene',summary:'ראי לוקח את ראיקה לבית העלמין. בין המתים שהמורשת שלהם חיה בתוכה, הוא אומר לה שמחר בבוקר היא יוצאת למסע.',characters:['raika','rai','kaminari'],tags:['מורשת','בית עלמין','מסע','משפחה']},
-    {id:'saga-seiran-raishin',order:138,title:'ראישין',status:'canon',type:'scene',summary:'בסוף סאגת כפר סאקורה, לאחר שנים של שתיקה, סייראן מרים את ראשו. עיניו זוהרות לבן והוא אומר מילה אחת: "ראישין."',characters:['seiran'],tags:['סוף סאגה','ראישין','מסתורין']}
+    {id:'saga-seiran-raishin',order:138,title:'ראישין',status:'canon',type:'scene',summary:'בסוף סאגת כפר סאקורה, לאחר שנים של שתיקה, סייראן מרים את ראשו. עיניו זוהרות לבן והוא אומר מילה אחת: "ראישין."',characters:['seiran'],tags:['סוף סאגה','ראישין','מסתורין']},
     {id:'mice-wolves-noise',order:139,title:'הרעש מתוך הסבך',status:'canon',type:'scene',summary:'ראיקה מחפשת את בסיס העכברים. רחש חד מתוך הסבך וריח מוכר גורמים לה להידרך.',fullText:`היער היה שקט.
 רוח קלה חלפה בין צמרות העצים,
 וקרני אור ריצדו על השביל.
