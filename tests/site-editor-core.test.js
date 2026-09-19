@@ -63,3 +63,10 @@ test('site chat can route source edits to the site editor instead of forbidding 
   assert.match(src,/site-editor/);
   assert.doesNotMatch(src,/אין לבצע שינויי קוד מקור מתוך הצ׳אט החי/);
 });
+
+
+test('github helper converts GitHub RSA PEM format', () => {
+  const src = read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(src,/pkcs1ToPkcs8/);
+  assert.match(src,/RSA PRIVATE KEY/);
+});
