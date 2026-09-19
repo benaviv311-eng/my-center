@@ -172,11 +172,45 @@ async function storeMemories(userId:string,threadId:string,messageId:string,defa
   return kept;
 }
 
-async function proposeSiteEdit(req:Request,threadId:string,scopeKey:string,question:string,pageContext:Record<string,unknown>,selectedElement:Record<string,unknown>,attachmentIds:string[]){
+async function proposeSiteEdit(
+  req:Request,
+  threadId:string,
+  scopeKey:string,
+  question:string,
+  pageContext:Record<string,unknown>,
+  selectedElement:Record<string,unknown>,
+  attachmentIds:string[],
+  editorMode:string,
+  activeRequestId:string
+){
   const auth=req.headers.get("authorization")||"";
+  const headers={Authorization:auth,apikey:SUPABASE_ANON_KEY,"Content-Type":"application/json"};
+
+  if(editorMode==="work"&&activeRequestId){
+    const revision=await fetch(SITE_EDITOR_FUNCTION,{
+      method:"POST",
+      headers,
+      body:JSON.stringify({
+        action:"request_revision",
+        request_id:activeRequestId,
+        instructions:question,
+        editor_mode:editorMode,
+        selected_element:selectedElement,
+        attachment_ids:attachmentIds
+      })
+    });
+    const revisionData=await revision.json().catch(()=>({}));
+    if(revision.ok)return revisionData?.request||null;
+    if(revision.status!==409){
+      const code=typeof revisionData?.code==="string"?revisionData.code:"editor_unavailable";
+      if(code==="owner_required")throw new Error("אין הרשאת עריכת אתר.");
+      throw new Error("עורך האתר אינו זמין כרגע.");
+    }
+  }
+
   const response=await fetch(SITE_EDITOR_FUNCTION,{
     method:"POST",
-    headers:{Authorization:auth,apikey:SUPABASE_ANON_KEY,"Content-Type":"application/json"},
+    headers,
     body:JSON.stringify({
       action:"propose",
       thread_id:threadId,
@@ -184,7 +218,9 @@ async function proposeSiteEdit(req:Request,threadId:string,scopeKey:string,quest
       area:scopeKey,
       page_context:pageContext,
       selected_element:selectedElement,
-      attachment_ids:attachmentIds
+      attachment_ids:attachmentIds,
+      editor_mode:editorMode,
+      active_request_id:activeRequestId||null
     })
   });
   const data=await response.json().catch(()=>({}));
@@ -317,7 +353,11 @@ Deno.serve(async(req:Request)=>{
 
     const images=parseImageAttachments(b.image_attachments);
     const question=text(b.message,8000);if(!question&&!images.length)return out(req,{error:"Message or image required"},400);
-    const pageContext=asObject(b.page_context),consultOnly=Boolean(b.consult_only);
+    const pageContext=asObject(b.page_context);
+    const editorMode=["consult","edit","work"].includes(String(b.editor_mode))?String(b.editor_mode):Boolean(b.consult_only)?"consult":"edit";
+    const consultOnly=Boolean(b.consult_only)||editorMode==="consult";
+    const activeRequestId=text(b.active_request_id,80);
+    const selectedElement=asObject(b.selected_element);
     const questionForModel=question||"המשתמש צירף תמונה ללא טקסט. נתח את התמונה והגב בצורה שימושית לפי ההקשר.";
     const storedQuestion=question||"📷 תמונה";
     const inserted=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"user",content:storedQuestion,context_snapshot:pageContext}).select("id").single();if(inserted.error)throw inserted.error;
@@ -329,6 +369,11 @@ Deno.serve(async(req:Request)=>{
 
 הקשר העמוד הנוכחי:
 ${JSON.stringify(pageContext).slice(0,22000)}
+
+מצב עורך האתר: ${editorMode}
+בקשת עריכה פעילה במצב עבודה: ${activeRequestId||"אין"}
+אלמנט שנבחר מהעמוד:
+${JSON.stringify(selectedElement).slice(0,12000)}
 
 זיכרונות רלוונטיים:
 ${JSON.stringify(memories).slice(0,16000)}
@@ -348,7 +393,17 @@ ${questionForModel}`;
     let siteEditRequest:any=null;
     if(!consultOnly&&parsed.siteEdit){
       const goal=text(parsed.siteEdit?.goal,8000)||questionForModel;
-      siteEditRequest=await proposeSiteEdit(req,thread.id,scopeKey,goal,pageContext,asObject(b.selected_element),userAttachments.map((x:any)=>x.id).filter(Boolean));
+      siteEditRequest=await proposeSiteEdit(
+        req,
+        thread.id,
+        scopeKey,
+        goal,
+        pageContext,
+        selectedElement,
+        userAttachments.map((x:any)=>x.id).filter(Boolean),
+        editorMode,
+        activeRequestId
+      );
     }
     const assistant=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"assistant",content:parsed.answer||"מוכן.",model,context_snapshot:pageContext,pending_action_id:queued?.id||null}).select("id,role,content,model,created_at,pending_action_id").single();if(assistant.error)throw assistant.error;
     const saved=await storeMemories(user.id,thread.id,inserted.data.id,scopeKey,parsed.memories);
