@@ -140,3 +140,18 @@ test('paste handling supports clipboard image items as well as clipboard files',
   assert.match(js, /clipboardData\?\.items/);
   assert.match(js, /getAsFile/);
 });
+
+
+test('PWA cache is refreshed for the image-enabled chat assets', () => {
+  const sw = read('sw.js');
+  const app = read('app.js');
+  assert.match(sw, /my-center-pwa-v4/);
+  assert.match(app, /site-chat\.js\?v=2/);
+  assert.match(app, /site-chat\.css\?v=2/);
+  const standalone = ['book.html','four-languages.html','language-archive.html','language-topics.html','language-vocabulary.html','library.html'];
+  for (const page of standalone) {
+    const html = read(page);
+    assert.match(html, /site-chat\.js\?v=2/);
+    assert.match(html, /site-chat\.css\?v=2/);
+  }
+});

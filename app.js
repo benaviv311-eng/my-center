@@ -1087,13 +1087,13 @@ function loadSiteChat(){
   if(!document.querySelector('link[data-site-chat-css]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='site-chat.css?v=1';
+    link.href='site-chat.css?v=2';
     link.dataset.siteChatCss='1';
     document.head.appendChild(link);
   }
   const script=document.createElement('script');
   script.id='site-chat-script';
-  script.src='site-chat.js?v=1';
+  script.src='site-chat.js?v=2';
   script.defer=true;
   document.body.appendChild(script);
 }
