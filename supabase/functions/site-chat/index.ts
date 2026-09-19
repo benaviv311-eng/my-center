@@ -289,6 +289,7 @@ Deno.serve(async(req:Request)=>{
     const images=parseImageAttachments(b.image_attachments);
     const question=text(b.message,8000);if(!question&&!images.length)return out(req,{error:"Message or image required"},400);
     const pageContext=asObject(b.page_context),consultOnly=Boolean(b.consult_only);
+    const questionForModel=question||"המשתמש צירף תמונה ללא טקסט. נתח את התמונה והגב בצורה שימושית לפי ההקשר.";
     const storedQuestion=question||"📷 תמונה";
     const inserted=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"user",content:storedQuestion,context_snapshot:pageContext}).select("id").single();if(inserted.error)throw inserted.error;
     const userAttachments=await saveImageAttachments(user.id,thread.id,inserted.data.id,images);
@@ -310,8 +311,8 @@ ${JSON.stringify(site).slice(0,22000)}
 ${(recent.data||[]).reverse().map((m:any)=>`${m.role}: ${m.content}`).join("\n\n").slice(0,22000)}
 
 הודעת המשתמש:
-${question}`;
-    let model=chooseModel(question||storedQuestion,pageContext),raw:string;
+${questionForModel}`;
+    let model=chooseModel(questionForModel,pageContext),raw:string;
     try{raw=await callOpenAI(model,prompt,images)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
     const parsed=parseBlocks(raw);
     const queued=consultOnly?null:await queueAction(user.id,thread.id,parsed.action);
