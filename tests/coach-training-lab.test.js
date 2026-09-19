@@ -120,3 +120,45 @@ test('drill detail exposes child language and source/interpretation separately',
 test('partial quick-match output names the mismatched constraint',()=>{
   const {renderQuickMatchResult}=load(); const html=renderQuickMatchResult({item:{id:'x',title:'תרגיל'},exact:false,mismatches:['time'],score:3}); assert.match(html,/זמן/); assert.doesNotMatch(html,/התאמה מלאה/);
 });
+
+test('age filter returns only items suitable for the requested age',()=>{
+  const {LAB_ITEMS,filterItems}=load();
+  const results=filterItems(LAB_ITEMS,{age:'10'});
+  assert.ok(results.length>0);
+  assert.ok(results.every(item=>(item.ages||[]).includes(10)));
+});
+
+test('rendered cards and details show age audience explicitly',()=>{
+  const {LAB_ITEMS,renderCard,renderDetail}=load();
+  const item=LAB_ITEMS.find(x=>x.type==='drill'&&x.ages?.length);
+  assert.ok(item);
+  const card=renderCard(item,{allItems:LAB_ITEMS,favorites:[],nextPractice:[]});
+  const detail=renderDetail(item,[]);
+  assert.match(card,/גיל/);
+  assert.match(detail,/למי מתאים/);
+  assert.match(detail,/גיל/);
+});
+
+test('drill card exposes simplify progress and variation actions with anchored detail sections',()=>{
+  const {LAB_ITEMS,renderCard,renderDetail}=load();
+  const item=LAB_ITEMS.find(x=>x.type==='drill'&&x.simplify?.length&&x.progressions?.length&&x.variations?.length);
+  assert.ok(item);
+  const card=renderCard(item,{allItems:LAB_ITEMS,favorites:[],nextPractice:[]});
+  assert.match(card,/data-lab-action="simplify"/);
+  assert.match(card,/data-lab-action="progress"/);
+  assert.match(card,/data-lab-action="variation"/);
+  const detail=renderDetail(item,[]);
+  assert.match(detail,/training-lab-simplify/);
+  assert.match(detail,/training-lab-progressions/);
+  assert.match(detail,/training-lab-variations/);
+});
+
+test('quick match never reports exact when requested time or player metadata is unknown',()=>{
+  const {recommendNow}=load();
+  const [result]=recommendNow([
+    {id:'unknown',type:'scenario',topics:['defense'],grades:['ז'],levels:['developing']}
+  ],{topic:'defense',grade:'ז',level:'developing',minutes:15,players:12},4);
+  assert.equal(result.exact,false);
+  assert.ok(result.mismatches.includes('time'));
+  assert.ok(result.mismatches.includes('players'));
+});
