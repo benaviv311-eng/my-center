@@ -169,3 +169,14 @@ test('site editor schema is owner-readable and client-write-closed', () => {
   assert.match(sql, /status text not null/i);
   assert.match(sql, /approved_head_sha/i);
 });
+
+
+test('site editor indexes cover all new foreign keys', () => {
+  const sql = read('supabase/migrations/20260919_site_editor_core_indexes.sql');
+  for (const marker of [
+    'site_edit_approvals_user_idx',
+    'site_edit_events_user_idx',
+    'site_edit_requests_thread_idx',
+    'site_edit_requests_undo_idx'
+  ]) assert.ok(sql.includes(marker));
+});
