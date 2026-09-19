@@ -316,6 +316,52 @@ async function approvePlan(user:{id:string},requestId:string){
   }
 }
 
+async function requestRevision(user:{id:string},requestId:string,instructions:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(!["awaiting_plan_approval","needs_replan"].includes(request.status)){
+    throw new EditorError("bad_request",409,"request_not_revisable");
+  }
+  const note=text(instructions,8000);
+  if(!note)throw new EditorError("bad_request",400);
+  const currentMain=await githubBranchHead("main");
+  const pageContext=asObject(request.page_context);
+  const selectedElement=asObject(request.selected_element);
+  const combinedPrompt=`${request.prompt}\n\nRevision requested:\n${note}`;
+  const files=await collectRelevantFiles(combinedPrompt,pageContext,currentMain);
+  if(!Object.keys(files).length)throw new EditorError("bad_request",400,"no_relevant_files");
+  const modelPlan=await callPlanner(combinedPrompt,{...pageContext,selected_element:selectedElement},files);
+  const validated=validateEditPlan(modelPlan,new Map(Object.entries(files)));
+
+  const cleared=await admin.from("site_edit_operations").delete().eq("request_id",request.id);
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const opRows=validated.operations.map((op:any,index:number)=>({
+    request_id:request.id,
+    sequence:index,
+    operation_type:op.operation_type,
+    path:op.path,
+    expected_sha:op.expected_sha||null,
+    payload:op.payload||{},
+    diff_summary:op.diff_summary||"",
+    status:"pending"
+  }));
+  const saved=await admin.from("site_edit_operations").insert(opRows);
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+
+  const updated=await admin.from("site_edit_requests").update({
+    prompt:combinedPrompt,
+    summary:modelPlan.summary||request.summary,
+    risk_level:validated.risk_level,
+    status:"awaiting_plan_approval",
+    base_sha:currentMain,
+    branch_name:null,
+    head_sha:null,
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id).eq("user_id",user.id);
+  if(updated.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"revision_requested",{instructions:note.slice(0,1200),base_sha:currentMain});
+  return requestView(user.id,request.id);
+}
+
 Deno.serve(async(req:Request)=>{
   if(req.method==="OPTIONS")return new Response("ok",{headers:cors(req)});
   if(req.method!=="POST")return out(req,{code:"bad_request",error:"Method not allowed"},405);
@@ -333,6 +379,10 @@ Deno.serve(async(req:Request)=>{
     if(action==='approve_plan'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await approvePlan(user,id)});
+    }
+    if(action==='request_revision'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await requestRevision(user,id,text(b.instructions,8000))});
     }
     if(action==='cancel'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
