@@ -218,7 +218,11 @@ If branch head moved, throw `stale_plan`.
 Run: `node --test tests/site-editor-core.test.js`  
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Configure the GitHub App integration**
+
+Create/install a GitHub App scoped only to `benaviv311-eng/my-center`. Its required capabilities are repository contents read/write, pull requests read/write, Actions/checks read, and metadata read. Add `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_REPO_OWNER=benaviv311-eng`, and `GITHUB_REPO_NAME=my-center` as server-side Supabase Edge Function secrets. Never paste the private key into source files or chat messages. If the available connector cannot set secrets, stop and have the user enter them in Supabase Dashboard before end-to-end verification.
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add supabase/functions/_shared/site-editor/github.ts tests/site-editor-core.test.js
@@ -311,7 +315,7 @@ git commit -m "feat: validate site edit operations"
 
 - [ ] **Step 1: Add failing endpoint tests**
 
-Assert source contains owner guard, actions above, storage inserts for requests/operations/events, strict model schema markers, branch prefix `site-edit/`, and that `site-chat` routes source-code intent to `site-editor` instead of saying source edits are forbidden.
+Assert source contains owner guard, actions above, storage inserts for requests/operations/events, strict model schema markers, `SITE_EDITOR_MODEL_STRONG`, `SITE_EDITOR_MODEL_FAST`, branch prefix `site-edit/`, and that `site-chat` routes source-code intent to `site-editor` instead of saying source edits are forbidden.
 
 - [ ] **Step 2: Run RED**
 
@@ -324,7 +328,7 @@ Expected: FAIL.
 1. require owner;
 2. inspect repository tree and current-page linked files;
 3. fetch only relevant source files;
-4. call the configured strong editor model with a strict JSON schema;
+4. call the model named by `SITE_EDITOR_MODEL_STRONG` with a strict JSON schema; use `SITE_EDITOR_MODEL_FAST` only for non-code summarization/classification; fail with safe code `editor_model_missing` if either required configuration is absent;
 5. validate operations;
 6. compute deterministic risk;
 7. save request + operations + event;
