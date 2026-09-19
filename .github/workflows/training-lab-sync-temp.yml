@@ -1,0 +1,77 @@
+name: Training Lab Sync Temp
+
+on:
+  push:
+    branches:
+      - feature/coach-training-lab
+    paths:
+      - '.github/workflows/training-lab-sync-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/coach-training-lab
+          fetch-depth: 0
+
+      - name: Reconstruct training lab files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tmp/training-lab-final2/part* | base64 -d > /tmp/training-lab-final.tar.gz
+          tar -xzf /tmp/training-lab-final.tar.gz
+
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('coach.html')
+          s=p.read_text()
+          needle='<a class="coach-cta coach-cta-secondary" href="volleyball.html">🏐 מרכז הכדורעף</a>'
+          addition=needle+'\n      <a class="coach-cta coach-cta-secondary" href="coach-training-lab.html">🧪 מעבדת האימון</a>'
+          if 'href="coach-training-lab.html"' not in s:
+              if needle not in s:
+                  raise SystemExit('coach insertion point missing')
+              s=s.replace(needle,addition,1)
+              p.write_text(s)
+
+          p=Path('volleyball.html')
+          s=p.read_text()
+          needle='<a class="btn small" href="volleyball-app/index.html">📲 אפליקציית הכדורעף</a>'
+          addition=needle+'<a class="btn small" href="coach-training-lab.html">🧪 מעבדת האימון</a>'
+          if 'href="coach-training-lab.html"' not in s:
+              if needle not in s:
+                  raise SystemExit('volleyball insertion point missing')
+              s=s.replace(needle,addition,1)
+              p.write_text(s)
+          PY
+
+          rm -rf .tmp/training-lab-sync .tmp/training-lab-final .tmp/training-lab-final2
+          rm -f .github/workflows/training-lab-sync-temp.yml
+
+      - name: Verify implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/coach-training-lab*.test.js
+          node --test tests/coach-feed.test.js tests/coach-performance-hub.test.js
+          node --check coach-training-lab-data.js
+          node --check coach-training-lab.js
+
+      - name: Commit synchronized implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "feat: complete coach training lab"
+          git push origin HEAD:feature/coach-training-lab
