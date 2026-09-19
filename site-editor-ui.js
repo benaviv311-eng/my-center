@@ -13,6 +13,9 @@ const EDITOR_ERRORS={
 const TERMINAL_STATUSES=new Set(['deployed','failed','cancelled','rolled_back']);
 let currentMode=MODES.includes(localStorage.getItem(MODE_KEY))?localStorage.getItem(MODE_KEY):'edit';
 let activeRequest=null;
+let selectedElement=null;
+let inspecting=false;
+let inspectHover=null;
 let installed=false;
 let ctx={chatState:null,api:null,pageContext:null};
 
@@ -47,15 +50,159 @@ function renderModeControls(){
     host.innerHTML=[
       '<button type="button" data-site-editor-mode="consult" aria-pressed="false">🛡️ ייעוץ בלבד</button>',
       '<button type="button" data-site-editor-mode="edit" aria-pressed="false">✏️ עריכה</button>',
-      '<button type="button" data-site-editor-mode="work" aria-pressed="false">⚡ עבודה</button>'
+      '<button type="button" data-site-editor-mode="work" aria-pressed="false">⚡ עבודה</button>',
+      '<button type="button" class="site-editor-inspect-btn" data-site-editor-inspect>🎯 בחר מהעמוד</button>'
     ].join('');
     toolbar.appendChild(host);
     host.addEventListener('click',event=>{
-      const btn=event.target.closest('[data-site-editor-mode]');
-      if(btn)setMode(btn.dataset.siteEditorMode);
+      const modeBtn=event.target.closest('[data-site-editor-mode]');
+      if(modeBtn){setMode(modeBtn.dataset.siteEditorMode);return}
+      const inspectBtn=event.target.closest('[data-site-editor-inspect]');
+      if(inspectBtn)beginInspect();
     });
   }
   setMode(currentMode,{persist:false});
+}
+
+function cssEscape(value){
+  if(window.CSS?.escape)return CSS.escape(String(value));
+  return String(value).replace(/[^a-zA-Z0-9_-]/g,ch=>'\\'+ch);
+}
+
+function stableDomPath(element){
+  if(!element||element.nodeType!==1)return '';
+  if(element.id)return '#'+cssEscape(element.id);
+  const preferred=['rpId','bankId','id'];
+  for(const key of preferred){
+    const value=element.dataset?.[key];
+    if(value){
+      const attr=key.replace(/[A-Z]/g,m=>'-'+m.toLowerCase());
+      return '[data-'+attr+'="'+String(value).replace(/"/g,'\\\"')+'"]';
+    }
+  }
+  const segments=[];
+  let node=element;
+  while(node&&node.nodeType===1&&node!==document.body&&segments.length<6){
+    let segment=node.tagName.toLowerCase();
+    const classes=[...node.classList].filter(x=>!x.startsWith('site-editor-inspect')).slice(0,2);
+    if(classes.length)segment+='.'+classes.map(cssEscape).join('.');
+    const parent=node.parentElement;
+    if(parent){
+      const same=[...parent.children].filter(child=>child.tagName===node.tagName);
+      if(same.length>1)segment+=':nth-of-type('+(same.indexOf(node)+1)+')';
+    }
+    segments.unshift(segment);
+    node=parent;
+  }
+  return segments.join(' > ');
+}
+
+function selectedElementContext(element){
+  const rect=element.getBoundingClientRect();
+  const style=getComputedStyle(element);
+  const container=element.closest('article,section,main,[data-rp-type],[data-bank-id],.card');
+  return {
+    tag:element.tagName.toLowerCase(),
+    id:element.id||'',
+    classes:[...element.classList].filter(x=>x!=='site-editor-inspect-hover'),
+    data:{...element.dataset},
+    visible_text:(element.innerText||element.textContent||'').replace(/\s+/g,' ').trim().slice(0,2400),
+    dom_path:stableDomPath(element),
+    container:container?{
+      tag:container.tagName.toLowerCase(),
+      id:container.id||'',
+      classes:[...container.classList].filter(x=>x!=='site-editor-inspect-hover'),
+      dom_path:stableDomPath(container)
+    }:null,
+    bounds:{
+      x:Math.round(rect.x),y:Math.round(rect.y),width:Math.round(rect.width),height:Math.round(rect.height),
+      top:Math.round(rect.top),right:Math.round(rect.right),bottom:Math.round(rect.bottom),left:Math.round(rect.left)
+    },
+    computed_style:{
+      display:style.display,
+      position:style.position,
+      fontSize:style.fontSize,
+      fontWeight:style.fontWeight,
+      color:style.color,
+      backgroundColor:style.backgroundColor,
+      margin:style.margin,
+      padding:style.padding,
+      gap:style.gap
+    }
+  };
+}
+
+function clearInspectHover(){
+  inspectHover?.classList?.remove('site-editor-inspect-hover');
+  inspectHover=null;
+}
+
+function endInspect(){
+  if(!inspecting)return;
+  inspecting=false;
+  clearInspectHover();
+  document.body.classList.remove('site-editor-inspecting');
+  document.removeEventListener('pointerover',inspectPointerOver,true);
+  document.removeEventListener('pointerout',inspectPointerOut,true);
+  document.removeEventListener('click',inspectClick,true);
+  document.querySelector('[data-site-editor-inspect]')?.classList.remove('active');
+}
+
+function inspectPointerOver(event){
+  const target=event.target?.closest?.('*');
+  if(!target||target.closest('#site-chat-drawer,#site-chat-fab'))return;
+  clearInspectHover();
+  inspectHover=target;
+  inspectHover.classList.add('site-editor-inspect-hover');
+}
+
+function inspectPointerOut(event){
+  if(event.target===inspectHover)clearInspectHover();
+}
+
+function inspectClick(event){
+  const target=event.target?.closest?.('*');
+  if(!target||target.closest('#site-chat-drawer,#site-chat-fab'))return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  selectedElement=selectedElementContext(target);
+  endInspect();
+  renderSelectionChip();
+  document.dispatchEvent(new CustomEvent('site-editor-element-selected',{detail:selectedElement}));
+}
+
+function beginInspect(){
+  if(inspecting){endInspect();return}
+  inspecting=true;
+  document.body.classList.add('site-editor-inspecting');
+  document.querySelector('[data-site-editor-inspect]')?.classList.add('active');
+  document.addEventListener('pointerover',inspectPointerOver,true);
+  document.addEventListener('pointerout',inspectPointerOut,true);
+  document.addEventListener('click',inspectClick,true);
+}
+
+function clearSelectedElement(){
+  selectedElement=null;
+  renderSelectionChip();
+}
+
+function renderSelectionChip(){
+  const composer=document.getElementById('site-chat-form');
+  if(!composer)return;
+  let host=composer.querySelector('[data-site-editor-selection]');
+  if(!selectedElement){
+    host?.remove();
+    return;
+  }
+  if(!host){
+    host=document.createElement('div');
+    host.className='site-editor-selection';
+    host.dataset.siteEditorSelection='1';
+    composer.insertBefore(host,composer.firstChild);
+  }
+  host.innerHTML='<span>נבחר: <b>'+escapeHtml(selectedElement.dom_path||selectedElement.tag)+'</b></span><button type="button" aria-label="נקה בחירה">×</button>';
+  host.querySelector('button').onclick=clearSelectedElement;
 }
 
 function editorErrorMessage(error){
@@ -150,6 +297,7 @@ function install({chatState,api,pageContext}={}){
   ctx={chatState:chatState||null,api:api||null,pageContext:pageContext||null};
   installed=true;
   renderModeControls();
+  renderSelectionChip();
   const observer=new MutationObserver(()=>{
     if(!document.querySelector('[data-site-editor-modes]'))renderModeControls();
   });
@@ -171,6 +319,10 @@ window.SiteEditorUI={
   installed:()=>installed,
   renderRequestCard,
   showRequest,
-  editorErrorMessage
+  editorErrorMessage,
+  selectedElementContext,
+  selectedElement:()=>selectedElement,
+  beginInspect,
+  clearSelectedElement
 };
 })();
