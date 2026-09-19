@@ -304,6 +304,9 @@ test('every internet source is dated by access and every drill is child-readable
       assert.ok(item.sayExactly.length>=10,item.id);
       assert.ok(item.oneCue.length>=3,item.id);
     }
+    if(item.sourceClaim){
+      assert.ok(item.sourceClaim.length<=700,`${item.id} sourceClaim should stay a concise paraphrase`);
+    }
   }
 });
 
@@ -474,7 +477,17 @@ test('search handles Hebrew grade tokens and topic text',()=>{
   const results=searchItems(LAB_ITEMS,'קבלה כיתה ה',{});
   assert.ok(results.length>0);
   assert.ok(results.every(item=>item.topics.includes('reception')));
-  assert.ok(results.some(item=>(item.grades||[]).includes('ה')));
+  assert.ok(results.every(item=>(item.grades||[]).includes('ה')));
+});
+
+test('grade ranges require content suitable for every requested grade',()=>{
+  const {searchItems}=load();
+  const items=[
+    {id:'both',title:'קבלה',summary:'',topics:['reception'],tags:[],grades:['ה','ו'],levels:['beginner']},
+    {id:'only-he',title:'קבלה',summary:'',topics:['reception'],tags:[],grades:['ה'],levels:['beginner']}
+  ];
+  const results=searchItems(items,'קבלה כיתות ה-ו',{});
+  assert.deepEqual(results.map(x=>x.id),['both']);
 });
 
 test('filters combine topic level type source and evidence',()=>{
@@ -559,15 +572,21 @@ function parseGradeTokens(query){
   return raw.split(/\s+/).map(x=>GRADE_ALIASES[x]).filter(Boolean);
 }
 
-function searchableText(item){
+function searchableText(item,data){
+  const topicLabels=(item.topics||[]).map(id=>(data.LAB_TOPICS||[]).find(topic=>topic.id===id)?.label||id);
   return normalizeText([
-    item.title,item.summary,...(item.topics||[]),...(item.tags||[]),
+    item.title,item.summary,...topicLabels,...(item.tags||[]),
     item.childExplanation,item.oneCue,item.sourcePublisher,item.application
   ].filter(Boolean).join(' '));
 }
 ```
 
-Then implement `filterItems` and `searchItems` so grade tokens constrain `grades` and remaining terms search the haystack.
+Then implement `filterItems` and `searchItems` so:
+- Hebrew topic labels are searchable even though stored topic IDs are English slugs.
+- grade tokens are removed from the free-text terms after parsing.
+- one requested grade must be present.
+- when the query specifies a range/list such as `כיתות ה-ו`, **every requested grade** must be included in `item.grades`.
+- remaining terms search the haystack.
 
 - [ ] **Step 5: Implement comparison grouping**
 
