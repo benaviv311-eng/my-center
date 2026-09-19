@@ -26,17 +26,52 @@ function base64UrlText(value:string){
   return base64Url(new TextEncoder().encode(value));
 }
 
-function pemPkcs8(pem:string){
+function pemDer(pem:string){
   const clean=pem
-    .replace(/-----BEGIN PRIVATE KEY-----/g,"")
-    .replace(/-----END PRIVATE KEY-----/g,"")
+    .replace(/-----BEGIN [^-]+-----/g,"")
+    .replace(/-----END [^-]+-----/g,"")
     .replace(/\s+/g,"");
-  if(!clean) throw new EditorError("github_unavailable",503);
+  if(!clean)throw new EditorError("github_unavailable",503);
   let binary="";
   try{binary=atob(clean)}catch{throw new EditorError("github_unavailable",503)}
   const bytes=new Uint8Array(binary.length);
   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-  return bytes.buffer;
+  return bytes;
+}
+
+function derLength(length:number){
+  if(length<0x80)return new Uint8Array([length]);
+  const bytes:number[]=[];
+  let value=length;
+  while(value>0){bytes.unshift(value&0xff);value>>>=8}
+  return new Uint8Array([0x80|bytes.length,...bytes]);
+}
+
+function concatBytes(...parts:Uint8Array[]){
+  const size=parts.reduce((n,p)=>n+p.length,0);
+  const out=new Uint8Array(size);
+  let offset=0;
+  for(const part of parts){out.set(part,offset);offset+=part.length}
+  return out;
+}
+
+function derWrap(tag:number,content:Uint8Array){
+  return concatBytes(new Uint8Array([tag]),derLength(content.length),content);
+}
+
+function pkcs1ToPkcs8(pkcs1:Uint8Array){
+  const version=new Uint8Array([0x02,0x01,0x00]);
+  const rsaAlgorithm=new Uint8Array([
+    0x30,0x0d,0x06,0x09,0x2a,0x86,0x48,0x86,
+    0xf7,0x0d,0x01,0x01,0x01,0x05,0x00
+  ]);
+  const wrappedKey=derWrap(0x04,pkcs1);
+  return derWrap(0x30,concatBytes(version,rsaAlgorithm,wrappedKey));
+}
+
+function pemPkcs8(pem:string){
+  const der=pemDer(pem);
+  return pem.includes("RSA PRIVATE KEY")?pkcs1ToPkcs8(der).buffer:der.buffer;
 }
 
 async function appJwt(){
