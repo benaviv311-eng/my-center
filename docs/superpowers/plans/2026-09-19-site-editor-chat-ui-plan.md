@@ -259,6 +259,8 @@ Expected: FAIL.
 
 In consult mode, never propose an edit.
 
+Before routing to Site Editor, preserve the existing structured-action path: database-backed content changes continue to use `content_create`/`content_update`; memory changes continue to use the memory actions; Raika structured content continues to use `raika_edit_upsert`. Only source/layout/code/feature/infrastructure requests route to Site Editor.
+
 In edit/work modes, the chat model may emit:
 ```json
 {"intent":"site_edit","goal":"..."}
