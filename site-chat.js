@@ -75,7 +75,7 @@ function bind(){
   const composer=document.getElementById('site-chat-form');
   document.getElementById('site-chat-image-button').onclick=()=>imageInput.click();
   imageInput.onchange=async()=>{await addImageFiles(imageInput.files);imageInput.value='';};
-  document.getElementById('site-chat-input').addEventListener('paste',async e=>{const files=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));if(files.length){e.preventDefault();await addImageFiles(files);}});
+  document.getElementById('site-chat-input').addEventListener('paste',async e=>{const direct=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));const itemFiles=[...(e.clipboardData?.items||[])].filter(i=>i.kind==='file'&&i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);const files=[...direct,...itemFiles].filter((f,i,a)=>a.findIndex(x=>x.name===f.name&&x.size===f.size&&x.type===f.type)===i);if(files.length){e.preventDefault();await addImageFiles(files);}});
   composer.addEventListener('dragover',e=>{e.preventDefault();composer.classList.add('is-dragging');});
   composer.addEventListener('dragleave',()=>composer.classList.remove('is-dragging'));
   composer.addEventListener('drop',async e=>{e.preventDefault();composer.classList.remove('is-dragging');const files=[...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith('image/'));if(files.length)await addImageFiles(files);});
