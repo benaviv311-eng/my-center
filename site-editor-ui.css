@@ -149,3 +149,64 @@
   font:inherit;
   cursor:pointer
 }
+
+
+.site-editor-history-panel{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  min-height:0;
+  flex:1 1 auto;
+  overflow:hidden;
+  background:#f7f3ea
+}
+.site-editor-history-panel[hidden]{display:none}
+.site-editor-history-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px;
+  border-bottom:1px solid #e8dfcf;
+  background:#fffdf8
+}
+.site-editor-history-head button{
+  min-height:38px;
+  border:1px solid #ddd3c4;
+  background:#fffdf8;
+  border-radius:10px;
+  padding:7px 11px;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer
+}
+.site-editor-history-list{
+  min-width:0;
+  overflow:auto;
+  padding:12px;
+  box-sizing:border-box
+}
+.site-editor-history-open #site-chat-body,
+.site-editor-history-open #site-chat-form{
+  display:none!important
+}
+@media(max-width:620px){
+  .site-edit-card,
+  .site-editor-history-list{
+    max-width:100%;
+    width:100%;
+    box-sizing:border-box
+  }
+  .site-edit-card-head,
+  .site-edit-actions,
+  .site-editor-history-head{
+    flex-wrap:wrap
+  }
+  .site-edit-actions button,
+  .site-editor-history-head button,
+  .site-editor-modes button{
+    min-height:44px
+  }
+  .site-edit-actions button{
+    flex:1 1 130px
+  }
+}
