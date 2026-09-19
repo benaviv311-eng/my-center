@@ -78,3 +78,12 @@ test('site editor supports request revisions for work mode', () => {
   assert.match(src,/revision_requested/);
   assert.match(src,/awaiting_plan_approval/);
 });
+
+
+test('site editor lists and restores owned requests', () => {
+  const src = read('supabase/functions/site-editor/index.ts');
+  assert.match(src,/action==='list_requests'/);
+  assert.match(src,/action==='get_request'/);
+  assert.match(src,/site_edit_requests/);
+  assert.match(src,/site_edit_operations/);
+});
