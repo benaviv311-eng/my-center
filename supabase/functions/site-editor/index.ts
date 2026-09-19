@@ -316,6 +316,33 @@ async function approvePlan(user:{id:string},requestId:string){
   }
 }
 
+async function listRequests(userId:string){
+  const requests=await admin.from("site_edit_requests")
+    .select("*")
+    .eq("user_id",userId)
+    .order("updated_at",{ascending:false})
+    .limit(50);
+  if(requests.error)throw new EditorError("editor_unavailable",500);
+  const rows=requests.data||[];
+  if(!rows.length)return [];
+  const ids=rows.map((row:any)=>row.id);
+  const operations=await admin.from("site_edit_operations")
+    .select("*")
+    .in("request_id",ids)
+    .order("sequence",{ascending:true});
+  if(operations.error)throw new EditorError("editor_unavailable",500);
+  const grouped=new Map<string,any[]>();
+  for(const op of operations.data||[]){
+    if(!grouped.has(op.request_id))grouped.set(op.request_id,[]);
+    grouped.get(op.request_id)!.push(op);
+  }
+  return rows.map((request:any)=>({
+    ...request,
+    operations:grouped.get(request.id)||[],
+    requires_preview:request.risk_level!=="low"
+  }));
+}
+
 async function requestRevision(user:{id:string},requestId:string,instructions:string){
   const request=await ownedRequest(user.id,requestId);
   if(!["awaiting_plan_approval","needs_replan"].includes(request.status)){
@@ -372,7 +399,10 @@ Deno.serve(async(req:Request)=>{
     const action=String(b.action||"");
 
     if(action==='propose')return out(req,{ok:true,request:await propose(user,b)});
-    if(action==='get'){
+    if(action==='list_requests'){
+      return out(req,{ok:true,requests:await listRequests(user.id)});
+    }
+    if(action==='get'||action==='get_request'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await requestView(user.id,id)});
     }
