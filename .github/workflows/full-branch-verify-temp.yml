@@ -1,0 +1,23 @@
+name: Full Branch Verify Temp
+
+on:
+  push:
+    branches:
+      - feature/coach-training-lab
+    paths:
+      - '.github/workflows/full-branch-verify-temp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/*.test.js
+      - run: node --check coach-training-lab-data.js
+      - run: node --check coach-training-lab.js
