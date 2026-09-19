@@ -84,6 +84,7 @@
       if(filters.type&&filters.type!=='all'&&item.type!==filters.type) return false;
       if(filters.sourceKind&&filters.sourceKind!=='all'&&item.sourceKind!==filters.sourceKind) return false;
       if(filters.evidenceStrength&&filters.evidenceStrength!=='all'&&item.evidenceStrength!==filters.evidenceStrength) return false;
+      if(filters.age&&filters.age!=='all'&&!(item.ages||[]).includes(Number(filters.age))) return false;
       if(filters.grade&&filters.grade!=='all'&&!(item.grades||[]).includes(filters.grade)) return false;
       return true;
     });
@@ -132,10 +133,15 @@
       if(requested.topic){ item.topics?.includes(requested.topic)?score+=5:mismatches.push('topic'); }
       if(requested.grade){ (item.grades||[]).includes(requested.grade)?score+=4:mismatches.push('grade'); }
       if(requested.level){ (item.levels||[]).includes(requested.level)?score+=3:mismatches.push('level'); }
-      if(requested.minutes&&item.durationMinutes){ item.durationMinutes<=requested.minutes?score+=3:mismatches.push('time'); }
-      if(requested.players&&(item.minPlayers||item.maxPlayers)){
-        const min=item.minPlayers??0,max=item.maxPlayers??Infinity;
-        requested.players>=min&&requested.players<=max?score+=3:mismatches.push('players');
+      if(requested.minutes){
+        Number.isFinite(Number(item.durationMinutes))&&Number(item.durationMinutes)>0&&Number(item.durationMinutes)<=requested.minutes?score+=3:mismatches.push('time');
+      }
+      if(requested.players){
+        if(item.minPlayers==null&&item.maxPlayers==null) mismatches.push('players');
+        else{
+          const min=item.minPlayers??0,max=item.maxPlayers??Infinity;
+          requested.players>=min&&requested.players<=max?score+=3:mismatches.push('players');
+        }
       }
       return {item,exact:mismatches.length===0,mismatches,score,index};
     }).sort((a,b)=>Number(b.exact)-Number(a.exact)||b.score-a.score||a.mismatches.length-b.mismatches.length||a.index-b.index);
@@ -190,6 +196,9 @@
         <button type="button" data-lab-action="favorite">${favorite?'★ שמור':'☆ שמור'}</button>
         <button type="button" data-lab-action="next-practice">${next?'✓ באימון הבא':'🏐 לקחת לאימון'}</button>
         ${item.childExplanation?'<button type="button" data-lab-action="child-language">🗣️ מה אני אומר לילדים</button>':''}
+        ${item.simplify?.length?'<button type="button" data-lab-action="simplify">⬇️ לפשט</button>':''}
+        ${item.progressions?.length?'<button type="button" data-lab-action="progress">⬆️ להקשות</button>':''}
+        ${item.variations?.length?'<button type="button" data-lab-action="variation">🔄 וריאציה</button>':''}
         ${item.science?'<button type="button" data-lab-action="why">🧠 למה זה עובד</button>':''}
         ${compare?`<button type="button" data-lab-action="compare">${esc(compare)}</button>`:''}
       </div>
@@ -207,6 +216,7 @@
       <button class="training-lab-detail-close" data-lab-action="close-detail" aria-label="סגור">×</button>
       <p class="training-lab-eyebrow">${esc(TYPE_LABELS[item.type]||item.type)} · ${esc(topicsLabel(item))}</p>
       <h2>${esc(item.title)}</h2><p class="training-lab-lead">${esc(item.summary)}</p>
+      ${section('למי מתאים',audienceLabel(item)?`<p>${esc(audienceLabel(item))}</p>`:'','training-lab-audience')}
       ${section('מה המטרה',item.objective?`<p>${esc(item.objective)}</p>`:'')}
       ${section('איך זה נראה במשחק',item.gameContext?`<p>${esc(item.gameContext)}</p>`:'')}
       ${section('איך מארגנים',item.setup?`<p>${esc(item.setup)}</p>`:'')}
@@ -214,9 +224,9 @@
       ${section('ניקוד / תחרות',item.scoring?`<p>${esc(item.scoring)}</p>`:'')}
       ${section('מה המאמן מסתכל עליו',listHtml(item.coachLooksFor))}
       ${section('טעויות נפוצות',listHtml(item.commonMistakes))}
-      ${section('איך לפשט',listHtml(item.simplify))}
-      ${section('איך להקשות',listHtml(item.progressions))}
-      ${section('וריאציות',listHtml(item.variations))}
+      ${section('איך לפשט',listHtml(item.simplify),'training-lab-simplify')}
+      ${section('איך להקשות',listHtml(item.progressions),'training-lab-progressions')}
+      ${section('וריאציות',listHtml(item.variations),'training-lab-variations')}
       ${item.childExplanation?section('🗣️ מה אני אומר לילדים',`<p>${esc(item.childExplanation)}</p><div class="training-lab-say"><b>תגיד בדיוק כך:</b><p>${esc(item.sayExactly)}</p></div><div class="training-lab-cue"><b>משפט מפתח:</b> ${esc(item.oneCue)}</div>`,'training-lab-child-language'):''}
       ${section('🧠 למה זה עובד',item.science?`<p>${esc(item.science)}</p><p><b>חוזק ראיות:</b> ${esc(EVIDENCE_LABELS[item.evidenceStrength]||item.evidenceStrength)}</p>`:'','training-lab-science')}
       ${section('מתי לא להשתמש בזה',item.whenNotToUse?`<p>${esc(item.whenNotToUse)}</p>`:'')}
@@ -250,7 +260,9 @@
     const favBox=$('training-lab-favorites'),nextBox=$('training-lab-next-practice');
 
     function option(value,label){return `<option value="${esc(value)}">${esc(label)}</option>`;}
+    const availableAges=[...new Set(labData.LAB_ITEMS.flatMap(item=>item.ages||[]).map(Number).filter(Number.isFinite))].sort((a,b)=>a-b);
     filters.innerHTML=`<label>נושא<select data-filter="topic">${option('all','הכול')}${labData.LAB_TOPICS.map(x=>option(x.id,x.label)).join('')}</select></label>
+      <label>גיל<select data-filter="age">${option('all','הכול')}${availableAges.map(x=>option(String(x),`גיל ${x}`)).join('')}</select></label>
       <label>רמה<select data-filter="level">${option('all','הכול')}${labData.LAB_LEVELS.map(x=>option(x,LEVEL_LABELS[x]||x)).join('')}</select></label>
       <label>סוג<select data-filter="type">${option('all','הכול')}${labData.LAB_TYPES.map(x=>option(x,TYPE_LABELS[x]||x)).join('')}</select></label>
       <label>מקור<select data-filter="sourceKind">${option('all','הכול')}${labData.LAB_SOURCE_KINDS.map(x=>option(x,SOURCE_LABELS[x]||x)).join('')}</select></label>
@@ -284,6 +296,9 @@
       if(action==='favorite'){toggleStoredId(favorites,item.id);render();return;}
       if(action==='next-practice'){toggleStoredId(nextPractice,item.id);render();return;}
       if(action==='child-language'){openItem(item,'.training-lab-child-language');return;}
+      if(action==='simplify'){openItem(item,'.training-lab-simplify');return;}
+      if(action==='progress'){openItem(item,'.training-lab-progressions');return;}
+      if(action==='variation'){openItem(item,'.training-lab-variations');return;}
       if(action==='why'){openItem(item,'.training-lab-science');return;}
       if(action==='compare'){openItem(item,'.training-lab-comparison');return;}
       openItem(item);
