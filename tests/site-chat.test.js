@@ -180,3 +180,9 @@ test('site editor indexes cover all new foreign keys', () => {
     'site_edit_requests_undo_idx'
   ]) assert.ok(sql.includes(marker));
 });
+
+
+test('site chat forwards editor mode and selected element context', () => {
+  const src = read('site-chat.js');
+  for (const marker of ['editor_mode','selected_element','active_request_id','site_edit_request']) assert.ok(src.includes(marker));
+});
