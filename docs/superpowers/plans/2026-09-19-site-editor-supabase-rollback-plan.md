@@ -152,7 +152,7 @@ npx supabase@2.117.0 link --project-ref "$SUPABASE_PROJECT_REF" -p "$SUPABASE_DB
 npx supabase@2.117.0 db push --linked -p "$SUPABASE_DB_PASSWORD"
 ```
 
-Set the secrets through `env:`; never echo them. Set job permissions to `contents: read`.
+Set `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, and `SUPABASE_PROJECT_REF` through workflow `env:`; never echo them. Supabase CLI reads the database password non-interactively from `SUPABASE_DB_PASSWORD`. Set job permissions to `contents: read`.
 
 - [ ] **Step 4: Run GREEN**
 
@@ -326,4 +326,67 @@ Expected: zero failures.
 ```bash
 git add supabase/functions/site-editor/index.ts tests/site-editor-db.test.js
 git commit -m "feat: make database rollback compensating and approval gated"
+```
+
+
+---
+
+### Task 6: Deploy approved Edge Function changes after merge
+
+**Files:**
+- Create: `.github/workflows/site-editor-edge-functions-deploy.yml`
+- Modify: `supabase/functions/_shared/site-editor/github.ts`
+- Modify: `supabase/functions/site-editor/index.ts`
+- Modify: `tests/site-editor-db.test.js`
+
+**Interfaces:**
+- Workflow trigger: `workflow_dispatch` only.
+- Inputs: `request_id`, `merge_sha`, `function_names`.
+- Add `functions_deploy` run kind.
+- CLI pinned to `supabase@2.117.0`.
+
+- [ ] **Step 1: Add failing tests**
+
+```js
+test('approved Edge Function changes deploy only from the merged sha',()=>{
+  const yml=read('.github/workflows/site-editor-edge-functions-deploy.yml');
+  assert.match(yml,/workflow_dispatch/);
+  assert.match(yml,/merge_sha/);
+  assert.match(yml,/function_names/);
+  assert.match(yml,/supabase@2\.117\.0/);
+  assert.match(yml,/functions deploy/);
+  assert.doesNotMatch(yml,/push:/);
+  assert.doesNotMatch(yml,/pull_request:/);
+});
+```
+
+- [ ] **Step 2: Run RED**
+
+Run: `node --test tests/site-editor-db.test.js`  
+Expected: FAIL.
+
+- [ ] **Step 3: Implement the deployment workflow**
+
+Checkout the exact `merge_sha`. Parse the comma-separated function names and validate every name against an actual directory under `supabase/functions/`. For each validated name run:
+
+```bash
+npx supabase@2.117.0 functions deploy "$name" --project-ref "$SUPABASE_PROJECT_REF"
+```
+
+Use `SUPABASE_ACCESS_TOKEN` from GitHub Secrets. Never deploy a function name that is absent from the approved request operations.
+
+- [ ] **Step 4: Gate final deployment state**
+
+After a high-risk PR merges, dispatch this workflow only when the approved operations changed `supabase/functions/<name>/**`. Keep the request in `deploying` until both GitHub Pages (when applicable) and all required Edge Function deployments succeed.
+
+- [ ] **Step 5: Run GREEN and full suite**
+
+Run: `node --test tests/*.test.js`  
+Expected: zero failures.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add .github/workflows/site-editor-edge-functions-deploy.yml supabase/functions/_shared/site-editor/github.ts supabase/functions/site-editor/index.ts tests/site-editor-db.test.js
+git commit -m "feat: deploy approved Edge Function edits"
 ```
