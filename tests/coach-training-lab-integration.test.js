@@ -38,3 +38,11 @@ test('coach and volleyball hubs both link prominently to the training lab',()=>{
     assert.match(html,/מעבדת האימון/,`${file} missing lab label`);
   }
 });
+
+test('browser UI includes age filtering and direct drill adaptation actions',()=>{
+  const js=read('coach-training-lab.js');
+  assert.match(js,/data-filter="age"/);
+  for(const action of ['simplify','progress','variation']){
+    assert.match(js,new RegExp(`data-lab-action="${action}"|action==='${action}'`));
+  }
+});
