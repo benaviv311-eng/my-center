@@ -52,3 +52,16 @@ test('inspect mode captures one element without activating it',()=>{
   for(const key of ['display','position','fontSize','fontWeight','color','backgroundColor','margin','padding','gap']) assert.ok(js.includes(key));
   for(const key of ['tag','id','classes','data','visible_text','dom_path','container','bounds','computed_style']) assert.ok(js.includes(key));
 });
+
+
+test('edit mode can receive a structured site edit request from site-chat',()=>{
+  const chat=read('site-chat.js');
+  const fn=read('supabase/functions/site-chat/index.ts');
+  assert.match(chat,/site_edit_request/);
+  assert.match(fn,/site_edit_request/);
+  assert.match(fn,/selected_element/);
+  assert.match(fn,/attachment_ids/);
+  assert.match(chat,/selected_element/);
+  assert.match(chat,/active_request_id/);
+  assert.match(chat,/editor_mode/);
+});
