@@ -65,3 +65,16 @@ test('edit mode can receive a structured site edit request from site-chat',()=>{
   assert.match(chat,/active_request_id/);
   assert.match(chat,/editor_mode/);
 });
+
+
+test('site changes view restores request history and active progress',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/שינויים באתר/);
+  assert.match(js,/list_requests/);
+  assert.match(js,/get_request/);
+  assert.match(js,/3000/);
+  for(const stage of ['מנתח','מוצא קבצים','מכין שינוי','שומר Branch','מריץ בדיקות','מכין Preview','ממתין לאישור','מפרסם']) assert.ok(js.includes(stage));
+  const css=read('site-editor-ui.css');
+  assert.match(css,/@media\(max-width:620px\)/);
+  assert.match(css,/min-height:44px/);
+});
