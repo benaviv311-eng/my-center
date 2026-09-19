@@ -30,3 +30,13 @@ test('site chat installs editor UI with authenticated editor API',()=>{
   assert.match(chat,/chatState:state/);
   assert.match(chat,/pageContext/);
 });
+
+
+test('change cards show risk files and approval controls',()=>{
+  const js=read('site-editor-ui.js');
+  for(const marker of ['מאשר','שנה את ההצעה','בטל','risk_level','requires_preview','public_asset_warning']) assert.ok(js.includes(marker));
+  assert.match(js,/approve_plan/);
+  assert.match(js,/request_revision/);
+  assert.match(js,/cancel/);
+  for(const code of ['owner_required','stale_plan','unsafe_plan','editor_unavailable']) assert.ok(js.includes(code));
+});
