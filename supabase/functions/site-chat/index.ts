@@ -5,6 +5,10 @@ const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")!;
 const SUPABASE_SERVICE_ROLE_KEY=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY=Deno.env.get("OPENAI_API_KEY")||"";
 const admin=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
+const CHAT_IMAGE_BUCKET="site-chat-images";
+const MAX_IMAGE_BYTES=6*1024*1024;
+const MAX_IMAGES_PER_MESSAGE=4;
+const ALLOWED_IMAGE_TYPES=new Set(["image/png","image/jpeg","image/webp","image/gif"]);
 
 function cors(req:Request){
   const origin=req.headers.get("origin")||"";
@@ -37,14 +41,68 @@ function answerText(r:any){
   return parts.join("\n").trim();
 }
 
-async function callOpenAI(model:string,input:string){
+async function callOpenAI(model:string,inputText:string,images:any[]=[]){
   if(!OPENAI_API_KEY)throw new Error("AI is not configured");
+  const content:any[]=[{type:"input_text",text:inputText}];
+  for(const image of images)content.push({type:"input_image",image_url:image.data_url,detail:"auto"});
+  const input=[{role:"user",content}];
   const response=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model,input,reasoning:{effort:model==="gpt-5.6-sol"?"medium":"low"}})});
   const raw=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(raw?.error?.message||`OpenAI ${response.status}`);
   const answer=answerText(raw);
   if(!answer)throw new Error("Empty AI response");
   return answer;
+}
+
+function imageExtension(mime:string){
+  return mime==="image/jpeg"?"jpg":mime.split("/")[1]||"img";
+}
+function safeFileName(value:unknown){
+  return text(value,160).replace(/[^\p{L}\p{N}._ -]+/gu,"_")||"image";
+}
+function parseImageAttachments(value:unknown){
+  if(!Array.isArray(value))return [];
+  if(value.length>MAX_IMAGES_PER_MESSAGE)throw new Error("Too many images");
+  return value.map((raw:any)=>{
+    const dataUrl=text(raw?.data_url,12_000_000);
+    const match=dataUrl.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=\r\n]+)$/i);
+    if(!match)throw new Error("Invalid image data");
+    const mime=match[1].toLowerCase();
+    if(!ALLOWED_IMAGE_TYPES.has(mime))throw new Error("Unsupported image type");
+    let binary:string;try{binary=atob(match[2].replace(/\s+/g,""))}catch{throw new Error("Invalid image encoding")}
+    if(binary.length<1||binary.length>MAX_IMAGE_BYTES)throw new Error("Image is too large");
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return {data_url:dataUrl,mime_type:mime,file_name:safeFileName(raw?.file_name),size_bytes:bytes.length,bytes};
+  });
+}
+async function signAttachment(row:any){
+  const signed=await admin.storage.from(CHAT_IMAGE_BUCKET).createSignedUrl(row.storage_path,3600);
+  return {id:row.id,message_id:row.message_id,file_name:row.file_name,mime_type:row.mime_type,size_bytes:row.size_bytes,signed_url:signed.data?.signedUrl||""};
+}
+async function saveImageAttachments(userId:string,threadId:string,messageId:string,images:any[]){
+  const saved:any[]=[];const uploaded:string[]=[];
+  try{
+    for(const image of images){
+      const path=`${userId}/${threadId}/${messageId}/${crypto.randomUUID()}.${imageExtension(image.mime_type)}`;
+      const upload=await admin.storage.from(CHAT_IMAGE_BUCKET).upload(path,image.bytes,{contentType:image.mime_type,cacheControl:"3600",upsert:false});
+      if(upload.error)throw upload.error;uploaded.push(path);
+      const row=await admin.from("site_chat_attachments").insert({message_id:messageId,thread_id:threadId,user_id:userId,storage_path:path,file_name:image.file_name,mime_type:image.mime_type,size_bytes:image.size_bytes}).select("id,message_id,storage_path,file_name,mime_type,size_bytes").single();
+      if(row.error)throw row.error;saved.push(row.data);
+    }
+    return await Promise.all(saved.map(signAttachment));
+  }catch(e){
+    if(uploaded.length)await admin.storage.from(CHAT_IMAGE_BUCKET).remove(uploaded);
+    if(saved.length)await admin.from("site_chat_attachments").delete().eq("user_id",userId).in("id",saved.map(x=>x.id));
+    throw e;
+  }
+}
+async function attachmentsForMessages(userId:string,messageIds:string[]){
+  const map=new Map<string,any[]>();if(!messageIds.length)return map;
+  const q=await admin.from("site_chat_attachments").select("id,message_id,storage_path,file_name,mime_type,size_bytes,created_at").eq("user_id",userId).in("message_id",messageIds).order("created_at",{ascending:true});
+  if(q.error)throw q.error;
+  for(const row of q.data||[]){const signed=await signAttachment(row);const list=map.get(row.message_id)||[];list.push(signed);map.set(row.message_id,list)}
+  return map;
 }
 
 function chooseModel(question:string,pageContext:Record<string,unknown>){
@@ -224,15 +282,20 @@ Deno.serve(async(req:Request)=>{
       const ids=(q.data||[]).map((m:any)=>m.pending_action_id).filter(Boolean);let actions:any[]=[];
       if(ids.length){const a=await admin.from("site_chat_actions").select("id,kind,label,target,payload,status").eq("user_id",user.id).in("id",ids);actions=a.data||[]}
       const amap=new Map(actions.map((a:any)=>[a.id,a]));
-      return out(req,{ok:true,thread_id:thread.id,messages:(q.data||[]).map((m:any)=>({...m,pending_action:m.pending_action_id&&amap.get(m.pending_action_id)?.status==="pending"?amap.get(m.pending_action_id):null}))});
+      const attachmentMap=await attachmentsForMessages(user.id,(q.data||[]).map((m:any)=>m.id));
+      return out(req,{ok:true,thread_id:thread.id,messages:(q.data||[]).map((m:any)=>({...m,attachments:attachmentMap.get(m.id)||[],pending_action:m.pending_action_id&&amap.get(m.pending_action_id)?.status==="pending"?amap.get(m.pending_action_id):null}))});
     }
 
-    const question=text(b.message,8000);if(!question)return out(req,{error:"Message required"},400);
+    const images=parseImageAttachments(b.image_attachments);
+    const question=text(b.message,8000);if(!question&&!images.length)return out(req,{error:"Message or image required"},400);
     const pageContext=asObject(b.page_context),consultOnly=Boolean(b.consult_only);
-    const inserted=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"user",content:question,context_snapshot:pageContext}).select("id").single();if(inserted.error)throw inserted.error;
+    const questionForModel=question||"המשתמש צירף תמונה ללא טקסט. נתח את התמונה והגב בצורה שימושית לפי ההקשר.";
+    const storedQuestion=question||"📷 תמונה";
+    const inserted=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"user",content:storedQuestion,context_snapshot:pageContext}).select("id").single();if(inserted.error)throw inserted.error;
+    const userAttachments=await saveImageAttachments(user.id,thread.id,inserted.data.id,images);
     const recent=await admin.from("site_chat_messages").select("role,content").eq("user_id",user.id).eq("thread_id",thread.id).order("created_at",{ascending:false}).limit(14);
     const memories=await listMemories(user.id,scopeKey,30);
-    const site=await relevantSiteContent(user.id,question);
+    const site=await relevantSiteContent(user.id,question||storedQuestion);
     const prompt=`${systemPrompt(scopeKey,consultOnly)}
 
 הקשר העמוד הנוכחי:
@@ -248,15 +311,15 @@ ${JSON.stringify(site).slice(0,22000)}
 ${(recent.data||[]).reverse().map((m:any)=>`${m.role}: ${m.content}`).join("\n\n").slice(0,22000)}
 
 הודעת המשתמש:
-${question}`;
-    let model=chooseModel(question,pageContext),raw:string;
-    try{raw=await callOpenAI(model,prompt)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt)}else throw e}
+${questionForModel}`;
+    let model=chooseModel(questionForModel,pageContext),raw:string;
+    try{raw=await callOpenAI(model,prompt,images)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
     const parsed=parseBlocks(raw);
     const queued=consultOnly?null:await queueAction(user.id,thread.id,parsed.action);
     const assistant=await admin.from("site_chat_messages").insert({thread_id:thread.id,user_id:user.id,role:"assistant",content:parsed.answer||"מוכן.",model,context_snapshot:pageContext,pending_action_id:queued?.id||null}).select("id,role,content,model,created_at,pending_action_id").single();if(assistant.error)throw assistant.error;
     const saved=await storeMemories(user.id,thread.id,inserted.data.id,scopeKey,parsed.memories);
-    if(!thread.title||thread.title==="שיחה חדשה")await admin.from("site_chat_threads").update({title:question.slice(0,72),updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);else await admin.from("site_chat_threads").update({updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);
-    return out(req,{ok:true,thread_id:thread.id,message:assistant.data,pending_action:queued,memory_updates:saved,model});
+    if(!thread.title||thread.title==="שיחה חדשה")await admin.from("site_chat_threads").update({title:(question||"תמונה").slice(0,72),updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);else await admin.from("site_chat_threads").update({updated_at:new Date().toISOString()}).eq("id",thread.id).eq("user_id",user.id);
+    return out(req,{ok:true,thread_id:thread.id,message:assistant.data,user_attachments:userAttachments,pending_action:queued,memory_updates:saved,model});
   }catch(e){
     console.error(e);
     return out(req,{error:e instanceof Error?e.message:"Server error",code:"site_chat_error"},500);

@@ -4,7 +4,10 @@ if(window.SiteChat)return;
 const CHAT_URL='https://iwemlxvjyhffumzcqrxf.supabase.co';
 const CHAT_KEY='sb_publishable_pU7OWc6Yoba6xQIYYROAxg_pJAliQDk';
 const CHAT_FUNCTION=CHAT_URL+'/functions/v1/site-chat';
-const state={client:null,session:null,mode:localStorage.getItem('site-chat-mode')||'global',threadId:null,messages:[],open:false,busy:false,abort:null,consultOnly:localStorage.getItem('site-chat-consult-only')==='1',view:'chat'};
+const state={client:null,session:null,mode:localStorage.getItem('site-chat-mode')||'global',threadId:null,messages:[],open:false,busy:false,abort:null,consultOnly:localStorage.getItem('site-chat-consult-only')==='1',view:'chat',pendingImages:[]};
+const MAX_CHAT_IMAGES=4;
+const MAX_CHAT_IMAGE_BYTES=6*1024*1024;
+const CHAT_IMAGE_TYPES=new Set(['image/png','image/jpeg','image/webp','image/gif']);
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function currentArea(){
@@ -49,8 +52,10 @@ function shell(){
       </div>
       <div id="site-chat-body" class="site-chat-body"></div>
       <form id="site-chat-form" class="site-chat-composer">
+        <div id="site-chat-image-preview" class="site-chat-image-preview" aria-live="polite"></div>
         <textarea id="site-chat-input" placeholder="כתוב לי כאן…" aria-label="הודעה לצ׳אט"></textarea>
-        <div class="site-chat-send-row"><span id="site-chat-status" class="site-chat-status"></span><div><button id="site-chat-stop" class="site-chat-stop" type="button" hidden>עצור</button> <button class="site-chat-send" type="submit">שלח</button></div></div>
+        <input id="site-chat-image-input" type="file" accept="image/*" multiple hidden>
+        <div class="site-chat-send-row"><span id="site-chat-status" class="site-chat-status"></span><div class="site-chat-send-actions"><button id="site-chat-image-button" class="site-chat-attach" type="button" aria-label="צרף תמונה">📎 תמונה</button> <button id="site-chat-stop" class="site-chat-stop" type="button" hidden>עצור</button> <button class="site-chat-send" type="submit">שלח</button></div></div>
       </form>
     </aside>`);
   bind();
@@ -66,8 +71,39 @@ function bind(){
   document.querySelector('[data-chat-memory]').onclick=showWhatIRemember;
   document.querySelector('[data-chat-consult]').onclick=toggleConsult;
   document.getElementById('site-chat-form').onsubmit=sendMessage;
+  const imageInput=document.getElementById('site-chat-image-input');
+  const composer=document.getElementById('site-chat-form');
+  document.getElementById('site-chat-image-button').onclick=()=>imageInput.click();
+  imageInput.onchange=async()=>{await addImageFiles(imageInput.files);imageInput.value='';};
+  document.getElementById('site-chat-input').addEventListener('paste',async e=>{const direct=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));const itemFiles=[...(e.clipboardData?.items||[])].filter(i=>i.kind==='file'&&i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);const files=[...direct,...itemFiles].filter((f,i,a)=>a.findIndex(x=>x.name===f.name&&x.size===f.size&&x.type===f.type)===i);if(files.length){e.preventDefault();await addImageFiles(files);}});
+  composer.addEventListener('dragover',e=>{e.preventDefault();composer.classList.add('is-dragging');});
+  composer.addEventListener('dragleave',()=>composer.classList.remove('is-dragging'));
+  composer.addEventListener('drop',async e=>{e.preventDefault();composer.classList.remove('is-dragging');const files=[...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith('image/'));if(files.length)await addImageFiles(files);});
   document.getElementById('site-chat-stop').onclick=()=>{state.abort?.abort();state.busy=false;setBusy(false,'נעצר');};
   document.addEventListener('click',actionClicks);
+}
+function fileToDataUrl(file){
+  return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('לא הצלחתי לקרוא את התמונה'));reader.readAsDataURL(file);});
+}
+async function addImageFiles(files){
+  for(const file of [...(files||[])]){
+    if(state.pendingImages.length>=MAX_CHAT_IMAGES){setStatus('אפשר לצרף עד 4 תמונות להודעה.');break}
+    if(!CHAT_IMAGE_TYPES.has(file.type)){setStatus('פורמט התמונה אינו נתמך.');continue}
+    if(file.size>MAX_CHAT_IMAGE_BYTES){setStatus('כל תמונה יכולה להיות עד 6MB.');continue}
+    const data_url=await fileToDataUrl(file);
+    state.pendingImages.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),name:file.name||'image',mime_type:file.type,size_bytes:file.size,data_url});
+  }
+  renderImagePreviews();
+}
+function renderImagePreviews(){
+  const host=document.getElementById('site-chat-image-preview');if(!host)return;
+  host.innerHTML=state.pendingImages.map(x=>`<div class="site-chat-image-preview-item"><img src="${esc(x.data_url)}" alt="תמונה מצורפת"><button type="button" data-chat-remove-image="${esc(x.id)}" aria-label="הסר תמונה">✕</button></div>`).join('');
+  host.classList.toggle('has-images',state.pendingImages.length>0);
+}
+function messageImages(m){
+  const images=m.attachments||m.image_attachments||[];
+  if(!images.length)return '';
+  return `<div class="site-chat-message-images">${images.map(a=>{const src=a.signed_url||a.data_url||'';return src?`<img class="site-chat-message-image" src="${esc(src)}" alt="${esc(a.file_name||a.name||'תמונה מצורפת')}" loading="lazy">`:''}).join('')}</div>`;
 }
 function updateChrome(){
   const area=currentArea();
@@ -87,7 +123,7 @@ async function ensureAuthView(){if(!state.client)return;const {data:{session}}=a
 function renderMessages(){
   const body=document.getElementById('site-chat-body');if(!body)return;
   if(!state.messages.length){body.innerHTML='<div class="site-chat-empty">אפשר לדבר איתי על מה שמופיע בעמוד הזה, או על כל דבר ששמור באתר.</div>';return}
-  body.innerHTML=state.messages.map(m=>`<div class="site-chat-message ${m.role==='user'?'user':'assistant'}"><div class="who">${m.role==='user'?'אתה':'אני'}</div><div>${esc(m.content).replace(/\n/g,'<br>')}</div></div>`).join('');
+  body.innerHTML=state.messages.map(m=>`<div class="site-chat-message ${m.role==='user'?'user':'assistant'}"><div class="who">${m.role==='user'?'אתה':'אני'}</div>${messageImages(m)}<div>${esc(m.content).replace(/\n/g,'<br>')}</div></div>`).join('');
   const pending=state.messages.filter(m=>m.pending_action).map(m=>m.pending_action);
   pending.forEach(a=>body.insertAdjacentHTML('beforeend',actionCard(a)));
   body.scrollTop=body.scrollHeight;
@@ -99,11 +135,18 @@ async function loadHistory(){
 function setBusy(on,msg=''){state.busy=on;document.querySelector('.site-chat-send')?.toggleAttribute('disabled',on);document.getElementById('site-chat-stop')?.toggleAttribute('hidden',!on);setStatus(msg)}
 function setStatus(msg){const el=document.getElementById('site-chat-status');if(el)el.textContent=msg||''}
 async function sendMessage(e){
-  e.preventDefault();if(state.busy)return;const input=document.getElementById('site-chat-input');const q=input.value.trim();if(!q)return;input.value='';state.messages.push({role:'user',content:q});renderMessages();setBusy(true,'חושב…');
-  try{const s=scope();const r=await api({action:'ask',...s,thread_id:state.threadId,message:q,page_context:pageContext(),consult_only:state.consultOnly});state.threadId=r.thread_id;state.messages.push({...r.message,pending_action:r.pending_action||null});renderMessages();setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'')}
-  catch(err){if(err.name!=='AbortError')state.messages.push({role:'assistant',content:'לא הצלחתי להשלים את הבקשה: '+err.message});renderMessages()}finally{setBusy(false)}
+  e.preventDefault();if(state.busy)return;const input=document.getElementById('site-chat-input');const q=input.value.trim();if(!q&&!state.pendingImages.length)return;
+  const images=state.pendingImages.map(x=>({...x}));input.value='';
+  state.messages.push({role:'user',content:q||'📷 תמונה',attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url,signed_url:x.data_url}))});renderMessages();setBusy(true,'חושב…');
+  try{
+    const s=scope();const r=await api({action:'ask',...s,thread_id:state.threadId,message:q,image_attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url})),page_context:pageContext(),consult_only:state.consultOnly});
+    state.threadId=r.thread_id;state.pendingImages=[];renderImagePreviews();
+    const localUser=[...state.messages].reverse().find(m=>m.role==='user'&&m.attachments?.some(a=>a.data_url));
+    if(localUser&&r.user_attachments?.length)localUser.attachments=r.user_attachments;
+    state.messages.push({...r.message,pending_action:r.pending_action||null});renderMessages();setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'');
+  }catch(err){if(err.name!=='AbortError')state.messages.push({role:'assistant',content:'לא הצלחתי להשלים את הבקשה: '+err.message});renderMessages()}finally{setBusy(false)}
 }
-async function newThread(){if(!state.session)return loginView();const r=await api({action:'new_thread',...scope(),page_context:pageContext()});state.threadId=r.thread_id;state.messages=[];state.view='chat';renderMessages();setStatus('שיחה חדשה')}
+async function newThread(){if(!state.session)return loginView();const r=await api({action:'new_thread',...scope(),page_context:pageContext()});state.threadId=r.thread_id;state.messages=[];state.pendingImages=[];renderImagePreviews();state.view='chat';renderMessages();setStatus('שיחה חדשה')}
 async function showThreads(){
   if(!state.session)return loginView();const r=await api({action:'threads',...scope()});const body=document.getElementById('site-chat-body');body.innerHTML='<div class="site-chat-thread-list">'+(r.threads||[]).map(t=>`<button class="site-chat-thread" type="button" data-thread-id="${t.id}"><b>${esc(t.title||'שיחה')}</b><small>${new Date(t.updated_at).toLocaleString('he-IL')}</small></button>`).join('')+'</div>';body.querySelectorAll('[data-thread-id]').forEach(b=>b.onclick=async()=>{state.threadId=b.dataset.threadId;state.view='chat';await loadHistory()})}
 async function showWhatIRemember(){
@@ -111,6 +154,7 @@ async function showWhatIRemember(){
 }
 function toggleConsult(){state.consultOnly=!state.consultOnly;localStorage.setItem('site-chat-consult-only',state.consultOnly?'1':'0');updateChrome();setStatus(state.consultOnly?'מצב ייעוץ בלבד פעיל':'מצב פעולות פעיל')}
 async function actionClicks(e){
+  const removeImage=e.target.closest('[data-chat-remove-image]');if(removeImage){state.pendingImages=state.pendingImages.filter(x=>x.id!==removeImage.dataset.chatRemoveImage);renderImagePreviews();return}
   const approve=e.target.closest('[data-chat-approve]'),cancel=e.target.closest('[data-chat-cancel]');
   if(!approve&&!cancel)return;
   const id=(approve||cancel).dataset.chatApprove||(approve||cancel).dataset.chatCancel;
