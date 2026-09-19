@@ -155,3 +155,17 @@ test('PWA cache is refreshed for the image-enabled chat assets', () => {
     assert.match(html, /site-chat\.css\?v=2/);
   }
 });
+
+
+test('site editor schema is owner-readable and client-write-closed', () => {
+  const sql = read('supabase/migrations/20260919_site_editor_core.sql');
+  for (const table of ['site_edit_requests','site_edit_operations','site_edit_approvals','site_edit_runs','site_edit_events']) {
+    assert.match(sql, new RegExp('create table if not exists public\\.' + table, 'i'));
+    assert.match(sql, new RegExp('alter table public\\.' + table + ' enable row level security', 'i'));
+  }
+  assert.match(sql, /for select\s+to authenticated/i);
+  assert.doesNotMatch(sql, /for all\s+to authenticated/i);
+  assert.match(sql, /risk_level text not null check \(risk_level in \('low','medium','high'\)\)/i);
+  assert.match(sql, /status text not null/i);
+  assert.match(sql, /approved_head_sha/i);
+});
