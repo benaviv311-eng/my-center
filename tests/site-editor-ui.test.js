@@ -40,3 +40,15 @@ test('change cards show risk files and approval controls',()=>{
   assert.match(js,/cancel/);
   for(const code of ['owner_required','stale_plan','unsafe_plan','editor_unavailable']) assert.ok(js.includes(code));
 });
+
+
+test('inspect mode captures one element without activating it',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/בחר מהעמוד/);
+  assert.match(js,/preventDefault\(\)/);
+  assert.match(js,/stopPropagation\(\)/);
+  assert.match(js,/stopImmediatePropagation\(\)/);
+  assert.match(js,/selectedElementContext/);
+  for(const key of ['display','position','fontSize','fontWeight','color','backgroundColor','margin','padding','gap']) assert.ok(js.includes(key));
+  for(const key of ['tag','id','classes','data','visible_text','dom_path','container','bounds','computed_style']) assert.ok(js.includes(key));
+});
