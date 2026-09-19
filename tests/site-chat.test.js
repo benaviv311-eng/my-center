@@ -83,3 +83,46 @@ test('every top-level page loads the site chat directly or through app.js', () =
   });
   assert.deepEqual(missing, []);
 });
+
+
+test('site chat accepts pasted, picked and dropped images with previews', () => {
+  const js = read('site-chat.js');
+  const css = read('site-chat.css');
+  assert.match(js, /type="file"/);
+  assert.match(js, /accept="image\/\*"/);
+  assert.match(js, /clipboardData/);
+  assert.match(js, /dragover/);
+  assert.match(js, /drop/);
+  assert.match(js, /pendingImages/);
+  assert.match(js, /FileReader/);
+  assert.match(js, /data-chat-remove-image/);
+  assert.match(css, /site-chat-image-preview/);
+});
+
+test('site chat can send an image without requiring text and renders image history', () => {
+  const js = read('site-chat.js');
+  assert.match(js, /image_attachments/);
+  assert.match(js, /signed_url/);
+  assert.match(js, /site-chat-message-image/);
+  assert.match(js, /if\(!q&&!state\.pendingImages\.length\)return/);
+});
+
+test('site chat backend stores private image attachments and sends them to OpenAI vision', () => {
+  const migration = 'supabase/migrations/20260919_site_chat_images.sql';
+  assert.equal(fs.existsSync(migration), true);
+  const sql = read(migration);
+  assert.match(sql, /create table if not exists public\.site_chat_attachments/i);
+  assert.match(sql, /site-chat-images/);
+  assert.match(sql, /public\s*=\s*false/i);
+  assert.match(sql, /enable row level security/i);
+  assert.match(sql, /auth\.uid\(\)/i);
+
+  const fn = read('supabase/functions/site-chat/index.ts');
+  assert.match(fn, /site_chat_attachments/);
+  assert.match(fn, /site-chat-images/);
+  assert.match(fn, /createSignedUrl/);
+  assert.match(fn, /input_image/);
+  assert.match(fn, /image_url/);
+  assert.match(fn, /MAX_IMAGE_BYTES/);
+  assert.match(fn, /ALLOWED_IMAGE_TYPES/);
+});
