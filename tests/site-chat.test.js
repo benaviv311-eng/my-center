@@ -126,3 +126,10 @@ test('site chat backend stores private image attachments and sends them to OpenA
   assert.match(fn, /MAX_IMAGE_BYTES/);
   assert.match(fn, /ALLOWED_IMAGE_TYPES/);
 });
+
+
+test('image-only messages give the vision model an explicit instruction', () => {
+  const fn = read('supabase/functions/site-chat/index.ts');
+  assert.match(fn, /המשתמש צירף תמונה ללא טקסט/);
+  assert.match(fn, /questionForModel/);
+});
