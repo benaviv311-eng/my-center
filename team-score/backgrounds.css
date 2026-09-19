@@ -1,0 +1,31 @@
+/* TeamScore — 24 approved volleyball backgrounds */
+.rotating-bg .bg-layer{display:none!important}
+.approved-bg-layer{
+  position:absolute;
+  inset:-2%;
+  overflow:hidden;
+  opacity:0;
+  transition:opacity 1.35s ease;
+  z-index:1;
+  pointer-events:none;
+  filter:saturate(1.04) contrast(1.03) brightness(1.03);
+  will-change:opacity;
+}
+.approved-bg-layer.active{opacity:1}
+.approved-bg-layer img{
+  position:absolute;
+  top:0;
+  left:0;
+  max-width:none!important;
+  max-height:none!important;
+  transform-origin:0 0;
+  will-change:transform,width,height;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.rotating-bg::after{z-index:2!important}
+body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.04) brightness(.97)}
+@media(max-width:640px){
+  .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.99)}
+  body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.94)}
+}
