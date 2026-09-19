@@ -4,6 +4,7 @@ if(window.SiteChat)return;
 const CHAT_URL='https://iwemlxvjyhffumzcqrxf.supabase.co';
 const CHAT_KEY='sb_publishable_pU7OWc6Yoba6xQIYYROAxg_pJAliQDk';
 const CHAT_FUNCTION=CHAT_URL+'/functions/v1/site-chat';
+const EDITOR_FUNCTION=CHAT_URL+'/functions/v1/site-editor';
 const state={client:null,session:null,mode:localStorage.getItem('site-chat-mode')||'global',threadId:null,messages:[],open:false,busy:false,abort:null,consultOnly:localStorage.getItem('site-chat-consult-only')==='1',view:'chat',pendingImages:[]};
 const MAX_CHAT_IMAGES=4;
 const MAX_CHAT_IMAGE_BYTES=6*1024*1024;
@@ -38,6 +39,19 @@ async function api(body){
   const data=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(data.error||'הבקשה נכשלה');
   return data;
+}
+async function editorApi(body){
+  if(!state.client)throw new Error('החיבור עדיין נטען');
+  const {data:{session}}=await state.client.auth.getSession();
+  state.session=session;
+  if(!session)throw new Error('צריך להתחבר');
+  const r=await fetch(EDITOR_FUNCTION,{method:'POST',headers:{apikey:CHAT_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){const err=new Error(data.error||'הבקשה נכשלה');err.code=data.code||'editor_unavailable';throw err}
+  return data;
+}
+function installSiteEditorUI(){
+  if(window.SiteEditorUI?.install)window.SiteEditorUI.install({chatState:state,api:editorApi,pageContext});
 }
 function shell(){
   if(document.getElementById('site-chat-drawer'))return;
@@ -173,6 +187,7 @@ async function init(){
   shell();
   const mod=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   state.client=mod.createClient(CHAT_URL,CHAT_KEY);
+  installSiteEditorUI();
   const {data:{session}}=await state.client.auth.getSession();state.session=session;
   state.client.auth.onAuthStateChange((_event,s)=>{state.session=s;setTimeout(()=>{if(state.open)ensureAuthView();renderMemoryCenter()},0)});
   if(state.open)await ensureAuthView();
