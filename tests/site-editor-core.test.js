@@ -45,3 +45,21 @@ test('replace_text requires exact text count and expected sha', () => {
   assert.match(src,/expected_sha/);
   assert.match(src,/stale_plan/);
 });
+
+
+test('site editor exposes proposal and plan approval actions with model configuration', () => {
+  const src = read('supabase/functions/site-editor/index.ts');
+  for (const marker of ["requireOwner","action==='propose'","action==='get'","action==='approve_plan'","action==='cancel'","site_edit_requests","site_edit_operations","site_edit_events","site-edit/","SITE_EDITOR_MODEL_STRONG","SITE_EDITOR_MODEL_FAST"]) assert.ok(src.includes(marker));
+  assert.match(src,/response_format|json_schema|strict/i);
+  assert.match(src,/githubCreateEditBranch/);
+  assert.match(src,/githubCommitFiles/);
+  assert.match(src,/awaiting_plan_approval/);
+  assert.match(src,/needs_replan/);
+});
+
+test('site chat can route source edits to the site editor instead of forbidding them', () => {
+  const src = read('supabase/functions/site-chat/index.ts');
+  assert.match(src,/site_edit_request/);
+  assert.match(src,/site-editor/);
+  assert.doesNotMatch(src,/אין לבצע שינויי קוד מקור מתוך הצ׳אט החי/);
+});
