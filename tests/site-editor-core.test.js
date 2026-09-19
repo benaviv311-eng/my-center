@@ -29,3 +29,19 @@ test('github helper uses GitHub App installation tokens and atomic git commits',
   assert.match(src,/refs\/heads/);
   assert.doesNotMatch(src,/force\s*:\s*true/);
 });
+
+
+test('risk classifier promotes sensitive paths and broad edits', () => {
+  const src = read('supabase/functions/_shared/site-editor/policy.ts');
+  for (const marker of ['supabase/migrations/','supabase/functions/','.github/workflows/','sw.js']) assert.ok(src.includes(marker));
+  assert.match(src,/operations\.length\s*>\s*10/);
+  assert.match(src,/unknown_operation/);
+  assert.match(src,/blocked_path/);
+});
+
+test('replace_text requires exact text count and expected sha', () => {
+  const src = read('supabase/functions/_shared/site-editor/operations.ts');
+  assert.match(src,/expected_occurrences/);
+  assert.match(src,/expected_sha/);
+  assert.match(src,/stale_plan/);
+});
