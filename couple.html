@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>הבן זוג המושלם</title>
   <meta name="theme-color" content="#201a1b">
-  <link rel="stylesheet" href="couple.css?v=2">
+  <link rel="stylesheet" href="couple.css?v=3">
 </head>
 <body>
 <div class="couple-app">
@@ -109,7 +109,11 @@
       <section class="section form-card">
         <label>תקציב זוגיות חודשי <span><b id="budgetValue">800</b> ₪</span></label>
         <input type="range" id="monthlyBudget" min="0" max="5000" step="50">
-        <label>רמת אוטומציה</label>
+        <div class="auto-planner-box">
+          <label class="switch-row"><span><strong>תכנון אוטומטי</strong><small>האפליקציה בונה ומעדכנת לבד את היום, השבוע והחודש</small></span><input type="checkbox" id="autoPlannerEnabled"></label>
+          <div class="planner-status" id="plannerStatus">התכנון יתעדכן לפי הפרופיל, הלוז והתקציב.</div>
+        </div>
+        <label>רמת אוטומציה לביצוע</label>
         <select id="automationLevel">
           <option value="suggest">הצעות בלבד</option>
           <option value="prepare">הכן הכול ואני מאשר</option>
@@ -200,6 +204,6 @@
 </div>
 
 <div class="toast" id="coupleToast"></div>
-<script src="couple.js?v=2"></script>
+<script src="couple.js?v=3"></script>
 </body>
 </html>
