@@ -87,3 +87,12 @@ test('preview action opens an expiring branch preview',()=>{
   assert.match(js,/preview_url/);
   assert.match(js,/Preview מוכן/);
 });
+
+
+test('publish button requires explicit approval for preview-ready edits',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/פרסם באתר/);
+  assert.match(js,/publish_site/);
+  assert.match(js,/approve_publish/);
+  assert.match(js,/action:'publish'/);
+});
