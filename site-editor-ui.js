@@ -19,7 +19,7 @@ const STATUS_STAGE={
   applying:'שומר Branch',
   testing:'מריץ בדיקות',
   repairing:'מריץ בדיקות',
-  preview_ready:'מכין Preview',
+  preview_ready:'Preview מוכן',
   awaiting_plan_approval:'ממתין לאישור',
   awaiting_publish_approval:'ממתין לאישור',
   merging:'מפרסם',
@@ -240,6 +240,7 @@ function requestCardMarkup(request){
   const operations=Array.isArray(request?.operations)?request.operations:[];
   const files=[...new Set(operations.map(op=>op?.path).filter(Boolean))];
   const awaiting=request?.status==='awaiting_plan_approval';
+  const previewable=['preview_ready','awaiting_publish_approval'].includes(request?.status);
   const cancellable=request?.status&&!TERMINAL_STATUSES.has(request.status);
   const warning=request?.public_asset_warning?'<div class="site-edit-warning">⚠️ קובץ פרטי יהפוך לנכס ציבורי באתר רק לאחר אישור מפורש.</div>':'';
   const preview=request?.requires_preview?'<div class="site-edit-requirement">🔎 נדרש Preview לפני פרסום.</div>':'<div class="site-edit-requirement">✓ אפשר להמשיך ללא Preview חובה בשלב התכנון.</div>';
@@ -259,6 +260,7 @@ function requestCardMarkup(request){
     <div class="site-edit-actions">
       <button type="button" data-site-edit-action="approve_plan" ${awaiting?'':'disabled'}>מאשר</button>
       <button type="button" data-site-edit-action="request_revision" ${awaiting?'':'disabled'}>שנה את ההצעה</button>
+      <button type="button" data-site-edit-action="create_preview" ${previewable?'':'disabled'}>פתח Preview</button>
       <button type="button" data-site-edit-action="cancel" ${cancellable?'':'disabled'}>בטל</button>
     </div>
   </article>`;
@@ -274,6 +276,7 @@ async function handleRequestAction(card,request,action){
   card.querySelectorAll('button').forEach(btn=>btn.disabled=true);
   const errorHost=card.querySelector('[data-site-edit-error]');
   if(errorHost){errorHost.hidden=true;errorHost.textContent=''}
+  const previewWindow=action==='create_preview'?window.open('about:blank','_blank'):null;
   try{
     const payload={action,request_id:request.id};
     if(action==='request_revision'){
@@ -282,10 +285,15 @@ async function handleRequestAction(card,request,action){
       payload.instructions=instructions;
     }
     const result=await ctx.api(payload);
+    if(action==='create_preview'&&result?.preview_url){
+      if(previewWindow)previewWindow.location.href=result.preview_url;
+      else window.open(result.preview_url,'_blank','noopener,noreferrer');
+    }else if(previewWindow){previewWindow.close()}
     const next=result?.request||request;
     if(next?.id)setActiveRequestId(next.id);
     showRequest(next,{replace:true});
   }catch(error){
+    if(previewWindow)previewWindow.close();
     card.dataset.busy='0';
     card.querySelectorAll('button').forEach(btn=>btn.disabled=false);
     if(errorHost){errorHost.textContent=editorErrorMessage(error);errorHost.hidden=false}
