@@ -47,3 +47,21 @@ test('preview is tokenized read-only and pinned to an exact head sha',()=>{
   assert.match(editor,/create_preview/);
   assert.match(editor,/site_edit_previews/);
 });
+
+
+test('validated edits publish with exact-sha approval and live verification',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(fn,/approve_publish/);
+  assert.match(fn,/action==='publish'/);
+  assert.match(fn,/awaiting_publish_approval/);
+  assert.match(fn,/risk_level==="low"/);
+  assert.match(fn,/low_risk_auto_publish_approved/);
+  assert.match(fn,/deploying/);
+  assert.match(fn,/deployed/);
+  assert.match(fn,/github_pages_content/);
+  assert.match(fn,/SITE_PUBLIC_BASE_URL/);
+  assert.match(gh,/githubFastForwardMain/);
+  assert.match(gh,/currentMain!==expectedBaseSha/);
+  assert.match(gh,/force:false/);
+});
