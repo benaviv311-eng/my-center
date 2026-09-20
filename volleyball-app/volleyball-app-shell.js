@@ -1,6 +1,8 @@
 (() => {
   let deferredPrompt=null;
   const installBtn=document.getElementById("vb-install-app");
+  const populationTabs=document.getElementById("volleyball-population-tabs");
+  const populationBadge=document.getElementById("volleyball-current-population-badge");
 
   if("serviceWorker" in navigator){
     window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));
@@ -20,6 +22,20 @@
     installBtn.hidden=true;
   });
   window.addEventListener("appinstalled",()=>{if(installBtn) installBtn.hidden=true;});
+
+  const syncPopulationContext=()=>{
+    const active=populationTabs?.querySelector(".vb-pop-tab.active");
+    if(!active)return;
+    const label=active.textContent.trim().replace(/^🏐|^👦|^👧|^👩|^👨/,"").trim();
+    if(populationBadge) populationBadge.textContent="עכשיו: "+label;
+    active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+  };
+  populationTabs?.addEventListener("click",()=>setTimeout(syncPopulationContext,0));
+  if(populationTabs){
+    const popObserver=new MutationObserver(syncPopulationContext);
+    popObserver.observe(populationTabs,{subtree:true,attributes:true,attributeFilter:["class","aria-pressed"],childList:true});
+    setTimeout(syncPopulationContext,0);
+  }
 
   const buttons=[...document.querySelectorAll("[data-vb-jump]")];
   buttons.forEach(btn=>btn.addEventListener("click",()=>{
