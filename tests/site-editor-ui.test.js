@@ -73,8 +73,17 @@ test('site changes view restores request history and active progress',()=>{
   assert.match(js,/list_requests/);
   assert.match(js,/refresh_status/);
   assert.match(js,/3000/);
-  for(const stage of ['מנתח','מוצא קבצים','מכין שינוי','שומר Branch','מריץ בדיקות','מכין Preview','ממתין לאישור','מפרסם']) assert.ok(js.includes(stage));
+  for(const stage of ['מנתח','מוצא קבצים','מכין שינוי','שומר Branch','מריץ בדיקות','Preview מוכן','ממתין לאישור','מפרסם']) assert.ok(js.includes(stage));
   const css=read('site-editor-ui.css');
   assert.match(css,/@media\(max-width:620px\)/);
   assert.match(css,/min-height:44px/);
+});
+
+
+test('preview action opens an expiring branch preview',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/פתח Preview/);
+  assert.match(js,/create_preview/);
+  assert.match(js,/preview_url/);
+  assert.match(js,/Preview מוכן/);
 });

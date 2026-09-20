@@ -38,6 +38,16 @@ function asObject(v:unknown):Record<string,unknown>{
 function text(v:unknown,max=12000){
   return typeof v==="string"?v.trim().slice(0,max):"";
 }
+function tokenBase64Url(bytes:Uint8Array){
+  let binary="";
+  for(const byte of bytes)binary+=String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+async function tokenHash(value:string){
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
 function answerText(r:any){
   if(typeof r?.output_text==="string")return r.output_text.trim();
   const parts:string[]=[];
@@ -367,6 +377,34 @@ async function refreshStatus(user:{id:string},requestId:string){
   return requestView(user.id,request.id);
 }
 
+async function createPreview(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(!["preview_ready","awaiting_publish_approval"].includes(request.status))throw new EditorError("bad_request",409,"request_not_previewable");
+  if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_not_previewable");
+  const currentHead=await githubBranchHead(request.branch_name);
+  if(currentHead!==request.head_sha){
+    await admin.from("site_edit_requests").update({status:"needs_replan",updated_at:new Date().toISOString()}).eq("id",request.id).eq("user_id",user.id);
+    await insertEvent(request.id,user.id,"preview_stale",{expected_head_sha:request.head_sha,current_head_sha:currentHead});
+    throw new EditorError("stale_plan",409);
+  }
+
+  const tokenBytes=crypto.getRandomValues(new Uint8Array(32));
+  const token=tokenBase64Url(tokenBytes);
+  const hash=await tokenHash(token);
+  const now=new Date();
+  const expiresAt=new Date(now.getTime()+60*60*1000).toISOString();
+  const revoked=await admin.from("site_edit_previews").update({revoked_at:now.toISOString()}).eq("request_id",request.id).is("revoked_at",null);
+  if(revoked.error)throw new EditorError("editor_unavailable",500);
+  const saved=await admin.from("site_edit_previews").insert({request_id:request.id,token_hash:hash,head_sha:currentHead,expires_at:expiresAt});
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"preview_created",{head_sha:currentHead,expires_at:expiresAt});
+  return {
+    request:await requestView(user.id,request.id),
+    preview_url:`${SUPABASE_URL}/functions/v1/site-preview/${encodeURIComponent(token)}/index.html`,
+    expires_at:expiresAt
+  };
+}
+
 async function listRequests(userId:string){
   const requests=await admin.from("site_edit_requests")
     .select("*")
@@ -460,6 +498,11 @@ Deno.serve(async(req:Request)=>{
     if(action==='refresh_status'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await refreshStatus(user,id)});
+    }
+    if(action==='create_preview'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      const preview=await createPreview(user,id);
+      return out(req,{ok:true,...preview});
     }
     if(action==='approve_plan'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
