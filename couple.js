@@ -278,12 +278,12 @@ function quickSetup(){
  const avoided=new Set(state.partner.avoidTags||[]);
  openModal(`<p class="eyebrow">הגדרה חד־פעמית</p><h2>דקה אחת ואני חושב במקומך</h2><label>איך קוראים לה?</label><input id="qsName" value="${esc(state.partner.name)}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><div class="decision-label">מה היא אוהבת? בחר 2–4</div><div class="quick-setup-grid" id="qsPrefs">${pref.map(x=>`<button type="button" data-qs-pref="${esc(x)}" class="${selected.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><div class="decision-label">מה לא לשלוח / לא להציע?</div><div class="quick-setup-grid" id="qsAvoid">${avoid.map(x=>`<button type="button" data-qs-avoid="${esc(x)}" class="${avoided.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><label>כמה מותר לי להוציא בחודש בלי שתצטרך לחשב?</label><select id="qsBudget" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><option value="400">400 ₪</option><option value="800">800 ₪</option><option value="1200">1,200 ₪</option><option value="2000">2,000 ₪</option></select><button class="primary full" id="qsSave">סיימנו — תחשוב במקומי</button>`);
  $('#qsBudget').value=String(state.plan.budget||800);
- $('[data-qs-pref]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
- $('[data-qs-avoid]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
+ $$('[data-qs-pref]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
+ $$('[data-qs-avoid]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
  $('#qsSave').onclick=()=>{
    state.partner.name=$('#qsName').value.trim();
-   state.partner.preferenceTags=$('[data-qs-pref].selected').map(b=>b.dataset.qsPref);
-   state.partner.avoidTags=$('[data-qs-avoid].selected').map(b=>b.dataset.qsAvoid);
+   state.partner.preferenceTags=$$('[data-qs-pref].selected').map(b=>b.dataset.qsPref);
+   state.partner.avoidTags=$$('[data-qs-avoid].selected').map(b=>b.dataset.qsAvoid);
    state.partner.likes=[state.partner.likes,state.partner.preferenceTags.join(', ')].filter(Boolean).join(', ');
    state.plan.budget=+$('#qsBudget').value||800;
    state.plan.autoPlanner=true;
@@ -421,7 +421,7 @@ function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction(
 $$('.bottom-nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function go(tab){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
-$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+$$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
 $('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#quickSetupBtn').onclick=quickSetup;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
