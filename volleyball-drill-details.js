@@ -8,6 +8,10 @@ const VOLLEYBALL_DRILL_DETAIL_FIELDS=[
   ['progression','התקדמות']
 ];
 
+function escapeDrillHtml(value){
+  return String(value??'').replace(/[&<>"']/g,char=>({"&":'&amp;',"<":'&lt;',">":'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+}
+function escapeDrillAttr(value){return escapeDrillHtml(value);}
 function findVolleyballCardForElement(element){
   if(typeof window==='undefined'||!element)return null;
   const title=element.querySelector('.vb-card-title-button')?.textContent?.trim()||element.querySelector('h3')?.textContent?.trim()||'';
@@ -44,6 +48,67 @@ function buildDrillDetailsSection(drill){
     grid.appendChild(item);
   }
   section.appendChild(grid);
+
+  const media=document.createElement('div');
+  media.className='vb-drill-media';
+
+  const tabs=document.createElement('div');
+  tabs.className='vb-drill-media-tabs';
+  const mediaTabs=[
+    ['overview','סקירה'],
+    ['diagram','תרשים'],
+    ['video','וידאו'],
+    ['images','תמונות'],
+    ['coach','דגשי אימון']
+  ];
+  for(const [id,label] of mediaTabs){
+    const button=document.createElement('button');
+    button.type='button';
+    button.dataset.drillMedia=id;
+    button.textContent=label;
+    if(id==='overview')button.classList.add('active');
+    tabs.appendChild(button);
+  }
+
+  const panels=document.createElement('div');
+  panels.className='vb-drill-media-panels';
+  const makePanel=(id,html)=>{
+    const panel=document.createElement('div');
+    panel.className='vb-drill-media-panel'+(id==='overview'?' active':'');
+    panel.dataset.drillPanel=id;
+    panel.innerHTML=html;
+    return panel;
+  };
+
+  const setup=escapeDrillHtml(drill.setup||'הסידור יופיע כאן.');
+  const execution=escapeDrillHtml(drill.execution||'מהלך התרגיל יופיע כאן.');
+  const coaching=escapeDrillHtml(drill.coachingPoints||'דגשי המאמן יופיעו כאן.');
+  const errors=escapeDrillHtml(drill.commonErrors||'טעויות נפוצות יופיעו כאן.');
+
+  panels.append(
+    makePanel('overview',`<div class="vb-drill-media-summary"><b>סידור</b><p>${setup}</p><b>ביצוע</b><p>${execution}</p></div>`),
+    makePanel('diagram',`<div class="vb-drill-diagram-card" aria-label="תרשים תרגיל סכמטי">
+      <div class="vb-drill-court">
+        <span class="vb-court-net"></span>
+        <i class="p p1">1</i><i class="p p2">2</i><i class="p p3">3</i><i class="p p4">4</i>
+        <span class="vb-drill-arrow a1">➜</span><span class="vb-drill-arrow a2">➜</span>
+      </div>
+      <div class="vb-drill-diagram-text"><b>סידור התרגיל</b><p>${setup}</p><b>רצף</b><p>${execution}</p><small>תרשים סכמטי: המספור עוזר לקרוא את סדר הפעולות. בתרגילים עם תרשים ייעודי הוא יוחלף בתרשים המדויק.</small></div>
+    </div>`),
+    makePanel('video',drill.videoUrl?`<div class="vb-drill-video-link"><a href="${escapeDrillAttr(drill.videoUrl)}" target="_blank" rel="noopener">▶ פתח סרטון הדגמה</a></div>`:`<div class="vb-drill-media-empty">🎥<b>סרטון הדגמה</b><p>כאן יוצג סרטון של התרגיל כשיצורף למאגר.</p></div>`),
+    makePanel('images',Array.isArray(drill.images)&&drill.images.length?`<div class="vb-drill-image-grid">${drill.images.map(src=>`<img src="${escapeDrillAttr(src)}" alt="תמונת תרגיל" loading="lazy">`).join('')}</div>`:`<div class="vb-drill-media-empty">🖼️<b>גלריית תרגיל</b><p>כאן יוצגו תמונות ורצף תנועה של התרגיל.</p></div>`),
+    makePanel('coach',`<div class="vb-drill-coach-panel"><b>דגשים</b><p>${coaching}</p><b>טעויות נפוצות</b><p>${errors}</p></div>`)
+  );
+
+  media.append(tabs,panels);
+  media.addEventListener('click',event=>{
+    const button=event.target.closest('[data-drill-media]');
+    if(!button)return;
+    const id=button.dataset.drillMedia;
+    tabs.querySelectorAll('[data-drill-media]').forEach(btn=>btn.classList.toggle('active',btn===button));
+    panels.querySelectorAll('[data-drill-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.drillPanel===id));
+  });
+  section.appendChild(media);
   return section;
 }
 
