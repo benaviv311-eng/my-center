@@ -1,0 +1,47 @@
+/* TeamScore mobile/projection hotfix v21 */
+body.projection-mode .team-card,
+body.projection-mode .group-card,
+body.projection-mode [class*="team-card"],
+body.projection-mode [class*="group-card"]{
+  min-width:0!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+body.projection-mode .score,
+body.projection-mode [class*="score"]{
+  max-width:100%!important;
+  line-height:.88!important;
+  overflow:hidden!important;
+}
+body.projection-mode .score-controls,
+body.projection-mode .controls,
+body.projection-mode [class*="score-controls"]{
+  max-width:100%!important;
+  min-width:0!important;
+  gap:clamp(2px,.55vw,8px)!important;
+}
+body.projection-mode .score-controls button,
+body.projection-mode .controls button,
+body.projection-mode [class*="score-controls"] button{
+  min-width:0!important;
+  min-height:0!important;
+  width:auto!important;
+  max-width:32%!important;
+  padding:clamp(3px,.7vw,10px)!important;
+  font-size:clamp(.72rem,1.45vw,1.25rem)!important;
+}
+body.projection-mode .mega,
+body.projection-mode [class*="mega"]{
+  max-width:92%!important;
+  min-width:0!important;
+}
+@media(max-width:900px){
+  body.projection-mode .score,
+  body.projection-mode [class*="score"]{font-size:clamp(2.1rem,9vw,6.5rem)!important}
+  body.projection-mode .score-controls button,
+  body.projection-mode .controls button,
+  body.projection-mode [class*="score-controls"] button{
+    font-size:clamp(.66rem,2.2vw,1rem)!important;
+    padding:3px!important;
+  }
+}
