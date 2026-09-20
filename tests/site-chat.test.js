@@ -145,7 +145,7 @@ test('paste handling supports clipboard image items as well as clipboard files',
 test('PWA cache is refreshed for the image-enabled chat assets', () => {
   const sw = read('sw.js');
   const app = read('app.js');
-  assert.match(sw, /my-center-pwa-v5/);
+  assert.match(sw, /my-center-pwa-v6/);
   assert.match(app, /site-chat\.js\?v=2/);
   assert.match(app, /site-chat\.css\?v=2/);
   const standalone = ['book.html','four-languages.html','language-archive.html','language-topics.html','language-vocabulary.html','library.html'];
