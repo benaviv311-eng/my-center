@@ -78,3 +78,12 @@ test('site changes view restores request history and active progress',()=>{
   assert.match(css,/@media\(max-width:620px\)/);
   assert.match(css,/min-height:44px/);
 });
+
+
+test('preview action opens an expiring branch preview',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/פתח Preview/);
+  assert.match(js,/create_preview/);
+  assert.match(js,/preview_url/);
+  assert.match(js,/Preview מוכן/);
+});
