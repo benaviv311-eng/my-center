@@ -68,3 +68,13 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.couple-app{max-
 .setup-card>div{flex:1}.setup-card strong,.setup-card small{display:block}.setup-card small{color:var(--muted);margin-top:3px;line-height:1.35}
 .quick-setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.quick-setup-grid button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px;text-align:center}.quick-setup-grid button.selected{background:#fff1f4;border-color:#d5a8b3;color:var(--wine);font-weight:900}
 @media(max-width:430px){.auto-decision-card,.setup-card{margin-inline:12px}}
+
+.pending-orders-section[hidden]{display:none}
+.pending-count{min-width:28px;height:28px;border-radius:999px;background:var(--wine);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:900}
+.pending-order-card{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;display:grid;gap:12px}
+.pending-order-main{display:flex;gap:11px;align-items:flex-start}
+.pending-order-main .emoji{font-size:24px}.pending-order-main>div{flex:1}
+.pending-order-main strong,.pending-order-main small{display:block}.pending-order-main small{color:var(--wine);font-weight:800;margin-top:3px}
+.pending-order-main p{margin:7px 0 0;color:var(--muted);line-height:1.45;font-size:13px}
+.pending-order-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pending-order-actions .primary,.pending-order-actions .ghost{padding:9px 12px}
