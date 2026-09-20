@@ -28,3 +28,22 @@ test('publish status is tied to the exact approved head sha',()=>{
   assert.match(fn,/preview_ready/);
   assert.match(fn,/site_edit_runs/);
 });
+
+
+test('preview is tokenized read-only and pinned to an exact head sha',()=>{
+  const preview=read('supabase/functions/site-preview/index.ts');
+  const migration=read('supabase/migrations/20260920_site_editor_preview.sql');
+  const editor=read('supabase/functions/site-editor/index.ts');
+  assert.match(migration,/token_hash/);
+  assert.match(migration,/expires_at/);
+  assert.match(migration,/head_sha/);
+  assert.match(preview,/raw\.githubusercontent\.com/);
+  assert.match(preview,/Cache-Control/);
+  assert.match(preview,/no-store/);
+  assert.match(preview,/X-Robots-Tag/);
+  assert.match(preview,/noindex/);
+  assert.match(preview,/serviceWorker/);
+  assert.doesNotMatch(preview,/GITHUB_APP_PRIVATE_KEY/);
+  assert.match(editor,/create_preview/);
+  assert.match(editor,/site_edit_previews/);
+});
