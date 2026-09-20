@@ -16,3 +16,15 @@ test('site editor policy checker rejects secret-like files and private keys',()=
   const src=read('scripts/site-editor-policy-check.mjs');
   for(const marker of ['origin/main','PRIVATE KEY','.env','.pem','.key']) assert.ok(src.includes(marker));
 });
+
+
+test('publish status is tied to the exact approved head sha',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(gh,/check-runs/);
+  assert.match(fn,/refresh_status/);
+  assert.match(fn,/head_sha/);
+  assert.match(fn,/stale_plan/);
+  assert.match(fn,/preview_ready/);
+  assert.match(fn,/site_edit_runs/);
+});
