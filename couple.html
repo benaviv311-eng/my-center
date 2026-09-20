@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>הבן זוג המושלם</title>
   <meta name="theme-color" content="#201a1b">
-  <link rel="stylesheet" href="couple.css?v=6">
+  <link rel="stylesheet" href="couple.css?v=7">
 </head>
 <body>
 <div class="couple-app">
@@ -61,15 +61,15 @@
         <b>בצע ←</b>
       </button>
 
-      <div class="manual-caption">או בחר בעצמך</div>
-      <section class="quick-grid" aria-label="פעולות מהירות">
-        <button class="quick-action" data-flow="gift"><span>🎁</span><strong>מתנה</strong><small>מצא ושלח</small></button>
-        <button class="quick-action" data-flow="date"><span>🥂</span><strong>דייט</strong><small>ארגן ערב</small></button>
-        <button class="quick-action" data-flow="gesture"><span>🌹</span><strong>מחווה</strong><small>משהו קטן</small></button>
-        <button class="quick-action accent" data-flow="surprise"><span>✨</span><strong>תפתיע אותי</strong><small>אני אבחר</small></button>
-      </section>
-
-      <button class="now-button" id="doNowBtn"><span>⚡</span><span><strong>תן לי פעולה בלי קנייה</strong><small>רעיון מיידי שלא דורש הזמנה</small></span><b>←</b></button>
+      <details class="manual-tools">
+        <summary>רוצה לבחור בעצמך?</summary>
+        <section class="quick-grid" aria-label="פעולות ידניות">
+          <button class="quick-action" data-flow="gift"><span>🎁</span><strong>מתנה</strong><small>בחר ידנית</small></button>
+          <button class="quick-action" data-flow="date"><span>🥂</span><strong>דייט</strong><small>בחר ידנית</small></button>
+          <button class="quick-action" data-flow="gesture"><span>🌹</span><strong>מחווה</strong><small>בחר ידנית</small></button>
+          <button class="quick-action" id="doNowBtn"><span>⚡</span><strong>בלי כסף</strong><small>פעולה מיידית</small></button>
+        </section>
+      </details>
 
       <section class="section">
         <div class="section-head"><h3>התוכנית שלי</h3><button class="text-btn" data-go="plans">לכל התוכנית</button></div>
@@ -228,6 +228,6 @@
 
 <div class="toast" id="coupleToast"></div>
 <script src="couple-catalog.js?v=2"></script>
-<script src="couple.js?v=10"></script>
+<script src="couple.js?v=11"></script>
 </body>
 </html>
