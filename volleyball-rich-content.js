@@ -69,6 +69,131 @@ const VOLLEYBALL_DRILL_LIBRARY=[
   makeDrill('m-read','men','Read the Hitter בקצב גבוה','לתאם חסימה והגנה מול תוקפים מהירים וחזקים.','תוקפים מול חסימה והגנה מלאה.','החסימה מגדירה מה נסגר, ההגנה מתמקמת וקוראת כתף; ממשיכים למעבר.','קשר בין ידיים בחסימה לעומק הגנה ומעבר מיידי.',VB_RICH_SOURCES.tools,'עיבוד של Read the Hitter לגברים בוגרים עם דגש על קריאה תחת קצב.')
 ];
 
+
+const VOLLEYBALL_DRILL_MEDIA={
+  'el-2v2':{
+    videoUrl:'https://www.youtube.com/watch?v=iAsH4YZKyLc',
+    images:[
+      {src:'https://images.pexels.com/photos/15149190/pexels-photo-15149190.jpeg',alt:'אימון כדורעף לילדים באולם',credit:'Pexels'},
+      {src:'https://storage.googleapis.com/msgsndr/aGagGPzv1aS4v8hffakm/media/686e81498796621b1544ef83.jpeg',alt:'אימון הגשה לנוער',credit:'Momentum Volleyball'}
+    ],
+    diagram:{title:'2×2 — רצף שלוש נגיעות',players:[['A1',28,145,'a'],['A2',72,145,'a'],['B1',28,35,'b'],['B2',72,35,'b']],arrows:[[28,145,50,112],[50,112,72,145],[72,145,50,72],[50,72,28,35]]}
+  },
+  'el-3skills':{
+    videoUrl:'https://www.youtube.com/watch?v=iAsH4YZKyLc',
+    images:[
+      {src:'https://images.pexels.com/photos/15149190/pexels-photo-15149190.jpeg',alt:'ילדים מתרגלים עם כדורי כדורעף',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/17557540/pexels-photo-17557540.jpeg',alt:'שחקניות צעירות באולם',credit:'Pexels'}
+    ],
+    diagram:{title:'קבלה → מסירה → העברה',players:[['1',25,150,'a'],['2',50,125,'a'],['3',75,150,'a'],['4',50,35,'b']],arrows:[[25,150,50,125],[50,125,75,150],[75,150,50,70]]}
+  },
+  'el-targets':{
+    images:[
+      {src:'https://storage.googleapis.com/msgsndr/aGagGPzv1aS4v8hffakm/media/686e81498796621b1544ef83.jpeg',alt:'שחקנים צעירים מתרגלים הגשה',credit:'Momentum Volleyball'},
+      {src:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',alt:'שחקן מבצע הגשה',credit:'Pexels'}
+    ],
+    diagram:{title:'הגשה וקבלה למטרות',players:[['S',50,160,'a'],['R1',28,35,'b'],['R2',72,35,'b']],targets:[[20,18],[80,18]],arrows:[[50,155,28,42],[50,155,72,42]]}
+  },
+  'yb-scramble':{
+    videoUrl:'https://www.youtube.com/watch?v=PxwxVLtKjYg',
+    images:[
+      {src:'https://images.pexels.com/photos/32681163/pexels-photo-32681163.jpeg',alt:'שחקן נוער בהתקפה',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',alt:'שחקן באימון כדורעף',credit:'Pexels'}
+    ],
+    diagram:{title:'Scramble & Recover',players:[['D1',20,145,'a'],['D2',50,155,'a'],['D3',80,145,'a'],['T',50,35,'coach']],arrows:[[50,35,20,145],[20,145,50,118],[50,118,78,72]]}
+  },
+  'yb-oos':{
+    videoUrl:'https://www.youtube.com/watch?v=PxwxVLtKjYg',
+    images:[
+      {src:'https://images.pexels.com/photos/32681163/pexels-photo-32681163.jpeg',alt:'תוקף צעיר קופץ באולם',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',alt:'שחקן כדורעף באולם',credit:'Pexels'}
+    ],
+    diagram:{title:'4×4 מחוץ למערכת',players:[['D',20,150,'a'],['S2',50,135,'a'],['OH',82,115,'a'],['MB',50,98,'a'],['B1',25,42,'b'],['B2',75,42,'b']],arrows:[[20,150,50,135],[50,135,82,115],[82,115,70,55]]}
+  },
+  'yb-serve':{
+    images:[
+      {src:'https://storage.googleapis.com/msgsndr/aGagGPzv1aS4v8hffakm/media/686e81498796621b1544ef83.jpeg',alt:'תרגול הגשה קבוצתי',credit:'Momentum Volleyball'},
+      {src:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',alt:'הגשת כדורעף',credit:'Pexels'}
+    ],
+    diagram:{title:'מגיש מול יחידת קבלה',players:[['S',50,162,'a'],['R1',22,35,'b'],['R2',50,28,'b'],['R3',78,35,'b'],['SET',50,68,'b']],arrows:[[50,156,22,42],[22,35,50,68]]}
+  },
+  'yg-dig-cover':{
+    videoUrl:'https://www.youtube.com/watch?v=PxwxVLtKjYg',
+    images:[
+      {src:'https://images.pexels.com/photos/17557540/pexels-photo-17557540.jpeg',alt:'שחקניות נוער באולם',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg',alt:'שחקנית כדורעף באולם',credit:'Pexels'}
+    ],
+    diagram:{title:'Dig → Set → Cover',players:[['D',28,150,'a'],['S',50,122,'a'],['H',78,105,'a'],['C1',60,150,'a'],['ATT',50,30,'b']],arrows:[[50,35,28,150],[28,150,50,122],[50,122,78,105]]}
+  },
+  'yg-defend-set':{
+    videoUrl:'https://www.youtube.com/watch?v=PxwxVLtKjYg',
+    images:[
+      {src:'https://images.pexels.com/photos/17557540/pexels-photo-17557540.jpeg',alt:'שחקניות צעירות במגרש',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg',alt:'שחקנית מחזיקה כדור',credit:'Pexels'}
+    ],
+    diagram:{title:'הגנה וכדור שני',players:[['D',30,150,'a'],['S2',58,130,'a'],['H',82,110,'a'],['T',50,30,'coach']],arrows:[[50,35,30,150],[30,150,58,130],[58,130,82,110]]}
+  },
+  'yg-read':{
+    videoUrl:'https://www.youtube.com/watch?v=QRgANLdhOLU',
+    images:[
+      {src:'https://images.pexels.com/photos/17557540/pexels-photo-17557540.jpeg',alt:'נוער בנות באימון',credit:'Pexels'},
+      {src:'https://stat.ameba.jp/user_images/20250310/07/jp-postman/6e/4b/j/o1024092815552884886.jpg',alt:'תרגול חסימה לנערות',credit:'Asaka Senior Volleyball Club'}
+    ],
+    diagram:{title:'Read the Hitter',players:[['D1',25,145,'a'],['D2',50,158,'a'],['D3',75,145,'a'],['H',72,35,'b'],['S',50,55,'b']],arrows:[[50,55,72,35],[72,35,25,145]]}
+  },
+  'w-coverage':{
+    videoUrl:'https://www.youtube.com/watch?v=PxwxVLtKjYg',
+    images:[
+      {src:'https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg',alt:'שחקנית מקצועית באולם',credit:'Pexels'},
+      {src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tijana_Bo%C5%A1kovi%C4%87_in_attack_%28team_Serbia%2C_2017%29.jpg',alt:'Tijana Bošković בהתקפה',credit:'Wikimedia Commons'}
+    ],
+    diagram:{title:'כיסוי התקפה ויציאה מחדש',players:[['H',78,105,'a'],['C1',62,135,'a'],['C2',82,145,'a'],['S2',45,130,'a'],['B',78,72,'b']],arrows:[[78,105,78,72],[75,80,62,135],[62,135,45,130],[45,130,78,105]]}
+  },
+  'w-middle':{
+    videoUrl:'https://www.youtube.com/watch?v=QRgANLdhOLU',
+    images:[
+      {src:'https://images.squarespace-cdn.com/content/v1/61f1e4a2503a804251d2c0a6/ade4a78e-ea04-4385-b735-ed60a631c7ac/22%2B03%2B20%2B-%2B4413.jpg',alt:'תרגול חסימה מסונכרן',credit:'Melbourne Volleyball Academy'},
+      {src:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Paola_Egonu_18_U.S._ProVictoria_Pallavolo_Monza_WV_CEV_WCL_20260107_%2821%29.jpg',alt:'Paola Egonu במשחק',credit:'Wikimedia Commons'}
+    ],
+    diagram:{title:'Middle vs Middle',players:[['S',50,130,'a'],['M',50,105,'a'],['MB',50,74,'b'],['D',50,35,'b']],arrows:[[50,130,50,105],[50,105,50,65]]}
+  },
+  'w-risk':{
+    images:[
+      {src:'https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg',alt:'שחקנית עם כדור לפני הגשה',credit:'Pexels'},
+      {src:'https://storage.googleapis.com/msgsndr/aGagGPzv1aS4v8hffakm/media/686e81498796621b1544ef83.jpeg',alt:'תרגול הגשה',credit:'Momentum Volleyball'}
+    ],
+    diagram:{title:'Risk–Reward בהגשה',players:[['S',50,162,'a'],['R1',20,35,'b'],['R2',50,25,'b'],['R3',80,35,'b']],targets:[[16,18],[50,18],[84,18]],arrows:[[50,158,16,25],[50,158,50,25],[50,158,84,25]]}
+  },
+  'm-serve':{
+    images:[
+      {src:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',alt:'שחקן גברים בהגשה',credit:'Pexels'},
+      {src:'https://images.pexels.com/photos/32681163/pexels-photo-32681163.jpeg',alt:'שחקן גברים בהתקפה',credit:'Pexels'}
+    ],
+    diagram:{title:'הגשה מול שלושה מקבלים',players:[['S',50,162,'a'],['R1',18,35,'b'],['R2',50,25,'b'],['R3',82,35,'b'],['SET',50,65,'b']],arrows:[[50,158,18,42],[18,35,50,65]]}
+  },
+  'm-setter-hitter':{
+    videoUrl:'https://www.youtube.com/watch?v=QRgANLdhOLU',
+    images:[
+      {src:'https://images.squarespace-cdn.com/content/v1/61f1e4a2503a804251d2c0a6/ade4a78e-ea04-4385-b735-ed60a631c7ac/22%2B03%2B20%2B-%2B4413.jpg',alt:'תרגול חסימה',credit:'Melbourne Volleyball Academy'},
+      {src:'https://stat.ameba.jp/user_images/20250310/07/jp-postman/6e/4b/j/o1024092815552884886.jpg',alt:'שתי חוסמות עולות לרשת',credit:'Asaka Senior Volleyball Club'}
+    ],
+    diagram:{title:'Ball → Setter → Hitter',players:[['B1',35,78,'a'],['B2',65,78,'a'],['S',50,45,'b'],['H',78,30,'b']],arrows:[[25,40,50,45],[50,45,78,30],[78,30,62,80]]}
+  },
+  'm-read':{
+    videoUrl:'https://www.youtube.com/watch?v=QRgANLdhOLU',
+    images:[
+      {src:'https://images.squarespace-cdn.com/content/v1/61f1e4a2503a804251d2c0a6/ade4a78e-ea04-4385-b735-ed60a631c7ac/22%2B03%2B20%2B-%2B4413.jpg',alt:'שלושה חוסמים בתרגול',credit:'Melbourne Volleyball Academy'},
+      {src:'https://images.pexels.com/photos/32681163/pexels-photo-32681163.jpeg',alt:'תוקף קופץ להנחתה',credit:'Pexels'}
+    ],
+    diagram:{title:'קריאת תוקף בקצב גבוה',players:[['D1',20,145,'a'],['D2',50,155,'a'],['D3',80,145,'a'],['B1',38,78,'a'],['B2',62,78,'a'],['H',78,32,'b']],arrows:[[78,32,62,78],[78,32,20,145]]}
+  }
+};
+
+VOLLEYBALL_DRILL_LIBRARY.forEach(drill=>{
+  const media=VOLLEYBALL_DRILL_MEDIA[drill.id];
+  if(media)Object.assign(drill,media);
+});
+
 function makePopulationCard(population,topic,variant){
   const p=VB_POPULATION_PROFILES[population],t=VB_TOPIC_CONTENT[topic.id];
   const title=variant===0?`${t[0]}: ${t[1]}`:`${t[2]} — ${p.short}`;
