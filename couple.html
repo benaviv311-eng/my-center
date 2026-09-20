@@ -242,5 +242,35 @@
 <div class="toast" id="coupleToast"></div>
 <script src="couple-catalog.js?v=2"></script>
 <script src="couple.js?v=16"></script>
+<script id="coupleCompatibilityFallback">
+(function(){
+  window.setTimeout(function(){
+    var title=document.getElementById('decisionTitle');
+    if(!title||title.textContent.indexOf('טוען')===-1)return;
+    var text=document.getElementById('decisionText');
+    var cost=document.getElementById('decisionCost');
+    var provider=document.getElementById('decisionProvider');
+    var execute=document.getElementById('decisionExecuteBtn');
+    var refresh=document.getElementById('decisionAnotherBtn');
+    var ideas=[
+      {t:'שלח לה משהו מתוק',d:'בחר משהו קטן שהיא אוהבת ותוסיף הודעה קצרה: חשבתי עלייך ❤️',c:'כ־60 ₪'},
+      {t:'תוריד ממנה משימה היום',d:'קח על עצמך משהו שהיא בדרך כלל עושה, בלי לשאול מה צריך.',c:'ללא עלות'},
+      {t:'ערב קטן רק שלכם',d:'20 דקות בלי טלפונים, משהו לשתות ושיחה רגועה.',c:'ללא עלות'},
+      {t:'פתק קטן במקום מפתיע',d:'כתוב משפט אחד אמיתי שאתה מעריך בה והשאר אותו במקום שתמצא.',c:'ללא עלות'}
+    ];
+    var i=0;
+    function show(){
+      var x=ideas[i%ideas.length];
+      title.textContent=x.t;
+      if(text)text.textContent=x.d;
+      if(cost)cost.textContent=x.c;
+      if(provider)provider.textContent='בתוך האפליקציה';
+    }
+    show();
+    if(refresh)refresh.onclick=function(){i++;show();};
+    if(execute)execute.onclick=function(){execute.textContent='מוכן ✓';execute.disabled=true;};
+  },1200);
+})();
+</script>
 </body>
 </html>
