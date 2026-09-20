@@ -1,4 +1,4 @@
-const CACHE_NAME="volleyball-app-v2";
+const CACHE_NAME="volleyball-app-v3";
 const CORE=[
   "./","./index.html","./manifest.webmanifest","./app-icon.svg","./app-icon-192.png","./app-icon-512.png","./volleyball-app.css","./volleyball-app-shell.js",
   "../styles.css","../volleyball.css","../volleyball-rich-content.css",
