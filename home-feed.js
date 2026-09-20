@@ -14,7 +14,8 @@
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function shortText(value,limit=420){const s=String(value||'').trim();return s.length>limit?`${s.slice(0,limit).trim()}…`:s;}
   function renderCard(item,{saved=false,recycled=false}={}){
-    const languageLabels={ar:'🌍 ערבית',it:'🌍 איטלקית',ru:'🌍 רוסית',es:'🌍 ספרדית'};\n    const source=item.source==='languages'&&item.metadata&&languageLabels[item.metadata.lang]?languageLabels[item.metadata.lang]:(SOURCE_LABELS[item.source]||item.source||'תוכן');
+    const languageLabels={ar:'🌍 ערבית',it:'🌍 איטלקית',ru:'🌍 רוסית',es:'🌍 ספרדית'};
+    const source=item.source==='languages'&&item.metadata&&languageLabels[item.metadata.lang]?languageLabels[item.metadata.lang]:(SOURCE_LABELS[item.source]||item.source||'תוכן');
     const status=item.source==='raika'&&item.metadata&&item.metadata.status?STATUS_LABELS[item.metadata.status]||esc(item.metadata.status):'';
     const summary=shortText(item.summary||item.fullText||'');
     const expanded=item.fullText&&item.fullText!==item.summary?`<div class="home-card-expanded" hidden>${esc(item.fullText).replace(/\n/g,'<br>')}</div>`:'';
