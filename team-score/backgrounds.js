@@ -1,5 +1,5 @@
 (()=>{
-  const SPRITE='assets/approved24.webp?v=18';
+  const SPRITE='assets/approved24.webp?v=19';
   const COLS=6, ROWS=4, TILE_W=240, TILE_H=180, SPRITE_W=1440, SPRITE_H=720, TOTAL=24;
   const INTERVAL=15000;
   let layers=[], active=0, current=0, timer=null, resizeTimer=null;
