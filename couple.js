@@ -106,16 +106,47 @@ function addEvent(){
 function giftFlow(){
  const budget=state.me.giftBudget||200;const hint=state.partner.hints.at(-1);
  openModal(`<p class="eyebrow">מתנה</p><h2>מצא מתנה ל${esc(partnerName())}</h2><p>${hint?'אפשר להשתמש ברמז האחרון: “'+esc(hint.text)+'”.':'ההצעה תתבסס על ההעדפות ששמרת.'}</p><label>תקציב</label><input id="flowBudget" type="number" value="${budget}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:8px 0 14px"><button class="primary full" id="findGift">מצא מתנה</button>`);
- $('#findGift').onclick=()=>{const b=+$('#flowBudget').value||budget;const ideas=['ספר או פריט שהיא הזכירה','תכשיט עדין בסגנון שלה','מארז קטן שמתחבר לתחביב שלה'];const idea=hint?`מתנה שמבוססת על: “${hint.text}”`:ideas[Math.floor(Math.random()*ideas.length)];openModal(`<p class="eyebrow">הבחירה שלי</p><h2>🎁 ${esc(idea)}</h2><div class="result-card"><p>המערכת תמצא ספק ומשלוח בתקציב שהוגדר.</p><div class="price">עד ${b} ₪</div></div><button class="primary full" id="approveGift">המשך להזמנה</button><p class="muted">ב־MVP עדיין לא מחובר ספק מסחר. הלחיצה תשמור את הפעולה ותכין אותה לחיבור ספק בהמשך.</p>`);$('#approveGift').onclick=()=>{state.progress.gifts++;state.progress.courtship++;save();closeModal();toast('המתנה נוספה לביצוע')}}}
+ $('#findGift').onclick=()=>{
+  const b=+$('#flowBudget').value||budget;
+  const ideas=['ספר או פריט שהיא הזכירה','תכשיט עדין בסגנון שלה','מארז קטן שמתחבר לתחביב שלה'];
+  const idea=hint?`מתנה שמבוססת על: “${hint.text}”`:ideas[Math.floor(Math.random()*ideas.length)];
+  openModal(`<p class="eyebrow">הבחירה שלי</p><h2>🎁 ${esc(idea)}</h2><div class="result-card"><p>בחר ספק כדי לעבור לבחירה ולהזמנה בפועל.</p><div class="price">עד ${b} ₪</div></div>${providerButtons([
+    {url:providers.woltGifts,icon:'🛵',label:'פתח מתנות ב-Wolt',note:'משלוח, ברכה ומעקב',primary:true},
+    {url:mapsSearch('חנות מתנות'),icon:'📍',label:'מתנות קרוב אליי',note:'חיפוש לפי המיקום שלך'},
+    {url:providers.printedCard,icon:'💌',label:'הוסף כרטיס ברכה מודפס',note:'טקסט אישי ומשלוח'}
+  ])}<button class="primary full" id="approveGift">סמן שהמתנה הוזמנה</button><p class="muted">כרגע התשלום נעשה אצל הספק. בהמשך נחבר ספקים שתומכים בתשלום ישירות מתוך האפליקציה.</p>`);
+  $('#approveGift').onclick=()=>{state.progress.gifts++;state.progress.courtship++;save();closeModal();toast('המתנה סומנה כהוזמנה')}
+ }
+}
 function dateFlow(){
  const b=state.me.dateBudget||400;
  openModal(`<p class="eyebrow">דייט</p><h2>תן לי לארגן ערב</h2><div class="modal-options"><button class="modal-option selected" data-date-style="רומנטי">רומנטי</button><button class="modal-option" data-date-style="מצחיק">מצחיק</button><button class="modal-option" data-date-style="רגוע">רגוע</button><button class="modal-option" data-date-style="חדש">חדש לנו</button></div><label>תקציב כולל</label><input id="dateFlowBudget" type="number" value="${b}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:8px 0 14px"><button class="primary full" id="buildDate">בנה לי דייט</button>`);
- let style='רומנטי';$$('[data-date-style]').forEach(x=>x.onclick=()=>{$$('[data-date-style]').forEach(y=>y.classList.remove('selected'));x.classList.add('selected');style=x.dataset.dateStyle});
- $('#buildDate').onclick=()=>{const budget=+$('#dateFlowBudget').value||b;const dist=state.me.maxDistance||30;openModal(`<p class="eyebrow">דייט מוכן</p><h2>🥂 ערב ${esc(style)}</h2><div class="result-card"><h3>19:30 יציאה</h3><p>20:00 פעילות או מקום שמתאים להעדפות של ${esc(partnerName())}<br>21:30 אוכל / קינוח קרוב<br>23:00 חזרה</p><small>טווח נסיעה</small><div class="price">עד ${dist} דקות · עד ${budget} ₪</div></div><button class="primary full" id="approveDate">ארגן את הדייט</button><p class="muted">בשלב הבא נחבר זמינות אמיתית של מסעדות, הופעות וכרטיסים.</p>`);$('#approveDate').onclick=()=>{state.progress.dates++;state.progress.courtship++;save();closeModal();toast('הדייט נוסף לתוכנית')}}}
+ let style='רומנטי';
+ $$('[data-date-style]').forEach(x=>x.onclick=()=>{$$('[data-date-style]').forEach(y=>y.classList.remove('selected'));x.classList.add('selected');style=x.dataset.dateStyle});
+ $('#buildDate').onclick=()=>{
+  const budget=+$('#dateFlowBudget').value||b;const dist=state.me.maxDistance||30;
+  openModal(`<p class="eyebrow">דייט מוכן</p><h2>🥂 ערב ${esc(style)}</h2><div class="result-card"><h3>19:30 יציאה</h3><p>20:00 פעילות או מקום שמתאים להעדפות של ${esc(partnerName())}<br>21:30 אוכל / קינוח קרוב<br>23:00 חזרה</p><small>טווח נסיעה</small><div class="price">עד ${dist} דקות · עד ${budget} ₪</div></div>${providerButtons([
+    {url:providers.ontopo,icon:'🍽️',label:'הזמן מסעדה ב-Ontopo',note:'זמינות והזמנת שולחן',primary:true},
+    {url:providers.eventimStandup,icon:'🎤',label:'מצא סטנד-אפ',note:'מופעים וכרטיסים עדכניים'},
+    {url:mapsSearch(style+' דייט מסעדה פעילות'),icon:'📍',label:'מצא אפשרויות קרובות',note:'לפי המיקום שלך'}
+  ])}<button class="primary full" id="approveDate">סמן שהדייט אורגן</button><p class="muted">ההזמנות נפתחות כרגע אצל הספקים. בהמשך נרכז אישור ותשלום בתוך האפליקציה כאשר האינטגרציה תאפשר זאת.</p>`);
+  $('#approveDate').onclick=()=>{state.progress.dates++;state.progress.courtship++;save();closeModal();toast('הדייט סומן כמאורגן')}
+ }
+}
 function gestureFlow(){
  const b=state.me.gestureBudget||70;
  openModal(`<p class="eyebrow">מחווה</p><h2>משהו קטן עכשיו</h2><div class="modal-options"><button class="modal-option" data-gesture="free">בלי כסף</button><button class="modal-option" data-gesture="delivery">משלוח קטן</button><button class="modal-option" data-gesture="home">בבית</button><button class="modal-option" data-gesture="work">לעבודה</button></div><button class="primary full" id="randomGesture">תבחר בשבילי</button>`);
- $$('[data-gesture]').forEach(x=>x.onclick=()=>{const type=x.dataset.gesture;const a=type==='free'?actionPool[0]:type==='home'?actionPool[1]:{type:'gesture',icon:'🌹',title:type==='work'?'הפתעה לעבודה':'משלוח קטן',body:`מצא משהו קטן עד ${b} ₪ ושלח עם ברכה אישית.`,cost:b};showAction(a)});
+ $$('[data-gesture]').forEach(x=>x.onclick=()=>{
+  const type=x.dataset.gesture;
+  if(type==='free'||type==='home'){showAction(type==='free'?actionPool[0]:actionPool[1]);return}
+  const title=type==='work'?'הפתעה לעבודה':'משלוח קטן';
+  openModal(`<p class="eyebrow">מחווה לביצוע</p><h2>🌹 ${title}</h2><p>מצא משהו קטן עד ${b} ₪ ושלח עם ברכה אישית.</p>${providerButtons([
+    {url:providers.woltGifts,icon:'🛵',label:'שלח מתנה עכשיו',note:'משלוח מהיר דרך Wolt',primary:true},
+    {url:providers.woltFlowers,icon:'💐',label:'שלח פרחים',note:'חנויות פרחים באזור'},
+    {url:providers.printedCard,icon:'💌',label:'שלח כרטיס ברכה מודפס',note:'ברכה אישית ומשלוח'}
+  ])}<button class="primary full" id="gestureDone">סמן שבוצע</button>`);
+  $('#gestureDone').onclick=()=>{state.progress.gestures++;state.progress.courtship++;save();closeModal();toast('המחווה סומנה כבוצעה')}
+ });
  $('#randomGesture').onclick=()=>showAction(actionPool.filter(a=>a.type==='gesture'||a.type==='free')[Math.floor(Math.random()*5)])
 }
 function buildWeek(){
