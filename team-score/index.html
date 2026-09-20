@@ -22,7 +22,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <script>
 (async function(){
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
-  const read=async n=>{const r=await fetch(n+"?v=18");if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
+  const read=async n=>{const r=await fetch(n+"?v=19");if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
   const bin=atob(parts.join(""));
   const bytes=new Uint8Array(bin.length);
@@ -33,8 +33,8 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const pixel="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
   for(let i=1;i<=4;i++) html=html.replaceAll("__BG"+i+"__",pixel);
   html=html.replaceAll("icon-192.png","icon.svg").replaceAll("icon-512.png","icon.svg");
-  html=html.replace("</head>","<link rel=\"stylesheet\" href=\"backgrounds.css?v=18\"></head>");
-  html=html.replace("</body>","<script src=\"backgrounds.js?v=18\"><\/script></body>");
+  html=html.replace("</head>","<link rel=\"stylesheet\" href=\"backgrounds.css?v=19\"></head>");
+  html=html.replace("</body>","<script src=\"backgrounds.js?v=19\"><\/script></body>");
   document.open();document.write(html);document.close();
 })().catch(e=>{
   document.getElementById("load").innerHTML="לא הצלחתי לטעון את TeamScore<small>"+String(e.message||e)+"</small>";
