@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>הבן זוג המושלם</title>
   <meta name="theme-color" content="#201a1b">
-  <link rel="stylesheet" href="couple.css?v=9">
+  <link rel="stylesheet" href="couple.css?v=10">
 </head>
 <body>
 <div class="couple-app">
@@ -23,8 +23,8 @@
       <section class="hero">
         <div>
           <p class="eyebrow">היום, בשביל שניכם</p>
-          <h2 id="greeting">מה נעשה היום בשביל הזוגיות?</h2>
-          <p id="heroSub">פחות לחשוב. יותר להשקיע.</p>
+          <h2 id="greeting">תפנק אותה היום</h2>
+          <p id="heroSub">אני כבר אחשוב מה לעשות.</p>
         </div>
         <span class="hero-heart">♥</span>
       </section>
@@ -36,7 +36,7 @@
           <div><h3 id="decisionTitle">טוען החלטה...</h3><p id="decisionText">אני בוחר עבורך את הדבר הכי נכון לעשות היום.</p></div>
         </div>
         <div class="decision-meta"><span id="decisionCost">—</span><span id="decisionProvider">—</span></div>
-        <button class="primary full one-tap-execute" id="decisionExecuteBtn">בצע עכשיו ←</button>
+        <button class="primary full one-tap-execute" id="decisionExecuteBtn">תעשה את זה</button>
         <button class="ghost full" style="margin-top:8px" id="decisionAnotherBtn">רענן</button>
       </article>
 
@@ -69,6 +69,13 @@
         <div id="pendingOrdersList" class="stack-list"></div>
       </section>
 
+      <button class="all-features-launcher" id="openAllFeaturesBtn">
+        <span>☰</span>
+        <div><strong>כל האפשרויות</strong><small>תוכניות, דייטים, מתנות, פרופיל והגדרות</small></div>
+        <b>←</b>
+      </button>
+
+      <div class="advanced-home-content">
       <details class="manual-tools">
         <summary>רוצה לבחור בעצמך?</summary>
         <section class="quick-grid" aria-label="פעולות ידניות">
@@ -99,6 +106,7 @@
         <div class="section-head"><h3>רמזים אחרונים</h3><button class="text-btn" id="addHintBtn">+ היא אמרה משהו</button></div>
         <div id="hintPreview" class="stack-list"></div>
       </section>
+      </div>
     </section>
 
     <section class="tab-page" data-page="courtship">
@@ -218,12 +226,9 @@
     </section>
   </main>
 
-  <nav class="bottom-nav">
-    <button class="active" data-tab="home"><span>⌂</span><small>בית</small></button>
-    <button data-tab="courtship"><span>♥</span><small>חיזור</small></button>
-    <button data-tab="plans"><span>▣</span><small>תוכניות</small></button>
-    <button data-tab="partner"><span>👩</span><small>בת הזוג</small></button>
-    <button data-tab="me"><span>⚙</span><small>אני</small></button>
+  <nav class="bottom-nav simple-nav">
+    <button class="active" data-tab="home"><span>⌂</span><small>היום</small></button>
+    <button id="allFeaturesNavBtn"><span>☰</span><small>כל האפשרויות</small></button>
   </nav>
 </div>
 
@@ -236,6 +241,6 @@
 
 <div class="toast" id="coupleToast"></div>
 <script src="couple-catalog.js?v=2"></script>
-<script src="couple.js?v=14"></script>
+<script src="couple.js?v=15"></script>
 </body>
 </html>
