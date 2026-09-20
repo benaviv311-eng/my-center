@@ -1,8 +1,8 @@
-const CACHE='teamscore-pilot-v19';
+const CACHE='teamscore-pilot-v20';
 const ASSETS=[
   './','./index.html','./manifest.webmanifest','./icon.svg',
   './t1.txt','./t2.txt','./t3.txt','./t4.txt',
-  './backgrounds.css','./backgrounds.js','./assets/approved24.webp'
+  './backgrounds.css','./backgrounds.js'
 ];
 self.addEventListener('install',e=>e.waitUntil(
   caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())
