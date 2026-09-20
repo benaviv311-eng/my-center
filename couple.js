@@ -144,6 +144,76 @@ function ensureAutomaticPlanning(force=false){
  if(!state.plan.autoPlanner&&!force)return;
  getDailyAction();autoBuildWeek(force);autoBuildMonth(force)
 }
+function oneTapMessage(kind){
+ const name=partnerName();
+ const messages={
+  flower:`סתם כי חשבתי עלייך. לא צריך סיבה מיוחדת כדי להזכיר לך שאני אוהב אותך ❤️`,
+  sweet:`משהו קטן ומתוק בשבילך, כי הגיע לך רגע קטן של כיף היום ❤️`,
+  card:`לא חיכיתי לאירוע מיוחד. רק רציתי שתדעי שאני רואה אותך, מעריך אותך ואוהב אותך.`,
+  gift:`ראיתי את זה וחשבתי עלייך. הקשבתי למה שאמרת ❤️`,
+  date:`שמרי לי את הערב. אני דואג לכל השאר ❤️`,
+  free:`רק רציתי להגיד לך משהו שאני לא אומר מספיק: אני מעריך אותך ואת כל מה שאת מביאה לחיים שלנו.`
+ };
+ return messages[kind]||messages.free
+}
+function oneTapPlan(){
+ const text=(state.partner.likes+' '+state.partner.giftPrefs+' '+state.partner.foodPrefs+' '+state.partner.emotionalPrefs).toLowerCase();
+ const dislikes=(state.partner.dislikes||'').toLowerCase();
+ const left=budgetLeft();
+ const gestureBudget=Math.max(0,Math.min(state.me.gestureBudget||70,left));
+ const giftBudget=Math.max(0,Math.min(state.me.giftBudget||200,left));
+ const ev=upcomingEvent(4);
+ const hint=state.partner.hints.at(-1);
+ const needDate=state.progress.dates<state.plan.dates && dayIsAvailable(new Date().getDay());
+ const flowerOK=!/פרח|זר/.test(dislikes);
+ const chocolateOK=!/שוקולד|מתוק|סוכר/.test(dislikes);
+ let plan;
+
+ if(ev && giftBudget>=120){
+   plan={kind:'gift',icon:'🎁',title:`מתנה קטנה לקראת ${ev.title}`,buy:hint?`מתנה שמתבססת על הרמז: “${hint.text}”`:'מתנה אישית קטנה שמתאימה למה שהיא אוהבת',cost:Math.min(giftBudget,180),url:providers.woltGifts,provider:'Wolt Gifts',reason:`${ev.title} מתקרב ולכן עדיף משהו אישי עכשיו`};
+ }else if(hint && giftBudget>=100 && state.progress.gifts<state.plan.gifts){
+   plan={kind:'gift',icon:'🎁',title:'היום מקשיבים לרמז',buy:`קנה משהו שקשור ישירות למה שהיא אמרה: “${hint.text}”`,cost:Math.min(giftBudget,160),url:providers.woltGifts,provider:'Wolt Gifts',reason:'יש רמז טרי ממנה ועוד חסרה מתנה בתוכנית'};
+ }else if(needDate && left>=Math.min(250,state.me.dateBudget||400) && state.progress.courtship>1){
+   plan={kind:'date',icon:'🥂',title:'הערב הולכים על דייט',buy:'הזמן שולחן לשניים במקום נעים קרוב, שעה שמתאימה ללוז שלכם. האפליקציה כבר בחרה: דייט פשוט, בלי להעמיס.',cost:Math.min(state.me.dateBudget||400,left),url:providers.ontopo,provider:'Ontopo',reason:'היום פנוי בלוז ועוד חסר דייט בתוכנית החודשית'};
+ }else if(/ספר/.test(text) && giftBudget>=80){
+   plan={kind:'gift',icon:'📚',title:'מתנה קטנה: ספר',buy:'קנה ספר חדש בתחום שהיא אוהבת, עם פתק אישי בפנים.',cost:Math.min(giftBudget,120),url:mapsSearch('חנות ספרים'),provider:'חנות ספרים קרובה',reason:'הפרופיל שלה מצביע על אהבה לספרים'};
+ }else if(flowerOK && gestureBudget>=60 && !/לא אוהבת פרחים/.test(dislikes)){
+   plan={kind:'flower',icon:'💐',title:'מחווה קטנה: זר + משהו מתוק',buy:`הזמן זר קטן ועדין ${chocolateOK?'ובתוספת שוקולד איכותי':''}. לא זר ענק — משהו אישי ונעים.`,cost:Math.min(Math.max(gestureBudget,60),100),url:providers.woltFlowers,provider:'Wolt',reason:'מחווה קטנה מתאימה יותר כרגע מדייט או מתנה גדולה'};
+ }else if(chocolateOK && gestureBudget>=40){
+   plan={kind:'sweet',icon:'🍰',title:'מחווה קטנה: משהו מתוק',buy:'שלח קינוח קטן שהיא אוהבת או מארז שוקולד איכותי.',cost:Math.min(Math.max(gestureBudget,40),80),url:providers.woltGifts,provider:'Wolt',reason:'מחווה קטנה בתקציב הנוכחי שומרת על רצף החיזור'};
+ }else if(left>=25){
+   plan={kind:'card',icon:'💌',title:'כרטיס אמיתי בדואר',buy:'שלח כרטיס ברכה פיזי עם טקסט אישי. האפליקציה כבר ניסחה את הברכה.',cost:Math.min(left,45),url:providers.printedCard,provider:'כרטיס ברכה מודפס',reason:'משהו אישי שלא דורש ממך תכנון'};
+ }else{
+   plan={kind:'free',icon:'❤️',title:'היום בלי לקנות כלום',buy:'שלח לה את ההודעה המוכנה, וכשאתה מגיע הביתה קח ממנה משימה אחת בלי לשאול מה צריך.',cost:0,url:null,provider:'',reason:'נשאר מעט מהתקציב ולכן עדיף חיזור אישי ללא הוצאה'};
+ }
+ plan.message=oneTapMessage(plan.kind);
+ return plan
+}
+function executeOneTap(plan){
+ rememberType(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card'?'gesture':plan.kind);
+ state.progress.courtship++;
+ if(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card')state.progress.gestures++;
+ if(plan.kind==='gift')state.progress.gifts++;
+ if(plan.kind==='date')state.progress.dates++;
+ state.progress.spent+=plan.cost||0;
+ state.planner.dailyKey='';
+ ensureAutomaticPlanning(true);
+ persistOnly();
+ if(plan.url){
+   try{navigator.clipboard?.writeText(`מה לקנות: ${plan.buy}\nברכה: ${plan.message}`)}catch{}
+   window.open(plan.url,'_blank','noopener');
+   closeModal();render();toast('פתחתי את הספק והעתקתי את מה לקנות ואת הברכה');
+ }else{
+   try{navigator.clipboard?.writeText(plan.message)}catch{}
+   closeModal();render();toast('ההודעה הועתקה — נשאר רק לשלוח');
+ }
+}
+function oneTapCourtship(){
+ const plan=oneTapPlan();
+ openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${plan.cost?plan.cost+' ₪':'0 ₪'}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">${plan.url?'בצע עכשיו ←':'שלח עכשיו ←'}</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">לא מתאים — תבחר משהו אחר</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. בלחיצה על ביצוע האפליקציה פותחת את הספק ומעתיקה עבורך את ההזמנה והברכה.</p>`);
+ $('#executeOneTapBtn').onclick=()=>executeOneTap(plan);
+ $('#rejectOneTapBtn').onclick=()=>{state.planner.lastTypes.unshift(plan.kind);state.planner.lastTypes=state.planner.lastTypes.slice(0,5);persistOnly();oneTapCourtship()}
+}
 const actionPool=[
  {type:'free',icon:'💬',title:'שלח הודעה אישית',body:'כתוב לה דבר אחד ספציפי שאתה מעריך בה היום.',cost:0},
  {type:'free',icon:'☕',title:'תוריד ממנה משהו קטן',body:'קח על עצמך משימה אחת שהיא בדרך כלל עושה, בלי להפוך את זה לאירוע.',cost:0},
@@ -260,7 +330,8 @@ function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction(
 $$('.bottom-nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function go(tab){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
-$$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+$('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
 $('#quickAddBtn').onclick=addHint;$('#addHintBtn').onclick=addHint;$('#partnerHintBtn').onclick=addHint;$('#addEventBtn').onclick=addEvent;
 $('#buildWeek').onclick=buildWeek;$('#regenerateWeek').onclick=buildWeek;
