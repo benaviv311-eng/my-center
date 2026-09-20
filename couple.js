@@ -15,7 +15,7 @@ let state=load();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])){a[k]=merge(a[k]||{},b[k])}else if(b[k]!==undefined)a[k]=b[k]}return a}
-function load(){try{return merge(clone(defaults),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(defaults)}}
+function load(){try{return merge(clone(defaults),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return clone(defaults)}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
 function toast(msg){const t=$('#coupleToast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2400)}
 function esc(v=''){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -81,7 +81,7 @@ function scoreAction(a){
 }
 function chooseSmartAction(variant=0){
  let pool=actionPool.map(a=>({...a}));
- const hint=state.partner.hints.at(-1);
+ const hint=state.partner.hints[state.partner.hints.length-1];
  if(hint)pool.push({type:'hint',icon:'💡',title:'הפוך רמז לפעולה',body:`היא אמרה: “${hint.text}”. בחר דרך קטנה להפוך את זה למשהו ממשי השבוע.`,cost:0});
  pool=pool.map(a=>({...a,score:scoreAction(a)})).sort((a,b)=>b.score-a.score);
  const top=pool.filter(a=>a.score>-50).slice(0,Math.min(4,pool.length));
@@ -195,7 +195,7 @@ function learnFromRefresh(plan){
  bumpFeedback('rejectedTypes',plan.kind,1);
  const catalog=Array.isArray(window.COUPLE_CATALOG)?window.COUPLE_CATALOG:[];
  const source=catalog.find(x=>x.id===plan.id);
- (source?.tags||[]).slice(0,3).forEach(tag=>bumpFeedback('rejectedTags',String(tag).toLowerCase(),1));
+ ((source&&source.tags)||[]).slice(0,3).forEach(tag=>bumpFeedback('rejectedTags',String(tag).toLowerCase(),1));
  rememberItem(plan.id);
  rememberType(plan.kind);
  state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;
@@ -204,8 +204,8 @@ function learnFromRefresh(plan){
 }
 function feedbackPenalty(item){
  const fb=state.feedback||{};
- let penalty=(fb.rejectedItems?.[item.id]||0)*12+(fb.rejectedTypes?.[item.type]||0)*3;
- (item.tags||[]).forEach(tag=>{penalty+=(fb.rejectedTags?.[String(tag).toLowerCase()]||0)*4});
+ let penalty=((fb.rejectedItems&&fb.rejectedItems[item.id])||0)*12+((fb.rejectedTypes&&fb.rejectedTypes[item.type])||0)*3;
+ (item.tags||[]).forEach(tag=>{penalty+=((fb.rejectedTags&&fb.rejectedTags[String(tag).toLowerCase()])||0)*4});
  return penalty
 }
 function catalogScore(item){
@@ -419,7 +419,7 @@ function addEvent(){
  $('#saveEventModal').onclick=()=>{const title=$('#eventTitle').value.trim(),date=$('#eventDate').value;if(!title||!date)return;state.events.push({id:Date.now(),title,date});save();closeModal()}
 }
 function giftFlow(){
- const budget=state.me.giftBudget||200;const hint=state.partner.hints.at(-1);
+ const budget=state.me.giftBudget||200;const hint=state.partner.hints[state.partner.hints.length-1];
  openModal(`<p class="eyebrow">מתנה</p><h2>מצא מתנה ל${esc(partnerName())}</h2><p>${hint?'אפשר להשתמש ברמז האחרון: “'+esc(hint.text)+'”.':'ההצעה תתבסס על ההעדפות ששמרת.'}</p><label>תקציב</label><input id="flowBudget" type="number" value="${budget}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:8px 0 14px"><button class="primary full" id="findGift">מצא מתנה</button>`);
  $('#findGift').onclick=()=>{
   const b=+$('#flowBudget').value||budget;
