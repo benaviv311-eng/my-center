@@ -6,6 +6,7 @@ const defaults={
   progress:{gifts:0,dates:0,gestures:0,courtship:0,spent:0},
   orders:[],
   planner:{dailyKey:'',daily:null,dailyVariant:0,weekKey:'',monthKey:'',lastTypes:[],lastItems:[]},
+  feedback:{rejectedItems:{},rejectedTypes:{},rejectedTags:{}},
   events:[],
   week:[],
   month:[]
@@ -93,7 +94,8 @@ function getDailyAction(){
  return state.planner.daily
 }
 function nextDailyAlternative(){
- state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;state.planner.daily=chooseSmartAction(state.planner.dailyVariant);state.planner.dailyKey=localDateKey();persistOnly();render()
+ const current=state.planner.daily;if(current)learnFromRefresh({id:current.id||null,kind:current.type||'free'});
+ state.planner.daily=chooseSmartAction(state.planner.dailyVariant);state.planner.dailyKey=localDateKey();persistOnly();render()
 }
 function persistOnly(){localStorage.setItem(KEY,JSON.stringify(state))}
 function getPreferredDays(startDate,count){
@@ -181,6 +183,31 @@ function catalogBudgetCap(type){
  if(type==='gesture')return Math.min(left,+state.me.gestureBudget||left);
  return left
 }
+function bumpFeedback(bucket,key,amount=1){
+ if(!key)return;
+ state.feedback=state.feedback||{rejectedItems:{},rejectedTypes:{},rejectedTags:{}};
+ state.feedback[bucket]=state.feedback[bucket]||{};
+ state.feedback[bucket][key]=(state.feedback[bucket][key]||0)+amount
+}
+function learnFromRefresh(plan){
+ if(!plan)return;
+ bumpFeedback('rejectedItems',plan.id,3);
+ bumpFeedback('rejectedTypes',plan.kind,1);
+ const catalog=Array.isArray(window.COUPLE_CATALOG)?window.COUPLE_CATALOG:[];
+ const source=catalog.find(x=>x.id===plan.id);
+ (source?.tags||[]).slice(0,3).forEach(tag=>bumpFeedback('rejectedTags',String(tag).toLowerCase(),1));
+ rememberItem(plan.id);
+ rememberType(plan.kind);
+ state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;
+ state.planner.dailyKey='';
+ persistOnly()
+}
+function feedbackPenalty(item){
+ const fb=state.feedback||{};
+ let penalty=(fb.rejectedItems?.[item.id]||0)*12+(fb.rejectedTypes?.[item.type]||0)*3;
+ (item.tags||[]).forEach(tag=>{penalty+=(fb.rejectedTags?.[String(tag).toLowerCase()]||0)*4});
+ return penalty
+}
 function catalogScore(item){
  const profile=catalogProfileText(),avoid=catalogAvoidText(),left=budgetLeft();
  let score=12;
@@ -202,6 +229,7 @@ function catalogScore(item){
  recent.forEach((id,i)=>{if(id===item.id)score-=30-i*3});
  const recentTypes=state.planner.lastTypes||[];
  recentTypes.forEach((t,i)=>{if(t===item.type)score-=5-i});
+ score-=feedbackPenalty(item);
  return score
 }
 function catalogReason(item){
@@ -262,7 +290,7 @@ function oneTapCourtship(){
  const plan=oneTapPlan();
  openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">בצע עכשיו ←</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">רענן</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. הכול נשמר ומוכן בתוך האפליקציה, בלי להעביר אותך לאתר אחר.</p>`);
  $('#executeOneTapBtn').onclick=()=>executeOneTap(plan);
- $('#rejectOneTapBtn').onclick=()=>{rememberType(plan.kind);rememberItem(plan.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;persistOnly();oneTapCourtship()}
+ $('#rejectOneTapBtn').onclick=()=>{learnFromRefresh(plan);oneTapCourtship()}
 }
 let currentHomeDecision=null;
 function profileReady(){
@@ -298,7 +326,7 @@ function renderDecisionCard(){
  $('#decisionProvider').textContent=currentHomeDecision.provider||'לא צריך ספק';
  $('#decisionExecuteBtn').textContent='בצע עכשיו ←';
  $('#decisionExecuteBtn').onclick=()=>executeOneTap(currentHomeDecision);
- $('#decisionAnotherBtn').onclick=()=>{rememberType(currentHomeDecision.kind==='flower'||currentHomeDecision.kind==='sweet'||currentHomeDecision.kind==='card'?'gesture':currentHomeDecision.kind);rememberItem(currentHomeDecision.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;state.planner.dailyKey='';persistOnly();currentHomeDecision=oneTapPlan();renderDecisionCard()};
+ $('#decisionAnotherBtn').onclick=()=>{learnFromRefresh(currentHomeDecision);currentHomeDecision=oneTapPlan();renderDecisionCard()};
  $('#decisionWhyBtn').onclick=()=>{openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
  $('#quickSetupCard').hidden=profileReady();
 }
@@ -331,7 +359,32 @@ function render(){
  $('#giftProgress').textContent=`${state.progress.gifts}/${state.plan.gifts}`;
  $('#budgetRemaining').textContent=`${Math.max(0,state.plan.budget-state.progress.spent)} ₪`;
  if($('#plannerStatus'))$('#plannerStatus').textContent=state.plan.autoPlanner?'פעיל: היום, השבוע והחודש מתעדכנים אוטומטית לפי הנתונים שלך.':'כבוי: התוכניות ישתנו רק כשתבקש.';
- renderDecisionCard();renderHints();renderEvents();renderWeek();renderMonth();renderInsights();
+ renderDecisionCard();renderPendingOrders();renderHints();renderEvents();renderWeek();renderMonth();renderInsights();
+}
+function renderPendingOrders(){
+ const list=(state.orders||[]).filter(o=>o.status==='pending');
+ const section=$('#pendingOrdersSection');
+ if(section)section.hidden=list.length===0;
+ if($('#pendingOrdersCount'))$('#pendingOrdersCount').textContent=String(list.length);
+ if(!$('#pendingOrdersList'))return;
+ $('#pendingOrdersList').innerHTML=list.length?list.map(o=>`<div class="pending-order-card"><div class="pending-order-main"><span class="emoji">${o.type==='gift'?'🎁':o.type==='date'?'🥂':o.type==='gesture'?'🌹':'❤️'}</span><div><strong>${esc(o.title)}</strong><small>${esc(o.priceLabel||'')}</small><p>${esc(o.buy||'')}</p></div></div><div class="pending-order-actions"><button class="primary" data-order-done="${o.id}">בוצע</button><button class="ghost" data-order-cancel="${o.id}">בטל</button></div></div>`).join(''):'';
+ $('[data-order-done]').forEach(b=>b.onclick=()=>completePreparedOrder(+b.dataset.orderDone));
+ $('[data-order-cancel]').forEach(b=>b.onclick=()=>cancelPreparedOrder(+b.dataset.orderCancel));
+}
+function completePreparedOrder(id){
+ const order=(state.orders||[]).find(o=>o.id===id);if(!order)return;
+ order.status='done';order.completedAt=new Date().toISOString();
+ state.progress.courtship++;
+ if(order.type==='gesture')state.progress.gestures++;
+ if(order.type==='gift')state.progress.gifts++;
+ if(order.type==='date')state.progress.dates++;
+ state.progress.spent+=order.cost||0;
+ state.planner.dailyKey='';
+ ensureAutomaticPlanning(true);persistOnly();render();toast('סומן כבוצע ♥')
+}
+function cancelPreparedOrder(id){
+ const order=(state.orders||[]).find(o=>o.id===id);if(!order)return;
+ order.status='cancelled';persistOnly();render();toast('הפעולה בוטלה')
 }
 function renderHints(){
  const list=state.partner.hints.slice().reverse();
