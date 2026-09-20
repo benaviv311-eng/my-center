@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>הבן זוג המושלם</title>
   <meta name="theme-color" content="#201a1b">
-  <link rel="stylesheet" href="couple.css?v=7">
+  <link rel="stylesheet" href="couple.css?v=8">
 </head>
 <body>
 <div class="couple-app">
@@ -57,9 +57,17 @@
 
       <button class="one-tap-cta" id="oneTapCourtshipBtn">
         <span class="one-tap-icon">❤️</span>
-        <span><strong>חזר אחרי אשתי עכשיו</strong><small>אני אבחר מה לעשות, מה לקנות ומה לכתוב</small></span>
+        <span><strong>תדאג לה היום</strong><small>אני אחליט מה נכון היום ואכין הכול</small></span>
         <b>בצע ←</b>
       </button>
+
+      <section class="section pending-orders-section" id="pendingOrdersSection">
+        <div class="section-head">
+          <h3>ממתין לביצוע</h3>
+          <span class="pending-count" id="pendingOrdersCount">0</span>
+        </div>
+        <div id="pendingOrdersList" class="stack-list"></div>
+      </section>
 
       <details class="manual-tools">
         <summary>רוצה לבחור בעצמך?</summary>
@@ -228,6 +236,6 @@
 
 <div class="toast" id="coupleToast"></div>
 <script src="couple-catalog.js?v=2"></script>
-<script src="couple.js?v=13"></script>
+<script src="couple.js?v=14"></script>
 </body>
 </html>
