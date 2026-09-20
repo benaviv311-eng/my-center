@@ -4,6 +4,7 @@ const defaults={
   partner:{name:'',years:'',likes:'',dislikes:'',foodPrefs:'',giftPrefs:'',emotionalPrefs:'',preferenceTags:[],avoidTags:[],hints:[],social:[]},
   plan:{budget:800,gifts:1,dates:2,gestures:4,courtship:8,automation:'prepare',autoLimit:70,style:'משולב',autoPlanner:true},
   progress:{gifts:0,dates:0,gestures:0,courtship:0,spent:0},
+  orders:[],
   planner:{dailyKey:'',daily:null,dailyVariant:0,weekKey:'',monthKey:'',lastTypes:[],lastItems:[]},
   events:[],
   week:[],
@@ -36,7 +37,7 @@ function mapsSearch(query){
   return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(query+suffix)
 }
 function providerButtons(items){
-  return '<div class="provider-actions">'+items.map(x=>`<a class="provider-link ${x.primary?'primary-provider':''}" href="${x.url}" target="_blank" rel="noopener"><span>${x.icon||'↗'}</span><div><strong>${esc(x.label)}</strong><small>${esc(x.note||'')}</small></div></a>`).join('')+'</div>'
+  return '<div class="provider-actions">'+items.map(x=>`<div class="provider-link ${x.primary?'primary-provider':''}"><span>${x.icon||'✓'}</span><div><strong>${esc(x.label)}</strong><small>${esc(x.note||'הספק יוצג בתוך האפליקציה')}</small></div></div>`).join('')+'</div>'
 }
 function localDateKey(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function weekKey(d=new Date()){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-x.getDay());return localDateKey(x)}
@@ -243,27 +244,23 @@ function oneTapPlan(){
 }
 function executeOneTap(plan){
  const normalizedType=(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card')?'gesture':plan.kind;
+ const order={
+   id:Date.now(),createdAt:new Date().toISOString(),status:'pending',
+   type:normalizedType,title:plan.title,buy:plan.buy,cost:plan.cost||0,
+   priceLabel:plan.priceLabel||(plan.cost?plan.cost+' ₪':'ללא עלות'),
+   provider:plan.provider||'',message:plan.message||'',sourceId:plan.id||null
+ };
+ state.orders=Array.isArray(state.orders)?state.orders:[];
+ state.orders.unshift(order);
  rememberType(normalizedType);rememberItem(plan.id);
- state.progress.courtship++;
- if(normalizedType==='gesture')state.progress.gestures++;
- if(normalizedType==='gift')state.progress.gifts++;
- if(normalizedType==='date')state.progress.dates++;
- state.progress.spent+=plan.cost||0;
  state.planner.dailyKey='';
- ensureAutomaticPlanning(true);
- persistOnly();
- if(plan.url){
-   try{navigator.clipboard?.writeText(`מה לקנות: ${plan.buy}\nברכה: ${plan.message}`)}catch{}
-   window.open(plan.url,'_blank','noopener');
-   closeModal();render();toast('פתחתי את הספק והעתקתי את מה לקנות ואת הברכה');
- }else{
-   try{navigator.clipboard?.writeText(plan.message)}catch{}
-   closeModal();render();toast('ההודעה הועתקה — נשאר רק לשלוח');
- }
+ persistOnly();render();
+ openModal(`<p class="eyebrow">נשארים בתוך האפליקציה</p><h2>✓ הפעולה מוכנה לביצוע</h2><div class="one-tap-result"><div class="decision-label">מה הוכן</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(order.priceLabel)}</b></div><div><small>ספק</small><b>${esc(order.provider||'לא נדרש')}</b></div></div><div class="decision-label">ברכה</div><blockquote>${esc(order.message||'אין צורך בברכה')}</blockquote></div><p class="muted">לא יצאנו לאתר חיצוני. הפעולה נשמרה בתוך האפליקציה כ״ממתין לביצוע״. רכישה אמיתית תתבצע רק אחרי שנחבר ספק שתומך בהזמנה ישירה מתוך האפליקציה.</p><button class="primary full" id="closePreparedOrder">הבנתי</button>`);
+ $('#closePreparedOrder').onclick=closeModal
 }
 function oneTapCourtship(){
  const plan=oneTapPlan();
- openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">${plan.url?'בצע עכשיו ←':'שלח עכשיו ←'}</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">לא מתאים — תבחר משהו אחר</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. בלחיצה על ביצוע האפליקציה פותחת את הספק ומעתיקה עבורך את ההזמנה והברכה.</p>`);
+ openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">בצע עכשיו ←</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">רענן</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. הכול נשמר ומוכן בתוך האפליקציה, בלי להעביר אותך לאתר אחר.</p>`);
  $('#executeOneTapBtn').onclick=()=>executeOneTap(plan);
  $('#rejectOneTapBtn').onclick=()=>{rememberType(plan.kind);rememberItem(plan.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;persistOnly();oneTapCourtship()}
 }
@@ -299,7 +296,7 @@ function renderDecisionCard(){
  $('#decisionText').textContent=currentHomeDecision.buy;
  $('#decisionCost').textContent=currentHomeDecision.priceLabel||(currentHomeDecision.cost?currentHomeDecision.cost+' ₪':'ללא עלות');
  $('#decisionProvider').textContent=currentHomeDecision.provider||'לא צריך ספק';
- $('#decisionExecuteBtn').textContent=currentHomeDecision.url?'בצע עכשיו ←':'שלח עכשיו ←';
+ $('#decisionExecuteBtn').textContent='בצע עכשיו ←';
  $('#decisionExecuteBtn').onclick=()=>executeOneTap(currentHomeDecision);
  $('#decisionAnotherBtn').onclick=()=>{rememberType(currentHomeDecision.kind==='flower'||currentHomeDecision.kind==='sweet'||currentHomeDecision.kind==='card'?'gesture':currentHomeDecision.kind);rememberItem(currentHomeDecision.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;state.planner.dailyKey='';persistOnly();currentHomeDecision=oneTapPlan();renderDecisionCard()};
  $('#decisionWhyBtn').onclick=()=>{openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
@@ -375,11 +372,11 @@ function giftFlow(){
   const b=+$('#flowBudget').value||budget;
   const ideas=['ספר או פריט שהיא הזכירה','תכשיט עדין בסגנון שלה','מארז קטן שמתחבר לתחביב שלה'];
   const idea=hint?`מתנה שמבוססת על: “${hint.text}”`:ideas[Math.floor(Math.random()*ideas.length)];
-  openModal(`<p class="eyebrow">הבחירה שלי</p><h2>🎁 ${esc(idea)}</h2><div class="result-card"><p>בחר ספק כדי לעבור לבחירה ולהזמנה בפועל.</p><div class="price">עד ${b} ₪</div></div>${providerButtons([
+  openModal(`<p class="eyebrow">הבחירה שלי</p><h2>🎁 ${esc(idea)}</h2><div class="result-card"><p>הספק כבר נבחר. הפעולה תישמר ותבוצע מתוך האפליקציה כשהחיבור הישיר יהיה פעיל.</p><div class="price">עד ${b} ₪</div></div>${providerButtons([
     {url:providers.woltGifts,icon:'🛵',label:'פתח מתנות ב-Wolt',note:'משלוח, ברכה ומעקב',primary:true},
     {url:mapsSearch('חנות מתנות'),icon:'📍',label:'מתנות קרוב אליי',note:'חיפוש לפי המיקום שלך'},
     {url:providers.printedCard,icon:'💌',label:'הוסף כרטיס ברכה מודפס',note:'טקסט אישי ומשלוח'}
-  ])}<button class="primary full" id="approveGift">סמן שהמתנה הוזמנה</button><p class="muted">כרגע התשלום נעשה אצל הספק. בהמשך נחבר ספקים שתומכים בתשלום ישירות מתוך האפליקציה.</p>`);
+  ])}<button class="primary full" id="approveGift">סמן שהמתנה הוזמנה</button><p class="muted">לא נפתח אתר חיצוני. ההזמנה נשמרת בתוך האפליקציה עד לחיבור תשלום וספק ישיר.</p>`);
   $('#approveGift').onclick=()=>{state.progress.gifts++;state.progress.courtship++;save();closeModal();toast('המתנה סומנה כהוזמנה')}
  }
 }
@@ -394,7 +391,7 @@ function dateFlow(){
     {url:providers.ontopo,icon:'🍽️',label:'הזמן מסעדה ב-Ontopo',note:'זמינות והזמנת שולחן',primary:true},
     {url:providers.eventimStandup,icon:'🎤',label:'מצא סטנד-אפ',note:'מופעים וכרטיסים עדכניים'},
     {url:mapsSearch(style+' דייט מסעדה פעילות'),icon:'📍',label:'מצא אפשרויות קרובות',note:'לפי המיקום שלך'}
-  ])}<button class="primary full" id="approveDate">סמן שהדייט אורגן</button><p class="muted">ההזמנות נפתחות כרגע אצל הספקים. בהמשך נרכז אישור ותשלום בתוך האפליקציה כאשר האינטגרציה תאפשר זאת.</p>`);
+  ])}<button class="primary full" id="approveDate">סמן שהדייט אורגן</button><p class="muted">הכול נשאר בתוך האפליקציה. הזמנה בפועל תופעל רק דרך חיבור ספק ישיר.</p>`);
   $('#approveDate').onclick=()=>{state.progress.dates++;state.progress.courtship++;save();closeModal();toast('הדייט סומן כמאורגן')}
  }
 }
