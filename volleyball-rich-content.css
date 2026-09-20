@@ -22,3 +22,21 @@
 .vb-drill-video-link a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:850;color:#0b4946}
 .vb-drill-image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.vb-drill-image-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px}
 @media(max-width:700px){.vb-drill-diagram-card{grid-template-columns:1fr}.vb-drill-court{min-height:190px}.vb-drill-image-grid{grid-template-columns:repeat(2,1fr)}}
+
+.vb-drill-svg-wrap{display:grid;gap:7px}
+.vb-drill-diagram-title{font-size:12px;font-weight:900;color:#164f4c;text-align:center}
+.vb-drill-svg{display:block;width:100%;max-height:360px;border-radius:14px;background:#cfe9e2;box-shadow:inset 0 0 0 1px rgba(11,73,70,.12)}
+.vb-svg-court{fill:#dff2ed;stroke:#fff;stroke-width:1.7}
+.vb-svg-net{stroke:#183f3d;stroke-width:2.2;stroke-dasharray:2 1}
+.vb-svg-attack{stroke:rgba(255,255,255,.9);stroke-width:1}
+.vb-svg-arrows line{stroke:#e88f2c;stroke-width:2.2;stroke-linecap:round}
+.vb-svg-arrows marker path,#vbArrow path{fill:#e88f2c}
+.vb-svg-player circle{stroke:#fff;stroke-width:1.7}
+.vb-svg-player text{fill:#fff;font-size:4px;font-weight:900;font-family:Arial,sans-serif}
+.vb-svg-a circle{fill:#0b4946}.vb-svg-b circle{fill:#9c4f3f}.vb-svg-coach circle{fill:#705d90}
+.vb-svg-target{fill:rgba(232,143,44,.24);stroke:#e88f2c;stroke-width:1.1;stroke-dasharray:2 1}
+.vb-drill-legend{display:flex;flex-wrap:wrap;gap:5px 10px;font-size:8.5px;color:#61736f;justify-content:center}
+.vb-drill-legend span{display:inline-flex;align-items:center;gap:4px}.vb-drill-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.1)}
+.vb-drill-legend .team-a{background:#0b4946}.vb-drill-legend .team-b{background:#9c4f3f}.vb-drill-legend .team-coach{background:#705d90}
+.vb-drill-image-grid figure{margin:0;overflow:hidden;border-radius:13px;background:#f5f7f6;border:1px solid #e0e9e6}
+.vb-drill-image-grid figure img{border-radius:0;display:block}.vb-drill-image-grid figcaption{padding:5px 7px;font-size:8px;color:#65736f;line-height:1.25}
