@@ -1,0 +1,30 @@
+name: Site Editor Validation
+
+on:
+  push:
+    branches:
+      - 'site-edit/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Fetch main
+        run: git fetch origin main:refs/remotes/origin/main
+      - name: Enforce edit policy
+        run: node scripts/site-editor-policy-check.mjs
+      - name: Check browser JavaScript
+        run: |
+          node --check site-chat.js
+          node --check site-editor-ui.js
+      - name: Run test suite
+        run: node --test tests/*.test.js

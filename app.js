@@ -1082,6 +1082,14 @@ refreshFavs();
 
 
 /* ===== SITE-WIDE AI CHAT ===== */
+function appendSiteChatScript(){
+  if(document.getElementById('site-chat-script'))return;
+  const script=document.createElement('script');
+  script.id='site-chat-script';
+  script.src='site-chat.js?v=2';
+  script.defer=true;
+  document.body.appendChild(script);
+}
 function loadSiteChat(){
   if(document.getElementById('site-chat-script')) return;
   if(!document.querySelector('link[data-site-chat-css]')){
@@ -1091,11 +1099,22 @@ function loadSiteChat(){
     link.dataset.siteChatCss='1';
     document.head.appendChild(link);
   }
-  const script=document.createElement('script');
-  script.id='site-chat-script';
-  script.src='site-chat.js?v=2';
-  script.defer=true;
-  document.body.appendChild(script);
+  if(!document.querySelector('link[data-site-editor-css]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='site-editor-ui.css?v=1';
+    link.dataset.siteEditorCss='1';
+    document.head.appendChild(link);
+  }
+  if(window.SiteEditorUI){appendSiteChatScript();return}
+  let editor=document.getElementById('site-editor-ui-script');
+  if(editor){editor.addEventListener('load',appendSiteChatScript,{once:true});return}
+  editor=document.createElement('script');
+  editor.id='site-editor-ui-script';
+  editor.src='site-editor-ui.js?v=1';
+  editor.defer=true;
+  editor.addEventListener('load',appendSiteChatScript,{once:true});
+  document.body.appendChild(editor);
 }
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',loadSiteChat,{once:true});
