@@ -48,3 +48,24 @@ test('index is a unified feed, not the old section mosaic',()=>{
   assert.equal(html.includes('⚡ ראיקה היום'),false);
   assert.equal(html.includes('🏐 היום כמאמן'),false);
 });
+
+
+test('language cards show their actual language in the source badge',()=>{
+  const H=require('../home-feed.js');
+  const labels={ar:'ערבית',it:'איטלקית',ru:'רוסית',es:'ספרדית'};
+  for(const [lang,label] of Object.entries(labels)){
+    const html=H.renderCard({
+      id:`languages:${lang}:word:x`,
+      source:'languages',
+      type:'word',
+      title:'כרטיס שפה',
+      summary:'טקסט',
+      fullText:'',
+      deepLink:'languages.html',
+      expandable:false,
+      metadata:{lang}
+    },{});
+    assert.ok(html.includes(label),`expected ${label} for ${lang}`);
+    assert.equal(html.includes('🌍 שפות'),false);
+  }
+});
