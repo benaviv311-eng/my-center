@@ -2,8 +2,9 @@ const KEY='coupleApp.v1';
 const defaults={
   me:{name:'',homeAddress:'',maxDistance:30,giftBudget:200,dateBudget:400,gestureBudget:70,location:null,availability:{}},
   partner:{name:'',years:'',likes:'',dislikes:'',foodPrefs:'',giftPrefs:'',emotionalPrefs:'',hints:[],social:[]},
-  plan:{budget:800,gifts:1,dates:2,gestures:4,courtship:8,automation:'prepare',autoLimit:70,style:'משולב'},
+  plan:{budget:800,gifts:1,dates:2,gestures:4,courtship:8,automation:'prepare',autoLimit:70,style:'משולב',autoPlanner:true},
   progress:{gifts:0,dates:0,gestures:0,courtship:0,spent:0},
+  planner:{dailyKey:'',daily:null,dailyVariant:0,weekKey:'',monthKey:'',lastTypes:[]},
   events:[],
   week:[],
   month:[]
@@ -34,6 +35,114 @@ function mapsSearch(query){
 }
 function providerButtons(items){
   return '<div class="provider-actions">'+items.map(x=>`<a class="provider-link ${x.primary?'primary-provider':''}" href="${x.url}" target="_blank" rel="noopener"><span>${x.icon||'↗'}</span><div><strong>${esc(x.label)}</strong><small>${esc(x.note||'')}</small></div></a>`).join('')+'</div>'
+}
+function localDateKey(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function weekKey(d=new Date()){const x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-x.getDay());return localDateKey(x)}
+function monthKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function seededNumber(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return Math.abs(h>>>0)}
+function daysUntil(dateStr){if(!dateStr)return 999;const a=new Date();a.setHours(0,0,0,0);const b=new Date(dateStr+'T12:00:00');return Math.ceil((b-a)/86400000)}
+function budgetLeft(){return Math.max(0,(+state.plan.budget||0)-(+state.progress.spent||0))}
+function hasAvailability(){return Object.keys(state.me.availability||{}).some(k=>state.me.availability[k]===true)}
+function dayIsAvailable(day){const a=state.me.availability||{};return !hasAvailability()||a[String(day)]===true||a[day]===true}
+function upcomingEvent(maxDays=7){return state.events.map(e=>({...e,days:daysUntil(e.date)})).filter(e=>e.days>=0&&e.days<=maxDays).sort((a,b)=>a.days-b.days)[0]||null}
+function rememberType(type){state.planner.lastTypes=Array.isArray(state.planner.lastTypes)?state.planner.lastTypes:[];state.planner.lastTypes.unshift(type);state.planner.lastTypes=state.planner.lastTypes.slice(0,5)}
+function inferReason(a){
+ const reasons=[];const ev=upcomingEvent(5);const left=budgetLeft();const p=state.partner;
+ if(ev&&(a.type==='gift'||a.type==='gesture'))reasons.push(`${ev.title} מתקרב בעוד ${ev.days===0?'היום':ev.days+' ימים'}`);
+ if(p.hints.length&&(a.type==='gift'||a.type==='gesture'||a.type==='memory'||a.type==='hint'))reasons.push('יש רמז ששמרת ממנה');
+ if(left<Math.max(80,state.plan.budget*.2)&&a.cost===0)reasons.push('נשאר מעט מהתקציב החודשי');
+ if(a.type==='date'&&dayIsAvailable(new Date().getDay()))reasons.push('היום מסומן כפנוי בלוז');
+ if(a.type==='date'&&state.progress.dates<state.plan.dates)reasons.push('עוד חסר דייט בתוכנית החודשית');
+ if(a.type==='gift'&&state.progress.gifts<state.plan.gifts)reasons.push('עוד חסרה מתנה בתוכנית החודשית');
+ if(a.type==='gesture'&&state.progress.gestures<state.plan.gestures)reasons.push('עוד חסרות מחוות בתוכנית');
+ if((a.type==='free'||a.type==='memory')&&state.progress.courtship<state.plan.courtship)reasons.push('שומר על חיזור גם בלי להוציא כסף');
+ return reasons.slice(0,2).join(' · ')||'נבחר כדי לגוון את החיזור ולא לחזור על אותה פעולה'
+}
+function scoreAction(a){
+ let score=10;const left=budgetLeft();const recent=state.planner.lastTypes||[];const ev=upcomingEvent(5);
+ if(a.cost>left)score-=100;
+ if(a.type==='date'){score+=(state.progress.dates<state.plan.dates?9:-2);score+=dayIsAvailable(new Date().getDay())?4:-8}
+ if(a.type==='gift')score+=(state.progress.gifts<state.plan.gifts?8:-2);
+ if(a.type==='gesture')score+=(state.progress.gestures<state.plan.gestures?7:-1);
+ if(a.type==='free'||a.type==='memory')score+=state.progress.courtship<state.plan.courtship?5:2;
+ if(left<Math.max(80,state.plan.budget*.2)&&a.cost===0)score+=8;
+ if(state.partner.hints.length){if(a.type==='gift')score+=6;if(a.type==='gesture')score+=4;if(a.type==='memory')score+=3}
+ if(ev){if(a.type==='gift')score+=7;if(a.type==='gesture')score+=6;if(a.type==='date')score+=2}
+ recent.forEach((t,i)=>{if(t===a.type)score-=7-i});
+ const likes=(state.partner.likes+' '+state.partner.giftPrefs+' '+state.partner.emotionalPrefs).toLowerCase();
+ if(a.type==='date'&&/(הופעה|מסעדה|סטנד|טיול|ים|ספא)/.test(likes))score+=3;
+ if(a.type==='gift'&&/(תכשיט|ספר|מתנה|בגד)/.test(likes))score+=3;
+ if(a.type==='gesture'&&/(פרח|שוקולד|קפה|אוכל)/.test(likes))score+=3;
+ return score
+}
+function chooseSmartAction(variant=0){
+ let pool=actionPool.map(a=>({...a}));
+ const hint=state.partner.hints.at(-1);
+ if(hint)pool.push({type:'hint',icon:'💡',title:'הפוך רמז לפעולה',body:`היא אמרה: “${hint.text}”. בחר דרך קטנה להפוך את זה למשהו ממשי השבוע.`,cost:0});
+ pool=pool.map(a=>({...a,score:scoreAction(a)})).sort((a,b)=>b.score-a.score);
+ const top=pool.filter(a=>a.score>-50).slice(0,Math.min(4,pool.length));
+ const pick=top[(seededNumber(localDateKey()+state.plan.style+variant)%Math.max(1,top.length))]||pool[0];
+ pick.reason=inferReason(pick);return pick
+}
+function getDailyAction(){
+ const key=localDateKey();
+ if(!state.planner.daily||state.planner.dailyKey!==key){state.planner.dailyKey=key;state.planner.dailyVariant=0;state.planner.daily=chooseSmartAction(0);persistOnly()}
+ return state.planner.daily
+}
+function nextDailyAlternative(){
+ state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;state.planner.daily=chooseSmartAction(state.planner.dailyVariant);state.planner.dailyKey=localDateKey();persistOnly();render()
+}
+function persistOnly(){localStorage.setItem(KEY,JSON.stringify(state))}
+function getPreferredDays(startDate,count){
+ const days=[];for(let i=0;i<14&&days.length<count;i++){const d=new Date(startDate);d.setDate(startDate.getDate()+i);if(dayIsAvailable(d.getDay()))days.push(d)}
+ if(!days.length){for(let i=0;i<count;i++){const d=new Date(startDate);d.setDate(startDate.getDate()+i*2);days.push(d)}}
+ return days
+}
+function autoBuildWeek(force=false){
+ if(!state.plan.autoPlanner&&!force)return;
+ const key=weekKey();if(!force&&state.planner.weekKey===key&&state.week.length)return;
+ const start=new Date();start.setHours(12,0,0,0);
+ const target=Math.max(3,Math.min(7,Math.ceil((+state.plan.courtship||8)/4)));
+ const types=[];
+ if(state.progress.dates<state.plan.dates)types.push('date');
+ if(state.progress.gestures<state.plan.gestures)types.push('gesture');
+ if(state.progress.gifts<state.plan.gifts&&budgetLeft()>Math.min(100,state.me.giftBudget||100))types.push('gift');
+ while(types.length<target)types.push(types.length%2?'free':'memory');
+ const dates=getPreferredDays(start,types.length);
+ state.week=types.map((type,i)=>{
+   let a=actionPool.filter(x=>x.type===type)[0]||actionPool[i%actionPool.length];
+   if(type==='free')a=actionPool[i%2?1:0];
+   if(type==='memory')a=actionPool[7];
+   const d=dates[i]||start;
+   return {date:localDateKey(d),day:['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'][d.getDay()],type:a.type,title:a.title,detail:a.body,icon:a.icon,reason:inferReason(a)}
+ });
+ state.planner.weekKey=key;persistOnly()
+}
+function autoBuildMonth(force=false){
+ if(!state.plan.autoPlanner&&!force)return;
+ const key=monthKey();if(!force&&state.planner.monthKey===key&&state.month.length)return;
+ const now=new Date();const year=now.getFullYear(),month=now.getMonth();const last=new Date(year,month+1,0).getDate();
+ const tasks=[];
+ const pushTasks=(count,type,icon,title,detail,cost)=>{for(let i=0;i<count;i++)tasks.push({type,icon,title,detail,cost:cost||0})};
+ pushTasks(Math.max(0,+state.plan.dates||0),'date','🥂','דייט','חלון זמן ייבחר לפי הלוז',state.me.dateBudget||0);
+ pushTasks(Math.max(0,+state.plan.gifts||0),'gift','🎁','מתנה','תיבחר לפי העדפות ורמזים',state.me.giftBudget||0);
+ pushTasks(Math.max(0,+state.plan.gestures||0),'gesture','🌹','מחווה','משהו קטן ומדויק',state.me.gestureBudget||0);
+ const extra=Math.max(0,(+state.plan.courtship||0)-tasks.length);pushTasks(extra,'free','❤️','חיזור קטן','פעולה ללא עלות או זמן איכות',0);
+ const total=Math.max(1,tasks.length);const evs=state.events.filter(e=>{const d=new Date(e.date+'T12:00:00');return d.getFullYear()===year&&d.getMonth()===month});
+ state.month=tasks.map((t,i)=>{
+   let day=Math.max(now.getDate(),Math.round((i+1)*(last/(total+1))));
+   if(t.type==='date'){
+     for(let k=0;k<7;k++){const d=new Date(year,month,Math.min(last,day+k));if(dayIsAvailable(d.getDay())){day=d.getDate();break}}
+   }
+   if((t.type==='gift'||t.type==='gesture')&&evs.length&&i<evs.length){const ed=new Date(evs[i].date+'T12:00:00').getDate();day=Math.max(now.getDate(),ed-1)}
+   const d=new Date(year,month,Math.min(last,day));
+   return {...t,date:localDateKey(d),when:`${d.getDate()} בחודש`,reason:inferReason(t)}
+ }).sort((a,b)=>a.date.localeCompare(b.date));
+ state.planner.monthKey=key;persistOnly()
+}
+function ensureAutomaticPlanning(force=false){
+ if(!state.plan.autoPlanner&&!force)return;
+ getDailyAction();autoBuildWeek(force);autoBuildMonth(force)
 }
 const actionPool=[
  {type:'free',icon:'💬',title:'שלח הודעה אישית',body:'כתוב לה דבר אחד ספציפי שאתה מעריך בה היום.',cost:0},
