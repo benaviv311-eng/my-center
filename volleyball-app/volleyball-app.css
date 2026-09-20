@@ -15,3 +15,50 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
 .vb-app-nav{position:fixed;z-index:100;bottom:0;left:0;right:0;padding:6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:rgba(255,255,255,.96);border-top:1px solid #d8e9e7;backdrop-filter:blur(16px);display:grid;grid-template-columns:repeat(5,1fr);box-shadow:0 -8px 30px rgba(11,73,70,.08)}
 .vb-app-nav button{border:0;background:transparent;padding:5px 2px;color:#637573;font-size:10px;font-weight:700;cursor:pointer}.vb-app-nav button span{display:block;font-size:21px;margin-bottom:1px}.vb-app-nav button.active{color:var(--vb-app)}
 @media(max-width:700px){.vb-standalone-app{padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right))}.vb-app-topbar{border-radius:15px}.vb-app-hero{grid-template-columns:1fr}.vb-app-hero-mark{display:none}.vb-app-shortcuts{grid-template-columns:repeat(2,1fr)}.vb-app-shortcuts button{min-height:86px}.vb-app-action{font-size:11px;padding:8px}.vb-app-brand small{display:none}}
+
+/* Persistent context while scrolling */
+.vb-standalone-app #volleyball-population-shell{
+  position:sticky;
+  top:70px;
+  z-index:76;
+  margin-top:12px;
+  background:rgba(238,248,247,.97);
+  border-color:rgba(11,73,70,.18);
+  box-shadow:0 10px 28px rgba(11,73,70,.13);
+}
+.vb-standalone-app #volleyball-topic-shell{
+  position:sticky;
+  top:132px;
+  z-index:74;
+}
+.vb-current-population-badge{
+  flex:0 0 auto;
+  border-radius:999px;
+  padding:7px 10px;
+  background:#0b4946;
+  color:#fff;
+  font-size:11px;
+  font-weight:850;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(11,73,70,.15);
+}
+.vb-standalone-app .vb-pop-tab.active{
+  outline:2px solid rgba(232,143,44,.42);
+  outline-offset:2px;
+}
+@media(max-width:900px){
+  .vb-standalone-app #volleyball-population-shell{top:66px}
+  .vb-standalone-app #volleyball-topic-shell{top:118px}
+}
+@media(max-width:650px){
+  .vb-standalone-app #volleyball-population-shell{
+    top:62px;
+    gap:7px;
+    padding:7px 8px;
+  }
+  .vb-current-population-badge{
+    font-size:10px;
+    padding:6px 8px;
+  }
+  .vb-standalone-app #volleyball-topic-shell{top:108px}
+}
