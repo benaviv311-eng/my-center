@@ -288,7 +288,7 @@ function executeOneTap(plan){
 }
 function oneTapCourtship(){
  const plan=oneTapPlan();
- openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">בצע עכשיו ←</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">רענן</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. הכול נשמר ומוכן בתוך האפליקציה, בלי להעביר אותך לאתר אחר.</p>`);
+ openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">תעשה את זה</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">רענן</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. הכול נשמר ומוכן בתוך האפליקציה, בלי להעביר אותך לאתר אחר.</p>`);
  $('#executeOneTapBtn').onclick=()=>executeOneTap(plan);
  $('#rejectOneTapBtn').onclick=()=>{learnFromRefresh(plan);oneTapCourtship()}
 }
@@ -324,7 +324,7 @@ function renderDecisionCard(){
  $('#decisionText').textContent=currentHomeDecision.buy;
  $('#decisionCost').textContent=currentHomeDecision.priceLabel||(currentHomeDecision.cost?currentHomeDecision.cost+' ₪':'ללא עלות');
  $('#decisionProvider').textContent=currentHomeDecision.provider||'לא צריך ספק';
- $('#decisionExecuteBtn').textContent='בצע עכשיו ←';
+ $('#decisionExecuteBtn').textContent='תעשה את זה';
  $('#decisionExecuteBtn').onclick=()=>executeOneTap(currentHomeDecision);
  $('#decisionAnotherBtn').onclick=()=>{learnFromRefresh(currentHomeDecision);currentHomeDecision=oneTapPlan();renderDecisionCard()};
  $('#decisionWhyBtn').onclick=()=>{openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
@@ -348,8 +348,8 @@ function showAction(a=tailoredAction()){
  $('#anotherAction').onclick=()=>{nextDailyAlternative();showAction(getDailyAction())}
 }
 function render(){
- $('#greeting').textContent=state.partner.name?`מה נעשה היום בשביל ${state.partner.name}?`:'מה נעשה היום בשביל הזוגיות?';
- $('#heroSub').textContent=state.me.name?`${state.me.name}, פעולה אחת טובה בזמן הנכון.`:'פעולה אחת טובה, בזמן הנכון.';
+ $('#greeting').textContent=state.partner.name?`תפנק את ${state.partner.name} היום`:'תפנק אותה היום';
+ $('#heroSub').textContent='אני כבר אחשוב מה לעשות.';
  $('#partnerHeading').textContent=state.partner.name||'בת הזוג';
  $('#partnerAvatar').textContent=state.partner.name?state.partner.name.trim().charAt(0):'♥';
  const a=getDailyAction();$('#dailyTitle').textContent=a.title;$('#dailyBody').textContent=a.body+(a.reason?' — '+a.reason:'');$('#doDailyBtn').onclick=()=>showAction(a);
@@ -468,10 +468,25 @@ function buildWeek(){autoBuildWeek(true);save();toast('נבנה שבוע חדש 
 function buildMonth(){autoBuildMonth(true);save()}
 function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction()];options[Math.floor(Math.random()*options.length)]()}
 
-$$('.bottom-nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-function go(tab){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
-$$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+function go(tab){$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
+function openAllFeatures(){
+ openModal(`<p class="eyebrow">כל האפשרויות</p><h2>רוצה יותר שליטה?</h2><p>הפעולה היומית נשארת פשוטה. כאן נמצאים כל הכלים למי שרוצה להעמיק.</p><div class="feature-hub-grid">
+   <button data-hub-go="courtship"><span>❤️</span><strong>חיזור</strong><small>שבוע חיזור ופעולות</small></button>
+   <button data-hub-go="plans"><span>📅</span><strong>תוכניות</strong><small>שבוע, חודש ותקציב</small></button>
+   <button data-hub-flow="gift"><span>🎁</span><strong>מתנה</strong><small>לבחור ידנית</small></button>
+   <button data-hub-flow="date"><span>🥂</span><strong>דייט</strong><small>לבנות ידנית</small></button>
+   <button data-hub-go="partner"><span>♥</span><strong>היא</strong><small>העדפות ורמזים</small></button>
+   <button data-hub-go="me"><span>⚙</span><strong>הגדרות</strong><small>זמן, תקציב ומיקום</small></button>
+ </div><button class="ghost full" id="hubHintBtn">＋ היא אמרה משהו</button>`);
+ $('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
+ $('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
+ $('#hubHintBtn').onclick=addHint
+}
+$('#openAllFeaturesBtn').onclick=openAllFeatures;
+$('#allFeaturesNavBtn').onclick=openAllFeatures;
+$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
 $('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#quickSetupBtn').onclick=quickSetup;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
