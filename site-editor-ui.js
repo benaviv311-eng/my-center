@@ -241,6 +241,8 @@ function requestCardMarkup(request){
   const files=[...new Set(operations.map(op=>op?.path).filter(Boolean))];
   const awaiting=request?.status==='awaiting_plan_approval';
   const previewable=['preview_ready','awaiting_publish_approval'].includes(request?.status);
+  const publishable=['preview_ready','awaiting_publish_approval'].includes(request?.status);
+  const revisable=['awaiting_plan_approval','needs_replan','preview_ready','awaiting_publish_approval','failed'].includes(request?.status);
   const cancellable=request?.status&&!TERMINAL_STATUSES.has(request.status);
   const warning=request?.public_asset_warning?'<div class="site-edit-warning">⚠️ קובץ פרטי יהפוך לנכס ציבורי באתר רק לאחר אישור מפורש.</div>':'';
   const preview=request?.requires_preview?'<div class="site-edit-requirement">🔎 נדרש Preview לפני פרסום.</div>':'<div class="site-edit-requirement">✓ אפשר להמשיך ללא Preview חובה בשלב התכנון.</div>';
@@ -259,8 +261,9 @@ function requestCardMarkup(request){
     <div class="site-edit-card-error" data-site-edit-error hidden></div>
     <div class="site-edit-actions">
       <button type="button" data-site-edit-action="approve_plan" ${awaiting?'':'disabled'}>מאשר</button>
-      <button type="button" data-site-edit-action="request_revision" ${awaiting?'':'disabled'}>שנה את ההצעה</button>
+      <button type="button" data-site-edit-action="request_revision" ${revisable?'':'disabled'}>שנה את ההצעה</button>
       <button type="button" data-site-edit-action="create_preview" ${previewable?'':'disabled'}>פתח Preview</button>
+      <button type="button" data-site-edit-action="publish_site" ${publishable?'':'disabled'}>פרסם באתר</button>
       <button type="button" data-site-edit-action="cancel" ${cancellable?'':'disabled'}>בטל</button>
     </div>
   </article>`;
@@ -279,6 +282,17 @@ async function handleRequestAction(card,request,action){
   const previewWindow=action==='create_preview'?window.open('about:blank','_blank'):null;
   try{
     const payload={action,request_id:request.id};
+    if(action==='publish_site'){
+      let result;
+      if(request.status==='preview_ready'){
+        result=await ctx.api({action:'approve_publish',request_id:request.id});
+      }
+      result=await ctx.api({action:'publish',request_id:request.id});
+      const next=result?.request||request;
+      if(next?.id)setActiveRequestId(next.id);
+      showRequest(next,{replace:true});
+      return;
+    }
     if(action==='request_revision'){
       const instructions=window.prompt('מה לשנות בהצעה?','');
       if(!instructions){card.dataset.busy='0';showRequest(request,{replace:true});return}
