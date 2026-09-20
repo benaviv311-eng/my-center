@@ -255,7 +255,7 @@ function renderDecisionCard(){
  $('#decisionExecuteBtn').textContent=currentHomeDecision.url?'בצע עכשיו ←':'שלח עכשיו ←';
  $('#decisionExecuteBtn').onclick=()=>executeOneTap(currentHomeDecision);
  $('#decisionAnotherBtn').onclick=()=>{rememberType(currentHomeDecision.kind==='flower'||currentHomeDecision.kind==='sweet'||currentHomeDecision.kind==='card'?'gesture':currentHomeDecision.kind);state.planner.dailyKey='';persistOnly();currentHomeDecision=oneTapPlan();renderDecisionCard()};
- $('#decisionWhyBtn').onclick=()=>openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
+ $('#decisionWhyBtn').onclick=()=>{openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
  $('#quickSetupCard').hidden=profileReady();
 }
 const actionPool=[
