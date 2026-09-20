@@ -155,29 +155,24 @@ const actionPool=[
  {type:'memory',icon:'📷',title:'תחזיר זיכרון טוב',body:'מצא תמונה ישנה שלכם ושלח אותה עם משפט שמזכיר למה הרגע הזה חשוב לך.',cost:0}
 ];
 function partnerName(){return state.partner.name||'בת הזוג'}
-function tailoredAction(){
- const hints=state.partner.hints;
- if(hints.length && Math.random()>.55){const h=hints[hints.length-1];return {type:'hint',icon:'💡',title:'נצל משהו שהיא אמרה',body:`היא אמרה: “${h.text}”. תחשוב איך להפוך את זה לפעולה קטנה השבוע.`,cost:0}}
- const budgetLeft=Math.max(0,state.plan.budget-state.progress.spent);
- const pool=actionPool.filter(a=>a.cost<=budgetLeft || a.cost===0);
- return pool[Math.floor(Math.random()*pool.length)]||actionPool[0]
-}
+function tailoredAction(){return getDailyAction()}
 function showAction(a=tailoredAction()){
- openModal(`<p class="eyebrow">הצעה חכמה</p><h2>${a.icon} ${esc(a.title)}</h2><p>${esc(a.body)}</p><div class="result-card"><small>עלות משוערת</small><div class="price">${a.cost?a.cost+' ₪':'ללא עלות'}</div></div><button class="primary full" id="completeAction">עשיתי / בצעתי</button><button class="ghost full" style="margin-top:8px" id="anotherAction">תן משהו אחר</button>`);
- $('#completeAction').onclick=()=>{state.progress.courtship++;if(a.type==='gesture')state.progress.gestures++;if(a.type==='date')state.progress.dates++;if(a.type==='gift')state.progress.gifts++;state.progress.spent+=a.cost||0;save();closeModal();toast('נשמר כחיזור שבוצע ♥')};
- $('#anotherAction').onclick=()=>showAction(tailoredAction())
+ openModal(`<p class="eyebrow">הצעה חכמה</p><h2>${a.icon} ${esc(a.title)}</h2><p>${esc(a.body)}</p>${a.reason?`<div class="planner-status"><strong>למה עכשיו?</strong><br>${esc(a.reason)}</div>`:''}<div class="result-card"><small>עלות משוערת</small><div class="price">${a.cost?a.cost+' ₪':'ללא עלות'}</div></div><button class="primary full" id="completeAction">עשיתי / בצעתי</button><button class="ghost full" style="margin-top:8px" id="anotherAction">תן משהו אחר</button>`);
+ $('#completeAction').onclick=()=>{state.progress.courtship++;if(a.type==='gesture')state.progress.gestures++;if(a.type==='date')state.progress.dates++;if(a.type==='gift')state.progress.gifts++;state.progress.spent+=a.cost||0;rememberType(a.type);state.planner.dailyKey='';ensureAutomaticPlanning(true);save();closeModal();toast('נשמר כחיזור שבוצע ♥')};
+ $('#anotherAction').onclick=()=>{nextDailyAlternative();showAction(getDailyAction())}
 }
 function render(){
  $('#greeting').textContent=state.partner.name?`מה נעשה היום בשביל ${state.partner.name}?`:'מה נעשה היום בשביל הזוגיות?';
  $('#heroSub').textContent=state.me.name?`${state.me.name}, פעולה אחת טובה בזמן הנכון.`:'פעולה אחת טובה, בזמן הנכון.';
  $('#partnerHeading').textContent=state.partner.name||'בת הזוג';
  $('#partnerAvatar').textContent=state.partner.name?state.partner.name.trim().charAt(0):'♥';
- const a=tailoredAction();$('#dailyTitle').textContent=a.title;$('#dailyBody').textContent=a.body;$('#doDailyBtn').onclick=()=>showAction(a);
+ const a=getDailyAction();$('#dailyTitle').textContent=a.title;$('#dailyBody').textContent=a.body+(a.reason?' — '+a.reason:'');$('#doDailyBtn').onclick=()=>showAction(a);
  $('#courtshipProgress').textContent=`${state.progress.courtship}/${state.plan.courtship}`;
  $('#gestureProgress').textContent=`${state.progress.gestures}/${state.plan.gestures}`;
  $('#dateProgress').textContent=`${state.progress.dates}/${state.plan.dates}`;
  $('#giftProgress').textContent=`${state.progress.gifts}/${state.plan.gifts}`;
  $('#budgetRemaining').textContent=`${Math.max(0,state.plan.budget-state.progress.spent)} ₪`;
+ if($('#plannerStatus'))$('#plannerStatus').textContent=state.plan.autoPlanner?'פעיל: היום, השבוע והחודש מתעדכנים אוטומטית לפי הנתונים שלך.':'כבוי: התוכניות ישתנו רק כשתבקש.';
  renderHints();renderEvents();renderWeek();renderMonth();renderInsights();
 }
 function renderHints(){
@@ -191,10 +186,10 @@ function renderEvents(){
  $$('[data-event-id]').forEach(b=>b.onclick=()=>showAction())
 }
 function renderWeek(){
- $('#weekPlan').innerHTML=state.week.length?state.week.map(x=>`<div class="timeline-item"><div class="day">${esc(x.day)}</div><div><strong>${esc(x.title)}</strong><small>${esc(x.detail)}</small></div><span>${x.icon}</span></div>`).join(''):'<p class="muted">עוד לא נבנתה תוכנית שבועית.</p>'
+ $('#weekPlan').innerHTML=state.week.length?state.week.map(x=>`<div class="timeline-item"><div class="day">${esc(x.day)}</div><div><strong>${esc(x.title)}</strong><small>${esc(x.detail)}</small>${x.reason?`<span class="plan-reason">${esc(x.reason)}</span>`:''}</div><span>${x.icon}</span></div>`).join(''):'<p class="muted">עוד לא נבנתה תוכנית שבועית.</p>'
 }
 function renderMonth(){
- $('#monthPlan').innerHTML=state.month.length?state.month.map(x=>`<div class="timeline-item"><div class="day">${esc(x.when)}</div><div><strong>${esc(x.title)}</strong><small>${esc(x.detail)}</small></div><span>${x.icon}</span></div>`).join(''):'<p class="muted">שמור את התוכנית כדי לבנות חודש.</p>'
+ $('#monthPlan').innerHTML=state.month.length?state.month.map(x=>`<div class="timeline-item"><div class="day">${esc(x.when)}</div><div><strong>${esc(x.title)}</strong><small>${esc(x.detail)}</small>${x.reason?`<span class="plan-reason">${esc(x.reason)}</span>`:''}</div><span>${x.icon}</span></div>`).join(''):'<p class="muted">שמור את התוכנית כדי לבנות חודש.</p>'
 }
 function renderInsights(){
  const insights=[];
@@ -258,42 +253,31 @@ function gestureFlow(){
  });
  $('#randomGesture').onclick=()=>showAction(actionPool.filter(a=>a.type==='gesture'||a.type==='free')[Math.floor(Math.random()*5)])
 }
-function buildWeek(){
- const days=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
- const picks=[actionPool[0],actionPool[1],actionPool[7],actionPool[3],actionPool[2],actionPool[5],actionPool[4]];
- state.week=days.map((day,i)=>({day,title:picks[i].title,detail:picks[i].body,icon:picks[i].icon}));save();toast('נבנה שבוע חיזור חדש')
-}
-function buildMonth(){
- const items=[];let n=2;
- const add=(count,icon,title,detail)=>{for(let i=0;i<count;i++){items.push({when:`${Math.min(28,n)} בחודש`,icon,title,detail});n+=Math.max(2,Math.floor(28/Math.max(1,state.plan.gifts+state.plan.dates+state.plan.gestures)))}};
- add(state.plan.gestures,'🌹','מחווה','משהו קטן שמותאם לפרופיל שלה');
- add(state.plan.dates,'🥂','דייט','חלון זמן ייבחר מתוך הלוז');
- add(state.plan.gifts,'🎁','מתנה','מתנה לפי תקציב והעדפות');
- items.sort((a,b)=>parseInt(a.when)-parseInt(b.when));state.month=items.slice(0,20);save()
-}
+function buildWeek(){autoBuildWeek(true);save();toast('נבנה שבוע חדש לפי הלוז, התקציב והפרופיל')}
+function buildMonth(){autoBuildMonth(true);save()}
 function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction()];options[Math.floor(Math.random()*options.length)]()}
 
 $$('.bottom-nav button').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function go(tab){$$('.bottom-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
 $$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
-$('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=render;
+$('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
 $('#quickAddBtn').onclick=addHint;$('#addHintBtn').onclick=addHint;$('#partnerHintBtn').onclick=addHint;$('#addEventBtn').onclick=addEvent;
 $('#buildWeek').onclick=buildWeek;$('#regenerateWeek').onclick=buildWeek;
-$('#autoCourtship').onclick=()=>{go('plans');toast('בחר רמת אוטומציה בתוכנית החודשית')};
+$('#autoCourtship').onclick=()=>{state.plan.autoPlanner=true;ensureAutomaticPlanning(true);persistOnly();fillForms();render();go('plans');toast('התכנון האוטומטי הופעל')};
 $$('#styleChips button').forEach(b=>b.onclick=()=>{$$('#styleChips button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.plan.style=b.dataset.style;save()});
 
 function fillForms(){
  $('#partnerName').value=state.partner.name;$('#relationshipYears').value=state.partner.years;$('#likes').value=state.partner.likes;$('#dislikes').value=state.partner.dislikes;$('#foodPrefs').value=state.partner.foodPrefs;$('#giftPrefs').value=state.partner.giftPrefs;$('#emotionalPrefs').value=state.partner.emotionalPrefs;
  $('#myName').value=state.me.name;$('#homeAddress').value=state.me.homeAddress;$('#maxDistance').value=state.me.maxDistance;$('#giftBudget').value=state.me.giftBudget;$('#dateBudget').value=state.me.dateBudget;$('#gestureBudget').value=state.me.gestureBudget;
- $('#monthlyBudget').value=state.plan.budget;$('#budgetValue').textContent=state.plan.budget;$('#planGifts').value=state.plan.gifts;$('#planDates').value=state.plan.dates;$('#planGestures').value=state.plan.gestures;$('#planCourtship').value=state.plan.courtship;$('#automationLevel').value=state.plan.automation;$('#autoLimit').value=state.plan.autoLimit;$('#autoLimitWrap').hidden=state.plan.automation!=='limited';
+ $('#monthlyBudget').value=state.plan.budget;$('#budgetValue').textContent=state.plan.budget;$('#autoPlannerEnabled').checked=state.plan.autoPlanner!==false;$('#planGifts').value=state.plan.gifts;$('#planDates').value=state.plan.dates;$('#planGestures').value=state.plan.gestures;$('#planCourtship').value=state.plan.courtship;$('#automationLevel').value=state.plan.automation;$('#autoLimit').value=state.plan.autoLimit;$('#autoLimitWrap').hidden=state.plan.automation!=='limited';
  const active=$$('#styleChips button').find(x=>x.dataset.style===state.plan.style);if(active)active.classList.add('active')
 }
-$('#savePartnerBtn').onclick=()=>{Object.assign(state.partner,{name:$('#partnerName').value.trim(),years:$('#relationshipYears').value,likes:$('#likes').value.trim(),dislikes:$('#dislikes').value.trim(),foodPrefs:$('#foodPrefs').value.trim(),giftPrefs:$('#giftPrefs').value.trim(),emotionalPrefs:$('#emotionalPrefs').value.trim()});save();toast('פרופיל בת הזוג נשמר')};
-$('#saveMeBtn').onclick=()=>{Object.assign(state.me,{name:$('#myName').value.trim(),homeAddress:$('#homeAddress').value.trim(),maxDistance:+$('#maxDistance').value,giftBudget:+$('#giftBudget').value||0,dateBudget:+$('#dateBudget').value||0,gestureBudget:+$('#gestureBudget').value||0});save();toast('ההגדרות נשמרו')};
+$('#savePartnerBtn').onclick=()=>{Object.assign(state.partner,{name:$('#partnerName').value.trim(),years:$('#relationshipYears').value,likes:$('#likes').value.trim(),dislikes:$('#dislikes').value.trim(),foodPrefs:$('#foodPrefs').value.trim(),giftPrefs:$('#giftPrefs').value.trim(),emotionalPrefs:$('#emotionalPrefs').value.trim()});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast('פרופיל בת הזוג נשמר והתכנון עודכן')};
+$('#saveMeBtn').onclick=()=>{Object.assign(state.me,{name:$('#myName').value.trim(),homeAddress:$('#homeAddress').value.trim(),maxDistance:+$('#maxDistance').value,giftBudget:+$('#giftBudget').value||0,dateBudget:+$('#dateBudget').value||0,gestureBudget:+$('#gestureBudget').value||0});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast('ההגדרות נשמרו והתכנון עודכן')};
 $('#monthlyBudget').oninput=e=>$('#budgetValue').textContent=e.target.value;
-$('#automationLevel').onchange=e=>$('#autoLimitWrap').hidden=e.target.value!=='limited';
-$('#savePlanBtn').onclick=()=>{Object.assign(state.plan,{budget:+$('#monthlyBudget').value,gifts:+$('#planGifts').value,dates:+$('#planDates').value,gestures:+$('#planGestures').value,courtship:+$('#planCourtship').value,automation:$('#automationLevel').value,autoLimit:+$('#autoLimit').value||0});buildMonth();toast('התוכנית החודשית נשמרה')};
+$('#automationLevel').onchange=e=>$('#autoLimitWrap').hidden=e.target.value!=='limited';$('#autoPlannerEnabled').onchange=e=>{state.plan.autoPlanner=e.target.checked;if(state.plan.autoPlanner)ensureAutomaticPlanning(true);persistOnly();render()};
+$('#savePlanBtn').onclick=()=>{Object.assign(state.plan,{budget:+$('#monthlyBudget').value,gifts:+$('#planGifts').value,dates:+$('#planDates').value,gestures:+$('#planGestures').value,courtship:+$('#planCourtship').value,automation:$('#automationLevel').value,autoLimit:+$('#autoLimit').value||0,autoPlanner:$('#autoPlannerEnabled').checked});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast(state.plan.autoPlanner?'התוכנית נשמרה והתכנון האוטומטי עודכן':'התוכנית נשמרה')};
 
 $('#locationBtn').onclick=()=>{
  if(!navigator.geolocation){toast('המכשיר לא תומך במיקום');return}
@@ -303,4 +287,4 @@ const dayNames=['ראשון','שני','שלישי','רביעי','חמישי','ש
 $('#calendarBtn').onclick=()=>{const box=$('#availabilityEditor');box.hidden=!box.hidden;if(!box.innerHTML)box.innerHTML=dayNames.map((d,i)=>`<label class="availability-row"><span>${d}</span><input type="checkbox" data-avail="${i}" ${state.me.availability[i]?'checked':''}></label>`).join('');$$('[data-avail]').forEach(x=>x.onchange=()=>{state.me.availability[x.dataset.avail]=x.checked;save()})};
 $('#addSocialBtn').onclick=()=>{openModal(`<p class="eyebrow">אות מהרשת</p><h2>שמור קישור או רעיון</h2><p>רק תוכן שאתה או בת הזוג בחרתם לשתף.</p><input id="socialLink" placeholder="קישור / תיאור" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px"><button class="primary full" style="margin-top:12px" id="saveSocial">שמור</button>`);$('#saveSocial').onclick=()=>{const v=$('#socialLink').value.trim();if(!v)return;state.partner.social.push({value:v,date:new Date().toISOString()});save();closeModal();toast('נשמר אות חדש')}}
 if(state.me.location)$('#locationStatus').textContent='קיימת הרשאת מיקום שמורה במכשיר.';
-fillForms();render();
+ensureAutomaticPlanning(false);fillForms();render();
