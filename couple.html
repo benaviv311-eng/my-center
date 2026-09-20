@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>הבן זוג המושלם</title>
+  <meta name="theme-color" content="#201a1b">
+  <link rel="stylesheet" href="couple.css?v=1">
+</head>
+<body>
+<div class="couple-app">
+  <header class="topbar">
+    <a class="back-home" href="index.html" aria-label="חזרה למרכז שלי">⌂</a>
+    <div>
+      <p class="eyebrow">עוזר זוגיות אישי</p>
+      <h1>הבן זוג המושלם</h1>
+    </div>
+    <button class="icon-button" id="quickAddBtn" title="היא אמרה משהו">＋</button>
+  </header>
+
+  <main>
+    <section class="tab-page active" data-page="home">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">היום</p>
+          <h2 id="greeting">מה נעשה היום בשביל הזוגיות?</h2>
+          <p id="heroSub">פעולה אחת טובה, בזמן הנכון.</p>
+        </div>
+        <span class="hero-heart">♥</span>
+      </section>
+
+      <article class="smart-card">
+        <div class="card-kicker">ההצעה שלי להיום</div>
+        <h3 id="dailyTitle">משהו קטן ומדויק</h3>
+        <p id="dailyBody">בחר כמה פרטים על בת הזוג והאפליקציה תתחיל להתאים את ההצעות.</p>
+        <div class="row-actions">
+          <button class="primary" id="doDailyBtn">תראה לי</button>
+          <button class="ghost" id="refreshDailyBtn">משהו אחר</button>
+        </div>
+      </article>
+
+      <section class="quick-grid" aria-label="פעולות מהירות">
+        <button class="quick-action" data-flow="gift"><span>🎁</span><strong>מתנה</strong><small>מצא ושלח</small></button>
+        <button class="quick-action" data-flow="date"><span>🥂</span><strong>דייט</strong><small>ארגן ערב</small></button>
+        <button class="quick-action" data-flow="gesture"><span>🌹</span><strong>מחווה</strong><small>משהו קטן</small></button>
+        <button class="quick-action accent" data-flow="surprise"><span>✨</span><strong>תפתיע אותי</strong><small>אני אבחר</small></button>
+      </section>
+
+      <button class="now-button" id="doNowBtn"><span>❤️</span><span><strong>תן לי משהו לעשות עכשיו</strong><small>לא חייב לעלות כסף</small></span><b>←</b></button>
+
+      <section class="section">
+        <div class="section-head"><h3>התוכנית שלי</h3><button class="text-btn" data-go="plans">לכל התוכנית</button></div>
+        <article class="plan-summary">
+          <div><span>❤️</span><strong id="courtshipProgress">0/8</strong><small>חיזור</small></div>
+          <div><span>🌹</span><strong id="gestureProgress">0/4</strong><small>מחוות</small></div>
+          <div><span>🥂</span><strong id="dateProgress">0/2</strong><small>דייטים</small></div>
+          <div><span>🎁</span><strong id="giftProgress">0/1</strong><small>מתנות</small></div>
+        </article>
+        <div class="budget-line"><span>תקציב חודשי שנותר</span><strong id="budgetRemaining">—</strong></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h3>מה מתקרב</h3><button class="text-btn" id="addEventBtn">+ הוסף</button></div>
+        <div id="upcomingList" class="stack-list"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h3>רמזים אחרונים</h3><button class="text-btn" id="addHintBtn">+ היא אמרה משהו</button></div>
+        <div id="hintPreview" class="stack-list"></div>
+      </section>
+    </section>
+
+    <section class="tab-page" data-page="courtship">
+      <section class="page-title">
+        <p class="eyebrow">חיזור קבוע</p>
+        <h2>לא להפסיק לבחור בה</h2>
+        <p>הודעות, זמן, עזרה, מגע, מתנות, דייטים והפתעות — לפי מה שמתאים לכם.</p>
+      </section>
+      <div class="feature-buttons">
+        <button class="feature-card" id="courtshipNow"><span>⚡</span><div><strong>משהו לעשות עכשיו</strong><small>פעולה אחת שמתאימה לרגע הזה</small></div></button>
+        <button class="feature-card" id="buildWeek"><span>🗓️</span><div><strong>בנה לי שבוע חיזור</strong><small>תוכנית מאוזנת לשבעה ימים</small></div></button>
+        <button class="feature-card" id="autoCourtship"><span>🤖</span><div><strong>נהל את החיזור בשבילי</strong><small>תדירות, תקציב ורמת אוטומציה</small></div></button>
+      </div>
+      <section class="section">
+        <div class="section-head"><h3>השבוע שלך</h3><button class="text-btn" id="regenerateWeek">בנה מחדש</button></div>
+        <div id="weekPlan" class="timeline"></div>
+      </section>
+      <section class="section">
+        <h3>סגנון החיזור</h3>
+        <div class="chip-group" id="styleChips">
+          <button data-style="משולב">משולב</button><button data-style="רומנטי">רומנטי</button><button data-style="קליל">קליל</button>
+          <button data-style="מצחיק">מצחיק</button><button data-style="עמוק">עמוק</button><button data-style="מעשי">מעשי</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-page" data-page="plans">
+      <section class="page-title">
+        <p class="eyebrow">תוכניות</p>
+        <h2>בנה לי חודש</h2>
+        <p>הגדר קצב ותקציב. האפליקציה מפזרת את ההשקעה לאורך החודש.</p>
+      </section>
+      <div class="plan-cards">
+        <article class="plan-card"><span>🎁</span><div><strong>תוכנית מתנות</strong><small>מתנות והפתעות לאורך החודש</small></div><label><input type="number" id="planGifts" min="0" max="8"> בחודש</label></article>
+        <article class="plan-card"><span>🥂</span><div><strong>תוכנית דייטים</strong><small>פשוטים ומיוחדים לפי הלוז</small></div><label><input type="number" id="planDates" min="0" max="8"> בחודש</label></article>
+        <article class="plan-card"><span>🌹</span><div><strong>תוכנית מחוות</strong><small>משלוחים, עזרה והפתעות קטנות</small></div><label><input type="number" id="planGestures" min="0" max="20"> בחודש</label></article>
+        <article class="plan-card"><span>❤️</span><div><strong>חיזור שוטף</strong><small>פעולות ללא כסף וגם פעולות ביצוע</small></div><label><input type="number" id="planCourtship" min="0" max="31"> בחודש</label></article>
+      </div>
+      <section class="section form-card">
+        <label>תקציב זוגיות חודשי <span><b id="budgetValue">800</b> ₪</span></label>
+        <input type="range" id="monthlyBudget" min="0" max="5000" step="50">
+        <label>רמת אוטומציה</label>
+        <select id="automationLevel">
+          <option value="suggest">הצעות בלבד</option>
+          <option value="prepare">הכן הכול ואני מאשר</option>
+          <option value="oneTap">אישור אחד לפני ביצוע</option>
+          <option value="limited">אוטומטי עד סכום מוגדר</option>
+        </select>
+        <div id="autoLimitWrap" hidden><label>סכום מקסימלי לביצוע אוטומטי</label><input type="number" id="autoLimit" min="0" step="10"></div>
+        <button class="primary full" id="savePlanBtn">שמור ובנה את החודש</button>
+      </section>
+      <section class="section"><div class="section-head"><h3>לוח החודש</h3></div><div id="monthPlan" class="timeline"></div></section>
+    </section>
+
+    <section class="tab-page" data-page="partner">
+      <section class="page-title partner-title">
+        <div class="avatar" id="partnerAvatar">♥</div>
+        <div><p class="eyebrow">הפרופיל החכם</p><h2 id="partnerHeading">בת הזוג</h2><p id="partnerLearning">ככל שתספר יותר, ההצעות יהיו מדויקות יותר.</p></div>
+      </section>
+      <section class="section form-card">
+        <div class="two-cols">
+          <label>שם<input id="partnerName" placeholder="לדוגמה: מאיה"></label>
+          <label>כמה זמן יחד<input id="relationshipYears" type="number" min="0" step="0.5" placeholder="שנים"></label>
+        </div>
+        <label>מה היא אוהבת לעשות<textarea id="likes" placeholder="מסעדות, הופעות, ים, ספרים..."></textarea></label>
+        <label>מה לא להציע<textarea id="dislikes" placeholder="מקומות רועשים, פרחים, סרטי אימה..."></textarea></label>
+        <label>אוכל והעדפות<textarea id="foodPrefs" placeholder="איטלקי, סושי, צמחונית, רגישויות..."></textarea></label>
+        <label>מתנות וסגנון<textarea id="giftPrefs" placeholder="תכשיטים עדינים, ספרים, חוויות..."></textarea></label>
+        <label>מה מרגש או מרגיע אותה<textarea id="emotionalPrefs" placeholder="זמן יחד, עזרה, מילים, הפתעות..."></textarea></label>
+        <button class="primary full" id="savePartnerBtn">שמור פרופיל</button>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h3>דברים שהיא אמרה</h3><button class="text-btn" id="partnerHintBtn">+ הוסף</button></div>
+        <div id="allHints" class="stack-list"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><h3>מה למדתי עליה</h3></div>
+        <div id="learnedInsights" class="insight-box"></div>
+      </section>
+
+      <section class="section">
+        <h3>אותות מהרשתות</h3>
+        <p class="muted">רק בהסכמה. אפשר לשתף פוסט או קישור לאפליקציה כדי לשמור רעיון.</p>
+        <button class="ghost full" id="addSocialBtn">שתף קישור / פוסט</button>
+      </section>
+    </section>
+
+    <section class="tab-page" data-page="me">
+      <section class="page-title"><p class="eyebrow">אני וההגדרות</p><h2>זמן, מקום וכסף</h2><p>אלו הנתונים שמאפשרים לאפליקציה להציע דברים שבאמת אפשר לבצע.</p></section>
+      <section class="section form-card">
+        <label>שם שלי<input id="myName" placeholder="שם"></label>
+        <label>כתובת בית<input id="homeAddress" placeholder="עיר / כתובת"></label>
+        <label>מרחק מקסימלי לדייט
+          <select id="maxDistance"><option value="15">עד 15 דקות</option><option value="30">עד 30 דקות</option><option value="45">עד 45 דקות</option><option value="90">עד שעה וחצי</option></select>
+        </label>
+        <div class="two-cols">
+          <label>תקציב מתנה טיפוסי<input id="giftBudget" type="number" min="0" step="10"></label>
+          <label>תקציב דייט טיפוסי<input id="dateBudget" type="number" min="0" step="10"></label>
+        </div>
+        <label>תקציב מחווה קטנה<input id="gestureBudget" type="number" min="0" step="10"></label>
+        <button class="ghost full" id="locationBtn">📍 אפשר מיקום</button>
+        <div id="locationStatus" class="status-note">המיקום עדיין לא נשמר.</div>
+        <button class="ghost full" id="calendarBtn">📅 הגדר זמינות ידנית</button>
+        <div id="availabilityEditor" hidden></div>
+        <button class="primary full" id="saveMeBtn">שמור הגדרות</button>
+      </section>
+      <section class="section">
+        <h3>פרטיות</h3>
+        <p class="muted">אין מעקב נסתר. מיקום, רשתות ויומן עובדים רק בהרשאה מפורשת. בגרסת ה־MVP הנתונים נשמרים במכשיר הזה בלבד.</p>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="active" data-tab="home"><span>⌂</span><small>בית</small></button>
+    <button data-tab="courtship"><span>♥</span><small>חיזור</small></button>
+    <button data-tab="plans"><span>▣</span><small>תוכניות</small></button>
+    <button data-tab="partner"><span>👩</span><small>בת הזוג</small></button>
+    <button data-tab="me"><span>⚙</span><small>אני</small></button>
+  </nav>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="סגור">×</button>
+    <div id="modalContent"></div>
+  </section>
+</div>
+
+<div class="toast" id="coupleToast"></div>
+<script src="couple.js?v=1"></script>
+</body>
+</html>
