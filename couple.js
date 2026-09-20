@@ -4,7 +4,7 @@ const defaults={
   partner:{name:'',years:'',likes:'',dislikes:'',foodPrefs:'',giftPrefs:'',emotionalPrefs:'',preferenceTags:[],avoidTags:[],hints:[],social:[]},
   plan:{budget:800,gifts:1,dates:2,gestures:4,courtship:8,automation:'prepare',autoLimit:70,style:'משולב',autoPlanner:true},
   progress:{gifts:0,dates:0,gestures:0,courtship:0,spent:0},
-  planner:{dailyKey:'',daily:null,dailyVariant:0,weekKey:'',monthKey:'',lastTypes:[]},
+  planner:{dailyKey:'',daily:null,dailyVariant:0,weekKey:'',monthKey:'',lastTypes:[],lastItems:[]},
   events:[],
   week:[],
   month:[]
@@ -158,49 +158,96 @@ function oneTapMessage(kind){
  };
  return messages[kind]||messages.free
 }
-function oneTapPlan(){
- const text=(state.partner.likes+' '+state.partner.giftPrefs+' '+state.partner.foodPrefs+' '+state.partner.emotionalPrefs+' '+(state.partner.preferenceTags||[]).join(' ')).toLowerCase();
- const dislikes=(state.partner.dislikes||'').toLowerCase();
+function catalogProfileText(){
+ return ([
+  state.partner.likes,state.partner.giftPrefs,state.partner.foodPrefs,state.partner.emotionalPrefs,
+  ...(state.partner.preferenceTags||[]),...state.partner.hints.map(h=>h.text||'')
+ ]).join(' ').toLowerCase()
+}
+function catalogAvoidText(){
+ return ([state.partner.dislikes,...(state.partner.avoidTags||[])]).join(' ').toLowerCase()
+}
+function catalogResolvedUrl(item){
+ if(item.url)return item.url;
+ if(item.providerKey&&providers[item.providerKey])return providers[item.providerKey];
+ if(item.mapsQuery)return mapsSearch(item.mapsQuery);
+ return null
+}
+function catalogBudgetCap(type){
  const left=budgetLeft();
- const gestureBudget=Math.max(0,Math.min(state.me.gestureBudget||70,left));
- const giftBudget=Math.max(0,Math.min(state.me.giftBudget||200,left));
- const ev=upcomingEvent(4);
- const hint=state.partner.hints.at(-1);
- const needDate=state.progress.dates<state.plan.dates && dayIsAvailable(new Date().getDay());
- const flowerOK=!/פרח|זר/.test(dislikes)&&!(state.partner.avoidTags||[]).includes('פרחים');
- const chocolateOK=!/שוקולד|מתוק|סוכר/.test(dislikes)&&!(state.partner.avoidTags||[]).includes('מתוקים');
- let plan;
-
- if(/מוזיקה|שיר|spotify|הופעה/.test(text) && giftBudget>=210 && state.progress.gifts<state.plan.gifts){
-   plan={kind:'gift',icon:'🎵',title:'מתנה מדויקת: השיר שלכם על תקליט עץ',buy:'הזמן תקליט עץ אישי עם השיר שלכם ותמונה זוגית. מחיר נוכחי: 210 ₪.',cost:210,url:providers.giftushVinyl,provider:'Giftush',reason:'היא אוהבת מוזיקה והתקציב מאפשר מתנה אישית במקום מתנה גנרית'};
- }else if(/תמונה|צילום|זיכרון|משפחה/.test(text) && giftBudget>=120 && state.progress.gifts<state.plan.gifts){
-   plan={kind:'gift',icon:'🖼️',title:'מתנה מדויקת: חריטת תמונה אישית',buy:'בחר תמונה זוגית טובה והזמן חריטת תמונה אומנותית. המחיר מתחיל ב־120 ₪.',cost:Math.min(giftBudget,120),url:providers.giftushEngraved,provider:'Giftush',reason:'הפרופיל שלה מתאים למתנה אישית שמבוססת על זיכרון משותף'};
- }else if(ev && giftBudget>=120){
-   plan={kind:'gift',icon:'🎁',title:`מתנה קטנה לקראת ${ev.title}`,buy:hint?`מתנה שמתבססת על הרמז: “${hint.text}”`:'מתנה אישית קטנה שמתאימה למה שהיא אוהבת',cost:Math.min(giftBudget,180),url:providers.woltGifts,provider:'Wolt Gifts',reason:`${ev.title} מתקרב ולכן עדיף משהו אישי עכשיו`};
- }else if(hint && giftBudget>=100 && state.progress.gifts<state.plan.gifts){
-   plan={kind:'gift',icon:'🎁',title:'היום מקשיבים לרמז',buy:`קנה משהו שקשור ישירות למה שהיא אמרה: “${hint.text}”`,cost:Math.min(giftBudget,160),url:providers.woltGifts,provider:'Wolt Gifts',reason:'יש רמז טרי ממנה ועוד חסרה מתנה בתוכנית'};
- }else if(needDate && left>=Math.min(250,state.me.dateBudget||400) && state.progress.courtship>1){
-   plan={kind:'date',icon:'🥂',title:'הערב הולכים על דייט',buy:'הזמן שולחן לשניים במקום נעים קרוב, שעה שמתאימה ללוז שלכם. האפליקציה כבר בחרה: דייט פשוט, בלי להעמיס.',cost:Math.min(state.me.dateBudget||400,left),url:providers.ontopo,provider:'Ontopo',reason:'היום פנוי בלוז ועוד חסר דייט בתוכנית החודשית'};
- }else if(/ספר/.test(text) && giftBudget>=80){
-   plan={kind:'gift',icon:'📚',title:'מתנה קטנה: ספר',buy:'קנה ספר חדש בתחום שהיא אוהבת, עם פתק אישי בפנים.',cost:Math.min(giftBudget,120),url:mapsSearch('חנות ספרים'),provider:'חנות ספרים קרובה',reason:'הפרופיל שלה מצביע על אהבה לספרים'};
- }else if(flowerOK && gestureBudget>=60 && !/לא אוהבת פרחים/.test(dislikes)){
-   plan={kind:'flower',icon:'💐',title:'מחווה קטנה: זר + משהו מתוק',buy:`הזמן זר קטן ועדין ${chocolateOK?'ובתוספת שוקולד איכותי':''}. לא זר ענק — משהו אישי ונעים.`,cost:Math.min(Math.max(gestureBudget,60),100),url:providers.woltFlowers,provider:'Wolt',reason:'מחווה קטנה מתאימה יותר כרגע מדייט או מתנה גדולה'};
- }else if(chocolateOK && gestureBudget>=40){
-   plan={kind:'sweet',icon:'🍰',title:'מחווה קטנה: משהו מתוק',buy:'שלח קינוח קטן שהיא אוהבת או מארז שוקולד איכותי.',cost:Math.min(Math.max(gestureBudget,40),80),url:providers.woltGifts,provider:'Wolt',reason:'מחווה קטנה בתקציב הנוכחי שומרת על רצף החיזור'};
- }else if(left>=25){
-   plan={kind:'card',icon:'💌',title:'כרטיס אמיתי בדואר',buy:'שלח כרטיס ברכה פיזי עם טקסט אישי. האפליקציה כבר ניסחה את הברכה.',cost:Math.min(left,45),url:providers.printedCard,provider:'כרטיס ברכה מודפס',reason:'משהו אישי שלא דורש ממך תכנון'};
- }else{
-   plan={kind:'free',icon:'❤️',title:'היום בלי לקנות כלום',buy:'שלח לה את ההודעה המוכנה, וכשאתה מגיע הביתה קח ממנה משימה אחת בלי לשאול מה צריך.',cost:0,url:null,provider:'',reason:'נשאר מעט מהתקציב ולכן עדיף חיזור אישי ללא הוצאה'};
+ if(type==='gift')return Math.min(left,+state.me.giftBudget||left);
+ if(type==='date')return Math.min(left,+state.me.dateBudget||left);
+ if(type==='gesture')return Math.min(left,+state.me.gestureBudget||left);
+ return left
+}
+function catalogScore(item){
+ const profile=catalogProfileText(),avoid=catalogAvoidText(),left=budgetLeft();
+ let score=12;
+ const cap=catalogBudgetCap(item.type);
+ if((item.price||0)>left || (item.price||0)>cap)score-=1000;
+ const avoided=(item.avoid||[]).some(tag=>avoid.includes(String(tag).toLowerCase()));
+ if(avoided)score-=1000;
+ (item.tags||[]).forEach(tag=>{if(profile.includes(String(tag).toLowerCase()))score+=7});
+ if(item.type==='gift')score+=state.progress.gifts<state.plan.gifts?12:-3;
+ if(item.type==='date'){score+=state.progress.dates<state.plan.dates?12:-3;score+=dayIsAvailable(new Date().getDay())?5:-10}
+ if(item.type==='gesture')score+=state.progress.gestures<state.plan.gestures?10:-2;
+ if(item.type==='free')score+=state.progress.courtship<state.plan.courtship?7:2;
+ const ev=upcomingEvent(5);
+ if(ev&&(item.type==='gift'||item.type==='gesture'))score+=8;
+ if(state.partner.hints.length&&(item.type==='gift'||item.type==='gesture'))score+=4;
+ if(left<Math.max(80,state.plan.budget*.2)&&item.price===0)score+=12;
+ if(item.effort==='low')score+=3;
+ const recent=state.planner.lastItems||[];
+ recent.forEach((id,i)=>{if(id===item.id)score-=30-i*3});
+ const recentTypes=state.planner.lastTypes||[];
+ recentTypes.forEach((t,i)=>{if(t===item.type)score-=5-i});
+ return score
+}
+function catalogReason(item){
+ const bits=[];const profile=catalogProfileText();const ev=upcomingEvent(5);
+ const matched=(item.tags||[]).filter(t=>profile.includes(String(t).toLowerCase())).slice(0,2);
+ if(matched.length)bits.push('מתאים למה שהיא אוהבת: '+matched.join(', '));
+ if(ev&&(item.type==='gift'||item.type==='gesture'))bits.push(ev.title+' מתקרב');
+ if(item.type==='date'&&dayIsAvailable(new Date().getDay()))bits.push('היום מתאים ללוז שהגדרת');
+ if(item.type==='gift'&&state.progress.gifts<state.plan.gifts)bits.push('עוד חסרה מתנה בתוכנית');
+ if(item.type==='gesture'&&state.progress.gestures<state.plan.gestures)bits.push('עוד חסרה מחווה בתוכנית');
+ if(item.type==='date'&&state.progress.dates<state.plan.dates)bits.push('עוד חסר דייט בתוכנית');
+ if(item.price===0)bits.push('לא דורש הוצאה');
+ return bits.slice(0,2).join(' · ')||'נבחר כדי לגוון ולשמור על חיזור רציף'
+}
+function rememberItem(id){
+ if(!id)return;
+ state.planner.lastItems=Array.isArray(state.planner.lastItems)?state.planner.lastItems:[];
+ state.planner.lastItems.unshift(id);
+ state.planner.lastItems=state.planner.lastItems.slice(0,8)
+}
+function oneTapPlan(){
+ const catalog=Array.isArray(window.COUPLE_CATALOG)?window.COUPLE_CATALOG:[];
+ if(catalog.length){
+   const ranked=catalog.map(item=>({...item,_score:catalogScore(item)})).filter(x=>x._score>-500).sort((a,b)=>b._score-a._score);
+   const top=ranked.slice(0,Math.min(6,ranked.length));
+   const variant=state.planner.dailyVariant||0;
+   const item=top[(seededNumber(localDateKey()+'|'+state.plan.style+'|'+variant)%Math.max(1,top.length))]||ranked[0];
+   if(item){
+     const messageKind=item.messageKey||item.type;
+     return {
+       id:item.id,kind:item.type,icon:item.icon,title:item.title,buy:item.buy,
+       cost:item.price||0,priceLabel:item.priceLabel||(item.price?item.price+' ₪':'ללא עלות'),
+       url:catalogResolvedUrl(item),provider:item.provider||'',reason:catalogReason(item),
+       message:oneTapMessage(messageKind),verified:Boolean(item.verified)
+     }
+   }
  }
- plan.message=oneTapMessage(plan.kind);
- return plan
+ const fallback=chooseSmartAction(state.planner.dailyVariant||0);
+ return {kind:fallback.type,icon:fallback.icon,title:fallback.title,buy:fallback.body,cost:fallback.cost||0,priceLabel:fallback.cost?fallback.cost+' ₪':'ללא עלות',url:null,provider:'',reason:fallback.reason||inferReason(fallback),message:oneTapMessage(fallback.type)}
 }
 function executeOneTap(plan){
- rememberType(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card'?'gesture':plan.kind);
+ const normalizedType=(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card')?'gesture':plan.kind;
+ rememberType(normalizedType);rememberItem(plan.id);
  state.progress.courtship++;
- if(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card')state.progress.gestures++;
- if(plan.kind==='gift')state.progress.gifts++;
- if(plan.kind==='date')state.progress.dates++;
+ if(normalizedType==='gesture')state.progress.gestures++;
+ if(normalizedType==='gift')state.progress.gifts++;
+ if(normalizedType==='date')state.progress.dates++;
  state.progress.spent+=plan.cost||0;
  state.planner.dailyKey='';
  ensureAutomaticPlanning(true);
@@ -216,9 +263,9 @@ function executeOneTap(plan){
 }
 function oneTapCourtship(){
  const plan=oneTapPlan();
- openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${plan.cost?plan.cost+' ₪':'0 ₪'}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">${plan.url?'בצע עכשיו ←':'שלח עכשיו ←'}</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">לא מתאים — תבחר משהו אחר</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. בלחיצה על ביצוע האפליקציה פותחת את הספק ומעתיקה עבורך את ההזמנה והברכה.</p>`);
+ openModal(`<p class="eyebrow">אני בוחר בשבילך</p><h2>${plan.icon} ${esc(plan.title)}</h2><div class="one-tap-result"><div class="decision-label">מה עושים</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(plan.priceLabel||(plan.cost?plan.cost+' ₪':'0 ₪'))}</b></div><div><small>ספק</small><b>${esc(plan.provider||'לא צריך')}</b></div></div><div class="decision-label">הברכה כבר מוכנה</div><blockquote>${esc(plan.message)}</blockquote><span class="plan-reason">${esc(plan.reason)}</span></div><button class="primary full one-tap-execute" id="executeOneTapBtn">${plan.url?'בצע עכשיו ←':'שלח עכשיו ←'}</button><button class="ghost full" style="margin-top:8px" id="rejectOneTapBtn">לא מתאים — תבחר משהו אחר</button><p class="muted">אין צורך לבחור מוצר או לנסח ברכה. בלחיצה על ביצוע האפליקציה פותחת את הספק ומעתיקה עבורך את ההזמנה והברכה.</p>`);
  $('#executeOneTapBtn').onclick=()=>executeOneTap(plan);
- $('#rejectOneTapBtn').onclick=()=>{state.planner.lastTypes.unshift(plan.kind);state.planner.lastTypes=state.planner.lastTypes.slice(0,5);persistOnly();oneTapCourtship()}
+ $('#rejectOneTapBtn').onclick=()=>{rememberType(plan.kind);rememberItem(plan.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;persistOnly();oneTapCourtship()}
 }
 let currentHomeDecision=null;
 function profileReady(){
@@ -250,11 +297,11 @@ function renderDecisionCard(){
  $('#decisionEmoji').textContent=currentHomeDecision.icon;
  $('#decisionTitle').textContent=currentHomeDecision.title;
  $('#decisionText').textContent=currentHomeDecision.buy;
- $('#decisionCost').textContent=currentHomeDecision.cost?currentHomeDecision.cost+' ₪':'ללא עלות';
+ $('#decisionCost').textContent=currentHomeDecision.priceLabel||(currentHomeDecision.cost?currentHomeDecision.cost+' ₪':'ללא עלות');
  $('#decisionProvider').textContent=currentHomeDecision.provider||'לא צריך ספק';
  $('#decisionExecuteBtn').textContent=currentHomeDecision.url?'בצע עכשיו ←':'שלח עכשיו ←';
  $('#decisionExecuteBtn').onclick=()=>executeOneTap(currentHomeDecision);
- $('#decisionAnotherBtn').onclick=()=>{rememberType(currentHomeDecision.kind==='flower'||currentHomeDecision.kind==='sweet'||currentHomeDecision.kind==='card'?'gesture':currentHomeDecision.kind);state.planner.dailyKey='';persistOnly();currentHomeDecision=oneTapPlan();renderDecisionCard()};
+ $('#decisionAnotherBtn').onclick=()=>{rememberType(currentHomeDecision.kind==='flower'||currentHomeDecision.kind==='sweet'||currentHomeDecision.kind==='card'?'gesture':currentHomeDecision.kind);rememberItem(currentHomeDecision.id);state.planner.dailyVariant=(state.planner.dailyVariant||0)+1;state.planner.dailyKey='';persistOnly();currentHomeDecision=oneTapPlan();renderDecisionCard()};
  $('#decisionWhyBtn').onclick=()=>{openModal(`<p class="eyebrow">למה בחרתי את זה?</p><h2>${currentHomeDecision.icon} ${esc(currentHomeDecision.title)}</h2><p>${esc(currentHomeDecision.reason)}</p><div class="result-card"><strong>אני בודק אוטומטית</strong><p>תקציב שנשאר, מה כבר עשית, מה היא אוהבת ולא אוהבת, רמזים ששמרת, אירועים קרובים והלוז שהגדרת.</p></div><button class="primary full" id="whyExecute">בצע את ההצעה</button>`);$('#whyExecute').onclick=()=>executeOneTap(currentHomeDecision)};
  $('#quickSetupCard').hidden=profileReady();
 }
