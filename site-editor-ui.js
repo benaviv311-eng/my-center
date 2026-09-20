@@ -301,7 +301,7 @@ function scheduleRequestPoll(request){
   if(!request?.id||!request?.status||STOP_POLL_STATUSES.has(request.status)||!ctx.api)return;
   pollTimer=setTimeout(async()=>{
     try{
-      const result=await ctx.api({action:'get_request',request_id:request.id});
+      const result=await ctx.api({action:'refresh_status',request_id:request.id});
       const fresh=result?.request;
       if(!fresh)return;
       activeRequestData=fresh;
