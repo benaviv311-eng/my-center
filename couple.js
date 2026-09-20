@@ -20,6 +20,21 @@ function openModal(html){$('#modalContent').innerHTML=html;$('#modalBackdrop').h
 function closeModal(){$('#modalBackdrop').hidden=true}
 $('#modalClose').onclick=closeModal;$('#modalBackdrop').addEventListener('click',e=>{if(e.target.id==='modalBackdrop')closeModal()});
 
+const providers={
+  woltGifts:'https://life.wolt.com/he/isr/howto/gifting',
+  woltFlowers:'https://life.wolt.com/he/isr/howto/flowers',
+  ontopo:'https://ontopo.com/he/il',
+  eventimStandup:'https://www.eventim.co.il/artist/stand-up/',
+  printedCard:'https://mysiddurname.co.il/product/%D7%9B%D7%A8%D7%98%D7%99%D7%A1-%D7%91%D7%A8%D7%9B%D7%94/'
+};
+function mapsSearch(query){
+  const loc=state.me.location;
+  const suffix=loc?` ליד ${loc.lat.toFixed(5)},${loc.lng.toFixed(5)}`:'';
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(query+suffix)
+}
+function providerButtons(items){
+  return '<div class="provider-actions">'+items.map(x=>`<a class="provider-link ${x.primary?'primary-provider':''}" href="${x.url}" target="_blank" rel="noopener"><span>${x.icon||'↗'}</span><div><strong>${esc(x.label)}</strong><small>${esc(x.note||'')}</small></div></a>`).join('')+'</div>'
+}
 const actionPool=[
  {type:'free',icon:'💬',title:'שלח הודעה אישית',body:'כתוב לה דבר אחד ספציפי שאתה מעריך בה היום.',cost:0},
  {type:'free',icon:'☕',title:'תוריד ממנה משהו קטן',body:'קח על עצמך משימה אחת שהיא בדרך כלל עושה, בלי להפוך את זה לאירוע.',cost:0},
