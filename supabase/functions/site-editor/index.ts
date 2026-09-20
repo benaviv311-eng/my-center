@@ -6,6 +6,7 @@ import {
   githubChecksForRef,
   githubCommitFiles,
   githubCreateEditBranch,
+  githubFastForwardMain,
   githubReadFile,
   githubTree
 } from "../_shared/site-editor/github.ts";
@@ -17,6 +18,7 @@ const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")||"";
 const OPENAI_API_KEY=Deno.env.get("OPENAI_API_KEY")||"";
 const SITE_EDITOR_MODEL_STRONG=Deno.env.get("SITE_EDITOR_MODEL_STRONG")||"";
 const SITE_EDITOR_MODEL_FAST=Deno.env.get("SITE_EDITOR_MODEL_FAST")||"";
+const SITE_PUBLIC_BASE_URL=(Deno.env.get("SITE_PUBLIC_BASE_URL")||"https://benaviv311-eng.github.io/my-center/").replace(/\/?$/,"/");
 const admin=serviceClient();
 
 function cors(req:Request){
@@ -330,8 +332,189 @@ async function approvePlan(user:{id:string},requestId:string){
 const PASSING_CHECK_CONCLUSIONS=new Set(["success","neutral","skipped"]);
 const FAILING_CHECK_CONCLUSIONS=new Set(["failure","cancelled","timed_out","action_required","startup_failure"]);
 
+async function validationState(headSha:string){
+  const checks=await githubChecksForRef(headSha);
+  const failed=checks.some(check=>check.status==="completed"&&check.conclusion&&FAILING_CHECK_CONCLUSIONS.has(check.conclusion));
+  const pending=checks.length===0||checks.some(check=>check.status!=="completed");
+  const allPassed=checks.length>0&&!pending&&checks.every(check=>!check.conclusion||PASSING_CHECK_CONCLUSIONS.has(check.conclusion));
+  return {checks,failed,pending,allPassed};
+}
+
+async function storeValidationRuns(requestId:string,headSha:string,checks:any[]){
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",requestId).eq("kind","validation");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  if(!checks.length)return;
+  const rows=checks.map(check=>({
+    request_id:requestId,
+    kind:"validation",
+    provider_run_id:check.id,
+    status:check.status,
+    url:check.url,
+    details:{name:check.name,conclusion:check.conclusion,head_sha:headSha},
+    started_at:check.started_at||new Date().toISOString(),
+    finished_at:check.completed_at||null
+  }));
+  const saved=await admin.from("site_edit_runs").insert(rows);
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+}
+
+async function revokePreviews(requestId:string){
+  const now=new Date().toISOString();
+  const r=await admin.from("site_edit_previews").update({revoked_at:now}).eq("request_id",requestId).is("revoked_at",null);
+  if(r.error)throw new EditorError("editor_unavailable",500);
+}
+
+async function latestPublishApproval(requestId:string){
+  const q=await admin.from("site_edit_approvals")
+    .select("*")
+    .eq("request_id",requestId)
+    .eq("stage","publish")
+    .eq("decision","approved")
+    .order("created_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(q.error)throw new EditorError("editor_unavailable",500);
+  return q.data||null;
+}
+
+async function approvePublish(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(request.status!=="preview_ready")throw new EditorError("bad_request",409,"request_not_publishable");
+  if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_not_publishable");
+  const currentHead=await githubBranchHead(request.branch_name);
+  if(currentHead!==request.head_sha)throw new EditorError("stale_plan",409);
+  const state=await validationState(currentHead);
+  if(!state.allPassed)throw new EditorError("bad_request",409,"validation_not_green");
+
+  const approval=await admin.from("site_edit_approvals").insert({
+    request_id:request.id,
+    user_id:user.id,
+    stage:"publish",
+    decision:"approved",
+    approved_head_sha:currentHead
+  });
+  if(approval.error)throw new EditorError("editor_unavailable",500);
+  const updated=await admin.from("site_edit_requests").update({
+    status:"awaiting_publish_approval",
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id).eq("user_id",user.id);
+  if(updated.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"publish_approved",{approved_head_sha:currentHead});
+  return requestView(user.id,request.id);
+}
+
+async function publishRequest(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(request.status!=="awaiting_publish_approval")throw new EditorError("bad_request",409,"request_not_publishable");
+  if(!request.branch_name||!request.head_sha||!request.base_sha)throw new EditorError("bad_request",409,"request_not_publishable");
+  const currentHead=await githubBranchHead(request.branch_name);
+  if(currentHead!==request.head_sha)throw new EditorError("stale_plan",409);
+  const approval=await latestPublishApproval(request.id);
+  if(!approval||approval.approved_head_sha!==currentHead)throw new EditorError("stale_plan",409);
+  const state=await validationState(currentHead);
+  if(!state.allPassed)throw new EditorError("bad_request",409,"validation_not_green");
+
+  try{
+    const published=await githubFastForwardMain(request.base_sha,currentHead);
+    const now=new Date().toISOString();
+    const updated=await admin.from("site_edit_requests").update({
+      status:"deploying",
+      merge_commit_sha:published.mainSha,
+      deploy_status:"pending",
+      updated_at:now
+    }).eq("id",request.id).eq("user_id",user.id);
+    if(updated.error)throw new EditorError("editor_unavailable",500);
+    await revokePreviews(request.id);
+    await insertEvent(request.id,user.id,"main_fast_forwarded",{main_sha:published.mainSha,head_sha:currentHead});
+    return requestView(user.id,request.id);
+  }catch(error){
+    if(error instanceof EditorError&&error.code==="stale_plan"){
+      await admin.from("site_edit_requests").update({status:"needs_replan",updated_at:new Date().toISOString()}).eq("id",request.id).eq("user_id",user.id);
+      await insertEvent(request.id,user.id,"publish_stale",{base_sha:request.base_sha,head_sha:currentHead});
+    }
+    throw error;
+  }
+}
+
+function publicSitePath(path:string){
+  const lower=path.toLowerCase();
+  return !(
+    lower.startsWith(".github/")||
+    lower.startsWith("supabase/")||
+    lower.startsWith("tests/")||
+    lower.startsWith("scripts/")||
+    lower.startsWith("docs/")
+  );
+}
+
+async function verifyPublicDeployment(request:any,operations:any[]){
+  const publicOps=operations.filter(op=>publicSitePath(String(op.path||""))).slice(0,8);
+  if(!publicOps.length)return true;
+  for(const op of publicOps){
+    const path=String(op.path||"");
+    const encoded=path.split("/").map(encodeURIComponent).join("/");
+    const joiner=SITE_PUBLIC_BASE_URL.includes("?")?"&":"?";
+    const url=`${SITE_PUBLIC_BASE_URL}${encoded}${joiner}site_edit_sha=${encodeURIComponent(request.head_sha)}`;
+    let response:Response;
+    try{
+      response=await fetch(url,{headers:{"Cache-Control":"no-cache","Pragma":"no-cache"}});
+    }catch{
+      return false;
+    }
+    if(op.operation_type==="delete_file"){
+      if(response.ok)return false;
+      continue;
+    }
+    if(!response.ok)return false;
+    let expected;
+    try{expected=await githubReadFile(path,request.head_sha)}catch{return false}
+    const actual=await response.text();
+    if(actual!==expected.content)return false;
+  }
+  return true;
+}
+
+async function refreshDeployment(user:{id:string},request:any){
+  if(!request.merge_commit_sha||!request.head_sha)return requestView(user.id,request.id);
+  const operations=await requestOperations(request.id);
+  const live=await verifyPublicDeployment(request,operations);
+  if(live){
+    const now=new Date().toISOString();
+    const updated=await admin.from("site_edit_requests").update({
+      status:"deployed",
+      deploy_status:"success",
+      published_at:now,
+      updated_at:now
+    }).eq("id",request.id).eq("user_id",user.id);
+    if(updated.error)throw new EditorError("editor_unavailable",500);
+    await admin.from("site_edit_runs").insert({
+      request_id:request.id,
+      kind:"deployment",
+      provider_run_id:request.merge_commit_sha,
+      status:"completed",
+      details:{verified_by:"github_pages_content",head_sha:request.head_sha},
+      finished_at:now
+    });
+    await insertEvent(request.id,user.id,"deployment_verified",{head_sha:request.head_sha});
+    return requestView(user.id,request.id);
+  }
+
+  const started=Date.parse(request.updated_at||request.created_at||"");
+  if(Number.isFinite(started)&&Date.now()-started>15*60*1000){
+    const now=new Date().toISOString();
+    await admin.from("site_edit_requests").update({
+      status:"failed",
+      deploy_status:"timeout",
+      updated_at:now
+    }).eq("id",request.id).eq("user_id",user.id);
+    await insertEvent(request.id,user.id,"deployment_timeout",{head_sha:request.head_sha});
+  }
+  return requestView(user.id,request.id);
+}
+
 async function refreshStatus(user:{id:string},requestId:string){
   const request=await ownedRequest(user.id,requestId);
+  if(request.status==="deploying")return refreshDeployment(user,request);
   if(!["testing","repairing"].includes(request.status))return requestView(user.id,request.id);
   if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_not_testable");
 
@@ -342,36 +525,33 @@ async function refreshStatus(user:{id:string},requestId:string){
     throw new EditorError("stale_plan",409);
   }
 
-  const checks=await githubChecksForRef(currentHead);
-  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","validation");
-  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const state=await validationState(currentHead);
+  await storeValidationRuns(request.id,currentHead,state.checks);
 
-  if(checks.length){
-    const rows=checks.map(check=>({
-      request_id:request.id,
-      kind:"validation",
-      provider_run_id:check.id,
-      status:check.status,
-      url:check.url,
-      details:{name:check.name,conclusion:check.conclusion,head_sha:currentHead},
-      started_at:check.started_at||new Date().toISOString(),
-      finished_at:check.completed_at||null
-    }));
-    const saved=await admin.from("site_edit_runs").insert(rows);
-    if(saved.error)throw new EditorError("editor_unavailable",500);
+  if(state.failed){
+    await admin.from("site_edit_requests").update({status:"failed",updated_at:new Date().toISOString()}).eq("id",request.id).eq("user_id",user.id);
+    await insertEvent(request.id,user.id,"validation_failed",{head_sha:currentHead,checks:state.checks.map(x=>({name:x.name,status:x.status,conclusion:x.conclusion}))});
+    return requestView(user.id,request.id);
   }
 
-  const failed=checks.some(check=>check.status==="completed"&&check.conclusion&&FAILING_CHECK_CONCLUSIONS.has(check.conclusion));
-  const pending=checks.length===0||checks.some(check=>check.status!=="completed");
-  const allPassed=checks.length>0&&!pending&&checks.every(check=>!check.conclusion||PASSING_CHECK_CONCLUSIONS.has(check.conclusion));
-  let nextStatus=request.status;
-  if(failed)nextStatus="failed";
-  else if(allPassed)nextStatus="preview_ready";
-
-  if(nextStatus!==request.status){
+  if(state.allPassed){
+    const nextStatus=request.risk_level==="low"?"awaiting_publish_approval":"preview_ready";
     const updated=await admin.from("site_edit_requests").update({status:nextStatus,updated_at:new Date().toISOString()}).eq("id",request.id).eq("user_id",user.id);
     if(updated.error)throw new EditorError("editor_unavailable",500);
-    await insertEvent(request.id,user.id,nextStatus==="preview_ready"?"validation_passed":"validation_failed",{head_sha:currentHead,checks:checks.map(x=>({name:x.name,status:x.status,conclusion:x.conclusion}))});
+    await insertEvent(request.id,user.id,"validation_passed",{head_sha:currentHead,risk_level:request.risk_level,checks:state.checks.map(x=>({name:x.name,status:x.status,conclusion:x.conclusion}))});
+
+    if(request.risk_level==="low"){
+      const approval=await admin.from("site_edit_approvals").insert({
+        request_id:request.id,
+        user_id:user.id,
+        stage:"publish",
+        decision:"approved",
+        approved_head_sha:currentHead
+      });
+      if(approval.error)throw new EditorError("editor_unavailable",500);
+      await insertEvent(request.id,user.id,"low_risk_auto_publish_approved",{approved_head_sha:currentHead});
+      return publishRequest(user,request.id);
+    }
   }
 
   return requestView(user.id,request.id);
@@ -434,7 +614,7 @@ async function listRequests(userId:string){
 
 async function requestRevision(user:{id:string},requestId:string,instructions:string){
   const request=await ownedRequest(user.id,requestId);
-  if(!["awaiting_plan_approval","needs_replan"].includes(request.status)){
+  if(!["awaiting_plan_approval","needs_replan","preview_ready","awaiting_publish_approval","failed"].includes(request.status)){
     throw new EditorError("bad_request",409,"request_not_revisable");
   }
   const note=text(instructions,8000);
@@ -503,6 +683,14 @@ Deno.serve(async(req:Request)=>{
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       const preview=await createPreview(user,id);
       return out(req,{ok:true,...preview});
+    }
+    if(action==='approve_publish'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await approvePublish(user,id)});
+    }
+    if(action==='publish'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await publishRequest(user,id)});
     }
     if(action==='approve_plan'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
