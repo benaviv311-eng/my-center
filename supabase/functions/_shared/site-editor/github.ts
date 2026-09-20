@@ -243,3 +243,16 @@ export async function githubCommitFiles(
   });
   return {commitSha:commit.sha};
 }
+
+
+export async function githubFastForwardMain(expectedBaseSha:string,expectedHeadSha:string):Promise<{mainSha:string}>{
+  const currentMain=await githubBranchHead("main");
+  if(currentMain!==expectedBaseSha)throw new EditorError("stale_plan",409);
+  await githubRequest(repoPath(`/git/refs/heads/main`),{
+    method:"PATCH",
+    body:JSON.stringify({sha:expectedHeadSha,force:false})
+  });
+  const mainSha=await githubBranchHead("main");
+  if(mainSha!==expectedHeadSha)throw new EditorError("github_unavailable",503);
+  return {mainSha};
+}
