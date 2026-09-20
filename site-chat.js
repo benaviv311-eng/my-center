@@ -4,6 +4,7 @@ if(window.SiteChat)return;
 const CHAT_URL='https://iwemlxvjyhffumzcqrxf.supabase.co';
 const CHAT_KEY='sb_publishable_pU7OWc6Yoba6xQIYYROAxg_pJAliQDk';
 const CHAT_FUNCTION=CHAT_URL+'/functions/v1/site-chat';
+const EDITOR_FUNCTION=CHAT_URL+'/functions/v1/site-editor';
 const state={client:null,session:null,mode:localStorage.getItem('site-chat-mode')||'global',threadId:null,messages:[],open:false,busy:false,abort:null,consultOnly:localStorage.getItem('site-chat-consult-only')==='1',view:'chat',pendingImages:[]};
 const MAX_CHAT_IMAGES=4;
 const MAX_CHAT_IMAGE_BYTES=6*1024*1024;
@@ -38,6 +39,19 @@ async function api(body){
   const data=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(data.error||'הבקשה נכשלה');
   return data;
+}
+async function editorApi(body){
+  if(!state.client)throw new Error('החיבור עדיין נטען');
+  const {data:{session}}=await state.client.auth.getSession();
+  state.session=session;
+  if(!session)throw new Error('צריך להתחבר');
+  const r=await fetch(EDITOR_FUNCTION,{method:'POST',headers:{apikey:CHAT_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){const err=new Error(data.error||'הבקשה נכשלה');err.code=data.code||'editor_unavailable';throw err}
+  return data;
+}
+function installSiteEditorUI(){
+  if(window.SiteEditorUI?.install)window.SiteEditorUI.install({chatState:state,api:editorApi,pageContext});
 }
 function shell(){
   if(document.getElementById('site-chat-drawer'))return;
@@ -139,11 +153,32 @@ async function sendMessage(e){
   const images=state.pendingImages.map(x=>({...x}));input.value='';
   state.messages.push({role:'user',content:q||'📷 תמונה',attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url,signed_url:x.data_url}))});renderMessages();setBusy(true,'חושב…');
   try{
-    const s=scope();const r=await api({action:'ask',...s,thread_id:state.threadId,message:q,image_attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url})),page_context:pageContext(),consult_only:state.consultOnly});
+    const s=scope();
+    const editorMode=window.SiteEditorUI?.mode?.()||(state.consultOnly?'consult':'edit');
+    const selectedElement=window.SiteEditorUI?.selectedElement?.()||null;
+    const activeRequestId=editorMode==='work'?(window.SiteEditorUI?.activeRequestId?.()||null):null;
+    const r=await api({
+      action:'ask',
+      ...s,
+      thread_id:state.threadId,
+      message:q,
+      image_attachments:images.map(x=>({file_name:x.name,mime_type:x.mime_type,size_bytes:x.size_bytes,data_url:x.data_url})),
+      page_context:pageContext(),
+      consult_only:editorMode==='consult',
+      editor_mode:editorMode,
+      selected_element:selectedElement,
+      active_request_id:activeRequestId
+    });
     state.threadId=r.thread_id;state.pendingImages=[];renderImagePreviews();
     const localUser=[...state.messages].reverse().find(m=>m.role==='user'&&m.attachments?.some(a=>a.data_url));
     if(localUser&&r.user_attachments?.length)localUser.attachments=r.user_attachments;
-    state.messages.push({...r.message,pending_action:r.pending_action||null});renderMessages();setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'');
+    state.messages.push({...r.message,pending_action:r.pending_action||null});
+    renderMessages();
+    if(r.site_edit_request){
+      window.SiteEditorUI?.showRequest?.(r.site_edit_request);
+      window.SiteEditorUI?.clearSelectedElement?.();
+    }
+    setStatus(r.model?'מודל: '+r.model.replace('gpt-5.6-',''):'');
   }catch(err){if(err.name!=='AbortError')state.messages.push({role:'assistant',content:'לא הצלחתי להשלים את הבקשה: '+err.message});renderMessages()}finally{setBusy(false)}
 }
 async function newThread(){if(!state.session)return loginView();const r=await api({action:'new_thread',...scope(),page_context:pageContext()});state.threadId=r.thread_id;state.messages=[];state.pendingImages=[];renderImagePreviews();state.view='chat';renderMessages();setStatus('שיחה חדשה')}
@@ -173,6 +208,7 @@ async function init(){
   shell();
   const mod=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
   state.client=mod.createClient(CHAT_URL,CHAT_KEY);
+  installSiteEditorUI();
   const {data:{session}}=await state.client.auth.getSession();state.session=session;
   state.client.auth.onAuthStateChange((_event,s)=>{state.session=s;setTimeout(()=>{if(state.open)ensureAuthView();renderMemoryCenter()},0)});
   if(state.open)await ensureAuthView();
