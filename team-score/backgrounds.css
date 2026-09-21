@@ -31,3 +31,17 @@ body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.04) bri
   .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.99)}
   body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.94)}
 }
+
+
+/* HD fallback: show a real volleyball image even if rotation JS is delayed */
+.rotating-bg{
+  background-image:url("assets/hd-sprites/maya.webp?v=25")!important;
+  background-size:300% auto!important;
+  background-position:left top!important;
+}
+@media(max-aspect-ratio:4/3){
+  .rotating-bg{
+    background-size:auto 200%!important;
+    background-position:left top!important;
+  }
+}
