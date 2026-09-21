@@ -3,10 +3,13 @@
   let deferredPrompt = null;
 
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(error => {
+    window.addEventListener("load", async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+        await registration.update();
+      } catch (error) {
         console.warn("Service worker registration failed:", error);
-      });
+      }
     });
   }
 
@@ -22,13 +25,15 @@
     if (installButton) installButton.hidden = false;
   });
 
-  installButton?.addEventListener("click", async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installButton.hidden = true;
-  });
+  if (installButton) {
+    installButton.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installButton.hidden = true;
+    });
+  }
 
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
