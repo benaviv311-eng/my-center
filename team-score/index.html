@@ -22,19 +22,18 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <script>
 (async function(){
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
-  const read=async n=>{const r=await fetch(n+"?v=20");if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
+  const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
+  const read=async n=>{const r=await fetch(n+"?v=26",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
+  const bgs=await Promise.all(bnames.map(read));
   const bin=atob(parts.join(""));
   const bytes=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
   if(typeof DecompressionStream==="undefined")throw new Error("הדפדפן ישן מדי");
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
   let html=await new Response(stream).text();
-  const pixel="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-  for(let i=1;i<=4;i++) html=html.replaceAll("__BG"+i+"__",pixel);
+  bgs.forEach((b,i)=>{html=html.replaceAll("__BG"+(i+1)+"__","data:image/webp;base64,"+b.trim())});
   html=html.replaceAll("icon-192.png","icon.svg").replaceAll("icon-512.png","icon.svg");
-  html=html.replace("</head>","<link rel=\"stylesheet\" href=\"backgrounds.css?v=25\"><link rel=\"stylesheet\" href=\"mobile-fix.css?v=21\"></head>");
-  html=html.replace("</body>","<script src=\"backgrounds.js?v=25\"><\/script></body>");
   document.open();document.write(html);document.close();
 })().catch(e=>{
   document.getElementById("load").innerHTML="לא הצלחתי לטעון את TeamScore<small>"+String(e.message||e)+"</small>";
