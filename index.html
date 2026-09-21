@@ -105,7 +105,7 @@
 </div>
 <div class="toast" id="toast"></div>
 <script src="pwa-install.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=9"></script>
 <script src="raika-data.js"></script>
 <script src="coach-feed-data.js"></script>
 <script src="volleyball-data.js"></script>
@@ -117,7 +117,17 @@
 <script src="home-feed-state.js?v=1"></script>
 <script src="home-feed-sources.js?v=1"></script>
 <script src="home-feed-ranking.js?v=1"></script>
-<script src="home-feed.js?v=2"></script>
+<script>
+window.addEventListener('error',function(e){
+  var status=document.getElementById('home-feed-status');
+  if(status)status.textContent='המרכז נטען במצב בטוח. אפשר להמשיך להשתמש בקיצורי הדרך למעלה.';
+});
+window.addEventListener('unhandledrejection',function(){
+  var status=document.getElementById('home-feed-status');
+  if(status&&status.textContent.indexOf('טוען')!==-1)status.textContent='המרכז נטען במצב בטוח.';
+});
+</script>
+<script src="home-feed.js?v=9"></script>
 <script>
 document.addEventListener('click',event=>{
   const shortcut=event.target.closest('[data-home-filter-shortcut]');
