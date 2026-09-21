@@ -85,8 +85,12 @@
   }
 
   async function init(){
-    const host=document.querySelector('.rotating-bg');
-    if(!host) return;
+    let host=null;
+    for(let i=0;i<40&&!host;i++){
+      host=document.querySelector('.rotating-bg');
+      if(!host) await new Promise(r=>setTimeout(r,100));
+    }
+    if(!host) throw new Error('rotating-bg not found');
     host.querySelectorAll('.bg-layer').forEach(el=>{el.style.display='none';});
     layers=[makeLayer(host,'A'),makeLayer(host,'B')];
     await show(0,true);
@@ -100,9 +104,7 @@
     },{passive:true});
   }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>init().catch(()=>{}),{once:true});
-  }else{
-    init().catch(()=>{});
-  }
+  // document.write loader can finish after DOMContentLoaded in some mobile browsers.
+  // Start immediately and retry the host instead of relying on that event.
+  setTimeout(()=>init().catch(e=>console.error('TeamScore backgrounds:',e)),0);
 })();
