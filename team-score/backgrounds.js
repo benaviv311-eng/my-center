@@ -1,9 +1,9 @@
 (()=>{
   const PLAYERS=[
-    {name:'maya',  file:'assets/hd-sprites/maya.b64?v=20'},
-    {name:'sofia', file:'assets/hd-sprites/sofia.b64?v=20'},
-    {name:'nia',   file:'assets/hd-sprites/nia.b64?v=20'},
-    {name:'lena',  file:'assets/hd-sprites/lena.b64?v=20'}
+    {name:'maya',  file:'assets/hd-sprites/maya.webp?v=24'},
+    {name:'sofia', file:'assets/hd-sprites/sofia.webp?v=24'},
+    {name:'nia',   file:'assets/hd-sprites/nia.webp?v=24'},
+    {name:'lena',  file:'assets/hd-sprites/lena.webp?v=24'}
   ];
   const COLS=3, ROWS=2;
   const TILE_W=800, TILE_H=600;
@@ -14,9 +14,13 @@
 
   async function getSprite(playerIdx){
     if(spriteCache.has(playerIdx)) return spriteCache.get(playerIdx);
-    const r=await fetch(PLAYERS[playerIdx].file);
-    if(!r.ok) throw new Error(PLAYERS[playerIdx].file+' '+r.status);
-    const src='data:image/webp;base64,'+(await r.text()).trim();
+    const src=PLAYERS[playerIdx].file;
+    await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve();
+      im.onerror=()=>reject(new Error('failed '+src));
+      im.src=src;
+    });
     spriteCache.set(playerIdx,src);
     return src;
   }
