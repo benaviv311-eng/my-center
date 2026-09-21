@@ -1,5 +1,13 @@
 const favoriteKey='my-center-favorites';
-const favorites=new Set(JSON.parse(localStorage.getItem(favoriteKey)||'[]'));
+let favorites;
+try{
+  const raw=localStorage.getItem(favoriteKey);
+  const parsed=raw?JSON.parse(raw):[];
+  favorites=new Set(Array.isArray(parsed)?parsed:[]);
+}catch(_){
+  favorites=new Set();
+  try{localStorage.removeItem(favoriteKey)}catch(__){}
+}
 
 function toast(msg){
   const el=document.getElementById('toast');
@@ -36,10 +44,9 @@ document.addEventListener('click',e=>{
     toast('נשמר במועדפים');
   }
 
-  localStorage.setItem(
-    favoriteKey,
-    JSON.stringify([...favorites])
-  );
+  try{
+    localStorage.setItem(favoriteKey,JSON.stringify([...favorites]));
+  }catch(_){}
 
   refreshFavs();
 });
