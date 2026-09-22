@@ -1,1 +1,86 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#15152a"><title>DOUBLE</title><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,Arial;background:radial-gradient(circle at top,#35356c,#111126 70%);color:white;min-height:100vh}.app{max-width:760px;margin:auto;padding:12px}.top{display:flex;justify-content:space-between;align-items:center;gap:8px}.logo{font-size:27px;font-weight:1000}.stats{display:flex;gap:6px;flex-wrap:wrap}.pill{background:#ffffff18;border:1px solid #ffffff25;border-radius:18px;padding:7px 10px;font-weight:900}.p1{outline:2px solid #55c8ff}.p2{outline:2px solid #ff6b91}.hint{text-align:center;opacity:.85;margin:7px}.board{display:grid;gap:12px;justify-items:center}.card{width:min(84vw,345px);aspect-ratio:1;border-radius:50%;background:#fff;box-shadow:0 10px 35px #0008,inset 0 0 0 8px #eee;position:relative;overflow:hidden}.sym{position:absolute;transform:translate(-50%,-50%);border:0;background:none;padding:5px;line-height:1;cursor:pointer;filter:drop-shadow(0 2px 1px #0002)}.sym:active{scale:.9}.controls,.modes{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:12px}button.action{border:0;border-radius:16px;padding:11px 16px;font-weight:900;font-size:16px}button{touch-action:manipulation;pointer-events:auto;-webkit-tap-highlight-color:transparent}.start,.panel,.modes{pointer-events:auto}.primary{background:#ffd84d}.secondary{background:#fff}.blue{background:#55c8ff}.pink{background:#ff6b91}.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);font-size:25px;font-weight:1000;pointer-events:none;z-index:6}.start{position:fixed;inset:0;background:linear-gradient(#22224f,#0e0e22);display:grid;place-items:center;z-index:4}.panel{text-align:center;padding:30px;max-width:520px}.panel h1{font-size:52px;margin:0}.panel p{opacity:.8}.big{font-size:20px!important;padding:15px 24px!important}.turn{text-align:center;font-size:20px;font-weight:1000;margin:6px}@media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}</style></head><body><div id="start" class="start"><div class="panel"><h1>DOUBLE</h1><p>מצא את הסמל המשותף בין שני הקלפים</p><div class="modes"><button type="button" id="startSingle" class="action primary big">👤 שחקן יחיד</button><button type="button" id="startDouble" class="action blue big">👥 שני שחקנים</button></div><p>בשני שחקנים: בוחרים מי מצא ואז לוחצים על הסמל</p></div></div><div class="app"><div class="top"><div class="logo">DOUBLE</div><div id="stats" class="stats"></div></div><div id="turn" class="turn"></div><div class="hint">לחץ על הסמל הזהה</div><div id="board" class="board"></div><div id="playerButtons" class="controls"></div><div class="controls"><button type="button" id="shuffleBtn" class="action secondary">ערבב</button><button type="button" id="menuBtn" class="action secondary">תפריט</button></div></div><div id="toast" class="toast"></div><script src="game.js?v=2"></script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#15152a">
+  <title>DOUBLE</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Arial,sans-serif;background:radial-gradient(circle at top,#35356c,#111126 70%);color:#fff;min-height:100vh}
+    button{font:inherit;touch-action:manipulation;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+    .app{max-width:760px;margin:auto;padding:12px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+    .logo{font-size:27px;font-weight:1000}
+    .mode-name{font-size:13px;opacity:.72;font-weight:800}
+    .stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{background:#ffffff18;border:1px solid #ffffff25;border-radius:18px;padding:7px 10px;font-weight:900}
+    .p1{outline:2px solid #55c8ff}.p2{outline:2px solid #ff6b91}
+    .challenge{text-align:center;font-weight:800;margin:8px 0 3px}
+    .hint{text-align:center;opacity:.75;margin:3px 0 8px}
+    .board{display:grid;gap:12px;justify-items:center}
+    .card{width:min(84vw,345px);aspect-ratio:1;border-radius:50%;background:#fff;box-shadow:0 10px 35px #0008,inset 0 0 0 8px #eee;position:relative;overflow:hidden}
+    .sym{position:absolute;transform:translate(-50%,-50%);border:0;background:none;padding:7px;line-height:1;cursor:pointer;display:grid;place-items:center;min-width:48px;min-height:48px}
+    .sym:active{scale:.92}
+    .glyph{display:inline-block;will-change:transform}
+    .glyph.spinning{animation:spin linear infinite}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion:reduce){.glyph.spinning{animation:none!important}}
+    .controls,.modes{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+    button.action{border:0;border-radius:16px;padding:11px 16px;font-weight:900;font-size:16px;cursor:pointer}
+    .primary{background:#ffd84d;color:#171717}.secondary{background:#fff;color:#171717}.blue{background:#55c8ff}.pink{background:#ff6b91}
+    .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);font-size:25px;font-weight:1000;pointer-events:none;z-index:6;text-align:center}
+    .start{position:fixed;inset:0;background:linear-gradient(#22224f,#0e0e22);display:grid;place-items:center;z-index:4;padding:18px;overflow:auto}
+    .panel{text-align:center;padding:24px;max-width:620px;width:min(100%,620px)}
+    .panel h1{font-size:52px;margin:0 0 6px}
+    .panel p{opacity:.82}
+    .big{font-size:18px!important;padding:14px 20px!important}
+    .turn{text-align:center;font-size:20px;font-weight:1000;margin:6px}
+    .mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+    .mode-card{border:0;border-radius:18px;padding:16px 13px;min-height:88px;text-align:right;cursor:pointer;color:#171717;display:grid;gap:5px;align-content:center}
+    .mode-card b{font-size:19px}.mode-card small{font-size:13px;line-height:1.3;opacity:.75;font-weight:700}
+    .mode-card.classic{background:#ffd84d}.mode-card.levels{background:#b8a6ff}.mode-card.knockout{background:#ff9b76}.mode-card.survival{background:#7ee0b8}.mode-card.versus{background:#55c8ff;grid-column:1/-1}
+    .menu-note{font-size:13px}
+    @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
+    @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
+  </style>
+</head>
+<body>
+  <div id="start" class="start">
+    <div id="menuPanel" class="panel">
+      <h1>DOUBLE</h1>
+      <p>מצא את הסמל המשותף בין שני הקלפים</p>
+      <div class="mode-grid">
+        <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>60 שניות · ניקוד ורצף</small></button>
+        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 שלבים</b><small>עולים שלב · מהירות וסיבוב מתגברים</small></button>
+        <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>12 התאמות בתוך 30 שניות</small></button>
+        <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>10 שניות להתחלה · כל הצלחה +2</small></button>
+        <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
+      </div>
+      <p class="menu-note">במצבי האתגר הסמלים מתחילים להסתובב ולהאיץ.</p>
+    </div>
+  </div>
+
+  <div class="app">
+    <div class="top">
+      <div>
+        <div class="logo">DOUBLE</div>
+        <div id="modeName" class="mode-name"></div>
+      </div>
+      <div id="stats" class="stats"></div>
+    </div>
+    <div id="challengeText" class="challenge"></div>
+    <div id="turn" class="turn"></div>
+    <div class="hint">לחץ על הסמל הזהה</div>
+    <div id="board" class="board"></div>
+    <div id="playerButtons" class="controls"></div>
+    <div class="controls">
+      <button type="button" id="shuffleBtn" class="action secondary">ערבב</button>
+      <button type="button" id="menuBtn" class="action secondary">מצבי משחק</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+  <script src="game.js?v=4"></script>
+</body>
+</html>
