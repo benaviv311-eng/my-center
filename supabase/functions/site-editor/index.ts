@@ -2,10 +2,12 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { requireOwner, serviceClient } from "../_shared/site-editor/auth.ts";
 import { EditorError, safeEditorError } from "../_shared/site-editor/errors.ts";
 import {
+  githubActionsRunsForHeadSha,
   githubBranchHead,
   githubChecksForRef,
   githubCommitFiles,
   githubCreateEditBranch,
+  githubMergeBranchIntoMain,
   githubReadFile,
   githubTree
 } from "../_shared/site-editor/github.ts";
@@ -330,8 +332,122 @@ async function approvePlan(user:{id:string},requestId:string){
 const PASSING_CHECK_CONCLUSIONS=new Set(["success","neutral","skipped"]);
 const FAILING_CHECK_CONCLUSIONS=new Set(["failure","cancelled","timed_out","action_required","startup_failure"]);
 
+async function approvePublish(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(!["preview_ready","awaiting_publish_approval"].includes(request.status)){
+    throw new EditorError("bad_request",409,"request_not_publishable");
+  }
+  if(!request.branch_name||!request.head_sha||!request.base_sha){
+    throw new EditorError("bad_request",409,"request_not_publishable");
+  }
+
+  const branchHead=await githubBranchHead(request.branch_name);
+  const mainHead=await githubBranchHead("main");
+  if(branchHead!==request.head_sha||mainHead!==request.base_sha){
+    await admin.from("site_edit_requests").update({status:"needs_replan",updated_at:new Date().toISOString()}).eq("id",request.id).eq("user_id",user.id);
+    await insertEvent(request.id,user.id,"publish_stale",{expected_head_sha:request.head_sha,current_head_sha:branchHead,expected_main_sha:request.base_sha,current_main_sha:mainHead});
+    throw new EditorError("stale_plan",409);
+  }
+
+  const checks=await githubChecksForRef(request.head_sha);
+  const pending=checks.length===0||checks.some(check=>check.status!=="completed");
+  const failed=checks.some(check=>check.status==="completed"&&check.conclusion&&FAILING_CHECK_CONCLUSIONS.has(check.conclusion));
+  const allPassed=checks.length>0&&!pending&&!failed&&checks.every(check=>!check.conclusion||PASSING_CHECK_CONCLUSIONS.has(check.conclusion));
+  if(!allPassed)throw new EditorError("bad_request",409,"validation_not_ready");
+
+  const approval=await admin.from("site_edit_approvals").insert({
+    request_id:request.id,
+    user_id:user.id,
+    stage:"publish",
+    decision:"approved",
+    approved_head_sha:request.head_sha
+  });
+  if(approval.error)throw new EditorError("editor_unavailable",500);
+
+  const merging=await admin.from("site_edit_requests").update({
+    status:"merging",
+    deploy_status:"not_started",
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id).eq("user_id",user.id);
+  if(merging.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"publish_approved",{head_sha:request.head_sha,base_sha:request.base_sha});
+
+  try{
+    const merged=await githubMergeBranchIntoMain(request.branch_name,request.head_sha,request.base_sha);
+    const updated=await admin.from("site_edit_requests").update({
+      status:"deploying",
+      merge_commit_sha:merged.sha,
+      deploy_status:"pending",
+      updated_at:new Date().toISOString()
+    }).eq("id",request.id).eq("user_id",user.id);
+    if(updated.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"merged",{head_sha:request.head_sha,merge_commit_sha:merged.sha});
+    return requestView(user.id,request.id);
+  }catch(error){
+    const stale=error instanceof EditorError&&error.code==="stale_plan";
+    await admin.from("site_edit_requests").update({
+      status:stale?"needs_replan":"failed",
+      deploy_status:stale?"not_started":"failed",
+      updated_at:new Date().toISOString()
+    }).eq("id",request.id).eq("user_id",user.id);
+    if(stale)await insertEvent(request.id,user.id,"publish_stale",{head_sha:request.head_sha,base_sha:request.base_sha});
+    throw error;
+  }
+}
+
 async function refreshStatus(user:{id:string},requestId:string){
   const request=await ownedRequest(user.id,requestId);
+
+  if(request.status==="deploying"){
+    if(!request.merge_commit_sha)throw new EditorError("bad_request",409,"deployment_missing_merge_sha");
+    const runs=await githubActionsRunsForHeadSha(request.merge_commit_sha);
+    const pagesRun=runs.find(run=>run.name==="pages build and deployment"||run.path.includes("pages-build-deployment"));
+
+    const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","deployment");
+    if(cleared.error)throw new EditorError("editor_unavailable",500);
+
+    if(pagesRun){
+      const saved=await admin.from("site_edit_runs").insert({
+        request_id:request.id,
+        kind:"deployment",
+        provider_run_id:pagesRun.id,
+        status:pagesRun.status,
+        url:pagesRun.url,
+        details:{name:pagesRun.name,path:pagesRun.path,conclusion:pagesRun.conclusion,head_sha:request.merge_commit_sha},
+        started_at:pagesRun.created_at||new Date().toISOString(),
+        finished_at:pagesRun.status==="completed"?(pagesRun.updated_at||new Date().toISOString()):null
+      });
+      if(saved.error)throw new EditorError("editor_unavailable",500);
+
+      if(pagesRun.status==="completed"&&pagesRun.conclusion==="success"){
+        const now=new Date().toISOString();
+        const updated=await admin.from("site_edit_requests").update({
+          status:"deployed",
+          deploy_status:"success",
+          published_at:now,
+          updated_at:now
+        }).eq("id",request.id).eq("user_id",user.id);
+        if(updated.error)throw new EditorError("editor_unavailable",500);
+        await insertEvent(request.id,user.id,"deployed",{merge_commit_sha:request.merge_commit_sha,run_id:pagesRun.id});
+      }else if(pagesRun.status==="completed"&&pagesRun.conclusion&&FAILING_CHECK_CONCLUSIONS.has(pagesRun.conclusion)){
+        const updated=await admin.from("site_edit_requests").update({
+          status:"failed",
+          deploy_status:"failed",
+          updated_at:new Date().toISOString()
+        }).eq("id",request.id).eq("user_id",user.id);
+        if(updated.error)throw new EditorError("editor_unavailable",500);
+        await insertEvent(request.id,user.id,"deployment_failed",{merge_commit_sha:request.merge_commit_sha,run_id:pagesRun.id,conclusion:pagesRun.conclusion});
+      }else{
+        await admin.from("site_edit_requests").update({
+          deploy_status:pagesRun.status,
+          updated_at:new Date().toISOString()
+        }).eq("id",request.id).eq("user_id",user.id);
+      }
+    }
+
+    return requestView(user.id,request.id);
+  }
+
   if(!["testing","repairing"].includes(request.status))return requestView(user.id,request.id);
   if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_not_testable");
 
@@ -508,6 +624,10 @@ Deno.serve(async(req:Request)=>{
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await approvePlan(user,id)});
     }
+    if(action==='approve_publish'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await approvePublish(user,id)});
+    }
     if(action==='request_revision'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await requestRevision(user,id,text(b.instructions,8000))});
@@ -515,7 +635,7 @@ Deno.serve(async(req:Request)=>{
     if(action==='cancel'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       const request=await ownedRequest(user.id,id);
-      if(["deployed","rolled_back"].includes(request.status))throw new EditorError("bad_request",409);
+      if(["merging","deploying","deployed","rolled_back"].includes(request.status))throw new EditorError("bad_request",409);
       const q=await admin.from("site_edit_requests").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id).eq("user_id",user.id).select("*").single();
       if(q.error)throw new EditorError("editor_unavailable",500);
       await insertEvent(id,user.id,"cancelled",{});

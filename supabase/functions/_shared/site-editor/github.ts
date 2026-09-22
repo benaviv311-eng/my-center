@@ -243,3 +243,68 @@ export async function githubCommitFiles(
   });
   return {commitSha:commit.sha};
 }
+
+export type GithubWorkflowRun={
+  id:string;
+  name:string;
+  path:string;
+  status:string;
+  conclusion:string|null;
+  url:string|null;
+  head_sha:string;
+  created_at:string|null;
+  updated_at:string|null;
+};
+
+export async function githubActionsRunsForHeadSha(sha:string):Promise<GithubWorkflowRun[]>{
+  const data=await githubRequest(repoPath(`/actions/runs?head_sha=${encodeURIComponent(sha)}&per_page=100`));
+  return (data?.workflow_runs||[]).map((run:any)=>({
+    id:String(run?.id||""),
+    name:typeof run?.name==="string"?run.name:"",
+    path:typeof run?.path==="string"?run.path:"",
+    status:typeof run?.status==="string"?run.status:"queued",
+    conclusion:typeof run?.conclusion==="string"?run.conclusion:null,
+    url:typeof run?.html_url==="string"?run.html_url:null,
+    head_sha:typeof run?.head_sha==="string"?run.head_sha:"",
+    created_at:typeof run?.created_at==="string"?run.created_at:null,
+    updated_at:typeof run?.updated_at==="string"?run.updated_at:null
+  })).filter((run:GithubWorkflowRun)=>Boolean(run.id)&&run.head_sha===sha);
+}
+
+export async function githubMergeBranchIntoMain(
+  branch:string,
+  expectedHeadSha:string,
+  expectedMainSha:string
+):Promise<{sha:string}>{
+  const branchHead=await githubBranchHead(branch);
+  const mainHead=await githubBranchHead("main");
+  if(branchHead!==expectedHeadSha||mainHead!==expectedMainSha)throw new EditorError("stale_plan",409);
+
+  const headCommit=await githubRequest(repoPath(`/git/commits/${encodeURIComponent(expectedHeadSha)}`));
+  const treeSha=headCommit?.tree?.sha;
+  if(typeof treeSha!=="string")throw new EditorError("github_unavailable",503);
+
+  const mergeCommit=await githubRequest(repoPath("/git/commits"),{
+    method:"POST",
+    body:JSON.stringify({
+      message:`Merge approved site edit from ${branch}`,
+      tree:treeSha,
+      parents:[expectedMainSha,expectedHeadSha]
+    })
+  });
+  if(typeof mergeCommit?.sha!=="string")throw new EditorError("github_unavailable",503);
+
+  const branchBeforeUpdate=await githubBranchHead(branch);
+  const mainBeforeUpdate=await githubBranchHead("main");
+  if(branchBeforeUpdate!==expectedHeadSha||mainBeforeUpdate!==expectedMainSha)throw new EditorError("stale_plan",409);
+
+  await githubRequest(repoPath("/git/refs/heads/main"),{
+    method:"PATCH",
+    body:JSON.stringify({sha:mergeCommit.sha,force:false})
+  });
+
+  const mainAfter=await githubBranchHead("main");
+  if(mainAfter!==mergeCommit.sha)throw new EditorError("stale_plan",409);
+  return {sha:mergeCommit.sha};
+}
+
