@@ -223,8 +223,21 @@ async function loadBankPage(){
     const items=await response.json();
     bankPageState.items=items;
     bankState.items=items;
-    await bankSnapshot().catch(()=>{});
-    bankPageState.manager=Boolean(bankStoredKey());
+    bankPageState.manager=false;
+
+    if(bankStoredKey()){
+      try{
+        await bankWrite({action:'ping'});
+        bankPageState.manager=true;
+        await bankSnapshot(true).catch(()=>{});
+      }catch(err){
+        localStorage.removeItem(BANK_EDITOR_KEY);
+        bankState.snapshotLoaded=false;
+      }
+    }else{
+      await bankSnapshot().catch(()=>{});
+    }
+
     renderAll();
   }catch(err){
     console.error(err);
@@ -238,17 +251,113 @@ async function refreshBank(){
   await loadBankPage();
 }
 
+function openManagerAccess(message=''){
+  const overlay=document.getElementById('bank-manager-access');
+  const input=document.getElementById('manager-key');
+  const error=document.getElementById('manager-access-error');
+
+  if(!overlay) return;
+
+  if(input) input.value='';
+  if(error){
+    error.textContent=message;
+    error.hidden=!message;
+  }
+
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden','false');
+  document.body.classList.add('modal-open');
+
+  setTimeout(()=>input?.focus(),0);
+}
+
+function closeManagerAccess(){
+  const overlay=document.getElementById('bank-manager-access');
+  if(!overlay) return;
+
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+}
+
+async function submitManagerAccess(){
+  const input=document.getElementById('manager-key');
+  const error=document.getElementById('manager-access-error');
+  const button=document.getElementById('manager-access-submit');
+  const key=(input?.value||'').trim();
+
+  if(!key){
+    if(error){
+      error.textContent='צריך להכניס קוד עריכה.';
+      error.hidden=false;
+    }
+    input?.focus();
+    return;
+  }
+
+  if(button){
+    button.disabled=true;
+    button.textContent='מתחבר…';
+  }
+
+  localStorage.setItem(BANK_EDITOR_KEY,key);
+  bankState.snapshotLoaded=false;
+
+  try{
+    await bankWrite({action:'ping'});
+    bankPageState.manager=true;
+    await bankSnapshot(true).catch(()=>{});
+    closeManagerAccess();
+    renderAll();
+    toast('מצב עריכה הופעל');
+  }catch(err){
+    localStorage.removeItem(BANK_EDITOR_KEY);
+    bankPageState.manager=false;
+    renderManagerState();
+
+    if(error){
+      error.textContent=err.message||'קוד העריכה אינו תקין';
+      error.hidden=false;
+    }
+
+    input?.focus();
+  }finally{
+    if(button){
+      button.disabled=false;
+      button.textContent='🔓 כניסה לעריכה';
+    }
+  }
+}
+
 async function enableManager(){
+  if(bankPageState.manager){
+    localStorage.removeItem(BANK_EDITOR_KEY);
+    bankState.snapshotLoaded=false;
+    bankPageState.manager=false;
+    renderAll();
+    toast('מצב עריכה נסגר');
+    return;
+  }
+
+  const stored=bankStoredKey();
+
+  if(!stored){
+    openManagerAccess();
+    return;
+  }
+
   try{
     await bankWrite({action:'ping'});
     bankPageState.manager=true;
     await bankSnapshot(true).catch(()=>{});
     renderAll();
-    toast('מצב ניהול הופעל');
+    toast('מצב עריכה הופעל');
   }catch(err){
+    localStorage.removeItem(BANK_EDITOR_KEY);
+    bankState.snapshotLoaded=false;
     bankPageState.manager=false;
     renderManagerState();
-    toast(err.message||'לא ניתן להפעיל מצב ניהול');
+    openManagerAccess('הקוד השמור כבר אינו תקין. הכנס את קוד העריכה החדש.');
   }
 }
 
@@ -358,12 +467,29 @@ document.getElementById('bank-clear')?.addEventListener('click',()=>{
   document.getElementById('bank-search').value='';renderAll();
 });
 document.getElementById('bank-manager-login')?.addEventListener('click',enableManager);
+document.getElementById('manager-access-submit')?.addEventListener('click',submitManagerAccess);
+document.getElementById('manager-access-close')?.addEventListener('click',closeManagerAccess);
+document.getElementById('manager-access-cancel')?.addEventListener('click',closeManagerAccess);
+document.getElementById('manager-key')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    submitManagerAccess();
+  }
+});
+document.getElementById('bank-manager-access')?.addEventListener('click',e=>{
+  if(e.target.id==='bank-manager-access') closeManagerAccess();
+});
 document.getElementById('bank-add-item')?.addEventListener('click',()=>openItemEditor());
 document.getElementById('editor-close')?.addEventListener('click',closeItemEditor);
 document.getElementById('editor-cancel')?.addEventListener('click',closeItemEditor);
 document.getElementById('editor-save')?.addEventListener('click',saveEditor);
 document.getElementById('editor-type')?.addEventListener('change',updateEditorVisibility);
 document.getElementById('bank-editor')?.addEventListener('click',e=>{if(e.target.id==='bank-editor')closeItemEditor();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeItemEditor();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeManagerAccess();
+    closeItemEditor();
+  }
+});
 
 loadBankPage();
