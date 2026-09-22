@@ -57,7 +57,7 @@ test('publish requires explicit approval and merges the exact validated head wit
   assert.match(fn,/merging/);
   assert.match(fn,/deploying/);
   assert.match(gh,/githubMergeBranchIntoMain/);
-  assert.match(gh,/\/merges/);
+  assert.match(gh,/parents:\[expectedMainSha,expectedHeadSha\]/);\n  assert.match(gh,/force:false/);
   assert.match(gh,/expectedHeadSha/);
   assert.match(gh,/expectedMainSha/);
   assert.doesNotMatch(gh,/force\s*:\s*true/);
