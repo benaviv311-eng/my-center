@@ -31,7 +31,6 @@ test('site chat installs editor UI with authenticated editor API',()=>{
   assert.match(chat,/pageContext/);
 });
 
-
 test('change cards show risk files and approval controls',()=>{
   const js=read('site-editor-ui.js');
   for(const marker of ['מאשר','שנה את ההצעה','בטל','risk_level','requires_preview','public_asset_warning']) assert.ok(js.includes(marker));
@@ -40,7 +39,6 @@ test('change cards show risk files and approval controls',()=>{
   assert.match(js,/cancel/);
   for(const code of ['owner_required','stale_plan','unsafe_plan','editor_unavailable']) assert.ok(js.includes(code));
 });
-
 
 test('inspect mode captures one element without activating it',()=>{
   const js=read('site-editor-ui.js');
@@ -52,7 +50,6 @@ test('inspect mode captures one element without activating it',()=>{
   for(const key of ['display','position','fontSize','fontWeight','color','backgroundColor','margin','padding','gap']) assert.ok(js.includes(key));
   for(const key of ['tag','id','classes','data','visible_text','dom_path','container','bounds','computed_style']) assert.ok(js.includes(key));
 });
-
 
 test('edit mode can receive a structured site edit request from site-chat',()=>{
   const chat=read('site-chat.js');
@@ -66,7 +63,6 @@ test('edit mode can receive a structured site edit request from site-chat',()=>{
   assert.match(chat,/editor_mode/);
 });
 
-
 test('site changes view restores request history and active progress',()=>{
   const js=read('site-editor-ui.js');
   assert.match(js,/שינויים באתר/);
@@ -79,11 +75,21 @@ test('site changes view restores request history and active progress',()=>{
   assert.match(css,/min-height:44px/);
 });
 
-
 test('preview action opens an expiring branch preview',()=>{
   const js=read('site-editor-ui.js');
   assert.match(js,/פתח Preview/);
   assert.match(js,/create_preview/);
   assert.match(js,/preview_url/);
   assert.match(js,/Preview מוכן/);
+});
+
+test('publish control appears only after validation and keeps polling through deployment',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/אשר פרסום/);
+  assert.match(js,/approve_publish/);
+  assert.match(js,/preview_ready/);
+  assert.match(js,/awaiting_publish_approval/);
+  assert.match(js,/merging/);
+  assert.match(js,/deploying/);
+  assert.match(js,/deployed/);
 });
