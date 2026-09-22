@@ -23,7 +23,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 (async function(){
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
   const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
-  const read=async n=>{const r=await fetch(n+"?v=26",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
+  const read=async n=>{const r=await fetch(n+"?v=27",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
   const bgs=await Promise.all(bnames.map(read));
   const bin=atob(parts.join(""));
