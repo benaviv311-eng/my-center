@@ -23,7 +23,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 (async function(){
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
   const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
-  const read=async n=>{const r=await fetch(n+"?v=27",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
+  const read=async n=>{const r=await fetch(n+"?v=28",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
   const bgs=await Promise.all(bnames.map(read));
   const bin=atob(parts.join(""));
@@ -33,6 +33,11 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
   let html=await new Response(stream).text();
   bgs.forEach((b,i)=>{html=html.replaceAll("__BG"+(i+1)+"__","data:image/webp;base64,"+b.trim())});
+  const sharp=bgs.map(b=>"data:image/webp;base64,"+b.trim());
+  const sharpCss='<style id="sharpBgCss">.rotating-bg{display:none!important}#sharpBg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#11151d;pointer-events:none}#sharpBg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 28%;opacity:0;transition:opacity 1.2s ease;filter:saturate(1.03) contrast(1.03) brightness(.98)}#sharpBg img.active{opacity:1}.wrap{position:relative!important;z-index:2!important}</style>';
+  const sharpHtml='<div id="sharpBg" aria-hidden="true"><img id="sharpA" class="active" src="'+sharp[0]+'" alt=""><img id="sharpB" src="'+sharp[1]+'" alt=""></div>';
+  const sharpJs='<script>(function(){var imgs='+JSON.stringify(sharp)+',a=document.getElementById("sharpA"),b=document.getElementById("sharpB"),i=0,onA=true;if(!a||!b)return;imgs.forEach(function(s){var x=new Image();x.src=s});setInterval(function(){i=(i+1)%imgs.length;var n=onA?b:a,c=onA?a:b;n.src=imgs[i];n.classList.add("active");c.classList.remove("active");onA=!onA},15000)})();<\/script>';
+  html=html.replace("</head>",sharpCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+"</body>");
   html=html.replaceAll("icon-192.png","icon.svg").replaceAll("icon-512.png","icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
