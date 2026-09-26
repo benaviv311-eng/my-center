@@ -64,24 +64,87 @@
       .sort((a,b)=>hash((book.slug||book.id||'')+a.id)-hash((book.slug||book.id||'')+b.id))
       .slice(0,Math.min(limit,2));
   }
+  const NUGGET_STOP_WORDS = new Set([
+    'the','and','that','this','with','from','into','when','then','than','your','you','are','for','can','will','was','were','has','have','had',
+    'של','את','על','עם','זה','זו','הוא','היא','גם','אם','לא','כי','מה','איך','יותר','יכול','יכולה','אפשר','אשר','כל','אחד','אחת','בין'
+  ]);
+  function nuggetTokens(value){
+    return str(value).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/)
+      .filter(token=>token.length>2 && !NUGGET_STOP_WORDS.has(token));
+  }
+  function nuggetSimilarity(a,b){
+    const left=new Set(nuggetTokens(a)),right=new Set(nuggetTokens(b));
+    if(!left.size||!right.size)return 0;
+    let overlap=0;left.forEach(token=>{if(right.has(token))overlap++});
+    return overlap/(left.size+right.size-overlap);
+  }
+  function nuggetHeadline(value){
+    const clean=str(value).replace(/\s+/g,' ').trim();
+    if(!clean)return '';
+    const first=(clean.split(/(?<=[.!?])\s+|[;:–—]\s*/)[0]||clean).trim();
+    const words=first.split(/\s+/).filter(Boolean);
+    if(words.length<=8)return first.replace(/[.!?]+$/,'');
+    return words.slice(0,7).join(' ')+'…';
+  }
+  function nuggetKind(value,sourceType){
+    const text=str(value).toLowerCase();
+    if(sourceType==='idea')return {kind:'idea',type:'◆ רעיון מפתח'};
+    if(sourceType==='summary')return {kind:'summary',type:'◌ בתמצית'};
+    if(/\b(?:instead|rather than|not the same|versus|unlike)\b|\bבמקום\b|\bאלא\b|\bלעומת\b|\bאינו\b|\bאינה\b/i.test(text))return {kind:'distinction',type:'◐ הבחנה'};
+    if(/\b(?:for example|example|for instance)\b|\bלמשל\b|\bלדוגמה\b/i.test(text))return {kind:'example',type:'◎ דוגמה'};
+    if(/\b(?:try|use|choose|build|start|stop|focus|notice|check|identify|make)\b|\b(?:נסה|בחר|בנה|התחל|עצור|התמקד|שים לב|בדוק|זהה)\b/i.test(text))return {kind:'practical',type:'→ עיקרון מעשי'};
+    return {kind:'insight',type:'✦ תובנה'};
+  }
+  function topicForNugget(topics,value,seed,index){
+    topics=arr(topics).map(str).filter(Boolean);
+    if(!topics.length)return 'רעיון מהספר';
+    const textTokens=new Set(nuggetTokens(value));
+    const ranked=topics.map((topic,topicIndex)=>{
+      const score=nuggetTokens(topic).reduce((total,token)=>total+(textTokens.has(token)?1:0),0);
+      return {topic,score,topicIndex};
+    }).sort((a,b)=>b.score-a.score || a.topicIndex-b.topicIndex);
+    if(ranked[0]&&ranked[0].score>0)return ranked[0].topic;
+    return topics[(hash(str(seed)+'|topic|'+index)+index)%topics.length];
+  }
+  function buildBookNuggets(book,seed){
+    const c=book&&book.content?book.content:{};
+    const prefix=book&&(book.slug||book.id||book.title)?(book.slug||book.id||book.title):'book';
+    const raw=[];
+    arr(c.feed_posts).forEach((value,index)=>raw.push({value:str(value),sourceType:'post',sourceIndex:index}));
+    arr(c.ideas).forEach((value,index)=>raw.push({value:str(value),sourceType:'idea',sourceIndex:index}));
+    str(c.summary).split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(x=>x.length>=28).slice(0,6)
+      .forEach((value,index)=>raw.push({value,sourceType:'summary',sourceIndex:index}));
+
+    const deduped=[];
+    raw.forEach(item=>{
+      if(!item.value)return;
+      const duplicate=deduped.some(existing=>nuggetSimilarity(existing.value,item.value)>=0.72);
+      if(!duplicate)deduped.push(item);
+    });
+
+    const built=deduped.map((item,index)=>{
+      const meta=nuggetKind(item.value,item.sourceType);
+      const topic=topicForNugget(c.topics,item.value,seed||prefix,index);
+      const headline=nuggetHeadline(item.value);
+      return {
+        id:`${prefix}|nugget|${item.sourceType}|${item.sourceIndex}`,
+        bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',
+        sourceKind:'book',sourceLabel:'מתוך חומר הספר',
+        type:meta.type,kind:meta.kind,headline,title:headline,
+        topic,text:item.value
+      };
+    });
+    return seed?shuffled(built,str(seed)+'|book-nuggets'):built;
+  }
   function nativePosts(book){
-    const c = book && book.content ? book.content : {};
-    const base = [];
-    arr(c.feed_posts).slice(0,4).forEach((text,index)=>base.push({
-      id:`${book.slug||book.id}|book-post|${index}`,bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',sourceKind:'book',sourceLabel:'מתוך חומר הספר',type:'📖 מתוך הספר',title:book.title,text:str(text)
-    }));
-    arr(c.ideas).slice(0,2).forEach((text,index)=>base.push({
-      id:`${book.slug||book.id}|idea|${index}`,bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',sourceKind:'book',sourceLabel:'מתוך חומר הספר',type:'💡 רעיון מהספר',title:book.title,text:str(text)
-    }));
-    if(!base.length && c.summary){
-      base.push({id:`${book.slug||book.id}|summary`,bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',sourceKind:'book',sourceLabel:'מתוך חומר הספר',type:'📖 תקציר',title:book.title,text:str(c.summary)});
-    }
-    return base;
+    return buildBookNuggets(book,(book.slug||book.id||book.title||'book')+'|native');
   }
   function conceptPosts(book){
-    return matchConcepts(book,4).map(c=>({
+    return matchConcepts(book,2).map((c,index)=>({
       id:`${book.slug||book.id}|concept|${c.id}`,
-      bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',sourceKind:c.sourceKind,sourceLabel:'מושג מקצועי קשור',type:c.type,title:c.title,
+      bookId:book.id,bookTitle:book.title,bookSlug:book.slug||'',sourceKind:c.sourceKind,sourceLabel:'מושג מקצועי קשור',
+      type:c.type,kind:'related',headline:nuggetHeadline(c.explanation),title:c.title,
+      topic:arr(book&&book.content&&book.content.topics)[index]||c.title,
       text:c.explanation,example:c.example,application:c.application,conceptId:c.id
     }));
   }
@@ -93,18 +156,28 @@
   function shuffled(items,seed){
     return items.slice().sort((a,b)=>hash(seed+'|'+a.id)-hash(seed+'|'+b.id));
   }
+  function pickFeedItem(rest,out){
+    if(!rest.length)return null;
+    const last=out.length?out[out.length-1]:null;
+    let index=rest.findIndex(item=>(!last||item.bookId!==last.bookId)&&(!last||!item.topic||item.topic!==last.topic));
+    if(index<0)index=rest.findIndex(item=>!last||item.bookId!==last.bookId);
+    if(index<0)index=0;
+    return rest.splice(index,1)[0];
+  }
   function buildRandomFeed(options){
     options = options || {};
     const count = Math.max(1, Number(options.count)||18);
     const seed = str(options.seed||Date.now());
-    const pool = shuffled(buildDiscoveryPool(options.books||[]),seed);
+    const pool = buildDiscoveryPool(options.books||[]);
+    const native = shuffled(pool.filter(item=>item.sourceKind==='book'),seed+'|native');
+    const related = shuffled(pool.filter(item=>item.sourceKind!=='book'),seed+'|related');
     const out=[];
-    const rest=pool.slice();
-    while(rest.length && out.length<count){
-      const lastBook = out.length ? out[out.length-1].bookId : null;
-      let index = rest.findIndex(item=>item.bookId!==lastBook);
-      if(index<0) index=0;
-      out.push(rest.splice(index,1)[0]);
+    while((native.length||related.length)&&out.length<count){
+      const wantRelated=out.length%5===4;
+      let source=wantRelated&&related.length?related:native;
+      if(!source.length)source=related;
+      const next=pickFeedItem(source,out);
+      if(next)out.push(next);else break;
     }
     return out;
   }
@@ -143,5 +216,5 @@
     ].filter(x=>x && x.text);
   }
 
-  return {LEARNING_CONCEPTS,matchConcepts,buildDiscoveryPool,buildRandomFeed,buildBookSections,hash};
+  return {LEARNING_CONCEPTS,matchConcepts,buildBookNuggets,buildDiscoveryPool,buildRandomFeed,buildBookSections,hash};
 });
