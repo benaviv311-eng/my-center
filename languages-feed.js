@@ -249,6 +249,7 @@
     });
     const label=$('feed-mode-label');
     label.textContent=state.filter==='all'?'כל ארבע השפות מעורבבות':state.filter==='four'?'כל פוסט מוצג בארבע השפות + עברית':`רק ${M.LANGUAGES[state.filter].name}`;
+    document.querySelectorAll('[data-language-card]').forEach(card=>card.classList.toggle('active',card.dataset.languageCard===state.filter));
     setContextLinks();
   }
   function resetFeed(){
@@ -341,6 +342,19 @@
     scope.querySelectorAll?.('[data-mini-recall]:not([data-wired])').forEach(box=>{box.dataset.wired='1';box.querySelector('[data-mini-recall-ready]').addEventListener('click',btn=>{box.querySelector('[data-mini-recall-list]').classList.add('feed-hidden');btn.currentTarget.classList.add('feed-hidden');box.querySelector('[data-mini-recall-q]').classList.remove('feed-hidden');});box.querySelectorAll('[data-mini-recall-option]').forEach(btn=>btn.addEventListener('click',()=>{box.querySelectorAll('[data-mini-recall-option]').forEach(x=>x.disabled=true);box.querySelector('[data-mini-feedback]').textContent=btn.dataset.correct==='1'?'נכון — זכרת ✓':'כמעט. במשחק המלא אפשר לנסות שוב.';}));});
   }
 
+
+  document.querySelectorAll('[data-language-card]').forEach(card=>card.addEventListener('click',()=>{
+    state.filter=card.dataset.languageCard;
+    save();
+    resetFeed();
+    document.getElementById('languages-feed-section')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }));
+
+  document.querySelectorAll('.language-section-nav a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
+    const target=document.querySelector(link.getAttribute('href'));
+    if(target){event.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}
+  }));
+
   document.querySelectorAll('[data-feed-filter]').forEach(btn=>btn.addEventListener('click',()=>{
     state.filter=btn.dataset.feedFilter;
     save();
@@ -353,11 +367,24 @@
     resetFeed();
     $('feed-status').textContent='הפיד התחלף ✨';
   });
-  $('feed-load-more').addEventListener('click',()=>{
+  let isLoadingMore=false;
+  function loadMoreFeed(){
+    if(isLoadingMore)return;
+    isLoadingMore=true;
     batch++;
     insertBatch(batch,10);
-    $('feed-status').textContent=state.filter==='four'?'נוספו עוד 10 פוסטים בארבע שפות':'נוספו עוד 10 פוסטים ומשחקים';
-  });
+    $('feed-status').textContent=state.filter==='four'?'נוספו עוד פוסטים בארבע שפות':'נוספו עוד פוסטים ומשחקים';
+    setTimeout(()=>{isLoadingMore=false;},120);
+  }
+  $('feed-load-more').addEventListener('click',loadMoreFeed);
+
+  const sentinel=$('feed-infinite-sentinel');
+  if(sentinel&&'IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting))loadMoreFeed();
+    },{rootMargin:'700px 0px 700px 0px'});
+    observer.observe(sentinel);
+  }
 
   updateFilters();
   resetFeed();
