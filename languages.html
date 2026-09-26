@@ -14,21 +14,80 @@
 <link rel="apple-touch-icon" href="app-icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="languages-feed.css?v=4">
+  <link rel="stylesheet" href="languages-feed.css?v=5">
 </head>
 <body>
 <div class="app language-feed-page">
   <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
 
-  <section class="hero feed-hero">
-    <div>
-      <h1>🌍 פיד השפות שלי</h1>
-      <p>מילים, משפטים, בדיחות, סיפורים, שיחות, אתגרים ומשחקים — ארבע השפות מתערבבות בפיד אחד.</p>
+  <section id="languages-home" class="language-hub-hero">
+    <div class="language-hub-title">
+      <span class="language-hub-eyebrow">מרכז השפות שלי</span>
+      <h1>🌍 שפות</h1>
+      <p>לומדים, משחקים וחוזרים על החומר — וכל זה נשאר מחובר לפיד אחד אינסופי.</p>
     </div>
-    <div class="language-progress-line">
+    <div class="language-progress-card">
+      <span>התקדמות יומית</span>
       <strong id="languages-daily-progress">0/4 שפות הושלמו היום</strong>
-      <span id="feed-mode-label">כל ארבע השפות מעורבבות</span>
+      <div class="language-progress-track"><i id="languages-progress-bar"></i></div>
+      <small id="feed-mode-label">כל ארבע השפות מעורבבות</small>
     </div>
+  </section>
+
+  <nav class="language-section-nav" aria-label="ניווט באזור השפות">
+    <a href="#languages-home">🏠 בית</a>
+    <a href="#languages-learn">📘 לומדים</a>
+    <a href="#languages-feed-section">📰 פיד</a>
+    <a href="language-games.html">🎮 משחקים</a>
+    <a href="language-vocabulary.html">📚 אוצר מילים</a>
+  </nav>
+
+  <section id="languages-learn" class="language-dashboard">
+    <div class="language-dashboard-head">
+      <div><span class="language-hub-eyebrow">בחר שפה</span><h2>לאן ממשיכים?</h2></div>
+      <a class="language-text-link" href="four-languages.html">🌐 תרגול 4 שפות יחד</a>
+    </div>
+    <div class="language-cards">
+      <button class="language-card language-card-ar" type="button" data-language-card="ar">
+        <span class="language-card-code">AR</span><strong>ערבית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+      </button>
+      <button class="language-card language-card-it" type="button" data-language-card="it">
+        <span class="language-card-code">IT</span><strong>איטלקית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+      </button>
+      <button class="language-card language-card-ru" type="button" data-language-card="ru">
+        <span class="language-card-code">RU</span><strong>רוסית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+      </button>
+      <button class="language-card language-card-es" type="button" data-language-card="es">
+        <span class="language-card-code">ES</span><strong>ספרדית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+      </button>
+      <button class="language-card language-card-four" type="button" data-language-card="four">
+        <span class="language-card-code">4×</span><strong>4 שפות יחד</strong><small>אותו רעיון בכל השפות</small><span>פתח בפיד ←</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="daily-path-card">
+    <div>
+      <span class="language-hub-eyebrow">מסלול יומי</span>
+      <h2>⚡ 5 דקות שמסדרות את הלמידה</h2>
+      <p>מילה → כרטיסיה → משפט → משחק קצר → חזרה.</p>
+    </div>
+    <div class="daily-path-actions">
+      <a class="hub-primary-btn" href="four-languages.html">התחל מסלול יומי</a>
+      <a class="hub-secondary-btn" href="language-games.html?game=translation-rush&mode=60">אתגר 60 שניות</a>
+    </div>
+  </section>
+
+  <section class="hub-shortcuts" aria-label="קיצורי דרך">
+    <a href="language-games.html?game=translation-rush&mode=60"><span>⏱️</span><strong>60 שניות</strong></a>
+    <a href="language-games.html?game=translation-rush&mode=ko"><span>💥</span><strong>נוקאאוט</strong></a>
+    <a href="language-games.html?game=translation-rush&mode=survival"><span>🔥</span><strong>הישרדות</strong></a>
+    <a href="language-vocabulary.html"><span>📚</span><strong>אוצר מילים</strong></a>
+  </section>
+
+  <section id="languages-feed-section" class="feed-section-head">
+    <div><span class="language-hub-eyebrow">פיד אינסופי</span><h2>לומדים תוך כדי גלילה</h2></div>
+    <button id="feed-refresh" class="hub-secondary-btn" type="button">↻ רענן פיד</button>
   </section>
 
   <section class="feed-toolbar" aria-label="סינון וכלי הפיד">
@@ -43,7 +102,6 @@
     </div>
     <div class="feed-tools">
       <div class="feed-tools-group">
-        <button id="feed-refresh" class="btn small" type="button">↻ רענן פיד</button>
         <a class="btn small" href="four-languages.html">🌐 מילה ב־4 שפות</a>
       </div>
       <div id="feed-context-links" class="feed-quick-links" aria-label="קיצורי דרך ללימוד"></div>
@@ -53,7 +111,8 @@
   <main id="language-feed" class="language-feed" aria-live="polite"></main>
 
   <div class="feed-load-wrap">
-    <button id="feed-load-more" class="feed-load-more" type="button">↓ תן לי עוד</button>
+    <button id="feed-load-more" class="feed-load-more" type="button">↓ טען עוד</button>
+    <div id="feed-infinite-sentinel" class="feed-infinite-sentinel" aria-hidden="true"></div>
     <div id="feed-status" class="feed-status" aria-live="polite"></div>
   </div>
 
@@ -70,7 +129,7 @@
 <script src="app.js?v=3"></script>
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
-<script src="languages-feed.js?v=5"></script>
+<script src="languages-feed.js?v=6"></script>
 <script src="language-audio.js?v=2"></script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
