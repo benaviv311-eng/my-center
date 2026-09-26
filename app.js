@@ -213,6 +213,30 @@ const BANK_FUNCTION=
   `${BANK_URL}/functions/v1/content-bank`;
 
 const BANK_EDITOR_KEY='my-center-editor-key';
+const BANK_EDITOR_TOKEN='my-center-editor-token';
+
+function bankStoredToken(){
+  return localStorage.getItem(BANK_EDITOR_TOKEN)||'';
+}
+
+function bankCaptureTrustedToken(){
+  const hash=location.hash||'';
+  const match=hash.match(/(?:^#|[&#])editor=([^&]+)/);
+
+  if(!match) return;
+
+  try{
+    const token=decodeURIComponent(match[1]||'').trim();
+    if(token.length>=20){
+      localStorage.setItem(BANK_EDITOR_TOKEN,token);
+      localStorage.removeItem(BANK_EDITOR_KEY);
+    }
+  }catch(_){}
+
+  history.replaceState(null,'',location.pathname+location.search);
+}
+
+bankCaptureTrustedToken();
 
 const bankState={
   items:[],
@@ -436,17 +460,29 @@ async function bankGetEditorKey(){
 }
 
 async function bankWrite(payload){
-  const key=await bankGetEditorKey();
+  const token=bankStoredToken();
+  let key='';
+
+  if(!token){
+    key=await bankGetEditorKey();
+  }
+
+  const headers={
+    'content-type':'application/json',
+    'apikey':BANK_PUBLISHABLE_KEY
+  };
+
+  if(token){
+    headers['x-editor-token']=token;
+  }else{
+    headers['x-editor-key']=key;
+  }
 
   const response=await fetch(
     BANK_FUNCTION,
     {
       method:'POST',
-      headers:{
-        'content-type':'application/json',
-        'apikey':BANK_PUBLISHABLE_KEY,
-        'x-editor-key':key
-      },
+      headers,
       body:JSON.stringify(payload)
     }
   );
@@ -456,10 +492,19 @@ async function bankWrite(payload){
     .catch(()=>({}));
 
   if(response.status===401){
-    localStorage.removeItem(BANK_EDITOR_KEY);
+    if(token){
+      localStorage.removeItem(BANK_EDITOR_TOKEN);
+    }else{
+      localStorage.removeItem(BANK_EDITOR_KEY);
+    }
+
     bankState.snapshotLoaded=false;
 
-    throw new Error('קוד העריכה אינו תקין');
+    throw new Error(
+      token
+        ?'ההרשאה השמורה במכשיר פגה'
+        :'קוד העריכה אינו תקין'
+    );
   }
 
   if(!response.ok || data.error){
@@ -480,7 +525,7 @@ async function bankSnapshot(force=false){
     return;
   }
 
-  if(!bankStoredKey()){
+  if(!bankStoredToken() && !bankStoredKey()){
     return;
   }
 
