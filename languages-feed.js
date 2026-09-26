@@ -218,6 +218,10 @@
       }
       html.push(cardHtml(card));
       if(n===0&&index===1)html.push(flashcardMoment(index+1));
+      if(n===0&&index===2){
+        const q=state.filter==='all'||state.filter==='four'?'':`&lang=${state.filter}`;
+        html.push(`<section class="feed-moment feed-game"><div class="feed-game-head"><div><span class="feed-type">🎯 משחק תרגום</span><h2>מילה אחת · 4 אפשרויות</h2><p class="meta">בחר תרגום נכון ושחק ב־60 שניות, נוקאאוט או הישרדות.</p></div></div><div class="feed-actions"><a class="feed-action" href="language-games.html?game=translation-rush&mode=60${q}">⏱️ 60 שניות</a><a class="feed-action" href="language-games.html?game=translation-rush&mode=ko${q}">💥 נוקאאוט</a><a class="feed-action" href="language-games.html?game=translation-rush&mode=survival${q}">🔥 הישרדות</a></div></section>`);
+      }
       if(state.filter==='all'&&n===0&&index===3)html.push(fourLanguageMoment(index));
       if(index===5){const type=M.GAME_TYPES[(state.refresh+n*2)%M.GAME_TYPES.length];html.push(miniGameMoment(type,`${seedForBatch(n)}:game:1`));}
       if(state.filter==='all'&&n===0&&index===8)html.push(travellingStoryMoment());
