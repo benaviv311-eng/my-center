@@ -72,3 +72,56 @@ const sectionsChanged = discovery.buildBookSections(books[0], 'book-seed-b');
 assert.notDeepStrictEqual(sections.map(s=>s.id), sectionsChanged.map(s=>s.id), 'random book mode should change section choices');
 
 console.log('library discovery tests: OK');
+
+
+const richBook = {
+  id:'rich', slug:'rich-book', title:'Rich Book',
+  content:{
+    category:'Learning',
+    summary:'A compact summary sentence about attention. A second sentence about practice and feedback.',
+    topics:['attention','practice','feedback','decision making','motivation','memory'],
+    ideas:[
+      'Practice improves when feedback is specific and close to the action.',
+      'Attention is limited, so priorities matter during learning.',
+      'A useful decision rule can reduce noise when pressure rises.',
+      'Motivation is easier to sustain when progress is visible.',
+      'Memory improves when retrieval is effortful rather than passive.',
+      'Context changes how the same behavior is interpreted.'
+    ],
+    feed_posts:[
+      'Specific feedback works best when the learner can connect it to the action that just happened.',
+      'Visible progress can make a long process feel more achievable.',
+      'Reducing competing cues can protect attention during a difficult task.',
+      'A decision made under pressure benefits from a simple rule prepared in advance.',
+      'Retrieval practice asks the learner to produce an answer instead of merely rereading it.',
+      'The same response can mean different things in different contexts.',
+      'Small improvements become easier to notice when the measurement is concrete.',
+      'Learning can stall when several corrections compete for attention at the same moment.'
+    ]
+  }
+};
+
+assert.strictEqual(typeof discovery.buildBookNuggets, 'function', 'discovery should expose a book nugget builder');
+const nuggets = discovery.buildBookNuggets(richBook, 'nugget-seed');
+assert.ok(nuggets.length >= 14, 'nugget bank should use the broad book material instead of slicing to only a few posts');
+assert.ok(nuggets.every(n => n.headline && n.text && n.kind && n.topic && n.sourceLabel), 'each nugget should be concise, typed, topical and sourced');
+assert.ok(new Set(nuggets.map(n => n.topic)).size >= 4, 'one book should surface several topics rather than repeating one theme');
+assert.ok(nuggets.every(n => n.headline.split(/\s+/).length <= 9), 'nugget headlines should stay short');
+
+const duplicateBook = {
+  id:'dup', slug:'dup', title:'Duplicate Book',
+  content:{
+    topics:['habits','learning'],
+    ideas:['Small repeated actions can become stable habits.'],
+    feed_posts:[
+      'Small repeated actions can become stable habits over time.',
+      'Small repeated actions can become stable habits over time.'
+    ]
+  }
+};
+const deduped = discovery.buildBookNuggets(duplicateBook, 'dedupe');
+assert.ok(deduped.length < 3, 'near-identical book material should not be repeated as separate nuggets');
+
+const nuggetFeed = discovery.buildRandomFeed({books:[richBook, ...books], seed:'nugget-mix', count:16});
+const bookDerived = nuggetFeed.filter(x => x.sourceKind === 'book').length;
+assert.ok(bookDerived >= Math.ceil(nuggetFeed.length * 0.75), 'discovery feed should strongly prioritize nuggets derived from books');
