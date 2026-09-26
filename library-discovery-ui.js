@@ -11,34 +11,42 @@ const $=id=>document.getElementById(id);
 const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const content=book=>book&&book.content?book.content:{};
 function toast(message){const el=$('toast');if(!el)return;el.textContent=message;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1400)}
-function materials(book){
-  const c=content(book),posts=Array.isArray(c.feed_posts)?c.feed_posts.filter(Boolean):[];
-  if(posts.length)return posts.slice(0,4).map((text,index)=>({key:`${book.slug}|post|${index}`,type:'📖 מתוך חומר הספר',text}));
-  const ideas=Array.isArray(c.ideas)?c.ideas:[],topics=Array.isArray(c.topics)?c.topics:[];
+function materials(book,seed){
+  const nuggets=typeof D.buildBookNuggets==='function'?D.buildBookNuggets(book,seed||book.slug||book.id):[];
+  if(nuggets.length)return nuggets.map(n=>({
+    key:n.id,type:n.type,text:n.text,headline:n.headline,topic:n.topic,kind:n.kind,sourceLabel:n.sourceLabel
+  }));
+  const c=content(book),ideas=Array.isArray(c.ideas)?c.ideas:[],topics=Array.isArray(c.topics)?c.topics:[];
   return [
-    {key:`${book.slug}|summary`,type:'📖 תקציר קצר',text:c.summary||''},
-    {key:`${book.slug}|idea|0`,type:'💡 רעיון',text:ideas[0]||''},
-    {key:`${book.slug}|idea|1`,type:'🧠 עוד מחשבה',text:ideas[1]||''},
-    {key:`${book.slug}|topics`,type:'🗺️ נושאים',text:topics.join(' · ')}
+    {key:`${book.slug}|summary`,type:'◌ בתמצית',headline:'הרעיון המרכזי',topic:topics[0]||'הספר',text:c.summary||''},
+    {key:`${book.slug}|idea|0`,type:'◆ רעיון מפתח',headline:'רעיון שכדאי לקחת',topic:topics[1]||topics[0]||'הספר',text:ideas[0]||''}
   ].filter(x=>x.text);
 }
 function favButton(key){const active=favorites.has(key);return `<button class="btn small feed-fav ${active?'active':''}" data-library-favorite="${esc(key)}">${active?'♥ נשמר':'♡ שמור'}</button>`}
 function feedCard(book,material){
-  const search=(book.title+' '+(content(book).category||'')+' '+material.text).toLowerCase();
-  return `<article class="feed-card library-open-book" data-book-id="${esc(book.id)}" data-library-search="${esc(search)}">
-    <div class="label">${esc(material.type)}</div><h3>${esc(book.title)}</h3><p>${esc(material.text)}</p>
-    <div class="book-linkline">לחץ על הפוסט כדי לפתוח את הספר</div>
+  const headline=material.headline||material.text;
+  const topic=material.topic||content(book).category||'רעיון מהספר';
+  const search=(book.title+' '+(content(book).category||'')+' '+headline+' '+material.text+' '+topic).toLowerCase();
+  return `<article class="feed-card nugget-card library-open-book" data-book-id="${esc(book.id)}" data-library-search="${esc(search)}">
+    <div class="nugget-meta"><span class="nugget-type">${esc(material.type||'✦ נאגט')}</span><span class="nugget-book">${esc(book.title)}</span></div>
+    <h3 class="nugget-headline">${esc(headline)}</h3>
+    <p class="nugget-text">${esc(material.text)}</p>
+    <div class="nugget-topic">${esc(topic)}</div>
+    <div class="book-linkline">פתח את הספר להעמקה</div>
     <div class="feed-actions"><button class="btn small library-open-book" data-book-id="${esc(book.id)}">📚 לספר</button>${favButton(material.key)}</div></article>`;
 }
 function discoveryCard(post){
   const isRelated=post.sourceKind==='related-concept';
-  const search=(post.bookTitle+' '+post.title+' '+post.text+' '+(post.sourceLabel||'')).toLowerCase();
-  return `<article class="discovery-card library-open-book" data-book-id="${esc(post.bookId)}" data-library-search="${esc(search)}">
-    <div class="discovery-card-top"><span class="source-badge ${isRelated?'':'book'}">${esc(post.sourceLabel)}</span><span class="label">${esc(post.type)}</span></div>
-    <h3>${esc(post.title)}</h3><p>${esc(post.text)}</p>
-    ${post.example?`<div class="concept-extra"><strong>דוגמה מהחיים</strong>${esc(post.example)}</div>`:''}
-    ${post.application?`<div class="concept-extra"><strong>יישום</strong>${esc(post.application)}</div>`:''}
-    <div class="book-linkline">מקושר ל־${esc(post.bookTitle)} · לחץ כדי להיכנס לספר</div>
+  const headline=isRelated?(post.title||post.headline):(post.headline||post.title);
+  const topic=post.topic||post.bookTitle;
+  const search=(post.bookTitle+' '+headline+' '+post.text+' '+topic+' '+(post.sourceLabel||'')).toLowerCase();
+  return `<article class="discovery-card nugget-card library-open-book" data-book-id="${esc(post.bookId)}" data-library-search="${esc(search)}">
+    <div class="nugget-meta"><span class="source-badge ${isRelated?'':'book'}">${esc(post.sourceLabel)}</span><span class="nugget-type">${esc(post.type||'✦ נאגט')}</span></div>
+    <div class="nugget-book">${esc(post.bookTitle)}</div>
+    <h3 class="nugget-headline">${esc(headline)}</h3>
+    <p class="nugget-text">${esc(post.text)}</p>
+    <div class="nugget-topic">${esc(topic)}</div>
+    <div class="book-linkline">פתח את הספר להעמקה</div>
     <div class="feed-actions"><button class="btn small library-open-book" data-book-id="${esc(post.bookId)}">📚 פתח את הספר</button>${favButton(post.id)}</div></article>`;
 }
 function bookCard(book){const c=content(book),search=(book.title+' '+(c.category||'')+' '+(c.summary||'')).toLowerCase();return `<article class="book-card library-open-book" data-book-id="${esc(book.id)}" data-library-search="${esc(search)}"><span class="category">${esc(c.category||'ספר')}</span><h3>${esc(book.title)}</h3><p class="meta">${esc(c.summary||'')}</p><button class="btn small library-open-book" data-book-id="${esc(book.id)}">פתח ספר</button></article>`}
@@ -46,10 +54,10 @@ function dailyBooks(){const map=new Map(state.books.map(b=>[b.id,b]));return sta
 function renderToday(){
   const books=dailyBooks();
   $('daily-books').innerHTML=books.map(book=>`<article class="daily-book library-open-book" data-book-id="${esc(book.id)}"><span class="category">${esc(content(book).category||'ספר')}</span><strong>${esc(book.title)}</strong><span class="meta">פתח את הספר</span></article>`).join('');
-  const posts=[];for(let round=0;round<4;round++)books.forEach(book=>{const m=materials(book)[round];if(m)posts.push(feedCard(book,m))});
+  const posts=[];for(let round=0;round<4;round++)books.forEach(book=>{const m=materials(book,`${state.today}|${book.slug||book.id}|daily`)[round];if(m)posts.push(feedCard(book,m))});
   $('daily-feed').innerHTML=posts.join('');state.extraShown=0;updateLoadMore();
 }
-function extraPool(){const ids=new Set(dailyBooks().map(b=>b.id)),pool=[];state.books.filter(b=>!ids.has(b.id)).forEach(book=>materials(book).forEach(material=>pool.push({book,material})));return pool.sort((a,b)=>D.hash(state.today+a.material.key)-D.hash(state.today+b.material.key))}
+function extraPool(){const ids=new Set(dailyBooks().map(b=>b.id)),pool=[];state.books.filter(b=>!ids.has(b.id)).forEach(book=>materials(book,`${state.today}|${book.slug||book.id}|extra`).forEach(material=>pool.push({book,material})));return pool.sort((a,b)=>D.hash(state.today+a.material.key)-D.hash(state.today+b.material.key))}
 function updateLoadMore(){$('library-load-more').classList.toggle('hidden',state.extraShown>=extraPool().length)}
 function loadMore(){const pool=extraPool().slice(state.extraShown,state.extraShown+12);$('daily-feed').insertAdjacentHTML('beforeend',pool.map(x=>feedCard(x.book,x.material)).join(''));state.extraShown+=pool.length;updateLoadMore();applySearch()}
 function renderDiscovery(){
@@ -68,7 +76,7 @@ function renderArchive(){
   const appeared=new Set(state.history.map(r=>r.item_id)),posts=[];state.books.filter(b=>appeared.has(b.id)).forEach(book=>materials(book).forEach(m=>posts.push(feedCard(book,m))));$('library-archive-feed').innerHTML=posts.length?posts.join(''):'<div class="library-empty">הארכיון מתחיל להצטבר מהיום.</div>';
 }
 function renderFavorites(){
-  const cards=[];state.books.forEach(book=>materials(book).forEach(m=>{if(favorites.has(m.key))cards.push(feedCard(book,m))}));
+  const cards=[];state.books.forEach(book=>materials(book,`${state.today}|${book.slug||book.id}|favorites`).forEach(m=>{if(favorites.has(m.key))cards.push(feedCard(book,m))}));
   D.buildDiscoveryPool(state.books).forEach(post=>{if(favorites.has(post.id))cards.push(discoveryCard(post))});
   $('library-favorites-feed').innerHTML=cards.length?cards.join(''):'<div class="library-empty">עדיין לא שמרת פוסטים למועדפים.</div>';
 }
