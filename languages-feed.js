@@ -138,6 +138,28 @@
     return `<section class="feed-moment"><div><span class="feed-type">סיפור עובר שפה</span><h2>ארבע שורות, ארבע שפות</h2><p class="meta">נסה להבין את הכיוון לפני שאתה מסתכל על התרגום.</p></div><div class="feed-lines">${M.LANGUAGE_CODES.map(lang=>{const d=itemDisplay(lang,picks[lang]);return `<div class="feed-line"><strong>${M.LANGUAGES[lang].code}</strong>${displayBlock(d,false)}<div class="feed-line-translation feed-hidden" data-translation>${esc(d.translation)}</div></div>`;}).join('')}</div>${revealButton('הצג את כל התרגומים')}</section>`;
   }
 
+  function flashcardMoment(seed){
+    const allCodes=M.LANGUAGE_CODES;
+    const mode=state.filter;
+    let picks=[];
+    if(mode==='all'||mode==='four'){
+      picks=allCodes.map((lang,index)=>{
+        const words=M.BANK[lang].words||[];
+        const row=words[(state.refresh+batch+seed+index)%words.length]||words[0];
+        const d=M.getDisplay({lang,target:row?.[1]||'',pron:row?.[2]||'',he:row?.[3]||''});
+        return {lang,d};
+      });
+    }else{
+      const words=M.BANK[mode].words||[];
+      picks=Array.from({length:Math.min(4,words.length)},(_,index)=>{
+        const row=words[(state.refresh+batch+seed+index)%words.length]||words[0];
+        const d=M.getDisplay({lang:mode,target:row?.[1]||'',pron:row?.[2]||'',he:row?.[3]||''});
+        return {lang:mode,d};
+      });
+    }
+    return `<section class="feed-moment feed-flashcards-moment"><div><span class="feed-type">🃏 כרטיסיות</span><h2>${mode==='all'||mode==='four'?'כרטיס אחד מכל שפה':'כרטיסיות · '+esc(M.LANGUAGES[mode].name)}</h2><p class="meta">לחץ על כרטיס כדי להפוך אותו ולראות עברית.</p></div><div class="feed-flashcards-grid">${picks.map(({lang,d})=>`<button class="feed-flashcard" type="button" data-feed-flashcard aria-pressed="false" aria-label="הפוך כרטיס ${esc(M.LANGUAGES[lang].name)}"><span class="feed-flashcard-inner"><span class="feed-flashcard-face feed-flashcard-front"><small>${esc(M.LANGUAGES[lang].code)} · ${esc(M.LANGUAGES[lang].name)}</small><strong>${esc(d.primary)}</strong>${d.secondary?`<em>${esc(d.secondary)}</em>`:''}<span class="feed-flip-hint">הפוך ↻</span></span><span class="feed-flashcard-face feed-flashcard-back"><small>עברית</small><strong>${esc(d.translation)}</strong><span class="feed-flip-hint">חזרה ↻</span></span></span></button>`).join('')}</div></section>`;
+  }
+
   function miniGameBody(game){
     const first=game.items?.[0];
     if(game.type==='flashcards'){
@@ -195,6 +217,7 @@
         return;
       }
       html.push(cardHtml(card));
+      if(n===0&&index===1)html.push(flashcardMoment(index+1));
       if(state.filter==='all'&&n===0&&index===3)html.push(fourLanguageMoment(index));
       if(index===5){const type=M.GAME_TYPES[(state.refresh+n*2)%M.GAME_TYPES.length];html.push(miniGameMoment(type,`${seedForBatch(n)}:game:1`));}
       if(state.filter==='all'&&n===0&&index===8)html.push(travellingStoryMoment());
@@ -289,6 +312,14 @@
         const article=btn.closest('.feed-card');
         const action=btn.dataset.feedAction;
         if(action==='more')moreLike(article);else toggleReaction(article,action);
+      });
+    });
+
+    scope.querySelectorAll?.('[data-feed-flashcard]:not([data-wired])').forEach(card=>{
+      card.dataset.wired='1';
+      card.addEventListener('click',()=>{
+        const flipped=card.classList.toggle('is-flipped');
+        card.setAttribute('aria-pressed',flipped?'true':'false');
       });
     });
 
