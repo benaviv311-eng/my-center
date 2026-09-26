@@ -321,9 +321,16 @@
 
     scope.querySelectorAll?.('[data-feed-flashcard]:not([data-wired])').forEach(card=>{
       card.dataset.wired='1';
-      card.addEventListener('click',()=>{
+      const flip=()=>{
         const flipped=card.classList.toggle('is-flipped');
         card.setAttribute('aria-pressed',flipped?'true':'false');
+      };
+      card.addEventListener('click',flip);
+      card.addEventListener('keydown',event=>{
+        if(event.key==='Enter'||event.key===' '){
+          event.preventDefault();
+          flip();
+        }
       });
     });
 
