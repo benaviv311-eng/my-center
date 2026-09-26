@@ -156,13 +156,20 @@
   function shuffled(items,seed){
     return items.slice().sort((a,b)=>hash(seed+'|'+a.id)-hash(seed+'|'+b.id));
   }
-  function pickFeedItem(rest,out){
-    if(!rest.length)return null;
+  function takeCandidate(primary,secondary,out){
     const last=out.length?out[out.length-1]:null;
-    let index=rest.findIndex(item=>(!last||item.bookId!==last.bookId)&&(!last||!item.topic||item.topic!==last.topic));
-    if(index<0)index=rest.findIndex(item=>!last||item.bookId!==last.bookId);
-    if(index<0)index=0;
-    return rest.splice(index,1)[0];
+    const take=(list,predicate)=>{
+      if(!list.length)return null;
+      const index=list.findIndex(predicate);
+      return index>=0?list.splice(index,1)[0]:null;
+    };
+    const differentBook=item=>!last||item.bookId!==last.bookId;
+    const differentBookAndTopic=item=>differentBook(item)&&(!last||!item.topic||item.topic!==last.topic);
+    return take(primary,differentBookAndTopic)
+      ||take(primary,differentBook)
+      ||take(secondary,differentBookAndTopic)
+      ||take(secondary,differentBook)
+      ||(primary.length?primary.shift():secondary.shift()||null);
   }
   function buildRandomFeed(options){
     options = options || {};
@@ -174,9 +181,9 @@
     const out=[];
     while((native.length||related.length)&&out.length<count){
       const wantRelated=out.length%5===4;
-      let source=wantRelated&&related.length?related:native;
-      if(!source.length)source=related;
-      const next=pickFeedItem(source,out);
+      const primary=wantRelated?related:native;
+      const secondary=wantRelated?native:related;
+      const next=takeCandidate(primary,secondary,out);
       if(next)out.push(next);else break;
     }
     return out;
