@@ -15,7 +15,8 @@
     }catch(e){return {filter:'all',refresh:0,reactions:{},more:0};}
   }
   const state=load();
-  if(!['all','four',...M.LANGUAGE_CODES].includes(state.filter))state.filter='all';
+  if(state.filter==='four')state.filter='all';
+  if(!['all',...M.LANGUAGE_CODES].includes(state.filter))state.filter='all';
   let batch=0;
 
   function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
@@ -245,7 +246,8 @@
   }
 
   function setLanguageFilter(next,{scroll=true}={}){
-    if(!['all','four',...M.LANGUAGE_CODES].includes(next))return;
+    if(next==='four')next='all';
+    if(!['all',...M.LANGUAGE_CODES].includes(next))return;
     state.filter=next;
     save();
     resetFeed();
@@ -264,8 +266,7 @@
       ['ar','AR','ערבית'],
       ['it','IT','איטלקית'],
       ['ru','RU','רוסית'],
-      ['es','ES','ספרדית'],
-      ['four','4×','4 שפות']
+      ['es','ES','ספרדית']
     ];
     langRoot.innerHTML=items.map(([code,badge,label])=>`<button type="button" class="language-nav-chip ${state.filter===code?'active':''}" data-frozen-language="${code}" aria-pressed="${state.filter===code?'true':'false'}"><span>${badge}</span>${label}</button>`).join('');
     langRoot.querySelectorAll('[data-frozen-language]').forEach(btn=>btn.addEventListener('click',()=>setLanguageFilter(btn.dataset.frozenLanguage)));
@@ -279,15 +280,12 @@
         feature('📘','שיעורים', '#language-lessons-dashboard', '1–10')+
         feature('📚','אוצר מילים', `language-vocabulary.html?lang=${lang}`, meta.name)+
         feature('🃏','כרטיסיות', `language-games.html?lang=${lang}&game=flashcards`, 'הפוך ותרגם')+
-        feature('🎮','משחקים', `language-games.html?lang=${lang}`, 'כל המשחקים')+
+        feature('🎮','משחקים', `language-games.html?lang=${lang}`, '60 שניות · נוקאאוט · הישרדות')+
         feature('⚡','מסלול יומי', `language-games.html?lang=${lang}&game=daily-mix`, '5 דקות')+
-        feature('⏱️','60 שניות', `language-games.html?lang=${lang}&game=translation-rush&mode=60`, '4 אפשרויות')+
-        feature('💥','נוקאאוט', `language-games.html?lang=${lang}&game=translation-rush&mode=ko`, 'טעות ונגמר')+
-        feature('🔥','הישרדות', `language-games.html?lang=${lang}&game=translation-rush&mode=survival`, '+3 שניות')+
         feature('🗂️','נושאים', `language-topics.html?lang=${lang}`, meta.name)+
         feature('↻','חזרות', `language-archive.html?lang=${lang}`, 'טעויות ושמורים');
     }else{
-      catRoot.innerHTML=`<a class="language-nav-category nav-feature" href="#languages-home"><span>🏠</span><strong>בית</strong></a><a class="language-nav-category nav-feature" href="#languages-feed-section"><span>📰</span><strong>פיד</strong></a><a class="language-nav-category nav-feature" href="four-languages.html"><span>🌐</span><strong>4 שפות</strong></a><a class="language-nav-category nav-feature" href="language-games.html"><span>🎮</span><strong>משחקים</strong></a><a class="language-nav-category nav-feature" href="language-games.html?game=flashcards"><span>🃏</span><strong>כרטיסיות</strong></a><a class="language-nav-category nav-feature" href="language-vocabulary.html"><span>📚</span><strong>אוצר מילים</strong></a>`;
+      catRoot.innerHTML=`<a class="language-nav-category nav-feature" href="#languages-home"><span>🏠</span><strong>בית</strong></a><a class="language-nav-category nav-feature" href="#languages-feed-section"><span>📰</span><strong>פיד</strong></a><a class="language-nav-category nav-feature" href="four-languages.html"><span>🌐</span><strong>4 שפות</strong><small>בתוך הכול</small></a><a class="language-nav-category nav-feature" href="language-games.html"><span>🎮</span><strong>משחקים</strong></a><a class="language-nav-category nav-feature" href="language-games.html?game=flashcards"><span>🃏</span><strong>כרטיסיות</strong></a><a class="language-nav-category nav-feature" href="language-vocabulary.html"><span>📚</span><strong>אוצר מילים</strong></a>`;
     }
     catRoot.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
       const target=document.querySelector(link.getAttribute('href'));

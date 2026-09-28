@@ -72,3 +72,6 @@
 
 .language-nav-category.nav-feature{min-width:104px;min-height:66px;padding:7px 10px;display:grid;grid-template-columns:auto;grid-template-rows:auto auto auto;place-items:center;gap:2px;text-align:center}.language-nav-category.nav-feature>span{grid-row:auto;font-size:19px}.language-nav-category.nav-feature strong{font-size:12px;line-height:1.15}.language-nav-category.nav-feature small{font-size:9px;max-width:94px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}.language-nav-category.nav-feature:hover{background:#f7f4ed}.language-nav-category.nav-feature:active{transform:translateY(1px)}
 @media(max-width:620px){.language-nav-category.nav-feature{min-width:92px;min-height:60px;padding:6px 8px}.language-nav-category.nav-feature strong{font-size:11px}}
+
+/* Simplified hierarchy: game modes live inside Games; 4 Languages lives under All */
+.language-nav-languages .language-nav-chip{min-width:auto}
