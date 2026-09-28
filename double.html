@@ -49,7 +49,23 @@
     .best-strip{margin:10px auto 4px;padding:9px 12px;border-radius:14px;background:#ffffff12;border:1px solid #ffffff20;font-size:13px;font-weight:800;max-width:520px}
     .boss-card{box-shadow:0 0 0 5px #ffd84d,0 10px 35px #0008,inset 0 0 0 8px #eee}
     .boss-pill{background:#ffd84d;color:#171717;border-color:#ffd84d}
-    @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
+
+    .profile-line{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:8px 0 14px;font-size:13px;opacity:.9}
+    .progress-card{background:#ffffff10;border:1px solid #ffffff20;border-radius:18px;padding:14px;margin:10px 0 14px;text-align:right}
+    .progress-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}
+    .progress-bar{height:9px;border-radius:999px;background:#ffffff18;overflow:hidden}
+    .progress-bar i{display:block;height:100%;background:#ffd84d;border-radius:999px}
+    .stage-map{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:13px 0}
+    .stage-node{min-height:46px;border:1px solid #ffffff28;background:#ffffff10;color:#fff;border-radius:14px;font-weight:1000;display:grid;place-items:center;gap:1px;cursor:pointer}
+    .stage-node span{font-size:13px}
+    .stage-node.done{background:#7ee0b8;color:#111;border-color:#7ee0b8}
+    .stage-node.current{background:#ffd84d;color:#111;border-color:#ffd84d;outline:3px solid #ffffff25}
+    .stage-node.boss{border-radius:50%}
+    .stage-node:disabled{opacity:.28;cursor:not-allowed}
+    .score-rules{display:grid;gap:5px;text-align:right;margin:12px 0;padding:12px 14px;border-radius:16px;background:#ffffff0d;border:1px solid #ffffff18}
+    .score-rules span,.score-rules small{font-size:13px;line-height:1.45;opacity:.85}
+    .combo-pill{background:#ffdf70;color:#171717;border-color:#ffdf70}
+      @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
   <link rel="stylesheet" href="site-chat.css?v=2">\n  <link rel="stylesheet" href="site-editor-ui.css?v=1">\n</head>
@@ -96,11 +112,11 @@
     <div id="playerButtons" class="controls"></div>
     <div class="controls">
       <button type="button" id="shuffleBtn" class="action secondary">ערבב</button>
-      <button type="button" id="menuBtn" class="action secondary">מצבי משחק</button>
+      <button type="button" id="menuBtn" class="action secondary">← חזור</button>
     </div>
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=6"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=7"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
