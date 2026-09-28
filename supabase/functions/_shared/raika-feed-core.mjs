@@ -14,7 +14,15 @@ const FEEDBACK_WEIGHT = {
 
 const text = (v,max=6000) => String(v ?? '').trim().slice(0,max);
 const arr = (v,max=24) => Array.isArray(v) ? v.slice(0,max).map(x => text(x,120)).filter(Boolean) : [];
-const tokens = v => new Set(text(v,12000).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/).filter(Boolean));
+const tokens = v => {
+  const out=new Set();
+  const raw=text(v,12000).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/).filter(Boolean);
+  for(const token of raw){
+    if(token.length>2)out.add(token);
+    if(token.length>4&&/^[ובלכמהש]/u.test(token))out.add(token.slice(1));
+  }
+  return out;
+};
 function hash(value=''){
   let h=2166136261;
   for(const ch of String(value)){h^=ch.codePointAt(0)||0;h=Math.imul(h,16777619);}
@@ -34,7 +42,7 @@ export function normalizeFeedRequest(input={}) {
     action,
     count: Math.max(1,Math.min(maxCount,count || 1)),
     seed_card_id,
-    recent_signatures: Array.isArray(input.recent_signatures)?input.recent_signatures.slice(0,80).map(x=>text(x,1400)).filter(Boolean):[],
+    recent_signatures: Array.isArray(input.recent_signatures)?input.recent_signatures.slice(0,240).map(x=>text(x,1400)).filter(Boolean):[],
     blocked_signatures:Array.isArray(input.blocked_signatures)?input.blocked_signatures.slice(0,120).map(x=>text(x,1400)).filter(Boolean):[],
     blocked_fingerprints:Array.isArray(input.blocked_fingerprints)?input.blocked_fingerprints.slice(0,120).map(x=>text(x,300)).filter(Boolean):[],
     filter_type:text(input.filter_type||'all',80)||'all',
@@ -93,6 +101,21 @@ export function similarity(a,b) {
   if (!A.size || !B.size) return 0;
   let common=0; for (const t of A) if (B.has(t)) common++;
   return common / Math.max(1,Math.min(A.size,B.size));
+}
+
+
+export function filterSemanticallyFresh(cards=[],recentCards=[],threshold=0.68){
+  const accepted=[];
+  for(const raw of Array.isArray(cards)?cards:[]){
+    const card=normalizeGeneratedCard(raw)||raw;
+    if(!card?.title||!card?.body)continue;
+    const repeatsRecent=(recentCards||[]).some(old=>similarity(old,card)>=threshold);
+    if(repeatsRecent)continue;
+    const repeatsBatch=accepted.some(old=>similarity(old,card)>=threshold);
+    if(repeatsBatch)continue;
+    accepted.push(raw);
+  }
+  return accepted;
 }
 
 export function dedupeCards(cards=[], recentCards=[], {allowSeedVariation=false,blockedRows=[]}={}) {

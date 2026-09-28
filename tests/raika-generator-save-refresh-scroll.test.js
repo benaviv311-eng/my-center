@@ -27,8 +27,8 @@ test('Raika generator adds a sticky refresh control after proposal three',()=>{
   assert.match(css,/bottom:/);
 });
 
-test('Writers Room cache-busts the updated generator assets',()=>{
+test('Writers Room cache-busts the unified generator asset',()=>{
   const html=fs.readFileSync('raika-writers-room.html','utf8');
   assert.match(html,/raika-generator\.css\?v=3/);
-  assert.match(html,/raika-generator-hotfix\.js\?v=3/);
+  assert.match(html,/raika-generator-hotfix\.js\?v=4/);
 });

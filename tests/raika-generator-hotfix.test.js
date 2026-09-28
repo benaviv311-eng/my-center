@@ -2,15 +2,15 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
-test('Raika generator has an independent last-loaded hotfix',()=>{
+test('Raika generator hotfix loads last and uses the unified idea engine',()=>{
   const html=fs.readFileSync('raika-writers-room.html','utf8');
   const hotfix=fs.readFileSync('raika-generator-hotfix.js','utf8');
-  assert.match(html,/raika-generator-hotfix\.js\?v=3/);
-  const posHotfix=html.indexOf('raika-generator-hotfix.js?v=3');
+  assert.match(html,/raika-generator-hotfix\.js\?v=4/);
+  const posHotfix=html.indexOf('raika-generator-hotfix.js?v=4');
   const posActions=html.indexOf('raika-generator-actions.js?v=6');
   assert.ok(posHotfix>posActions,'hotfix must load after generator actions');
   assert.match(hotfix,/getElementById\('rg-generate'\)/);
   assert.match(hotfix,/addEventListener\('click'/);
-  assert.match(hotfix,/rg-result/);
-  assert.match(hotfix,/ההצעות נוצרו/);
+  assert.match(hotfix,/RaikaFeedClient\.refreshAll/);
+  assert.match(hotfix,/RaikaIdeaHistory/);
 });
