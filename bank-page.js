@@ -225,13 +225,14 @@ async function loadBankPage(){
     bankState.items=items;
     bankPageState.manager=false;
 
-    if(bankStoredKey()){
+    if(bankStoredKey()||bankStoredToken()){
       try{
         await bankWrite({action:'ping'});
         bankPageState.manager=true;
         await bankSnapshot(true).catch(()=>{});
       }catch(err){
         localStorage.removeItem(BANK_EDITOR_KEY);
+        localStorage.removeItem(BANK_EDITOR_TOKEN);
         bankState.snapshotLoaded=false;
       }
     }else{
@@ -331,15 +332,13 @@ async function submitManagerAccess(){
 
 async function enableManager(){
   if(bankPageState.manager){
-    localStorage.removeItem(BANK_EDITOR_KEY);
-    bankState.snapshotLoaded=false;
     bankPageState.manager=false;
     renderAll();
-    toast('מצב עריכה נסגר');
+    toast('כלי העריכה הוסתרו');
     return;
   }
 
-  const stored=bankStoredKey();
+  const stored=bankStoredKey()||bankStoredToken();
 
   if(!stored){
     openManagerAccess();
@@ -354,10 +353,11 @@ async function enableManager(){
     toast('מצב עריכה הופעל');
   }catch(err){
     localStorage.removeItem(BANK_EDITOR_KEY);
+    localStorage.removeItem(BANK_EDITOR_TOKEN);
     bankState.snapshotLoaded=false;
     bankPageState.manager=false;
     renderManagerState();
-    openManagerAccess('הקוד השמור כבר אינו תקין. הכנס את קוד העריכה החדש.');
+    openManagerAccess('ההרשאה השמורה אינה תקינה. אפשר לחבר מחדש את המכשיר.');
   }
 }
 
