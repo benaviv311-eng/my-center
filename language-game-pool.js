@@ -19,7 +19,7 @@
     const topicData=bank.TOPICS[topicId];
     (topicData.words||[]).forEach(word=>{
       langs.forEach(code=>{
-        const target=word[code]?.target||'';
+        const target=code==='ar'?(word.ar?.spoken||word.ar?.target||''):(word[code]?.target||'');
         if(!target)return;
         const key=`${code}|${normalise(target)}`;
         if(unique.has(key))return;
@@ -28,6 +28,7 @@
           id:`${topicId}:${word.id}:${code}`,
           lang:code,
           target,
+          translit:code==='ar'?(word.ar?.translit||''):'',
           he:word.he||'',
           topicId,
           topicName:topicData.name||topicId
@@ -73,7 +74,7 @@
   function transliterate(text,map){return String(text||'').split('').map(ch=>{const low=ch.toLowerCase();const out=map[low];if(out===undefined)return ch;if(ch===ch.toUpperCase()&&ch!==low&&out)return out.charAt(0).toUpperCase()+out.slice(1);return out;}).join('');}
   createGamePool.display=function(item){
     if(!item)return{primary:'',secondary:'',translation:''};
-    if(item.lang==='ar')return{primary:transliterate(item.target,arMap),secondary:item.target,translation:item.he||''};
+    if(item.lang==='ar')return{primary:item.translit||transliterate(item.target,arMap),secondary:item.target,translation:item.he||''};
     if(item.lang==='ru')return{primary:transliterate(item.target,ruMap),secondary:item.target,translation:item.he||''};
     return{primary:item.target||'',secondary:'',translation:item.he||''};
   };
