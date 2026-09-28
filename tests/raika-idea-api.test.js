@@ -25,7 +25,9 @@ test('Raika feed edge function implements refresh_all with base fallback and per
   assert.match(src,/source_mix/);
   assert.match(src,/dynamic/);
   assert.match(src,/base/);
-  assert.match(src,/if\(!apiKey&&requestData\.action==='refresh_all'\)/);
+  assert.match(src,/if\(apiKey\)/);
+  assert.match(src,/shortfall/);
+  assert.match(src,/baseSelected/);
 });
 
 test('refresh inserts source metadata so later permanent blocking can identify the premise',()=>{
