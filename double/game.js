@@ -628,7 +628,7 @@
     }else{
       onWrong();
       update();
-      if(time<=0) finishByTime();
+      if(mode!=='sprint'&&time<=0) finishByTime();
     }
   }
 
