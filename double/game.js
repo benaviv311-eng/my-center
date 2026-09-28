@@ -3,12 +3,109 @@
 
   const icons=['🐶','🐱','🦁','🐘','🐵','🐼','🐧','🐟','🍕','🍎','🍌','🍉','🍦','🍩','🍔','🍓','⚽','🏀','🏐','🎾','🏆','🎯','🛹','🚗','✈️','🚲','🚀','🚂','🚢','☀️','🌙','⭐','🌈','☁️','⚡','🔥','🌸','❤️','👑','💎','😊','👻','💩','🎸','🎁','🔑','⏰','💡','📷','🎈','🤖','🦄','👽','🐉','🧙','🏰','🏴‍☠️'];
   const spots=[[50,16],[27,30],[70,31],[48,43],[22,58],[76,60],[39,76],[62,80]];
+  const BEST_KEY='double-best-v1';
+  const DIFF_KEY='double-difficulty-v1';
+
+  const difficultyConfig={
+    easy:{
+      label:'קל',
+      classicTime:75,
+      levelsTime:45,
+      knockoutTime:40,
+      knockoutTarget:10,
+      survivalStart:14,
+      survivalBonus:3,
+      wrongPenalty:1,
+      targetFactor:.85,
+      spinFactor:1.25
+    },
+    normal:{
+      label:'בינוני',
+      classicTime:60,
+      levelsTime:35,
+      knockoutTime:30,
+      knockoutTarget:12,
+      survivalStart:10,
+      survivalBonus:2,
+      wrongPenalty:2,
+      targetFactor:1,
+      spinFactor:1
+    },
+    hard:{
+      label:'קשה',
+      classicTime:45,
+      levelsTime:28,
+      knockoutTime:22,
+      knockoutTarget:15,
+      survivalStart:7,
+      survivalBonus:1,
+      wrongPenalty:3,
+      targetFactor:1.2,
+      spinFactor:.78
+    }
+  };
 
   let deck=[], pair=[], timer=null, active=false, mode='classic', claim=null;
   let score=0, streak=0, time=60, matches=0, level=1, levelProgress=0, scores=[0,0];
   let knockoutTarget=12;
+  let bossActive=false;
+  let bossGoal=0;
+  let bossProgress=0;
+  let bossTimeBefore=0;
+  let difficulty=readDifficulty();
 
   const $ = id => document.getElementById(id);
+
+  function safeGet(key){
+    try{return localStorage.getItem(key)}catch(_){return null}
+  }
+  function safeSet(key,value){
+    try{localStorage.setItem(key,value)}catch(_){}
+  }
+  function readDifficulty(){
+    const saved=safeGet(DIFF_KEY);
+    return difficultyConfig[saved]?saved:'normal';
+  }
+  function readBest(){
+    try{
+      const parsed=JSON.parse(safeGet(BEST_KEY)||'{}');
+      return parsed&&typeof parsed==='object'?parsed:{};
+    }catch(_){
+      return {};
+    }
+  }
+  function saveBest(data){
+    safeSet(BEST_KEY,JSON.stringify(data));
+  }
+  function bestKey(which=mode){
+    return which+'-'+difficulty;
+  }
+  function getBest(which=mode){
+    return readBest()[bestKey(which)]||null;
+  }
+  function commitBest(which,value,secondary=0){
+    if(which==='versus') return false;
+    const all=readBest();
+    const key=bestKey(which);
+    const old=all[key];
+
+    let better=false;
+    if(!old) better=true;
+    else if(which==='classic'||which==='survival'){
+      better=value>old.value;
+    }else if(which==='levels'){
+      better=value>old.value || (value===old.value&&secondary>Number(old.secondary||0));
+    }else if(which==='knockout'){
+      better=value>old.value;
+    }
+
+    if(better){
+      all[key]={value,secondary,updated:Date.now()};
+      saveBest(all);
+      return true;
+    }
+    return false;
+  }
 
   function buildDeck(){
     const lines=[];
@@ -39,6 +136,8 @@
     return out;
   }
 
+  function cfg(){return difficultyConfig[difficulty]}
+
   function modeLabel(){
     return {
       classic:'קלאסי',
@@ -50,6 +149,7 @@
   }
 
   function rotating(){
+    if(bossActive) return true;
     if(mode==='levels') return level>=2;
     if(mode==='knockout') return true;
     if(mode==='survival') return matches>=3;
@@ -57,14 +157,25 @@
   }
 
   function spinSpeed(){
-    if(mode==='levels') return Math.max(2.2, 7-level*0.8);
-    if(mode==='knockout') return 4.3;
-    if(mode==='survival') return Math.max(2.4, 5.5-matches*0.08);
-    return 6;
+    let base=6;
+    if(bossActive) base=1.9;
+    else if(mode==='levels') base=Math.max(2.2,7-level*.8);
+    else if(mode==='knockout') base=4.3;
+    else if(mode==='survival') base=Math.max(2.4,5.5-matches*.08);
+    return Math.max(1.25,base*cfg().spinFactor);
   }
 
   function levelGoal(){
-    return 4 + level;
+    const raw=4+level;
+    return Math.max(3,Math.round(raw*cfg().targetFactor));
+  }
+
+  function isBossLevel(){
+    return mode==='levels' && level>1 && level%5===0;
+  }
+
+  function bossGoalForLevel(){
+    return Math.max(3,Math.round((3+Math.floor(level/5))*cfg().targetFactor));
   }
 
   function configureMode(nextMode){
@@ -76,11 +187,17 @@
     levelProgress=0;
     scores=[0,0];
     claim=null;
+    bossActive=false;
+    bossGoal=0;
+    bossProgress=0;
 
-    if(mode==='classic') time=60;
-    if(mode==='levels') time=35;
-    if(mode==='knockout'){ time=30; knockoutTarget=12; }
-    if(mode==='survival') time=10;
+    if(mode==='classic') time=cfg().classicTime;
+    if(mode==='levels') time=cfg().levelsTime;
+    if(mode==='knockout'){
+      time=cfg().knockoutTime;
+      knockoutTarget=cfg().knockoutTarget;
+    }
+    if(mode==='survival') time=cfg().survivalStart;
     if(mode==='versus') time=60;
   }
 
@@ -89,7 +206,7 @@
     deck=shuffle(buildDeck());
     active=true;
     $('start').style.display='none';
-    $('modeName').textContent=modeLabel();
+    $('modeName').textContent=modeLabel()+' · '+cfg().label;
 
     if(timer) clearInterval(timer);
     timer=setInterval(()=>{
@@ -105,16 +222,26 @@
   }
 
   function finishByTime(){
+    if(!active) return;
+
     if(mode==='levels'){
-      endGame('נגמר הזמן', 'הגעת לשלב '+level+' עם '+levelProgress+'/'+levelGoal()+' הצלחות בשלב.');
+      const isBest=commitBest('levels',level,score);
+      endGame('נגמר הזמן','הגעת לשלב '+level+' · ניקוד '+score+(isBest?' · שיא חדש! 🏆':''));
       return;
     }
     if(mode==='knockout'){
-      endGame('נוקאאוט', 'השגת '+matches+' מתוך '+knockoutTarget+' בזמן.');
+      const isBest=commitBest('knockout',matches);
+      endGame('נוקאאוט','השגת '+matches+' מתוך '+knockoutTarget+(isBest?' · שיא חדש! 🏆':''));
       return;
     }
     if(mode==='survival'){
-      endGame('נגמר הזמן', 'שרדת '+matches+' התאמות.');
+      const isBest=commitBest('survival',matches);
+      endGame('נגמר הזמן','שרדת '+matches+' התאמות'+(isBest?' · שיא חדש! 🏆':''));
+      return;
+    }
+    if(mode==='classic'){
+      const isBest=commitBest('classic',score);
+      endGame('⭐ '+score,'הניקוד שלך'+(isBest?' · שיא חדש! 🏆':''));
       return;
     }
     endGame();
@@ -161,7 +288,8 @@
 
     pair.forEach(card=>{
       const el=document.createElement('div');
-      el.className='card';
+      el.className='card'+(bossActive?' boss-card':'');
+      if(bossActive) el.setAttribute('aria-label','קלף בוס');
 
       shuffle(card).forEach((id,i)=>{
         const p=spots[i];
@@ -176,8 +304,12 @@
         const glyph=document.createElement('span');
         glyph.className='glyph'+(spin?' spinning':'');
         glyph.textContent=icons[id];
-        glyph.style.transform='rotate('+(-25+Math.random()*50)+'deg)';
-        if(spin) glyph.style.animationDuration=speed+'s';
+        if(spin){
+          glyph.style.animationDuration=speed+'s';
+          if((i+id)%2===0) glyph.style.animationDirection='reverse';
+        }else{
+          glyph.style.transform='rotate('+(-25+Math.random()*50)+'deg)';
+        }
 
         bt.appendChild(glyph);
         bt.addEventListener('click',()=>hit(id));
@@ -186,6 +318,25 @@
 
       board.appendChild(el);
     });
+  }
+
+  function enterBoss(){
+    bossActive=true;
+    bossProgress=0;
+    bossGoal=bossGoalForLevel();
+    bossTimeBefore=time;
+    time=Math.min(time,12);
+    flash('👑 בוס! '+bossGoal+' התאמות');
+    update();
+  }
+
+  function completeBoss(){
+    bossActive=false;
+    score+=250*level;
+    time=Math.max(time,bossTimeBefore)+8;
+    flash('👑 הבוס הובס! +8 שניות');
+    level++;
+    levelProgress=0;
   }
 
   function onCorrect(){
@@ -198,31 +349,47 @@
     }
 
     if(mode==='levels'){
-      levelProgress++;
-      score+=10*level;
-      if(levelProgress>=levelGoal()){
-        level++;
-        levelProgress=0;
-        time+=8;
-        flash('⬆️ שלב '+level+'! +8 שניות');
+      if(bossActive){
+        bossProgress++;
+        score+=25*level;
+        if(bossProgress>=bossGoal){
+          completeBoss();
+        }else{
+          flash('👑 '+bossProgress+'/'+bossGoal);
+        }
       }else{
-        flash('✓ '+levelProgress+'/'+levelGoal());
+        levelProgress++;
+        score+=10*level;
+
+        if(levelProgress>=levelGoal()){
+          level++;
+          levelProgress=0;
+          if(isBossLevel()){
+            enterBoss();
+          }else{
+            time+=8;
+            flash('⬆️ שלב '+level+'! +8 שניות');
+          }
+        }else{
+          flash('✓ '+levelProgress+'/'+levelGoal());
+        }
       }
     }
 
     if(mode==='knockout'){
       score++;
       if(matches>=knockoutTarget){
-        endGame('🏆 נוקאאוט הושלם!', 'השגת '+knockoutTarget+' התאמות עם '+time+' שניות שנותרו.');
+        const isBest=commitBest('knockout',time);
+        endGame('🏆 נוקאאוט הושלם!','נשארו '+time+' שניות'+(isBest?' · שיא חדש! 🏆':''));
         return false;
       }
       flash('✓ '+matches+'/'+knockoutTarget);
     }
 
     if(mode==='survival'){
-      time+=2;
+      time+=cfg().survivalBonus;
       score=matches;
-      flash('⏱️ +2 שניות');
+      flash('⏱️ +'+cfg().survivalBonus+' שניות');
     }
 
     if(mode==='versus'){
@@ -235,25 +402,27 @@
 
   function onWrong(){
     streak=0;
+    const penalty=cfg().wrongPenalty;
 
     if(mode==='classic'){
-      score=Math.max(0,score-3);
+      score=Math.max(0,score-(difficulty==='hard'?5:3));
       flash('✕ נסה שוב');
     }
 
     if(mode==='levels'){
-      time=Math.max(0,time-2);
-      flash('✕ -2 שניות');
+      const loss=bossActive?penalty+1:penalty;
+      time=Math.max(0,time-loss);
+      flash('✕ -'+loss+' שניות');
     }
 
     if(mode==='knockout'){
-      time=Math.max(0,time-1);
-      flash('✕ -1 שנייה');
+      time=Math.max(0,time-penalty);
+      flash('✕ -'+penalty+' שניות');
     }
 
     if(mode==='survival'){
-      time=Math.max(0,time-2);
-      flash('✕ -2 שניות');
+      time=Math.max(0,time-penalty);
+      flash('✕ -'+penalty+' שניות');
     }
 
     if(mode==='versus'){
@@ -288,7 +457,17 @@
     const e=$('toast');
     e.textContent=t;
     clearTimeout(e._t);
-    e._t=setTimeout(()=>{e.textContent='';},850);
+    e._t=setTimeout(()=>{e.textContent='';},900);
+  }
+
+  function bestText(){
+    const best=getBest();
+    if(!best) return '';
+    if(mode==='classic') return 'שיא: '+best.value;
+    if(mode==='levels') return 'שיא: שלב '+best.value;
+    if(mode==='knockout') return 'שיא: '+best.value+(best.value>cfg().knockoutTarget?'':' שנ׳/התקדמות');
+    if(mode==='survival') return 'שיא: '+best.value+' התאמות';
+    return '';
   }
 
   function update(){
@@ -297,26 +476,32 @@
     if(mode==='classic'){
       s.innerHTML='<div class="pill">🔥 '+streak+'</div><div class="pill">⭐ '+score+'</div><div class="pill">⏱️ '+time+'</div>';
     }else if(mode==='levels'){
-      s.innerHTML='<div class="pill">שלב '+level+'</div><div class="pill">✓ '+levelProgress+'/'+levelGoal()+'</div><div class="pill">⏱️ '+time+'</div>';
+      s.innerHTML=bossActive
+        ? '<div class="pill boss-pill">👑 בוס '+bossProgress+'/'+bossGoal+'</div><div class="pill">⭐ '+score+'</div><div class="pill">⏱️ '+time+'</div>'
+        : '<div class="pill">שלב '+level+'</div><div class="pill">✓ '+levelProgress+'/'+levelGoal()+'</div><div class="pill">⏱️ '+time+'</div>';
     }else if(mode==='knockout'){
       s.innerHTML='<div class="pill">🎯 '+matches+'/'+knockoutTarget+'</div><div class="pill">⏱️ '+time+'</div>';
     }else if(mode==='survival'){
-      s.innerHTML='<div class="pill">🛡️ '+matches+'</div><div class="pill">⏱️ '+time+'</div><div class="pill">כל הצלחה +2</div>';
+      s.innerHTML='<div class="pill">🛡️ '+matches+'</div><div class="pill">⏱️ '+time+'</div><div class="pill">+'+cfg().survivalBonus+' להצלחה</div>';
     }else{
       s.innerHTML='<div class="pill p1">🔵 '+scores[0]+'</div><div class="pill">⏱️ '+time+'</div><div class="pill p2">🔴 '+scores[1]+'</div>';
     }
 
     const challenge=$('challengeText');
+    const best=bestText();
+
     if(mode==='levels'){
-      challenge.textContent=level===1?'שלב 1 — חימום. משלב 2 הסמלים מתחילים להסתובב.':'שלב '+level+' — הסמלים מסתובבים והקצב עולה.';
+      challenge.textContent=bossActive
+        ? '👑 שלב בוס '+level+' — '+bossGoal+' התאמות לפני שהזמן נגמר'+(best?' · '+best:'')
+        : 'שלב '+level+' — '+(level>=2?'הסמלים מסתובבים והקצב עולה':'חימום')+(best?' · '+best:'');
     }else if(mode==='knockout'){
-      challenge.textContent='השג '+knockoutTarget+' התאמות לפני שהשעון מגיע לאפס.';
+      challenge.textContent='השג '+knockoutTarget+' התאמות לפני שהשעון מגיע לאפס'+(best?' · '+best:'');
     }else if(mode==='survival'){
-      challenge.textContent='התחלה עם 10 שניות. כל הצלחה מוסיפה 2 שניות.';
+      challenge.textContent='כל הצלחה מוסיפה '+cfg().survivalBonus+' שניות'+(best?' · '+best:'');
     }else if(mode==='versus'){
       challenge.textContent='בוחרים מי מצא ואז לוחצים על הסמל המשותף.';
     }else{
-      challenge.textContent='כמה נקודות תצליח לצבור ב־60 שניות?';
+      challenge.textContent='כמה נקודות תצליח לצבור?'+(best?' · '+best:'');
     }
   }
 
@@ -329,10 +514,7 @@
     let finalText=description;
 
     if(!finalTitle){
-      if(mode==='classic'){
-        finalTitle='⭐ '+score;
-        finalText='הניקוד שלך';
-      }else if(mode==='versus'){
+      if(mode==='versus'){
         if(scores[0]===scores[1]){
           finalTitle='תיקו!';
           finalText=scores[0]+' : '+scores[1];
@@ -374,21 +556,61 @@
     $('start').style.display='grid';
   }
 
+  function bestOverview(){
+    const all=readBest();
+    const d=difficulty;
+    const parts=[];
+    if(all['classic-'+d]) parts.push('⚡ '+all['classic-'+d].value);
+    if(all['levels-'+d]) parts.push('🚀 שלב '+all['levels-'+d].value);
+    if(all['knockout-'+d]) parts.push('🎯 '+all['knockout-'+d].value);
+    if(all['survival-'+d]) parts.push('🛡️ '+all['survival-'+d].value);
+    return parts.length?parts.join(' · '):'עדיין אין שיאים ברמה הזו';
+  }
+
   function restoreMenuMarkup(){
     $('menuPanel').innerHTML=`
       <h1>DOUBLE</h1>
       <p>מצא את הסמל המשותף בין שני הקלפים</p>
+
+      <div class="difficulty-wrap">
+        <span>רמת קושי</span>
+        <div class="difficulty-picker">
+          <button type="button" data-difficulty="easy">קל</button>
+          <button type="button" data-difficulty="normal">בינוני</button>
+          <button type="button" data-difficulty="hard">קשה</button>
+        </div>
+      </div>
+
+      <div class="best-strip" id="bestStrip">${bestOverview()}</div>
+
       <div class="mode-grid">
-        <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>60 שניות · ניקוד ורצף</small></button>
-        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 שלבים</b><small>עולים שלב · מהירות וסיבוב מתגברים</small></button>
-        <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>12 התאמות בתוך 30 שניות</small></button>
-        <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>10 שניות להתחלה · כל הצלחה +2</small></button>
+        <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>ניקוד ורצף · הזמן משתנה לפי הרמה</small></button>
+        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 שלבים</b><small>כל שלב קשה יותר · כל שלב 5 הוא בוס 👑</small></button>
+        <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בתוך זמן מוגבל</small></button>
+        <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
         <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
       </div>
-      <p class="menu-note">במצבי האתגר הסמלים מתחילים להסתובב ולהאיץ.</p>
+      <p class="menu-note">השיאים נשמרים במכשיר בנפרד לכל רמת קושי.</p>
     `;
-    $('menuPanel').querySelectorAll('[data-mode]').forEach(btn=>{
+
+    bindMenuControls();
+  }
+
+  function bindMenuControls(){
+    const panel=$('menuPanel');
+
+    panel.querySelectorAll('[data-mode]').forEach(btn=>{
       btn.addEventListener('click',()=>startGame(btn.dataset.mode));
+    });
+
+    panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
+      const key=btn.dataset.difficulty;
+      btn.classList.toggle('active',key===difficulty);
+      btn.addEventListener('click',()=>{
+        difficulty=key;
+        safeSet(DIFF_KEY,difficulty);
+        restoreMenuMarkup();
+      });
     });
   }
 
@@ -402,9 +624,7 @@
   function bindStaticControls(){
     $('shuffleBtn').addEventListener('click',newRound);
     $('menuBtn').addEventListener('click',showMenu);
-    $('menuPanel').querySelectorAll('[data-mode]').forEach(btn=>{
-      btn.addEventListener('click',()=>startGame(btn.dataset.mode));
-    });
+    bindMenuControls();
   }
 
   deck=buildDeck();
