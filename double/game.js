@@ -112,7 +112,25 @@
     return out;
   }
 
-  function cfg(){return difficultyConfig[difficulty]}
+  function stageCfg(stage=level){
+    const n=Math.max(1,Math.min(MAX_STAGE,Number(stage)||1));
+    const tier=n<=4?1:n<=9?2:n<=14?3:n<=19?4:5;
+    const labels=['','התחלה','מתקדם','מהיר','מומחה','גמר'];
+    return {
+      label:'שלב '+n+' · '+labels[tier],
+      levelsTime:Math.max(18,44-Math.floor((n-1)*1.25)),
+      wrongPenalty:Math.min(5,1+Math.floor((n-1)/5)),
+      targetFactor:1+Math.floor((n-1)/4)*0.12,
+      spinFactor:Math.max(.56,1.18-(n-1)*.032),
+      pointMultiplier:1+((n-1)*.06),
+      survivalBonus:2,
+      classicTime:60,
+      knockoutTime:30,
+      knockoutTarget:12,
+      survivalStart:10
+    };
+  }
+  function cfg(){return mode==='levels'?stageCfg(level):difficultyConfig[difficulty]}
   function modeLabel(){
     return {classic:'קלאסי',levels:'שלבים',knockout:'נוקאאוט',survival:'הישרדות',versus:'שני שחקנים'}[mode]||'';
   }
@@ -239,7 +257,7 @@
 
   function rotating(){
     if(bossActive) return true;
-    if(mode==='levels') return level>=2;
+    if(mode==='levels') return level>=4;
     if(mode==='knockout') return true;
     if(mode==='survival') return matches>=3;
     return false;
@@ -253,7 +271,7 @@
     return Math.max(1.25,base*cfg().spinFactor);
   }
   function levelGoal(){
-    return Math.max(3,Math.round((4+level)*cfg().targetFactor));
+    return Math.max(4,Math.round((4+level*.7)*cfg().targetFactor));
   }
   function isBossLevel(){return mode==='levels'&&level>1&&level%5===0}
   function bossGoalForLevel(){return Math.max(3,Math.round((3+Math.floor(level/5))*cfg().targetFactor))}
@@ -266,7 +284,7 @@
 
     if(mode==='classic') time=cfg().classicTime;
     if(mode==='levels'){
-      time=cfg().levelsTime;
+      time=stageCfg(level).levelsTime;
       if(isBossLevel()) enterBoss(true);
     }
     if(mode==='knockout'){time=cfg().knockoutTime;knockoutTarget=cfg().knockoutTarget}
@@ -279,7 +297,7 @@
     deck=shuffle(buildDeck());
     active=true;
     $('start').style.display='none';
-    $('modeName').textContent=modeLabel()+' · '+cfg().label;
+    $('modeName').textContent=mode==='levels'?cfg().label:(modeLabel()+' · '+cfg().label);
 
     if(timer) clearInterval(timer);
     timer=setInterval(()=>{
@@ -597,28 +615,36 @@
   }
 
   function stageGraphHtml(){
-    const nodes=[];
-    for(let n=1;n<=MAX_STAGE;n++){
-      const unlocked=n<=profile.unlockedLevel;
-      const completed=profile.campaignComplete||n<profile.unlockedLevel;
-      const current=!profile.campaignComplete&&n===profile.unlockedLevel;
-      const boss=n%5===0;
-      nodes.push(
-        '<button type="button" class="stage-node'+(completed?' done':'')+(current?' current':'')+(boss?' boss':'')+'" data-stage="'+n+'" '+(unlocked?'':'disabled')+' aria-label="שלב '+n+(boss?' בוס':'')+'">'+
-        (boss?'👑<span>'+n+'</span>':'<span>'+n+'</span>')+
-        '</button>'
-      );
+    const rows=[];
+    for(let start=1;start<=MAX_STAGE;start+=4){
+      const nums=[];
+      for(let n=start;n<start+4&&n<=MAX_STAGE;n++) nums.push(n);
+      if(((start-1)/4)%2===1) nums.reverse();
+
+      const buttons=nums.map(n=>{
+        const unlocked=n<=profile.unlockedLevel;
+        const completed=profile.campaignComplete||n<profile.unlockedLevel;
+        const current=!profile.campaignComplete&&n===profile.unlockedLevel;
+        const boss=n%5===0;
+        const tier=n<=4?'התחלה':n<=9?'מתקדם':n<=14?'מהיר':n<=19?'מומחה':'גמר';
+        return '<button type="button" class="stage-node'+(completed?' done':'')+(current?' current':'')+(boss?' boss':'')+'" data-stage="'+n+'" '+(unlocked?'':'disabled')+' aria-label="שלב '+n+(boss?' בוס':'')+'">'+
+          '<span class="stage-icon">'+(boss?'👑':completed?'✓':current?'▶':'🔒')+'</span>'+
+          '<strong>'+n+'</strong><small>'+tier+'</small>'+
+        '</button>';
+      }).join('');
+
+      rows.push('<div class="world-row'+((((start-1)/4)%2===1)?' reverse':'')+'">'+buttons+'</div>');
     }
-    return nodes.join('');
+    return rows.join('');
   }
 
   function restoreMenuMarkup(){
     $('menuPanel').innerHTML=`
       <h1>DOUBLE</h1>
-      <div class="profile-line"><b>🪙 ${profile.coins}</b><span>${profile.totalSuccess} הצלחות</span><span>${profile.totalScore} נק׳</span></div>
+      <div class="wallet-line">🪙 <b>${profile.coins}</b> מטבעות</div>
 
       <div class="difficulty-wrap">
-        <span>רמת קושי</span>
+        <span>רמת קושי למצבים החופשיים</span>
         <div class="difficulty-picker">
           <button type="button" data-difficulty="easy">קל</button>
           <button type="button" data-difficulty="normal">בינוני</button>
@@ -626,44 +652,50 @@
         </div>
       </div>
 
-      <div class="best-strip" id="bestStrip">${bestOverview()}</div>
-
       <div class="mode-grid">
         <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>צבור כמה שיותר נקודות</small></button>
-        <button type="button" class="mode-card levels" data-open-levels><b>🚀 שלבים</b><small>שלב ${profile.unlockedLevel}/${MAX_STAGE} · ${progressPercent()}% הושלם</small></button>
+        <button type="button" class="mode-card levels" data-open-levels><b>🗺️ עולם השלבים</b><small>שלב ${profile.unlockedLevel}/${MAX_STAGE} · הקושי עולה בדרך</small></button>
         <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן מוגבל</small></button>
         <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
         <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
-      </div>
-
-      <div class="score-rules compact-rules">
-        <b>⭐ ניקוד</b>
-        <span>100 בסיס · בונוס מהירות · מכפיל קושי · קומבו עד ×3</span>
-        <small>כל הצלחה גם נותנת מטבעות. טעות שוברת קומבו.</small>
       </div>
     `;
     bindMenuControls();
   }
 
   function showLevelsMenu(){
+    const currentTier=profile.unlockedLevel<=4?'התחלה':profile.unlockedLevel<=9?'מתקדם':profile.unlockedLevel<=14?'מהיר':profile.unlockedLevel<=19?'מומחה':'גמר';
     $('menuPanel').innerHTML=`
       <div class="submenu-head">
         <button type="button" class="action secondary" data-back-main>← חזור</button>
         <div>
-          <h2>🚀 שלבים</h2>
-          <small>מסלול נפרד בתוך DOUBLE</small>
+          <h2>🗺️ עולם השלבים</h2>
+          <small>אזור נוכחי: ${currentTier} · הקושי עולה אוטומטית</small>
         </div>
       </div>
 
-      <section class="progress-card">
-        <div class="progress-head"><b>התקדמות</b><span>${progressPercent()}%</span></div>
+      <section class="world-card">
+        <div class="progress-head">
+          <b>הדרך שלך</b>
+          <span>שלב ${profile.unlockedLevel}/${MAX_STAGE} · ${progressPercent()}%</span>
+        </div>
         <div class="progress-bar"><i style="width:${progressPercent()}%"></i></div>
-        <div class="stage-map">${stageGraphHtml()}</div>
-        <small>שלבים אפורים נעולים. כל שלב 5 הוא בוס 👑.</small>
+
+        <div class="world-map">
+          <div class="world-zone-label">🌱 התחלה</div>
+          ${stageGraphHtml()}
+          <div class="world-finish">🏆 יעד: שלב 20</div>
+        </div>
+
+        <div class="world-rules">
+          <span>כל 5 שלבים: 👑 בוס</span>
+          <span>משלב 4: 🔄 סמלים מסתובבים</span>
+          <span>בהמשך: ⏱️ פחות זמן · 🎯 יותר התאמות</span>
+        </div>
       </section>
 
       <div class="modes">
-        <button type="button" class="action primary big" data-continue-levels>המשך משלב ${profile.unlockedLevel}</button>
+        <button type="button" class="action primary big" data-continue-levels>▶ המשך משלב ${profile.unlockedLevel}</button>
       </div>
     `;
 
