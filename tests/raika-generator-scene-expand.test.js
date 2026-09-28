@@ -23,11 +23,11 @@ test('only one expanded scene is open at a time and it renders below its source 
   assert.match(src,/currentIdeas\.map/);
 });
 
-test('expanded scene supports AI enrichment with local fallback',()=>{
+test('expanded scene uses the shared feed scene API with local fallback',()=>{
   const src=fs.readFileSync('raika-generator-hotfix.js','utf8');
-  assert.match(src,/window\.raiCall/);
+  assert.match(src,/RaikaFeedClient\?\.expandScene/);
   assert.match(src,/buildLocalScene/);
-  assert.match(src,/sceneFromAiResponse/);
+  assert.match(src,/sceneFromProposal/);
   assert.match(src,/catch\(err\)/);
 });
 
@@ -42,8 +42,8 @@ test('expanded scene can be refreshed, edited, saved as a scene, and closed',()=
   assert.match(src,/RaikaWorkspaceClient\.save/);
 });
 
-test('Writers Room cache-busts scene expansion assets',()=>{
+test('Writers Room cache-busts scene expansion asset',()=>{
   const html=fs.readFileSync('raika-writers-room.html','utf8');
   assert.match(html,/raika-generator\.css\?v=3/);
-  assert.match(html,/raika-generator-hotfix\.js\?v=3/);
+  assert.match(html,/raika-generator-hotfix\.js\?v=4/);
 });
