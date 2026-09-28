@@ -119,3 +119,11 @@ test('feed prompt includes blocked context and novelty target', async () => {
   assert.match(prompt,/family-secret/);
   assert.match(prompt,/חדש|novel/i);
 });
+
+
+test('permanent blocks reject a semantically close rewording using stored blocked text', async () => {
+  const coreModule=await core();
+  const blocked={title:'ראיקה מגלה יומן ישן של קאמינארי',body:'ראיקה מוצאת יומן עתיק של קאמינארי ובו סוד משפחתי.',semantic_fingerprint:'old-fp',plot_family:'journal-discovery',scope:'fingerprint'};
+  const candidate={card_type:'secret',characters:['raika','kaminari'],title:'ראיקה מוצאת מחברת עתיקה של קאמינארי',body:'ראיקה מגלה מחברת ישנה של קאמינארי שחושפת סוד משפחתי.',plot_family:'journal-discovery'};
+  assert.equal(coreModule.isBlockedCard(candidate,[blocked]),true);
+});
