@@ -500,8 +500,8 @@ function renderPendingOrders(){
  if($('#pendingOrdersCount'))$('#pendingOrdersCount').textContent=String(list.length);
  if(!$('#pendingOrdersList'))return;
  $('#pendingOrdersList').innerHTML=list.length?list.map(o=>`<div class="pending-order-card"><div class="pending-order-main"><span class="emoji">${o.type==='gift'?'🎁':o.type==='date'?'🥂':o.type==='gesture'?'🌹':'❤️'}</span><div><strong>${esc(o.title)}</strong><small>${esc(o.priceLabel||'')}</small><p>${esc(o.buy||'')}</p></div></div><div class="pending-order-actions"><button class="primary" data-order-done="${o.id}">בוצע</button><button class="ghost" data-order-cancel="${o.id}">בטל</button></div></div>`).join(''):'';
- $('[data-order-done]').forEach(b=>b.onclick=()=>completePreparedOrder(b.dataset.orderDone));
- $('[data-order-cancel]').forEach(b=>b.onclick=()=>cancelPreparedOrder(b.dataset.orderCancel));
+ $$('[data-order-done]').forEach(b=>b.onclick=()=>completePreparedOrder(b.dataset.orderDone));
+ $$('[data-order-cancel]').forEach(b=>b.onclick=()=>cancelPreparedOrder(b.dataset.orderCancel));
 }
 async function completePreparedOrder(id){
  const order=(state.orders||[]).find(function(o){return String(o.id)===String(id)});if(!order)return;
@@ -602,9 +602,9 @@ function buildWeek(){autoBuildWeek(true);save();toast('נבנה שבוע חדש 
 function buildMonth(){autoBuildMonth(true);save()}
 function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction()];options[Math.floor(Math.random()*options.length)]()}
 
-$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+$$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-function go(tab){$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
+function go(tab){$$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
 function openAllFeatures(){
  openModal(`<p class="eyebrow">כל האפשרויות</p><h2>רוצה יותר שליטה?</h2><p>הפעולה היומית נשארת פשוטה. כאן נמצאים כל הכלים למי שרוצה להעמיק.</p><div class="feature-hub-grid">
    <button data-hub-go="courtship"><span>❤️</span><strong>חיזור</strong><small>שבוע חיזור ופעולות</small></button>
@@ -614,13 +614,13 @@ function openAllFeatures(){
    <button data-hub-go="partner"><span>♥</span><strong>היא</strong><small>העדפות ורמזים</small></button>
    <button data-hub-go="me"><span>⚙</span><strong>הגדרות</strong><small>זמן, תקציב ומיקום</small></button>
  </div><button class="ghost full" id="hubHintBtn">＋ היא אמרה משהו</button>`);
- $('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
- $('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
+ $$('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
+ $$('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
  $('#hubHintBtn').onclick=addHint
 }
 $('#openAllFeaturesBtn').onclick=openAllFeatures;
 $('#allFeaturesNavBtn').onclick=openAllFeatures;
-$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+$$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
 $('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#quickSetupBtn').onclick=quickSetup;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
