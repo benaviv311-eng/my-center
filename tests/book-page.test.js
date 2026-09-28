@@ -118,3 +118,9 @@ assert.ok(html.includes('he-IL') && html.includes('ar-SA') && html.includes('it-
 assert.ok(js.includes('function readLanguage()'), 'reader should resolve the selected read-aloud language');
 assert.ok(js.includes('utterance.lang=readLanguage()'), 'speech synthesis should use the selected language');
 assert.ok(js.includes('compactSummaryText(value,88)'), 'chapter key sentences should be noticeably shorter');
+
+assert.ok(js.includes("stopReadAloud('ההקראה נעצרה בגלל רענון.')"), 'refresh-all should stop active read-aloud before replacing chapters');
+assert.ok(js.includes('utterance.onboundary'), 'read-aloud should follow speech boundary events');
+assert.ok(js.includes('data-speech-start'), 'reader should mark spoken words with character offsets');
+assert.ok(js.includes('scrollIntoView({behavior:\'smooth\',block:\'center\''), 'spoken word tracking should auto-scroll the current word into view');
+assert.ok(pageCss.includes('.speech-word.is-speaking-word'), 'current spoken word should have a visible highlight style');

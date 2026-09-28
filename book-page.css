@@ -213,6 +213,15 @@
 }
 
 .reading-chapter-copy p{margin:0}
+.speech-word{
+  border-radius:4px;
+  transition:background .12s ease,box-shadow .12s ease,color .12s ease;
+}
+.speech-word.is-speaking-word{
+  background:color-mix(in srgb,#f2c94c 52%,transparent);
+  box-shadow:0 0 0 3px color-mix(in srgb,#f2c94c 22%,transparent);
+  color:var(--text);
+}
 .reading-chapter-copy p+p{margin-top:1.45em}
 .reading-chapter-copy p:first-child::first-letter{
   font-family:Georgia,"Times New Roman",serif;
