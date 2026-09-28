@@ -21,6 +21,76 @@ function bankTypeIcon(type){
   return icons[type]||'🗂️';
 }
 
+const BANK_FIXED_TABS=['','verse','book','idea','quote'];
+
+function bankCountByType(type=''){
+  if(!type) return bankPageState.items.length;
+  return bankPageState.items.filter(item=>item.item_type===type).length;
+}
+
+function renderBankCategoryTabs(){
+  const wrap=document.getElementById('bank-category-tabs');
+  if(!wrap) return;
+
+  const dynamic=[...new Set(bankPageState.items.map(x=>x.item_type).filter(Boolean))]
+    .filter(type=>!BANK_FIXED_TABS.includes(type))
+    .sort();
+
+  const types=[...BANK_FIXED_TABS,...dynamic];
+
+  wrap.innerHTML=types.map(type=>{
+    const label=type?bankTypeName(type):'הכל';
+    const icon=type?bankTypeIcon(type):'🗂️';
+    const count=bankCountByType(type);
+    return `
+      <button
+        class="bank-category-tab ${bankPageState.type===type?'active':''}"
+        type="button"
+        data-bank-tab="${bankEsc(type)}">
+        <span>${icon} ${bankEsc(label)}</span>
+        <b>${count}</b>
+      </button>`;
+  }).join('');
+}
+
+function renderBankGrowth(){
+  const wrap=document.getElementById('bank-growth');
+  if(!wrap) return;
+
+  const verses=bankPageState.items.filter(x=>x.item_type==='verse');
+  const now=Date.now();
+  const weekAgo=now-(7*24*60*60*1000);
+  const addedWeek=verses.filter(x=>new Date(x.created_at).getTime()>=weekAgo).length;
+  const latest=verses
+    .map(x=>new Date(x.created_at))
+    .filter(d=>!Number.isNaN(d.getTime()))
+    .sort((a,b)=>b-a)[0];
+
+  let latestText='אין תאריך עדכון';
+  if(latest){
+    const latestDay=new Intl.DateTimeFormat('he-IL',{
+      timeZone:'Asia/Jerusalem',
+      day:'numeric',
+      month:'short'
+    }).format(latest);
+    latestText=`נוסף לאחרונה: ${latestDay}`;
+  }
+
+  wrap.innerHTML=`
+    <div class="bank-growth-main">
+      <span class="bank-growth-icon">📖</span>
+      <div>
+        <b>מאגר הפסוקים גדל</b>
+        <div class="meta">כל פסוק חדש נשמר כאן ומצטרף לסבב היומי.</div>
+      </div>
+    </div>
+    <div class="bank-growth-metrics">
+      <span><b>${verses.length}</b> פסוקים במאגר</span>
+      <span><b>+${addedWeek}</b> ב־7 הימים האחרונים</span>
+      <span>${bankEsc(latestText)}</span>
+    </div>`;
+}
+
 function itemSearchText(item){
   return [item.title,item.slug,item.item_type,JSON.stringify(item.content||{})].join(' ').toLowerCase();
 }
@@ -228,12 +298,24 @@ function renderManagerState(){
   const status=document.getElementById('manager-status');
   const add=document.getElementById('bank-add-item');
   const login=document.getElementById('bank-manager-login');
-  if(status) status.textContent=bankPageState.manager?'🔓 מצב ניהול פעיל':'🔒 צפייה בלבד';
+
+  if(status){
+    status.textContent=bankPageState.manager?'מצב עריכה פעיל':'צפייה בלבד';
+    status.hidden=true;
+  }
+
   if(add) add.hidden=!bankPageState.manager;
-  if(login) login.textContent=bankPageState.manager?'🔓 ניהול פעיל':'🔐 מצב ניהול';
+
+  if(login){
+    login.textContent=bankPageState.manager?'✏️ עריכה פעילה':'🔐 מצב ניהול';
+    login.classList.toggle('manager-active',bankPageState.manager);
+    login.setAttribute('aria-label',bankPageState.manager?'מצב עריכה פעיל — לחץ להסתרת כלי העריכה':'פתיחת מצב ניהול');
+  }
 }
 
 function renderAll(){
+  renderBankCategoryTabs();
+  renderBankGrowth();
   renderBankDashboard();
   renderBankFilters();
   renderBankList();
@@ -478,6 +560,14 @@ async function archiveItem(itemId){
 }
 
 document.addEventListener('click',async e=>{
+  const tab=e.target.closest('[data-bank-tab]');
+  if(tab){
+    bankPageState.type=tab.dataset.bankTab||'';
+    renderAll();
+    document.getElementById('bank-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
+
   const dash=e.target.closest('[data-dashboard-type]');
   if(dash){bankPageState.type=dash.dataset.dashboardType||'';renderAll();return;}
 
