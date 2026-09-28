@@ -15,7 +15,7 @@ const state={
   notes:JSON.parse(localStorage.getItem(notesKey)||'{}'),
   feedSeed:'',feedOffset:0,feedFilter:'all',feedLoading:false,feedObserver:null,
   chapterObserver:null,progressBound:false,progressRaf:0,activeChapterId:'',
-  speechUtterance:null,speechPaused:false,
+  speechUtterance:null,speechPaused:false,speechWords:[],speechWord:null,
   savedFeed:new Set(JSON.parse(localStorage.getItem(savedFeedKey)||'[]'))
 };
 
@@ -113,6 +113,66 @@ function chapterSpeechText(chapter){
   });
   return parts.filter(Boolean).join('. ');
 }
+function clearSpeechHighlight(){
+  if(state.speechWord)state.speechWord.classList.remove('is-speaking-word');
+  document.querySelectorAll('.speech-word.is-speaking-word').forEach(word=>word.classList.remove('is-speaking-word'));
+  state.speechWord=null;
+}
+function wrapSpeechElement(element,baseOffset){
+  const raw=String(element.textContent||'').trim();
+  if(!raw)return {text:'',length:0};
+  let html='',last=0;
+  for(const match of raw.matchAll(/\S+/gu)){
+    const start=match.index||0;
+    const word=match[0];
+    html+=esc(raw.slice(last,start));
+    html+=`<span class="speech-word" data-speech-start="${baseOffset+start}" data-speech-end="${baseOffset+start+word.length}">${esc(word)}</span>`;
+    last=start+word.length;
+  }
+  html+=esc(raw.slice(last));
+  element.innerHTML=html;
+  return {text:raw,length:raw.length};
+}
+function prepareSpeechTracking(chapter){
+  clearSpeechHighlight();
+  state.speechWords=[];
+  const root=chapter?document.getElementById(`chapter-${chapter.id}`):null;
+  if(!root)return {text:chapterSpeechText(chapter),words:[]};
+  const elements=[...root.querySelectorAll(':scope > h2,.reading-chapter-copy p,.reading-support-head strong,.reading-support-block p')];
+  let text='',cursor=0;
+  elements.forEach(element=>{
+    const raw=String(element.textContent||'').trim();
+    if(!raw)return;
+    if(text){text+='. ';cursor+=2}
+    const wrapped=wrapSpeechElement(element,cursor);
+    text+=wrapped.text;
+    cursor+=wrapped.length;
+  });
+  state.speechWords=[...root.querySelectorAll('[data-speech-start]')];
+  return {text,words:state.speechWords};
+}
+function highlightSpeechWord(charIndex){
+  const words=state.speechWords||[];
+  if(!words.length||!Number.isFinite(Number(charIndex)))return;
+  const index=Number(charIndex);
+  let selected=null;
+  for(const word of words){
+    const start=Number(word.dataset.speechStart||0);
+    if(start>index)break;
+    selected=word;
+  }
+  if(!selected)return;
+  if(state.speechWord===selected)return;
+  clearSpeechHighlight();
+  state.speechWord=selected;
+  selected.classList.add('is-speaking-word');
+  const rect=selected.getBoundingClientRect();
+  const upper=window.innerHeight*.28;
+  const lower=window.innerHeight*.72;
+  if(rect.top<upper||rect.bottom>lower){
+    selected.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'});
+  }
+}
 function readRate(){
   const control=$('book-read-rate');
   const value=control?Number(control.value):1;
@@ -132,7 +192,8 @@ function setReadControls(active,paused){
 }
 function stopReadAloud(message){
   if('speechSynthesis' in window)window.speechSynthesis.cancel();
-  state.speechUtterance=null;state.speechPaused=false;
+  state.speechUtterance=null;state.speechPaused=false;state.speechWords=[];
+  clearSpeechHighlight();
   setReadControls(false,false);
   setReadStatus(message||'');
 }
@@ -142,7 +203,9 @@ function speakCurrentChapter(){
     setReadStatus('הקראה אינה נתמכת בדפדפן הזה.');
     return;
   }
-  const chapter=currentReadingChapter(),text=chapterSpeechText(chapter);
+  const chapter=currentReadingChapter();
+  const tracking=prepareSpeechTracking(chapter);
+  const text=tracking.text||chapterSpeechText(chapter);
   if(!text)return;
   window.speechSynthesis.cancel();
   const utterance=new SpeechSynthesisUtterance(text);
@@ -154,8 +217,9 @@ function speakCurrentChapter(){
     || voices.find(voice=>String(voice.lang||'').toLowerCase().startsWith(selectedLang.split('-')[0]));
   if(matchingVoice)utterance.voice=matchingVoice;
   utterance.onstart=()=>{state.speechPaused=false;setReadControls(true,false);setReadStatus(`מקריא את הפרק הנוכחי · ${readRate()}×`)};
-  utterance.onend=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('ההקראה הסתיימה.')};
-  utterance.onerror=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('לא הצלחתי להפעיל את ההקראה.')};
+  utterance.onboundary=event=>{if(Number.isFinite(Number(event.charIndex)))highlightSpeechWord(Number(event.charIndex))};
+  utterance.onend=()=>{clearSpeechHighlight();state.speechWords=[];state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('ההקראה הסתיימה.')};
+  utterance.onerror=()=>{clearSpeechHighlight();state.speechWords=[];state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('לא הצלחתי להפעיל את ההקראה.')};
   state.speechUtterance=utterance;
   window.speechSynthesis.speak(utterance);
 }
@@ -290,6 +354,7 @@ function renderStatic(){
 }
 function newSeed(mode){return `${state.today}|${state.book.slug||state.book.id}|${mode}|${Date.now()}|${Math.random()}`}
 function refreshAll(mode){
+  if(isReaderPrototype())stopReadAloud('ההקראה נעצרה בגלל רענון.');
   const excludeTitles=isReaderPrototype()?state.readingChapters.map(ch=>ch.title):[];
   state.seed=newSeed(mode);
   renderReading(state.seed,isReaderPrototype()?{fullRefresh:true,excludeTitles}:null);
