@@ -30,12 +30,13 @@
   }
   function reaction(card,kind){return !!state.reactions[card.id]?.[kind];}
   function actions(card){
+    const lessonLink=(state.filter===card.lang&&window.LanguageLessons)?`<a class="feed-action feed-study-link" href="${window.LanguageLessons.url(card.lang,window.LanguageLessons.current(card.lang))}">לשיעור הנוכחי ←</a>`:'';
     return `<div class="feed-actions">
       <button class="feed-action ${reaction(card,'know')?'active':''}" type="button" data-feed-action="know">✓ ידעתי</button>
       <button class="feed-action ${reaction(card,'practice')?'active':''}" type="button" data-feed-action="practice">↻ לתרגול</button>
       <button class="feed-action ${reaction(card,'save')?'active':''}" type="button" data-feed-action="save">♡ שמור</button>
       <button class="feed-action" type="button" data-feed-action="more">＋ עוד כזה</button>
-      <a class="feed-action feed-study-link" href="language-study.html?lang=${card.lang}&topic=basics">לשיעור המלא ←</a>
+      ${lessonLink}
     </div>`;
   }
   function fourActions(card){
@@ -236,9 +237,10 @@
     if(state.filter==='four'){
       root.innerHTML=`<a class="btn small" href="four-languages.html">🌐 מילה ב־4 שפות</a><a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`;
     }else if(state.filter==='all'){
-      root.innerHTML=`<a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`+M.LANGUAGE_CODES.map(code=>`<a class="btn small" href="language-study.html?lang=${code}&topic=basics">${M.LANGUAGES[code].code} · שיעור</a>`).join('');
+      root.innerHTML=`<span class="feed-current-language-note">בחר שפה כדי לפתוח שיעורים</span><a class="btn small" href="language-games.html">🎮 משחקים ותרגול</a>`;
     }else{
-      root.innerHTML=`<a class="btn small" href="language-games.html?lang=${state.filter}">🎮 משחקים</a><a class="btn small" href="language-study.html?lang=${state.filter}&topic=basics">שיעור מלא</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
+      const lessonUrl=window.LanguageLessons?window.LanguageLessons.url(state.filter,window.LanguageLessons.current(state.filter)):`language-study.html?lang=${state.filter}&topic=basics`;
+      root.innerHTML=`<a class="btn small" href="language-games.html?lang=${state.filter}">🎮 משחקים</a><a class="btn small lesson-current-link" href="${lessonUrl}">📘 השיעור הנוכחי</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
     }
   }
   function updateFilters(){
@@ -250,6 +252,7 @@
     const label=$('feed-mode-label');
     label.textContent=state.filter==='all'?'כל ארבע השפות מעורבבות':state.filter==='four'?'כל פוסט מוצג בארבע השפות + עברית':`רק ${M.LANGUAGES[state.filter].name}`;
     document.querySelectorAll('[data-language-card]').forEach(card=>card.classList.toggle('active',card.dataset.languageCard===state.filter));
+    if(window.LanguageLessons)window.LanguageLessons.renderDashboard(M.LANGUAGE_CODES.includes(state.filter)?state.filter:null);
     setContextLinks();
   }
   function resetFeed(){
@@ -347,7 +350,8 @@
     state.filter=card.dataset.languageCard;
     save();
     resetFeed();
-    document.getElementById('languages-feed-section')?.scrollIntoView({behavior:'smooth',block:'start'});
+    const target=M.LANGUAGE_CODES.includes(state.filter)?document.getElementById('language-lessons-dashboard'):document.getElementById('languages-feed-section');
+    target?.scrollIntoView({behavior:'smooth',block:'start'});
   }));
 
   document.querySelectorAll('.language-section-nav a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
