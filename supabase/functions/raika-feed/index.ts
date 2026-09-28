@@ -3,6 +3,7 @@ import {
   buildFeedPrompt,
   buildFeedSchema,
   dedupeCards,
+  filterSemanticallyFresh,
   isBlockedCard,
   mapOpenAIError,
   normalizeFeedRequest,
@@ -232,10 +233,14 @@ Deno.serve(async(req:Request)=>{
       ...requestData.recent_signatures,
       ...requestData.blocked_signatures
     ].filter(Boolean));
-    const baseCandidates=(poolRows||[]).map(poolCard)
-      .filter((card:any)=>!seen.has(String(card.signature)))
-      .filter((card:any)=>matchesFilter(card,requestData.filter_type))
-      .filter((card:any)=>!isBlockedCard(card,blocks||[]));
+    const baseCandidates=filterSemanticallyFresh(
+      (poolRows||[]).map(poolCard)
+        .filter((card:any)=>!seen.has(String(card.signature)))
+        .filter((card:any)=>matchesFilter(card,requestData.filter_type))
+        .filter((card:any)=>!isBlockedCard(card,blocks||[])),
+      recentCards,
+      0.68
+    );
     const seed=crypto.randomUUID();
     const baseTarget=requestData.filter_type==='new'?0:Math.round(requestData.count*0.6);
     let baseSelected=diversePick(baseCandidates,baseTarget,seed);
