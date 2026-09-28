@@ -47,3 +47,30 @@ const refreshedSet = reading.buildReadingChapters(richSample,{seed:'second',full
 assert.ok(refreshedSet.length >= 5, 'full refresh should still return a substantial chapter set');
 assert.ok(refreshedSet.every(ch=>!excludedTitles.includes(ch.title)), 'full refresh should avoid all currently visible chapter titles when enough material exists');
 assert.ok(refreshedSet.some(ch=>!['מפת הספר','מהרעיון לפעולה'].includes(ch.title)), 'full refresh should build chapters directly from alternate book material');
+
+
+const keySentenceBook = {
+  id:'key-sentences',
+  slug:'key-sentences',
+  title:'Key Sentences',
+  content:{
+    summary:'משוב מדויק מאפשר ללומד להבין איזו פעולה הצליחה. תזמון קובע אם המשוב מתחבר להתנהגות הנכונה.',
+    ideas:[
+      'חיזוק מוגדר לפי ההשפעה שלו על ההתנהגות העתידית.',
+      'תזמון הוא מידע: משוב מאוחר עלול לחזק את הדבר הלא נכון.',
+      'לומד צריך לדעת איזו פעולה בדיוק הובילה לתוצאה.'
+    ],
+    topics:['משוב','תזמון','למידה'],
+    feed_posts:[
+      'משוב שמגיע סמוך לפעולה עוזר לקשר בין ההתנהגות לבין התוצאה.',
+      'אות מותנה עובד רק אם הוא ממשיך לנבא חיזוק אמיתי.',
+      'כאשר מתקנים כמה דברים יחד, המסר ללומד נהיה פחות ברור.'
+    ]
+  }
+};
+const keyChapters = reading.buildReadingChapters(keySentenceBook,{seed:'keys'});
+keyChapters.forEach(chapter=>{
+  assert.ok(Array.isArray(chapter.keySentences), 'each chapter should expose key sentences for the left rail');
+  assert.ok(chapter.keySentences.length >= 3, 'chapter should surface several key sentences when the book bank has enough material');
+  assert.ok(chapter.keySentences.every(sentence=>!/^הפרק הזה|^דרך מועילה|^כדי להעמיק|^בסופו של דבר/.test(sentence)), 'key sentences should not be explanatory meta-text about the chapter');
+});

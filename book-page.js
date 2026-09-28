@@ -70,12 +70,7 @@ function compactSummaryText(value,max){
 }
 function chapterSummaryPoints(chapter){
   if(!chapter)return [];
-  const candidates=[];
-  (Array.isArray(chapter.bodyParagraphs)?chapter.bodyParagraphs:[]).forEach(text=>candidates.push(text));
-  (Array.isArray(chapter.supportBlocks)?chapter.supportBlocks:[]).forEach(block=>{
-    if(block&&block.text)candidates.push(block.text);
-  });
-  if(chapter.deep&&chapter.deep.takeaway)candidates.push(chapter.deep.takeaway);
+  const candidates=Array.isArray(chapter.keySentences)?chapter.keySentences:[];
   const seen=new Set(),points=[];
   for(const value of candidates){
     const point=compactSummaryText(value,155);
@@ -94,10 +89,10 @@ function renderChapterSummary(chapterId){
   if(!chapter)return;
   state.activeChapterId=String(chapter.id);
   const title=$('book-summary-title'),position=$('book-summary-position'),list=$('book-summary-points');
-  if(title)title.textContent=`נאגטס מהפרק · ${chapter.title||'סיכום קצר'}`;
+  if(title)title.textContent=`משפטי מפתח · ${chapter.title||'הפרק'}`;
   if(position)position.textContent=`פרק ${index+1} מתוך ${chapters.length}`;
   const points=chapterSummaryPoints(chapter);
-  if(list)list.innerHTML=points.length?points.map(point=>`<li>${esc(point)}</li>`).join(''):'<li>הסיכום הקצר יופיע כאן.</li>';
+  if(list)list.innerHTML=points.length?points.map(point=>`<li>${esc(point)}</li>`).join(''):'<li>אין עדיין משפטי מפתח לפרק הזה.</li>';
 }
 function setActiveReadingChapter(chapterId){
   state.activeChapterId=String(chapterId||'');

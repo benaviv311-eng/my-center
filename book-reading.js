@@ -13,6 +13,40 @@
   function content(book){return book&&book.content?book.content:{}}
   function summaryOf(book){const c=content(book);return str(c.summary)||`הספר ${str(book&&book.title)||'הזה'} עוסק ברעיונות שאפשר לפרק, לבחון וליישם בהדרגה.`}
 
+  const KEY_STOP_WORDS=new Set(['של','את','על','עם','זה','זו','הוא','היא','גם','אם','לא','כי','מה','איך','יותר','יכול','יכולה','אשר','כל','אחד','אחת','בין','the','and','that','this','with','from','into','when','then','than','your','you','are','for','can','will','was','were','has','have','had']);
+  function keyTokens(value){
+    return str(value).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/).filter(token=>token.length>2&&!KEY_STOP_WORDS.has(token));
+  }
+  function splitSentences(value){
+    return str(value).split(/(?<=[.!?])\s+/).map(x=>x.trim()).filter(x=>x.length>=18);
+  }
+  function keySentencePool(book){
+    const c=content(book),out=[];
+    arr(c.feed_posts).forEach(text=>out.push(text));
+    arr(c.ideas).forEach(text=>out.push(text));
+    splitSentences(c.summary).forEach(text=>out.push(text));
+    const seen=new Set();
+    return out.filter(text=>{
+      const key=text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+      if(!key||seen.has(key))return false;
+      seen.add(key);return true;
+    });
+  }
+  function keySentencesFor(book,anchor,seed){
+    const anchorTokens=new Set(keyTokens(anchor));
+    const pool=keySentencePool(book);
+    const scored=pool.map((text,index)=>{
+      const tokens=keyTokens(text);
+      let overlap=0;tokens.forEach(token=>{if(anchorTokens.has(token))overlap++});
+      const contains=str(text).toLowerCase().includes(str(anchor).toLowerCase())||str(anchor).toLowerCase().includes(str(text).toLowerCase());
+      return {text,index,score:overlap+(contains?4:0),tie:hash(`${seed}|${index}|${text}`)};
+    }).sort((a,b)=>b.score-a.score||a.tie-b.tie);
+    const relevant=scored.filter(item=>item.score>0);
+    const fallback=scored.filter(item=>item.score===0);
+    const selected=relevant.concat(fallback).slice(0,5).map(item=>item.text);
+    return selected;
+  }
+
   function relatedConcepts(book){
     if(discovery&&typeof discovery.matchConcepts==='function'){
       const found=discovery.matchConcepts(book,10);
@@ -138,6 +172,7 @@
       kicker:kicker||`פרק ${index+1}`,
       title,
       sourceLabel:sourceLabel||'מתוך חומר הספר',
+      keySentences:keySentencesFor(book,anchor,`${title}|${index}`),
       bodyParagraphs:mainParagraphs(book,title,anchor,summary,concept,index),
       supportBlocks:supportBlocks(anchor,concept,index),
       deep:deepMaterial(book,title,anchor,summary,concept)

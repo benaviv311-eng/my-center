@@ -88,10 +88,13 @@ assert.ok(pageCss.includes('book-prototype-reading'), 'prototype should have an 
 assert.ok(pageCss.includes('grid-template-areas:"summary reader toc"'), 'prototype desktop layout should place summary on the physical left and TOC on the physical right');
 assert.ok(pageCss.includes('book-chapter-summary-card'), 'prototype should style a sticky chapter summary');
 
-assert.ok(js.includes('נאגטס מהפרק'), 'left rail should label the short points as chapter nuggets');
+assert.ok(js.includes('משפטי מפתח'), 'left rail should label the short points as chapter key sentences');
 assert.ok(js.includes('points.length===5'), 'left rail should expose five concise nuggets when enough material exists');
 assert.ok(pageCss.includes('.book-chapter-summary-wrap{') && pageCss.includes('position:sticky'), 'left chapter summary rail should stay fixed while scrolling on desktop');
 
 assert.ok(pageCss.includes('.book-prototype-reading .book-reading-toc-wrap{') && pageCss.includes('position:sticky'), 'prototype TOC wrapper should stay fixed while scrolling on desktop');
 assert.ok(js.includes('excludeTitles'), 'prototype refresh should exclude the chapter titles currently on screen');
 assert.ok(js.includes('fullRefresh:true'), 'prototype refresh should request a completely fresh chapter set');
+
+assert.ok(js.includes('chapter.keySentences'), 'left rail should render key sentences supplied by the chapter model');
+assert.ok(js.includes('משפטי מפתח'), 'left rail should be labeled as key sentences rather than a chapter explanation');
