@@ -145,12 +145,13 @@
   }
 
   function buildReadingChapters(book,options){
+    options=options||{};
     const c=content(book);
     const summary=summaryOf(book);
     const ideas=arr(c.ideas);
     const topics=arr(c.topics);
     const posts=arr(c.feed_posts);
-    const concepts=rotate(relatedConcepts(book),`${str(options&&options.seed)}|concepts`);
+    const concepts=rotate(relatedConcepts(book),`${str(options.seed)}|concepts`);
     const anchors=[];
     const pushUnique=(value,type)=>{const v=str(value);if(v&&!anchors.some(x=>x.value===v))anchors.push({value:v,type});};
 
@@ -158,7 +159,31 @@
     topics.forEach(x=>pushUnique(x,'topic'));
     posts.forEach(x=>pushUnique(x,'post'));
 
-    const ordered=rotate(anchors,`${str(options&&options.seed)}|anchors`);
+    const excluded=new Set(arr(options.excludeTitles));
+    if(options.fullRefresh){
+      const available=anchors.filter(entry=>!excluded.has(entry.value));
+      const ordered=rotate(available,`${str(options.seed)}|fresh-anchors`);
+      const selected=ordered.slice(0,6);
+      const freshFallbacks=[
+        'מבט אחר על הרעיון המרכזי',
+        'הנחות שכדאי לבדוק',
+        'מה משתנה כשמחליפים הקשר',
+        'הבחנה שלא כדאי לפספס',
+        'גבולות הרעיון',
+        'שאלה חדשה לקחת הלאה'
+      ];
+      let fallbackIndex=0;
+      while(selected.length<5&&fallbackIndex<freshFallbacks.length){
+        const value=freshFallbacks[fallbackIndex++];
+        if(!excluded.has(value)&&!selected.some(entry=>entry.value===value))selected.push({value,type:'fallback'});
+      }
+      return selected.map((entry,index)=>{
+        const label=entry.type==='topic'?'נושא חדש ללמידה':entry.type==='post'?'נאגט אחר מהמאגר':entry.type==='idea'?'רעיון אחר מהספר':'זווית חדשה';
+        return chapter(book,entry.value,entry.value,summary,conceptFor(concepts,index),index,label,'מתוך חומר הספר');
+      }).slice(0,6);
+    }
+
+    const ordered=rotate(anchors,`${str(options.seed)}|anchors`);
     const selected=ordered.slice(0,5);
     while(selected.length<4){
       const fallback=['הרעיון המרכזי','הקשר ופרשנות','יישום ובדיקה','למידה והעברה'][selected.length];
