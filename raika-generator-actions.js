@@ -47,6 +47,8 @@ function rgBuildLocal(mode,title,ids,count,note=''){
 }
 async function rgGenerate(){
   rgClearError();
+  const status=document.getElementById('rg-status');
+  if(status)status.textContent='קיבלתי את הלחיצה — יוצר הצעות…';
   const mode=document.getElementById('rg-mode')?.value||'related';
   const count=Math.max(1,Math.min(5,Number(document.getElementById('rg-count')?.value||3)));
   let prompt,title,ids,note='';
@@ -68,21 +70,12 @@ async function rgGenerate(){
     RG.current=generatedProposal({mode,title:count>1?`${title} — ${count} הצעות`:title,text:r.message?.content||'',characters:ids});RG.current.source='ai';RG.saved=false;rgRender();
   }catch(e){
     RG.current=rgBuildLocal(mode,title,ids,count,note);RG.saved=false;rgShowError(e);rgRender();
-  }finally{if(btn){btn.disabled=false;btn.textContent='צור הצעות';}}
+  }finally{if(btn){btn.disabled=false;btn.textContent='צור הצעות';}if(status)status.textContent=RG.current?'ההצעות נוצרו ומופיעות כאן למטה.':'';}
 }
 window.rgGenerate=rgGenerate;
 
-function rgBindGenerateButton(){
-  const btn=document.getElementById('rg-generate');
-  if(!btn||btn.dataset.rgBound==='1')return;
-  btn.dataset.rgBound='1';
-  btn.addEventListener('click',async e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    await rgGenerate();
-  });
-}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-rg]');if(!b||!RG.current)return;try{if(b.dataset.rg==='save'){if(!window.RaikaPrivate?.authorized){toast('כדי לשמור צריך להתחבר לחדר הכותבים.');return;}RG.current.saved=true;await RaikaWorkspaceClient.save(RG.current);RG.saved=true;toast('נשמר בעמוד השמורים.');}else if(b.dataset.rg==='retry'){await rgGenerate();}else if(b.dataset.rg==='approve'){if(!window.RaikaPrivate?.authorized){toast('כדי לאשר לקאנון צריך להתחבר.');return;}if(confirm('להפוך את ההצעה הזאת לקאנון?')){await RaikaWorkspaceActions.approve(RG.current);RG.current.status='canon';toast('אושר כקאנון.');}}else if(b.dataset.rg==='delete'){if(RG.saved&&window.RaikaPrivate?.authorized)await RaikaWorkspaceRemove(RG.current);RG.current=null;document.getElementById('rg-result').innerHTML='';toast('הוסר.');}}catch{toast('הפעולה נכשלה.');}});
 window.RaikaGeneratorState=RG;
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rgBindGenerateButton);else rgBindGenerateButton();
+
+window.RaikaGeneratorActions={generate:rgGenerate,render:rgRender,state:RG};
