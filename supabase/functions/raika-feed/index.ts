@@ -179,7 +179,8 @@ Deno.serve(async(req:Request)=>{
     const fingerprint=text(card.semantic_fingerprint||semanticFingerprint(card),300);
     const block={
       user_id:user.id,idea_id:text(card.idea_id,180)||null,signature:text(card.signature,1400),
-      semantic_fingerprint:fingerprint,plot_family:text(card.plot_family,180),scope:'fingerprint',reason:'never_show_again'
+      semantic_fingerprint:fingerprint,plot_family:text(card.plot_family,180),title:text(card.title,220),body:text(card.body,5000),
+      scope:'fingerprint',reason:'never_show_again'
     };
     const {error:blockError}=await admin.from('raika_idea_blocks').upsert(block,{onConflict:'user_id,semantic_fingerprint'});
     if(blockError)return json(req,{error:blockError.message,code:'block_save_failed'},500);
@@ -192,7 +193,7 @@ Deno.serve(async(req:Request)=>{
     admin.from('raika_item_edits').select('item_type,item_id,status,payload,updated_at').eq('user_id',user.id).order('updated_at',{ascending:false}).limit(80),
     admin.from('raika_feed_cards').select('id,card_type,title,body,signature,creativity_distance,structured_payload,context_refs,created_at,hidden_at,promoted_item_id').eq('user_id',user.id).order('created_at',{ascending:false}).limit(300),
     admin.from('raika_feed_feedback').select('action,metadata,created_at').eq('user_id',user.id).order('created_at',{ascending:false}).limit(300),
-    admin.from('raika_idea_blocks').select('idea_id,signature,semantic_fingerprint,plot_family,scope,created_at').eq('user_id',user.id).order('created_at',{ascending:false}).limit(500),
+    admin.from('raika_idea_blocks').select('idea_id,signature,semantic_fingerprint,plot_family,title,body,scope,created_at').eq('user_id',user.id).order('created_at',{ascending:false}).limit(500),
   ]);
   if(workspaceError||recentError||feedbackError||blockError)return json(req,{error:(workspaceError||recentError||feedbackError||blockError)?.message||'Context load failed',code:'context_load_failed'},500);
   const recentCards=(recentRows||[]).map(cleanRecentCard);
