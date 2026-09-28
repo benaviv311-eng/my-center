@@ -723,8 +723,8 @@ function bankRenderCard(item,index){
 
           ${
             favorited
-              ?'♥ מועדף'
-              :'♡ מועדף'
+              ?'✅ נשמר'
+              :'💾 שמור'
           }
 
         </button>
@@ -1085,13 +1085,13 @@ document.addEventListener(
 
         button.textContent=
           result.favorited
-            ?'♥ מועדף'
-            :'♡ מועדף';
+            ?'✅ נשמר'
+            :'💾 שמור';
 
         toast(
           result.favorited
-            ?'נשמר במועדפים'
-            :'הוסר מהמועדפים'
+            ?'נשמר'
+            :'הוסר מהשמורים'
         );
       }
 
