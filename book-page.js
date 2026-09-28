@@ -77,7 +77,7 @@ function chapterSummaryPoints(chapter){
     const key=point.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
     if(!point||!key||seen.has(key))continue;
     seen.add(key);points.push(point);
-    if(points.length===5)break;
+    if(points.length===6)break;
   }
   return points;
 }
@@ -89,8 +89,8 @@ function renderChapterSummary(chapterId){
   if(!chapter)return;
   state.activeChapterId=String(chapter.id);
   const title=$('book-summary-title'),position=$('book-summary-position'),list=$('book-summary-points');
-  if(title)title.textContent=`משפטי מפתח · ${chapter.title||'הפרק'}`;
-  if(position)position.textContent=`פרק ${index+1} מתוך ${chapters.length}`;
+  if(title){title.textContent='';title.hidden=true}
+  if(position)position.textContent='';
   const points=chapterSummaryPoints(chapter);
   if(list)list.innerHTML=points.length?points.map(point=>`<li>${esc(point)}</li>`).join(''):'<li>אין עדיין משפטי מפתח לפרק הזה.</li>';
 }

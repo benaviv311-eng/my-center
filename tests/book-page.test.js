@@ -91,8 +91,8 @@ assert.ok(pageCss.includes('book-prototype-reading'), 'prototype should have an 
 assert.ok(pageCss.includes('grid-template-areas:"summary reader toc"'), 'prototype desktop layout should place summary on the physical left and TOC on the physical right');
 assert.ok(pageCss.includes('book-chapter-summary-card'), 'prototype should style a sticky chapter summary');
 
-assert.ok(js.includes('משפטי מפתח'), 'left rail should label the short points as chapter key sentences');
-assert.ok(js.includes('points.length===5'), 'left rail should expose five concise nuggets when enough material exists');
+assert.ok(!js.includes('title.textContent=`משפטי מפתח'), 'left rail should not show a redundant key-sentences heading');
+assert.ok(js.includes('points.length===6'), 'left rail should expose six concise nuggets when enough material exists');
 assert.ok(pageCss.includes('.book-chapter-summary-wrap{') && pageCss.includes('position:sticky'), 'left chapter summary rail should stay fixed while scrolling on desktop');
 
 assert.ok(pageCss.includes('.book-prototype-reading .book-reading-toc-wrap{') && pageCss.includes('position:sticky'), 'prototype TOC wrapper should stay fixed while scrolling on desktop');
@@ -100,7 +100,7 @@ assert.ok(js.includes('excludeTitles'), 'prototype refresh should exclude the ch
 assert.ok(js.includes('fullRefresh:true'), 'prototype refresh should request a completely fresh chapter set');
 
 assert.ok(js.includes('chapter.keySentences'), 'left rail should render key sentences supplied by the chapter model');
-assert.ok(js.includes('משפטי מפתח'), 'left rail should be labeled as key sentences rather than a chapter explanation');
+assert.ok(pageCss.includes('.book-prototype-reading .book-chapter-summary-head') && pageCss.includes('display:none'), 'prototype nugget rail should hide meta headings and show only ideas');
 
 assert.ok(html.includes('0.75') && html.includes('1.25') && html.includes('1.5'), 'read-aloud prototype should offer multiple playback speeds');
 assert.ok(js.includes('function readRate()'), 'reader should resolve the selected playback rate');
@@ -130,3 +130,6 @@ assert.ok(html.includes('<option value="en-US">אנגלית</option>'), 'read-al
 assert.ok(pageCss.includes('.book-prototype-reading #book-read-floating') && pageCss.includes('position:fixed'), 'read-aloud should have a fixed floating control in the prototype');
 assert.ok(pageCss.includes('bottom:calc(212px + env(safe-area-inset-bottom))'), 'floating read control should sit above refresh on desktop');
 assert.ok(js.includes("$('book-read-floating').addEventListener"), 'floating read control should trigger read-aloud');
+
+assert.ok(pageCss.includes('.book-summary-points li::marker'), 'nugget bullets should have an explicit marker style');
+assert.ok(pageCss.includes('color:#111'), 'nugget text and bullets should render in solid black');
