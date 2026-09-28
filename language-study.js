@@ -5,7 +5,8 @@
   const L=window.LanguageLessons;
   const rawParams=new URLSearchParams(location.search);
   const lang=params.lang;
-  const requestedLesson=Math.max(1,Math.min(10,Number(rawParams.get('lesson'))||0));
+  const rawLesson=Number(rawParams.get('lesson'));
+  const requestedLesson=rawLesson>=1&&rawLesson<=10?rawLesson:0;
   const inferredLesson=L?L.lessonForTopic(params.topic).n:1;
   const lessonNumber=requestedLesson||inferredLesson;
   const lessonMeta=L?L.lesson(lessonNumber):null;
