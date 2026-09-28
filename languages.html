@@ -136,7 +136,7 @@
 <script src="language-audio.js?v=2"></script>
 <script>window.LanguageLessons&&window.LanguageLessons.renderDashboard();</script>
 <script>
-(function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
+(function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';const b=document.getElementById('languages-progress-bar');if(b)b.style.width=(n/4*100)+'%';}catch(e){}})();
 </script>
 <script src="mobile-app-shell.js?v=1"></script>
 </body>
