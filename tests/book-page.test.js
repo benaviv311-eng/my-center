@@ -32,6 +32,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-read-aloud',
   'book-read-pause',
   'book-read-stop',
+  'book-read-rate',
   'book-takeaways',
   'book-summary',
   'book-ideas',
@@ -98,3 +99,8 @@ assert.ok(js.includes('fullRefresh:true'), 'prototype refresh should request a c
 
 assert.ok(js.includes('chapter.keySentences'), 'left rail should render key sentences supplied by the chapter model');
 assert.ok(js.includes('משפטי מפתח'), 'left rail should be labeled as key sentences rather than a chapter explanation');
+
+assert.ok(html.includes('0.75') && html.includes('1.25') && html.includes('1.5'), 'read-aloud prototype should offer multiple playback speeds');
+assert.ok(js.includes('function readRate()'), 'reader should resolve the selected playback rate');
+assert.ok(js.includes('utterance.rate=readRate()'), 'speech synthesis should use the selected playback rate');
+assert.ok(pageCss.includes('.book-prototype-reading #book-refresh-all') && pageCss.includes('position:fixed'), 'refresh-all should stay fixed near the bottom of the viewport in the prototype');
