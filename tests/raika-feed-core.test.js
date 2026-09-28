@@ -127,3 +127,24 @@ test('permanent blocks reject a semantically close rewording using stored blocke
   const candidate={card_type:'secret',characters:['raika','kaminari'],title:'ראיקה מוצאת מחברת עתיקה של קאמינארי',body:'ראיקה מגלה מחברת ישנה של קאמינארי שחושפת סוד משפחתי.',plot_family:'journal-discovery'};
   assert.equal(coreModule.isBlockedCard(candidate,[blocked]),true);
 });
+
+
+test('semantic fresh filter rejects reworded recent premises and duplicates within a new batch', async () => {
+  const coreModule=await core();
+  const recent=[{title:'ראיקה מגלה סוד משפחתי ביומן ישן',body:'ראיקה מוצאת יומן עתיק שחושף סוד משפחתי של קאמינארי.'}];
+  const cards=[
+    {title:'יומן ישן חושף לראיקה סוד משפחתי',body:'ראיקה מגלה מחברת עתיקה ובה סוד משפחתי הקשור לקאמינארי.'},
+    {title:'אימון על גשר צר',body:'ראיקה צריכה להשלים אימון שיווי משקל על גשר בזמן שרוח חזקה משנה את חוקי התרגיל.'},
+    {title:'רוח חזקה באימון הגשר',body:'בתרגיל על גשר צר ראיקה נאבקת בשיווי משקל מול רוח שמשנה את המשימה.'}
+  ];
+  const out=coreModule.filterSemanticallyFresh(cards,recent,0.5);
+  assert.equal(out.length,1);
+  assert.match(out[0].title,/גשר/);
+});
+
+test('feed request keeps a larger cross-interface signature history', async () => {
+  const coreModule=await core();
+  const many=Array.from({length:240},(_,i)=>'sig-'+i);
+  const out=coreModule.normalizeFeedRequest({action:'refresh_all',recent_signatures:many});
+  assert.equal(out.recent_signatures.length,240);
+});
