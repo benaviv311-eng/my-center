@@ -47,6 +47,8 @@ function rgBuildLocal(mode,title,ids,count,note=''){
 }
 async function rgGenerate(){
   rgClearError();
+  const status=document.getElementById('rg-status');
+  if(status)status.textContent='קיבלתי את הלחיצה — יוצר הצעות…';
   const mode=document.getElementById('rg-mode')?.value||'related';
   const count=Math.max(1,Math.min(5,Number(document.getElementById('rg-count')?.value||3)));
   let prompt,title,ids,note='';
@@ -68,7 +70,7 @@ async function rgGenerate(){
     RG.current=generatedProposal({mode,title:count>1?`${title} — ${count} הצעות`:title,text:r.message?.content||'',characters:ids});RG.current.source='ai';RG.saved=false;rgRender();
   }catch(e){
     RG.current=rgBuildLocal(mode,title,ids,count,note);RG.saved=false;rgShowError(e);rgRender();
-  }finally{if(btn){btn.disabled=false;btn.textContent='צור הצעות';}}
+  }finally{if(btn){btn.disabled=false;btn.textContent='צור הצעות';}if(status)status.textContent=RG.current?'ההצעות נוצרו ומופיעות כאן למטה.':'';}
 }
 window.rgGenerate=rgGenerate;
 
@@ -86,3 +88,5 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rg]'
 window.RaikaGeneratorState=RG;
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',rgBindGenerateButton);else rgBindGenerateButton();
+
+window.RaikaGeneratorActions={generate:rgGenerate,render:rgRender,state:RG};
