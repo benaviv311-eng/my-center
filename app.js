@@ -928,7 +928,7 @@ async function bankShowFavorites(){
 
 async function showFavorites(){
   try{
-    if(bankStoredKey()){
+    if(bankStoredKey()||bankStoredToken()){
       await bankShowFavorites();
     }else{
       toast(
