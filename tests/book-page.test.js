@@ -104,3 +104,8 @@ assert.ok(html.includes('0.75') && html.includes('1.25') && html.includes('1.5')
 assert.ok(js.includes('function readRate()'), 'reader should resolve the selected playback rate');
 assert.ok(js.includes('utterance.rate=readRate()'), 'speech synthesis should use the selected playback rate');
 assert.ok(pageCss.includes('.book-prototype-reading #book-refresh-all') && pageCss.includes('position:fixed'), 'refresh-all should stay fixed near the bottom of the viewport in the prototype');
+
+assert.ok(html.includes('id="book-refresh-all"') && html.includes('aria-label="רענן הכול"'), 'refresh-all should keep an accessible label');
+assert.ok(/id="book-refresh-all"[^>]*>🔄<\/button>/.test(html), 'refresh-all should render as an icon-only button');
+assert.ok(pageCss.includes('left:16px'), 'refresh icon should be pinned to the physical left edge');
+assert.ok(pageCss.includes('width:46px') && pageCss.includes('height:46px'), 'refresh icon should be compact');
