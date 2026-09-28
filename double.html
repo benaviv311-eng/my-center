@@ -81,6 +81,33 @@
     @keyframes coinBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}70%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1.18) rotate(240deg)}100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) - 24px)) scale(.75) rotate(360deg)}}
     @keyframes coinAmount{0%{opacity:0;transform:translate(-50%,-20%) scale(.7)}25%{opacity:1;transform:translate(-50%,-70%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-150%) scale(.95)}}
     @media (prefers-reduced-motion:reduce){.encouragement,.coin-pop,.coin-amount{animation-duration:.01ms!important}}
+  
+    .wallet-line{display:inline-flex;align-items:center;gap:6px;background:#ffffff12;border:1px solid #ffffff20;border-radius:999px;padding:8px 13px;margin:4px auto 12px;font-size:14px}
+    .world-card{background:linear-gradient(180deg,#ffffff12,#ffffff08);border:1px solid #ffffff20;border-radius:24px;padding:16px;margin:10px 0 14px;text-align:right}
+    .world-map{position:relative;margin-top:16px;padding:14px 6px 10px;border-radius:22px;background:linear-gradient(180deg,#20345f66,#16254255);overflow:hidden}
+    .world-map:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 10%,#ffffff12,transparent 26%),radial-gradient(circle at 80% 42%,#ffffff0c,transparent 22%),radial-gradient(circle at 40% 80%,#ffffff0a,transparent 20%);pointer-events:none}
+    .world-zone-label,.world-finish{position:relative;z-index:1;text-align:center;font-weight:1000;font-size:13px;opacity:.85;margin:2px 0 10px}
+    .world-finish{margin-top:12px}
+    .world-row{position:relative;z-index:1;display:flex;justify-content:flex-start;gap:12px;margin:10px 0;padding:0 8px}
+    .world-row.reverse{justify-content:flex-end}
+    .world-row:after{content:"";position:absolute;left:12%;right:12%;top:50%;height:3px;background:#ffffff18;border-radius:999px;z-index:-1}
+    .stage-node{width:64px;min-height:64px;border-radius:50%;border:3px solid #ffffff2e;background:#283a62;color:#fff;display:grid;place-items:center;align-content:center;gap:0;cursor:pointer;box-shadow:0 5px 0 #0004}
+    .stage-node strong{font-size:18px;line-height:1}
+    .stage-node small{font-size:9px;opacity:.74;margin-top:3px}
+    .stage-node .stage-icon{font-size:16px;line-height:1;margin-bottom:2px}
+    .stage-node.done{background:#63c995;color:#102116;border-color:#b6f2cf}
+    .stage-node.current{background:#ffd84d;color:#171717;border-color:#fff3a0;transform:scale(1.08);box-shadow:0 0 0 5px #ffd84d30,0 6px 0 #0004}
+    .stage-node.boss{background:#8558c9;border-color:#d6c3ff}
+    .stage-node.boss.done{background:#8fd3a7}
+    .stage-node.boss.current{background:#ffd84d}
+    .stage-node:disabled{opacity:.28;filter:grayscale(.7);cursor:not-allowed;box-shadow:none}
+    .world-rules{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:13px}
+    .world-rules span{font-size:11px;background:#ffffff0d;border:1px solid #ffffff18;border-radius:999px;padding:6px 9px}
+    @media(max-width:520px){
+      .world-row{gap:7px;padding:0 2px}
+      .stage-node{width:56px;min-height:56px}
+      .stage-node strong{font-size:16px}
+    }
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -133,6 +160,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=9"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=10"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
