@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { shouldOpenSiteEdit } from "../_shared/site-chat-edit-intent.mjs";
 
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -389,9 +390,16 @@ ${questionForModel}`;
     let model=chooseModel(questionForModel,pageContext),raw:string;
     try{raw=await callOpenAI(model,prompt,images)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
     const parsed=parseBlocks(raw);
-    const queued=consultOnly||parsed.siteEdit?null:await queueAction(user.id,thread.id,parsed.action);
+    const shouldCreateSiteEdit=shouldOpenSiteEdit({
+      editorMode,
+      question:questionForModel,
+      selectedElement,
+      parsedSiteEdit:parsed.siteEdit,
+      parsedAction:parsed.action
+    });
+    const queued=consultOnly||shouldCreateSiteEdit?null:await queueAction(user.id,thread.id,parsed.action);
     let siteEditRequest:any=null;
-    if(!consultOnly&&parsed.siteEdit){
+    if(!consultOnly&&shouldCreateSiteEdit){
       const goal=text(parsed.siteEdit?.goal,8000)||questionForModel;
       siteEditRequest=await proposeSiteEdit(
         req,
