@@ -396,10 +396,8 @@
   }));
 
   document.querySelectorAll('[data-feed-filter]').forEach(btn=>btn.addEventListener('click',()=>{
-    state.filter=btn.dataset.feedFilter;
-    save();
-    resetFeed();
-    window.scrollTo({top:0,behavior:'smooth'});
+    setLanguageFilter(btn.dataset.feedFilter,{scroll:false});
+    document.getElementById('language-section-nav')?.scrollIntoView({behavior:'smooth',block:'start'});
   }));
   $('feed-refresh').addEventListener('click',()=>{
     state.refresh++;
