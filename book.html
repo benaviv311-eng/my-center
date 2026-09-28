@@ -53,6 +53,25 @@
           <ul id="book-takeaways"></ul>
         </section>
       </main>
+      <aside id="book-chapter-summary" class="book-chapter-summary-wrap hidden" aria-label="סיכום הפרק">
+        <div class="book-chapter-summary-card">
+          <div class="book-chapter-summary-head">
+            <span class="reading-eyebrow">סיכום הפרק</span>
+            <span id="book-summary-position" class="book-summary-position"></span>
+          </div>
+          <h3 id="book-summary-title">סיכום קצר</h3>
+          <ul id="book-summary-points" class="book-summary-points"></ul>
+          <div class="book-read-aloud" aria-label="הקראת הפרק">
+            <strong>🔊 הקראה</strong>
+            <button id="book-read-aloud" type="button" class="book-read-button">הקרא את הפרק</button>
+            <div class="book-read-secondary">
+              <button id="book-read-pause" type="button" class="book-read-mini" disabled>השהה</button>
+              <button id="book-read-stop" type="button" class="book-read-mini" disabled>עצור</button>
+            </div>
+            <span id="book-read-status" class="book-read-status" aria-live="polite"></span>
+          </div>
+        </div>
+      </aside>
     </div>
   </section>
 
