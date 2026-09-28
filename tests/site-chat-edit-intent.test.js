@@ -30,6 +30,17 @@ test('ordinary questions do not accidentally create edit requests',async()=>{
   assert.equal(shouldOpenSiteEdit({editorMode:'work',question:'למה העמוד בנוי ככה?',selectedElement:null,parsedSiteEdit:null}),false);
 });
 
+test('a valid structured content action wins over heuristic source editing',async()=>{
+  const {shouldOpenSiteEdit}=await helper();
+  assert.equal(shouldOpenSiteEdit({
+    editorMode:'edit',
+    question:'שנה את הטקסט',
+    selectedElement:null,
+    parsedSiteEdit:null,
+    parsedAction:{kind:'content_update'}
+  }),false);
+});
+
 test('explicit SITE_EDIT_JSON remains supported in edit/work mode',async()=>{
   const {shouldOpenSiteEdit}=await helper();
   assert.equal(shouldOpenSiteEdit({editorMode:'edit',question:'אפשר לטפל בזה?',selectedElement:null,parsedSiteEdit:{goal:'עדכן את הכותרת'}}),true);
