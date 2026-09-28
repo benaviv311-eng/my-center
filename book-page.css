@@ -377,8 +377,8 @@
   max-width:1540px;
 }
 .book-prototype-reading .book-reading-layout{
-  grid-template-columns:minmax(210px,250px) minmax(0,760px) minmax(220px,270px);
-  grid-template-areas:"toc reader summary";
+  grid-template-columns:minmax(220px,270px) minmax(0,760px) minmax(210px,250px);
+  grid-template-areas:"summary reader toc";
   gap:clamp(28px,3vw,54px);
   justify-content:center;
 }
@@ -388,10 +388,14 @@
   grid-area:summary;
   min-width:0;
   align-self:start;
-}
-.book-chapter-summary-card{
   position:sticky;
   top:24px;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  scrollbar-width:thin;
+}
+.book-chapter-summary-card{
+  position:static;
   padding:0 0 18px;
   border-top:3px solid var(--text);
   border-bottom:1px solid var(--line);
@@ -500,6 +504,12 @@
     grid-template-columns:1fr;
     grid-template-areas:"toc" "summary" "reader";
     gap:18px;
+  }
+  .book-prototype-reading .book-chapter-summary-wrap{
+    position:static;
+    top:auto;
+    max-height:none;
+    overflow:visible;
   }
   .book-prototype-reading .book-chapter-summary-card{
     position:static;
