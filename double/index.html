@@ -41,6 +41,14 @@
     .mode-card b{font-size:19px}.mode-card small{font-size:13px;line-height:1.3;opacity:.75;font-weight:700}
     .mode-card.classic{background:#ffd84d}.mode-card.levels{background:#b8a6ff}.mode-card.knockout{background:#ff9b76}.mode-card.survival{background:#7ee0b8}.mode-card.versus{background:#55c8ff;grid-column:1/-1}
     .menu-note{font-size:13px}
+    .difficulty-wrap{margin:16px 0 4px;display:grid;gap:8px}
+    .difficulty-wrap>span{font-size:14px;font-weight:900;opacity:.82}
+    .difficulty-picker{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+    .difficulty-picker button{border:1px solid #ffffff30;background:#ffffff12;color:#fff;border-radius:14px;padding:9px 16px;font-weight:900;cursor:pointer}
+    .difficulty-picker button.active{background:#ffd84d;color:#171717;border-color:#ffd84d}
+    .best-strip{margin:10px auto 4px;padding:9px 12px;border-radius:14px;background:#ffffff12;border:1px solid #ffffff20;font-size:13px;font-weight:800;max-width:520px}
+    .boss-card{box-shadow:0 0 0 5px #ffd84d,0 10px 35px #0008,inset 0 0 0 8px #eee}
+    .boss-pill{background:#ffd84d;color:#171717;border-color:#ffd84d}
     @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -50,15 +58,27 @@
     <div id="menuPanel" class="panel">
       <h1>DOUBLE</h1>
       <p>מצא את הסמל המשותף בין שני הקלפים</p>
+
+      <div class="difficulty-wrap">
+        <span>רמת קושי</span>
+        <div class="difficulty-picker">
+          <button type="button" data-difficulty="easy">קל</button>
+          <button type="button" data-difficulty="normal">בינוני</button>
+          <button type="button" data-difficulty="hard">קשה</button>
+        </div>
+      </div>
+
+      <div class="best-strip" id="bestStrip">השיאים שלך יופיעו כאן</div>
+
       <div class="mode-grid">
-        <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>60 שניות · ניקוד ורצף</small></button>
-        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 שלבים</b><small>עולים שלב · מהירות וסיבוב מתגברים</small></button>
-        <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>12 התאמות בתוך 30 שניות</small></button>
-        <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>10 שניות להתחלה · כל הצלחה +2</small></button>
+        <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>ניקוד ורצף · הזמן משתנה לפי הרמה</small></button>
+        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 שלבים</b><small>כל שלב קשה יותר · כל שלב 5 הוא בוס 👑</small></button>
+        <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בתוך זמן מוגבל</small></button>
+        <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
         <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
       </div>
-      <p class="menu-note">במצבי האתגר הסמלים מתחילים להסתובב ולהאיץ.</p>
-    </div>
+      <p class="menu-note">השיאים נשמרים במכשיר בנפרד לכל רמת קושי.</p>
+    </div></div>
   </div>
 
   <div class="app">
@@ -81,6 +101,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=5"></script>
 </body>
 </html>
