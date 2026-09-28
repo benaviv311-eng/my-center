@@ -243,6 +243,47 @@
       root.innerHTML=`<a class="btn small" href="language-games.html?lang=${state.filter}">🎮 משחקים</a><a class="btn small lesson-current-link" href="${lessonUrl}">📘 השיעור הנוכחי</a><a class="btn small" href="language-topics.html?lang=${state.filter}">נושאים</a><a class="btn small" href="language-archive.html?lang=${state.filter}">מאגר וחזרות</a>`;
     }
   }
+
+  function setLanguageFilter(next,{scroll=true}={}){
+    if(!['all','four',...M.LANGUAGE_CODES].includes(next))return;
+    state.filter=next;
+    save();
+    resetFeed();
+    if(scroll){
+      const target=M.LANGUAGE_CODES.includes(state.filter)?document.getElementById('language-lessons-dashboard'):document.getElementById('languages-feed-section');
+      target?.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }
+
+  function renderFrozenNav(){
+    const langRoot=$('language-nav-languages');
+    const catRoot=$('language-nav-categories');
+    if(!langRoot||!catRoot)return;
+    const items=[
+      ['all','✨','הכול'],
+      ['ar','AR','ערבית'],
+      ['it','IT','איטלקית'],
+      ['ru','RU','רוסית'],
+      ['es','ES','ספרדית'],
+      ['four','4×','4 שפות']
+    ];
+    langRoot.innerHTML=items.map(([code,badge,label])=>`<button type="button" class="language-nav-chip ${state.filter===code?'active':''}" data-frozen-language="${code}" aria-pressed="${state.filter===code?'true':'false'}"><span>${badge}</span>${label}</button>`).join('');
+    langRoot.querySelectorAll('[data-frozen-language]').forEach(btn=>btn.addEventListener('click',()=>setLanguageFilter(btn.dataset.frozenLanguage)));
+
+    if(M.LANGUAGE_CODES.includes(state.filter)&&window.LanguageLessons){
+      const meta=M.LANGUAGES[state.filter];
+      catRoot.innerHTML=`<a class="language-nav-home-chip" href="#languages-feed-section">📰 פיד ${esc(meta.name)}</a>`+
+        window.LanguageLessons.LESSONS.map(l=>`<a class="language-nav-category" href="${window.LanguageLessons.url(state.filter,l.n)}" title="שיעור ${l.n} · ${esc(l.name)}"><span>${l.icon}</span><b>${l.n}</b><small>${esc(l.name)}</small></a>`).join('')+
+        `<a class="language-nav-category nav-tool" href="language-games.html?lang=${state.filter}"><span>🎮</span><small>משחקים</small></a><a class="language-nav-category nav-tool" href="language-vocabulary.html?lang=${state.filter}"><span>📚</span><small>מילים</small></a>`;
+    }else{
+      catRoot.innerHTML=`<a class="language-nav-category nav-tool" href="#languages-home"><span>🏠</span><small>בית</small></a><a class="language-nav-category nav-tool" href="#languages-feed-section"><span>📰</span><small>פיד</small></a><a class="language-nav-category nav-tool" href="language-games.html"><span>🎮</span><small>משחקים</small></a><a class="language-nav-category nav-tool" href="language-vocabulary.html"><span>📚</span><small>אוצר מילים</small></a>`;
+    }
+    catRoot.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
+      const target=document.querySelector(link.getAttribute('href'));
+      if(target){event.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}
+    }));
+  }
+
   function updateFilters(){
     document.querySelectorAll('[data-feed-filter]').forEach(btn=>{
       const active=btn.dataset.feedFilter===state.filter;
@@ -253,6 +294,7 @@
     label.textContent=state.filter==='all'?'כל ארבע השפות מעורבבות':state.filter==='four'?'כל פוסט מוצג בארבע השפות + עברית':`רק ${M.LANGUAGES[state.filter].name}`;
     document.querySelectorAll('[data-language-card]').forEach(card=>card.classList.toggle('active',card.dataset.languageCard===state.filter));
     if(window.LanguageLessons)window.LanguageLessons.renderDashboard(M.LANGUAGE_CODES.includes(state.filter)?state.filter:null);
+    renderFrozenNav();
     setContextLinks();
   }
   function resetFeed(){
@@ -346,13 +388,7 @@
   }
 
 
-  document.querySelectorAll('[data-language-card]').forEach(card=>card.addEventListener('click',()=>{
-    state.filter=card.dataset.languageCard;
-    save();
-    resetFeed();
-    const target=M.LANGUAGE_CODES.includes(state.filter)?document.getElementById('language-lessons-dashboard'):document.getElementById('languages-feed-section');
-    target?.scrollIntoView({behavior:'smooth',block:'start'});
-  }));
+  document.querySelectorAll('[data-language-card]').forEach(card=>card.addEventListener('click',()=>setLanguageFilter(card.dataset.languageCard)));
 
   document.querySelectorAll('.language-section-nav a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
     const target=document.querySelector(link.getAttribute('href'));
