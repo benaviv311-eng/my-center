@@ -22,10 +22,10 @@ function refreshFavs(){
     const id=btn.dataset.id;
     if(favorites.has(id)){
       btn.classList.add('active');
-      btn.textContent='♥ נשמר';
+      btn.textContent='✅ נשמר';
     }else{
       btn.classList.remove('active');
-      btn.textContent='♡ שמור';
+      btn.textContent='💾 שמור';
     }
   });
 }
@@ -38,10 +38,10 @@ document.addEventListener('click',e=>{
 
   if(favorites.has(id)){
     favorites.delete(id);
-    toast('הוסר מהמועדפים');
+    toast('הוסר מהשמורים');
   }else{
     favorites.add(id);
-    toast('נשמר במועדפים');
+    toast('נשמר');
   }
 
   try{
