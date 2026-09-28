@@ -2,8 +2,14 @@
   const C=window.LanguageCore;
   if(!C)return;
   const params=C.qs();
+  const L=window.LanguageLessons;
+  const rawParams=new URLSearchParams(location.search);
   const lang=params.lang;
-  const topic=params.topic;
+  const requestedLesson=Math.max(1,Math.min(10,Number(rawParams.get('lesson'))||0));
+  const inferredLesson=L?L.lessonForTopic(params.topic).n:1;
+  const lessonNumber=requestedLesson||inferredLesson;
+  const lessonMeta=L?L.lesson(lessonNumber):null;
+  const topic=lessonMeta?.topic||params.topic;
   const language=C.LANGUAGES[lang];
   const topicMeta=C.TOPIC_META[topic];
   const course=C.course(lang,topic);
@@ -23,10 +29,12 @@
   $('study-language-code').textContent=language.code;
   $('study-language-name').textContent=language.name;
   $('study-language-note').textContent=language.native+' · '+language.primaryNote+(language.secondaryNote?' · '+language.secondaryNote+' משני':'');
-  $('study-topic-chip').textContent=topicMeta.icon+' '+topicMeta.name;
+  $('study-topic-chip').textContent=lessonMeta?'שיעור '+lessonNumber+' · '+lessonMeta.icon+' '+lessonMeta.name:topicMeta.icon+' '+topicMeta.name;
+  if(lessonMeta)$('study-progress-chip').textContent='שיעור '+lessonNumber+' מתוך 10';
   $('topics-link').href='language-topics.html?lang='+lang;
   $('archive-link').href='language-archive.html?lang='+lang;
-  $('study-language-switch').innerHTML=Object.entries(C.LANGUAGES).map(([code,item])=>`<a class="btn small ${code===lang?'active':''}" href="language-study.html?lang=${code}&topic=${topic}">${item.code} · ${item.name}</a>`).join('');
+  $('study-language-switch').innerHTML=Object.entries(C.LANGUAGES).map(([code,item])=>`<a class="btn small ${code===lang?'active':''}" href="${L?L.url(code,lessonNumber):'language-study.html?lang='+code+'&topic='+topic}">${item.code} · ${item.name}</a>`).join('');
+  if(L)L.renderStudyTrack(lang,lessonNumber);
 
   function remember(words){C.rememberWords(state,lang,topic,words);}
   function wordsFor(section){return C.shuffled(course.words,baseSeed+':'+section+':'+offsets[section]).slice(0,5);}
@@ -131,8 +139,36 @@
   document.querySelectorAll('[data-refresh]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.refresh;offsets[key]=(offsets[key]||0)+1;renderers[key]&&renderers[key]();if(typeof toast==='function')toast('התרגיל רוענן');}));
 
   let batch=0;$('append-more').addEventListener('click',()=>{batch++;renderExtraBatch(batch);setTimeout(()=>$('extra-batches').lastElementChild?.scrollIntoView({behavior:'smooth',block:'start'}),20);});
-  $('complete-language').addEventListener('click',()=>{C.setCompleted(state,lang,true);$('complete-language').textContent='הושלם להיום ✓';if(typeof toast==='function')toast(language.name+' הושלמה להיום');});
+  function refreshLessonCompletion(){
+    if(!L)return;
+    const done=L.completed(lang).includes(lessonNumber);
+    if(done){
+      $('complete-language').textContent='שיעור '+lessonNumber+' הושלם ✓';
+      $('lesson-complete-copy').textContent='השיעור נשמר כהושלם במסלול '+language.name+'.';
+      if(lessonNumber<10){
+        const next=L.lesson(lessonNumber+1);
+        $('lesson-next-link').href=L.url(lang,lessonNumber+1);
+        $('lesson-next-link').textContent='לשיעור '+(lessonNumber+1)+' · '+next.name+' ←';
+        $('lesson-next-link').classList.remove('hidden');
+      }else{
+        $('lesson-complete-title').textContent='סיימת את מסלול 1–10 🎉';
+        $('lesson-complete-copy').textContent='כל עשרת שיעורי הבסיס של '+language.name+' הושלמו.';
+      }
+    }
+  }
+  $('complete-language').addEventListener('click',()=>{
+    C.setCompleted(state,lang,true);
+    if(L){
+      L.complete(lang,lessonNumber);
+      L.renderStudyTrack(lang,lessonNumber);
+      refreshLessonCompletion();
+      if(typeof toast==='function')toast('שיעור '+lessonNumber+' הושלם ✓');
+    }else{
+      $('complete-language').textContent='הושלם להיום ✓';
+      if(typeof toast==='function')toast(language.name+' הושלמה להיום');
+    }
+  });
 
   Object.values(renderers).forEach(fn=>fn());
-  if(C.completedToday(state).includes(lang))$('complete-language').textContent='הושלם להיום ✓';
+  refreshLessonCompletion();
 })();
