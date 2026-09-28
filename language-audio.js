@@ -12,6 +12,10 @@
   let remoteRequestId=0;
   let observer=null;
   let decorateQueued=false;
+  let highlightTarget=null;
+  let highlightWords=[];
+  let highlightedWord=null;
+  let highlightFrame=0;
 
   function escapeAttr(value){return String(value??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function button(lang,text,label='השמע'){return `<button class="language-audio-btn" type="button" data-audio-lang="${escapeAttr(lang)}" data-audio-text="${escapeAttr(text)}" aria-label="${escapeAttr(label)}" title="${escapeAttr(label)}">🔊</button>`;}
@@ -97,7 +101,105 @@
     return resolved||visible;
   }
 
-  function resetActive(){if(activeButton){activeButton.classList.remove('is-speaking');activeButton.textContent='🔊';activeButton=null;}}
+  function findHighlightTarget(buttonEl){
+    if(!buttonEl)return null;
+    if(buttonEl._audioTarget&&document.contains(buttonEl._audioTarget))return buttonEl._audioTarget;
+    const selector=SELECTORS.join(',');
+    const parent=buttonEl.parentElement;
+    if(parent){
+      const direct=[...parent.querySelectorAll(selector)].find(node=>node!==buttonEl);
+      if(direct)return direct;
+    }
+    const host=buttonEl.closest('.vocab-word,.vocab-card,.four-card,.four-study-lang,.quiz-card,.translation-row,.feed-line,.feed-card,.feed-moment-item,.dialogue-bubble');
+    return host?.querySelector(selector)||null;
+  }
+  function clearWordHighlight(){
+    if(highlightFrame&&root.cancelAnimationFrame){root.cancelAnimationFrame(highlightFrame);highlightFrame=0;}
+    if(highlightedWord){highlightedWord.classList.remove('is-current');highlightedWord.removeAttribute('aria-current');}
+    highlightWords.forEach(node=>node.classList.remove('is-current'));
+    highlightedWord=null;
+    highlightWords=[];
+    highlightTarget=null;
+  }
+  function wordSpansFor(target){
+    if(!target)return[];
+    const existing=[...target.querySelectorAll('.language-audio-word')];
+    if(existing.length)return existing;
+    const walker=document.createTreeWalker(target,NodeFilter.SHOW_TEXT,{
+      acceptNode(node){
+        if(!node.nodeValue||!node.nodeValue.trim())return NodeFilter.FILTER_REJECT;
+        const parent=node.parentElement;
+        if(!parent||parent.closest('.language-audio-btn'))return NodeFilter.FILTER_REJECT;
+        if(target.classList.contains('dialogue-bubble')&&parent!==target&&parent.closest('strong,small'))return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[];let node;
+    while((node=walker.nextNode()))nodes.push(node);
+    nodes.forEach(textNode=>{
+      const frag=document.createDocumentFragment();
+      textNode.nodeValue.split(/(\s+)/).forEach(part=>{
+        if(!part)return;
+        if(/^\s+$/.test(part)){frag.appendChild(document.createTextNode(part));return;}
+        const span=document.createElement('span');
+        span.className='language-audio-word';
+        span.textContent=part;
+        frag.appendChild(span);
+      });
+      textNode.parentNode.replaceChild(frag,textNode);
+    });
+    return [...target.querySelectorAll('.language-audio-word')];
+  }
+  function prepareWordHighlight(buttonEl){
+    clearWordHighlight();
+    highlightTarget=findHighlightTarget(buttonEl);
+    highlightWords=wordSpansFor(highlightTarget);
+    if(highlightWords.length)setHighlightedWord(0);
+  }
+  function setHighlightedWord(index){
+    if(!highlightWords.length)return;
+    const next=highlightWords[Math.max(0,Math.min(index,highlightWords.length-1))];
+    if(!next||next===highlightedWord)return;
+    if(highlightedWord){highlightedWord.classList.remove('is-current');highlightedWord.removeAttribute('aria-current');}
+    highlightedWord=next;
+    next.classList.add('is-current');
+    next.setAttribute('aria-current','true');
+    const rect=next.getBoundingClientRect();
+    const topBand=(root.innerHeight||document.documentElement.clientHeight||0)*.28;
+    const bottomBand=(root.innerHeight||document.documentElement.clientHeight||0)*.72;
+    if(rect.top<topBand||rect.bottom>bottomBand){
+      const reduce=root.matchMedia&&root.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      next.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center',inline:'nearest'});
+    }
+  }
+  function spokenWordIndex(text,charIndex){
+    const prefix=String(text||'').slice(0,Math.max(0,charIndex||0)).trim();
+    return prefix?prefix.split(/\s+/).length:0;
+  }
+  function trackUtterance(utterance,text,buttonEl){
+    prepareWordHighlight(buttonEl);
+    utterance.onboundary=event=>{
+      if(typeof event.charIndex!=='number')return;
+      setHighlightedWord(spokenWordIndex(text,event.charIndex));
+    };
+  }
+  function trackRemoteAudio(audio,text,buttonEl){
+    prepareWordHighlight(buttonEl);
+    const spokenWords=String(text||'').trim().split(/\s+/).filter(Boolean);
+    const count=Math.max(1,spokenWords.length);
+    const tick=()=>{
+      if(remoteAudio!==audio)return;
+      if(Number.isFinite(audio.duration)&&audio.duration>0){
+        const ratio=Math.max(0,Math.min(.999,audio.currentTime/audio.duration));
+        const spokenIndex=Math.min(count-1,Math.floor(ratio*count));
+        const visualIndex=Math.round(spokenIndex*Math.max(0,highlightWords.length-1)/Math.max(1,count-1));
+        setHighlightedWord(visualIndex);
+      }
+      highlightFrame=root.requestAnimationFrame?root.requestAnimationFrame(tick):setTimeout(tick,100);
+    };
+    tick();
+  }
+  function resetActive(){clearWordHighlight();if(activeButton){activeButton.classList.remove('is-speaking');activeButton.textContent='🔊';activeButton=null;}}
   function revokeRemoteUrl(){if(remoteObjectUrl&&root.URL?.revokeObjectURL){root.URL.revokeObjectURL(remoteObjectUrl);remoteObjectUrl='';}}
   function stopRemote(){
     remoteRequestId+=1;
@@ -146,6 +248,7 @@
     if(voice)utterance.voice=voice;
     utterance.rate=.9;
     markSpeaking(buttonEl);
+    trackUtterance(utterance,text,buttonEl);
     utterance.onend=resetActive;
     utterance.onerror=resetActive;
     root.speechSynthesis.speak(utterance);
@@ -173,6 +276,7 @@
       const audio=new Audio(objectUrl);
       remoteAudio=audio;
       audio.preload='auto';
+      trackRemoteAudio(audio,text,buttonEl);
       audio.onended=()=>{
         if(remoteAudio===audio)remoteAudio=null;
         revokeRemoteUrl();
@@ -229,6 +333,7 @@
     btn.dataset.audioLang=lang;btn.dataset.audioText=text;
     btn.setAttribute('aria-label','השמע הגייה');btn.title='השמע הגייה';
     el.dataset.audioDecorated='1';
+    btn._audioTarget=el;
     placeButton(el,btn);
   }
   function decorate(scope=document){
@@ -245,7 +350,7 @@
   function installStyle(){
     if(document.getElementById('language-audio-style'))return;
     const style=document.createElement('style');style.id='language-audio-style';
-    style.textContent='.language-audio-inline{display:inline-flex;align-items:center;gap:7px;max-width:100%;flex-wrap:wrap}.language-audio-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line,#d8d2c7);border-radius:999px;background:#fff;cursor:pointer;font-size:16px;line-height:1;vertical-align:middle;flex:0 0 auto}.language-audio-btn:hover{background:#f5f1e8}.language-audio-btn.is-speaking{background:#22313e;color:#fff;border-color:#22313e}.dialogue-bubble .language-audio-btn{margin-inline-start:7px;width:30px;height:30px;font-size:14px}@media(max-width:520px){.language-audio-btn{width:32px;height:32px;font-size:15px}}';
+    style.textContent='.language-audio-inline{display:inline-flex;align-items:center;gap:7px;max-width:100%;flex-wrap:wrap}.language-audio-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line,#d8d2c7);border-radius:999px;background:#fff;cursor:pointer;font-size:16px;line-height:1;vertical-align:middle;flex:0 0 auto}.language-audio-btn:hover{background:#f5f1e8}.language-audio-btn.is-speaking{background:#22313e;color:#fff;border-color:#22313e}.language-audio-word{border-radius:5px;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background-color .14s ease,color .14s ease,box-shadow .14s ease}.language-audio-word.is-current{background:#ffe16a;color:#111;padding:0 .08em;box-shadow:0 0 0 2px rgba(255,225,106,.38);font-weight:800}.dialogue-bubble .language-audio-btn{margin-inline-start:7px;width:30px;height:30px;font-size:14px}@media(max-width:520px){.language-audio-btn{width:32px;height:32px;font-size:15px}}';
     document.head.appendChild(style);
   }
   function init(){
