@@ -128,8 +128,10 @@
     if(streak>=3) return '🔥 COMBO ×1.5';
     return streak>1?'🔥 '+streak:'';
   }
-  function speedBonus(){
-    const seconds=(nowMs()-roundStartedAt)/1000;
+  function reactionSeconds(){
+    return Math.max(0,(nowMs()-roundStartedAt)/1000);
+  }
+  function speedBonus(seconds=reactionSeconds()){
     if(seconds<=1.5) return 50;
     if(seconds<=3) return 25;
     return 0;
@@ -141,8 +143,9 @@
     return coins;
   }
   function awardSuccess(){
+    const seconds=reactionSeconds();
     streak++;
-    const speed=speedBonus();
+    const speed=speedBonus(seconds);
     const mult=comboMultiplier();
     const points=Math.round((100+speed)*cfg().pointMultiplier*mult);
     const coins=coinReward();
@@ -154,11 +157,84 @@
       profile.totalScore+=points;
     }
     saveProfile();
-    return {points,coins,speed,mult};
+    return {points,coins,speed,mult,seconds};
   }
   function rewardText(reward){
     const combo=comboLabel();
     return '✓ +'+reward.points+' נק׳ · 🪙+'+reward.coins+(combo?' · '+combo:'');
+  }
+
+  function encouragementFor(seconds){
+    if(seconds<=0.85) return {text:'INCREDIBLE!',level:4,rate:1.18,pitch:1.22};
+    if(seconds<=1.45) return {text:'AMAZING!',level:3,rate:1.12,pitch:1.16};
+    if(seconds<=2.5) return {text:'GREAT!',level:2,rate:1.06,pitch:1.08};
+    return {text:'GOOD!',level:1,rate:1,pitch:1};
+  }
+
+  function speakEncouragement(item){
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
+    try{
+      window.speechSynthesis.cancel();
+      const utterance=new SpeechSynthesisUtterance(item.text.replace('!',''));
+      utterance.lang='en-US';
+      utterance.rate=item.rate;
+      utterance.pitch=item.pitch;
+      utterance.volume=.82;
+      window.speechSynthesis.speak(utterance);
+    }catch(_){}
+  }
+
+  function showEncouragement(reward){
+    const item=encouragementFor(reward.seconds);
+    let el=document.getElementById('encouragement');
+    if(!el){
+      el=document.createElement('div');
+      el.id='encouragement';
+      el.className='encouragement';
+      el.setAttribute('aria-live','polite');
+      document.body.appendChild(el);
+    }
+    el.className='encouragement level-'+item.level;
+    el.textContent=item.text;
+    el.style.animation='none';
+    void el.offsetWidth;
+    el.style.animation='';
+    clearTimeout(el._t);
+    el._t=setTimeout(()=>{el.textContent=''},720);
+    speakEncouragement(item);
+  }
+
+  function burstCoins(sourceEl,count){
+    const rect=sourceEl&&sourceEl.getBoundingClientRect?sourceEl.getBoundingClientRect():null;
+    const x=rect?rect.left+rect.width/2:window.innerWidth/2;
+    const y=rect?rect.top+rect.height/2:window.innerHeight/2;
+    const visible=Math.max(1,Math.min(7,count));
+
+    for(let i=0;i<visible;i++){
+      const coin=document.createElement('span');
+      coin.className='coin-pop';
+      coin.textContent='🪙';
+      coin.style.left=x+'px';
+      coin.style.top=y+'px';
+      coin.style.setProperty('--coin-x',((i-(visible-1)/2)*28+(Math.random()*16-8))+'px');
+      coin.style.setProperty('--coin-y',(-72-Math.random()*54)+'px');
+      coin.style.animationDelay=(i*35)+'ms';
+      document.body.appendChild(coin);
+      setTimeout(()=>coin.remove(),1050);
+    }
+
+    const amount=document.createElement('span');
+    amount.className='coin-amount';
+    amount.textContent='+'+count;
+    amount.style.left=x+'px';
+    amount.style.top=y+'px';
+    document.body.appendChild(amount);
+    setTimeout(()=>amount.remove(),950);
+  }
+
+  function celebrateSuccess(reward,sourceEl){
+    burstCoins(sourceEl,reward.coins);
+    showEncouragement(reward);
   }
 
   function rotating(){
@@ -293,7 +369,7 @@
         }else glyph.style.transform='rotate('+(-25+Math.random()*50)+'deg)';
 
         bt.appendChild(glyph);
-        bt.addEventListener('click',()=>hit(id));
+        bt.addEventListener('click',()=>hit(id,bt));
         el.appendChild(bt);
       });
       board.appendChild(el);
@@ -344,9 +420,10 @@
     return true;
   }
 
-  function onCorrect(){
+  function onCorrect(sourceEl){
     matches++;
     const reward=awardSuccess();
+    celebrateSuccess(reward,sourceEl);
 
     if(mode==='classic'){
       flash(rewardText(reward));
@@ -407,13 +484,13 @@
     }
   }
 
-  function hit(id){
+  function hit(id,sourceEl){
     if(!active) return;
     if(mode==='versus'&&claim===null){flash('בחרו קודם מי מצא');return}
 
     const common=pair[0].find(x=>pair[1].includes(x));
     if(id===common){
-      const keepGoing=onCorrect();
+      const keepGoing=onCorrect(sourceEl);
       update();
       if(keepGoing!==false) newRound();
     }else{
