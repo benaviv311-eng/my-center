@@ -3,6 +3,10 @@
 
   var currentIdeas=[];
   var refreshRound=0;
+  var expandedIndex=-1;
+  var sceneCache={};
+  var sceneRounds={};
+  var sceneLoading=-1;
 
   function esc(v){
     return String(v==null?'':v).replace(/[&<>"']/g,function(c){
@@ -152,6 +156,145 @@
     return '<div class="rg-sticky-refresh"><button class="btn primary" type="button" data-rg-hotfix-refresh>🔄 רענן רעיונות</button></div>';
   }
 
+  function characterNames(ids){
+    return (ids||[]).map(function(id){
+      var found=(window.RAIKA_DATA?.characters||[]).find(function(ch){return ch.id===id;});
+      return found?.title||id;
+    }).filter(Boolean);
+  }
+
+  function buildLocalScene(idea,variant){
+    var names=characterNames(idea.characters);
+    var who=names.join(' ו')||idea.title.replace(/^\d+\.\s*/,'').split('—')[0].trim()||'ראיקה';
+    var locations=['דוג׳ו אינאזומה','בית המשפחה בכפר סאקורה','בית הספר','שביל מחוץ לכפר','שוק הכפר','חדר תה שקט'];
+    var times=['ערב, אחרי יום ארוך','בוקר לפני האימון','אחר הצהריים, רגע לפני שהכפר נרגע','לילה, אחרי שכולם כבר הלכו לישון'];
+    var location=locations[variant%locations.length];
+    var time=times[variant%times.length];
+    var premise=idea.body.replace(/הכיוון נשאר הצעה בלבד.*$/,'').trim();
+    var opener='הסצנה נפתחת ב'+location+'. '+who+' כבר נמצא/ים בתוך פעולה קטנה ושגרתית, אבל '+premise;
+    var beats=[
+      'הפתיחה נראית רגילה: אחת הדמויות עסוקה במשימה פשוטה והאחרת נכנסת בלי טקס.',
+      'משפט קצר או טעות קטנה מכניסים את המתח של הרעיון לחדר, בלי להסביר אותו במפורש.',
+      'אחת הדמויות מנסה להחזיר את המצב לשגרה, אבל הבחירה שלה רק חושפת יותר ממה שהתכוונה.',
+      'העימות נעשה אישי: לא צעקה גדולה, אלא משפט מדויק שנוגע בפחד, בגאווה או באמון.',
+      'מגיעה תפנית: מי שנראה עד עכשיו כצודק מבין שהוא פספס משהו חשוב אצל האחר.',
+      'הסצנה מסתיימת בהחלטה קטנה שמשנה את הפעולה הבאה — לא פתרון מלא, אלא כיוון חדש.'
+    ];
+    var dialogue=[
+      (names[0]||'ראיקה')+': ״לא ביקשתי ממך לפתור את זה.״',
+      (names[1]||'הדמות שמולה')+': ״אז למה באת אליי?״',
+      (names[0]||'ראיקה')+': ״כי ידעתי שלא תיתן לי לברוח מזה.״',
+      (names[1]||'הדמות שמולה')+': ״אני לא עוצר אותך. אני רק שואל לאן את בורחת.״',
+      (names[0]||'ראיקה')+': ״זה לא אותו דבר.״',
+      (names[1]||'הדמות שמולה')+': ״נכון. בגלל זה עדיין נשארת.״'
+    ];
+    return {
+      title:'סצנה מוצעת — '+idea.title.replace(/^\d+\.\s*/,''),
+      location:location,
+      time:time,
+      participants:who,
+      opening:opener,
+      beats:beats,
+      dialogue:dialogue,
+      emotional_turn:'התפנית הרגשית מגיעה כשהדמות שמנסה להגן על עצמה מבינה שהצד השני אינו מנסה לנצח אותה — אלא להישאר איתה בתוך הקושי.',
+      ending:'בסיום, אף אחד לא אומר שהכול הסתדר. אחת הדמויות מתחילה ללכת, נעצרת לשנייה ואומרת: ״מחר. באותה שעה.״ השנייה רק מהנהנת.',
+      placement:'מתאים כסצנת ביניים אחרי כישלון, ויכוח או החלטה קשה, ולפני סצנה שבה הבחירה החדשה מקבלת מבחן ממשי.',
+      source:'local',
+      editing:false,
+      draftText:''
+    };
+  }
+
+  function sceneFromAiResponse(idea,raw,fallback){
+    var text=String(raw||'').trim();
+    if(!text)return fallback;
+    return Object.assign({},fallback,{
+      source:'ai',
+      fullText:text,
+      title:'🎬 '+idea.title.replace(/^\d+\.\s*/,''),
+      editing:false,
+      draftText:''
+    });
+  }
+
+  function sceneStructuredText(scene){
+    if(scene.fullText)return scene.fullText;
+    return [
+      scene.title,
+      'מיקום / זמן: '+scene.location+' · '+scene.time,
+      'משתתפים: '+scene.participants,
+      '',
+      'פתיח:',
+      scene.opening,
+      '',
+      'מהלך הסצנה:',
+      ...(scene.beats||[]).map(function(x,i){return (i+1)+'. '+x;}),
+      '',
+      'דיאלוג לדוגמה:',
+      ...(scene.dialogue||[]),
+      '',
+      'תפנית רגשית:',
+      scene.emotional_turn,
+      '',
+      'שורת סיום:',
+      scene.ending,
+      '',
+      'מיקום בעלילה:',
+      scene.placement
+    ].join('\n');
+  }
+
+  function scenePanelHtml(index){
+    if(expandedIndex!==index)return '';
+    if(sceneLoading===index)return '<div class="rg-scene-panel" data-rg-scene-panel="'+index+'"><div class="rg-scene-loading">🎬 בונה סצנה ממשית מהרעיונות והדמויות…</div></div>';
+    var scene=sceneCache[index];
+    if(!scene)return '';
+    var body;
+    if(scene.editing){
+      body='<textarea class="search rg-scene-editor" rows="22" data-rg-scene-editor="'+index+'">'+esc(scene.draftText||sceneStructuredText(scene))+'</textarea>';
+    }else if(scene.fullText){
+      body='<div class="rg-scene-ai-text">'+esc(scene.draftText||scene.fullText).replace(/\n/g,'<br>')+'</div>';
+    }else{
+      body='<div class="rg-scene-grid">'+
+        '<div><b>מיקום / זמן</b><p>'+esc(scene.location)+' · '+esc(scene.time)+'</p></div>'+
+        '<div><b>משתתפים</b><p>'+esc(scene.participants)+'</p></div>'+
+        '<div class="rg-scene-wide"><b>פתיח</b><p>'+esc(scene.opening)+'</p></div>'+
+        '<div class="rg-scene-wide"><b>מהלך הסצנה</b><ol>'+scene.beats.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ol></div>'+
+        '<div class="rg-scene-wide"><b>דיאלוג לדוגמה</b><div class="rg-scene-dialogue">'+scene.dialogue.map(function(x){return '<p>'+esc(x)+'</p>';}).join('')+'</div></div>'+
+        '<div class="rg-scene-wide"><b>תפנית רגשית</b><p>'+esc(scene.emotional_turn)+'</p></div>'+
+        '<div class="rg-scene-wide"><b>שורת סיום</b><p>'+esc(scene.ending)+'</p></div>'+
+        '<div class="rg-scene-wide"><b>מיקום בעלילה</b><p>'+esc(scene.placement)+'</p></div>'+
+      '</div>';
+    }
+    var source=scene.source==='ai'?'✨ הותאם בעזרת יועץ ראיקה':'🛟 נוצר מקומית לפי הרעיון והדמויות';
+    return '<section class="rg-scene-panel" data-rg-scene-panel="'+index+'">'+
+      '<div class="rg-scene-head"><div><span class="meta">'+source+'</span><h3>'+esc(scene.title)+'</h3></div><button class="btn small" type="button" data-rg-scene-close="'+index+'">✕ סגור</button></div>'+
+      body+
+      '<div class="card-actions rg-scene-actions">'+
+        '<button class="btn small" type="button" data-rg-scene-save="'+index+'">🎬 שמור כסצנה</button>'+
+        '<button class="btn small" type="button" data-rg-scene-refresh="'+index+'">🔄 רענן סצנה</button>'+
+        '<button class="btn small" type="button" data-rg-scene-edit="'+index+'">'+(scene.editing?'✓ סיים עריכה':'✏️ פתח לעריכה')+'</button>'+
+        '<button class="btn small" type="button" data-rg-scene-close="'+index+'">סגור</button>'+
+      '</div><div class="meta">💡 הסצנה היא הצעה בלבד ואינה קאנון עד אישור מפורש.</div>'+
+    '</section>';
+  }
+
+  function renderIdeas(scrollFirst){
+    var host=document.getElementById('rg-result');
+    if(!host)return;
+    var cardsHtml=currentIdeas.map(function(x,i){
+      var card='<article class="rg-result-card" data-rg-hotfix-card="'+i+'"><h3>'+esc(x.title)+'</h3><p>'+esc(x.body)+'</p><div class="card-actions"><button class="btn small" type="button" data-rg-hotfix-save="'+i+'">💾 שמור</button><button class="btn small" type="button" data-rg-hotfix-expand="'+i+'">🎬 הרחב לסצנה</button></div><span class="meta">💡 הצעה בלבד</span>'+scenePanelHtml(i)+'</article>';
+      if(i===2)card+=stickyRefreshHtml();
+      return card;
+    }).join('');
+    if(currentIdeas.length<3)cardsHtml+=stickyRefreshHtml();
+    host.innerHTML='<div class="canon-note"><b>🛠️ מצב יציב:</b> ההצעות נוצרו וניתן לשמור או להרחיב כל רעיון לסצנה.</div>'+cardsHtml;
+    if(scrollFirst){
+      var first=host.querySelector('[data-rg-hotfix-card="0"]');
+      if(first){first.style.scrollMarginTop='120px';first.scrollIntoView({behavior:'smooth',block:'start'});}
+    }
+  }
+
   function renderLocal(){
     var host=document.getElementById('rg-result');
     var status=document.getElementById('rg-status');
@@ -171,25 +314,15 @@
       return idea;
     });
 
-    var cardsHtml=currentIdeas.map(function(x,i){
-      var card='<article class="rg-result-card" data-rg-hotfix-card="'+i+'"><h3>'+esc(x.title)+'</h3><p>'+esc(x.body)+'</p><div class="card-actions"><button class="btn small" type="button" data-rg-hotfix-save="'+i+'">💾 שמור</button></div><span class="meta">💡 הצעה בלבד</span></article>';
-      if(i===2)card+=stickyRefreshHtml();
-      return card;
-    }).join('');
-
-    if(currentIdeas.length<3)cardsHtml+=stickyRefreshHtml();
-
-    host.innerHTML='<div class="canon-note"><b>🛠️ מצב יציב:</b> ההצעות נוצרו וניתן לשמור כל רעיון בנפרד.</div>'+cardsHtml;
+    expandedIndex=-1;
+    sceneCache={};
+    sceneRounds={};
+    sceneLoading=-1;
+    renderIdeas(true);
 
     if(status)status.textContent='ההצעות נוצרו ומופיעות כאן למטה.';
     var btn=document.getElementById('rg-generate');
     if(btn){btn.disabled=false;btn.textContent='צור הצעות';}
-
-    var first=host.querySelector('[data-rg-hotfix-card="0"]');
-    if(first){
-      first.style.scrollMarginTop='120px';
-      first.scrollIntoView({behavior:'smooth',block:'start'});
-    }
   }
 
   async function saveIdea(index,button){
@@ -221,14 +354,112 @@
     }
   }
 
+  async function expandScene(index,forceRefresh){
+    var idea=currentIdeas[index];
+    if(!idea)return;
+    expandedIndex=index;
+    if(forceRefresh)sceneRounds[index]=(sceneRounds[index]||0)+1;
+    var variant=sceneRounds[index]||0;
+    sceneLoading=index;
+    renderIdeas(false);
+    var panel=document.querySelector('[data-rg-scene-panel="'+index+'"]');
+    if(panel){panel.style.scrollMarginTop='110px';panel.scrollIntoView({behavior:'smooth',block:'start'});}
+    var fallback=buildLocalScene(idea,variant);
+    try{
+      if(window.RaikaPrivate?.authorized&&typeof window.raiCall==='function'){
+        var prompt='פתח את הרעיון הבא לסצנה ממשית בעברית, לא רק תקציר. שמור על הקאנון הקיים והצג אותה כהצעה בלבד.\n\nרעיון: '+idea.title+'\n'+idea.body+'\n\nכתוב במבנה ברור: כותרת; מיקום וזמן; פתיח קונקרטי; מהלך הסצנה ב-4 עד 6 ביטים; דיאלוג ממשי של לפחות 6 שורות; תפנית רגשית; שורת סיום; איפה הסצנה יכולה להשתלב בעלילה. תן פעולות, תגובות ודיאלוג שאפשר ממש לדמיין כסצנה.';
+        var response=await window.raiCall({
+          action:'ask',
+          item_type:'idea',
+          item_id:idea.id,
+          message:prompt,
+          context:{idea:idea,characters:idea.characters||[],rule:'הצעה בלבד; אין לשנות קאנון ללא אישור.'}
+        });
+        var raw=response?.message?.content||response?.message||'';
+        sceneCache[index]=sceneFromAiResponse(idea,raw,fallback);
+      }else{
+        sceneCache[index]=fallback;
+      }
+    }catch(err){
+      sceneCache[index]=fallback;
+      if(typeof toast==='function')toast('ה־AI לא היה זמין; יצרתי סצנה מקומית מלאה.');
+    }finally{
+      sceneLoading=-1;
+      renderIdeas(false);
+      var readyPanel=document.querySelector('[data-rg-scene-panel="'+index+'"]');
+      if(readyPanel){readyPanel.style.scrollMarginTop='110px';readyPanel.scrollIntoView({behavior:'smooth',block:'start'});}
+    }
+  }
+
+  async function saveScene(index,button){
+    var idea=currentIdeas[index],scene=sceneCache[index];
+    if(!idea||!scene)return;
+    if(!window.RaikaPrivate?.authorized||!window.RaikaWorkspaceClient?.save){
+      if(typeof toast==='function')toast('כדי לשמור סצנה צריך להתחבר לחדר הכותבים.');
+      return;
+    }
+    button.disabled=true;button.textContent='שומר סצנה…';
+    try{
+      await window.RaikaWorkspaceClient.save({
+        id:'scene-'+idea.id+'-'+Date.now(),
+        type:'scene',
+        status:'developing',
+        title:scene.title.replace(/^🎬\s*/,''),
+        summary:scene.draftText||sceneStructuredText(scene),
+        placement:scene.placement||'',
+        characters:idea.characters||[],
+        tags:['generator','scene-proposal'],
+        saved:true
+      });
+      button.textContent='הסצנה נשמרה ✓';
+      if(typeof toast==='function')toast('הסצנה נשמרה במצב פיתוח.');
+    }catch(err){
+      button.disabled=false;button.textContent='🎬 שמור כסצנה';
+      if(typeof toast==='function')toast('שמירת הסצנה נכשלה.');
+    }
+  }
+
+  function toggleSceneEdit(index){
+    var scene=sceneCache[index];if(!scene)return;
+    if(scene.editing){
+      var editor=document.querySelector('[data-rg-scene-editor="'+index+'"]');
+      if(editor)scene.draftText=editor.value;
+    }
+    scene.editing=!scene.editing;
+    renderIdeas(false);
+  }
+
+  function closeScene(index){
+    if(expandedIndex===index)expandedIndex=-1;
+    renderIdeas(false);
+  }
+
   function generateAgain(){
     refreshRound+=1;
+    expandedIndex=-1;
+    sceneCache={};
+    sceneRounds={};
     var status=document.getElementById('rg-status');
     if(status)status.textContent='מרענן רעיונות…';
     renderLocal();
   }
 
   function handle(e){
+    var sceneSave=e.target&&e.target.closest&&e.target.closest('[data-rg-scene-save]');
+    if(sceneSave){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();saveScene(Number(sceneSave.dataset.rgSceneSave),sceneSave);return;}
+
+    var sceneRefresh=e.target&&e.target.closest&&e.target.closest('[data-rg-scene-refresh]');
+    if(sceneRefresh){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();expandScene(Number(sceneRefresh.dataset.rgSceneRefresh),true);return;}
+
+    var sceneEdit=e.target&&e.target.closest&&e.target.closest('[data-rg-scene-edit]');
+    if(sceneEdit){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();toggleSceneEdit(Number(sceneEdit.dataset.rgSceneEdit));return;}
+
+    var sceneClose=e.target&&e.target.closest&&e.target.closest('[data-rg-scene-close]');
+    if(sceneClose){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();closeScene(Number(sceneClose.dataset.rgSceneClose));return;}
+
+    var expand=e.target&&e.target.closest&&e.target.closest('[data-rg-hotfix-expand]');
+    if(expand){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();expandedIndex=Number(expand.dataset.rgHotfixExpand);expandScene(expandedIndex,false);return;}
+
     var save=e.target&&e.target.closest&&e.target.closest('[data-rg-hotfix-save]');
     if(save){
       e.preventDefault();
@@ -265,6 +496,13 @@
       btn.textContent='צור הצעות';
     }
   }
+
+  document.addEventListener('input',function(e){
+    var editor=e.target&&e.target.closest&&e.target.closest('[data-rg-scene-editor]');
+    if(!editor)return;
+    var index=Number(editor.dataset.rgSceneEditor);
+    if(sceneCache[index])sceneCache[index].draftText=editor.value;
+  },true);
 
   document.addEventListener('click',handle,true);
 
