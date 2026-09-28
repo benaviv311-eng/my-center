@@ -382,7 +382,14 @@
   gap:clamp(28px,3vw,54px);
   justify-content:center;
 }
-.book-prototype-reading .book-reading-toc-wrap{grid-area:toc}
+.book-prototype-reading .book-reading-toc-wrap{
+  grid-area:toc;
+  position:sticky;
+  top:24px;
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  scrollbar-width:thin;
+}
 .book-prototype-reading .book-reading-main{grid-area:reader}
 .book-chapter-summary-wrap{
   grid-area:summary;
@@ -484,7 +491,8 @@
   line-height:1.4;
 }
 .book-prototype-reading .book-reading-toc-card{
-  top:24px;
+  position:static;
+  top:auto;
 }
 @media(max-width:1180px){
   .book-prototype-reading .book-reading-layout{
@@ -504,6 +512,16 @@
     grid-template-columns:1fr;
     grid-template-areas:"toc" "summary" "reader";
     gap:18px;
+  }
+  .book-prototype-reading .book-reading-toc-wrap{
+    position:static;
+    top:auto;
+    max-height:none;
+    overflow:visible;
+  }
+  .book-prototype-reading .book-reading-toc-card{
+    position:sticky;
+    top:2px;
   }
   .book-prototype-reading .book-chapter-summary-wrap{
     position:static;
