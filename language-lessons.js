@@ -81,19 +81,24 @@
       '<div class="lesson-current-copy">'+(done.length===10?'כל 10 השיעורים הושלמו ✓':'השיעור הבא: <b>'+next+'. '+esc(nextLesson.name)+'</b>')+'</div>'+
     '</article>';
   }
-  function renderDashboard(){
+  function renderDashboard(activeLang){
     const root=document.getElementById('language-lessons-dashboard');
     if(!root)return;
     const state=load();
-    root.innerHTML='<div class="lesson-dashboard-head"><div><span class="language-hub-eyebrow">מסלול 1–10</span><h2>השיעורים שלי</h2><p>כל שיעור כולל מילים, משפטים, כרטיסיות, תרגול ואתגר מסכם.</p></div><div class="lesson-dashboard-legend"><span>✓ הושלם</span><span>▶ נוכחי</span><span>🔒 בהמשך — עדיין ניתן לדלג</span></div></div>'+
-      '<div class="lesson-courses">'+Object.keys(LANGUAGES).map(lang=>courseHtml(lang,state)).join('')+'</div>'+
-      '<div class="lesson-weekly"><div><span class="language-hub-eyebrow">7 ימים אחרונים</span><h3>גרף התקדמות</h3><p>מספר שיעורים שהושלמו בכל יום.</p></div>'+weeklyChart(state)+'</div>';
     Object.keys(LANGUAGES).forEach(lang=>{
       const card=document.querySelector('[data-language-card="'+lang+'"]');
       if(!card)return;
       const progress=card.querySelector('[data-card-progress]');
       if(progress)progress.textContent=completed(lang,state).length===10?'10/10 הושלם ✓':'שיעור '+current(lang,state)+' מתוך 10';
     });
+    if(!LANGUAGES[activeLang]){
+      root.innerHTML='<div class="lesson-dashboard-empty"><span class="language-hub-eyebrow">מסלול שיעורים 1–10</span><h2>בחר שפה כדי לפתוח שיעורים</h2><p>השיעורים נפתחים רק מתוך השפה הנוכחית. בחר ערבית, איטלקית, רוסית או ספרדית למעלה.</p></div>';
+      return;
+    }
+    const meta=LANGUAGES[activeLang];
+    root.innerHTML='<div class="lesson-dashboard-head"><div><span class="language-hub-eyebrow">מסלול 1–10 · '+esc(meta.name)+'</span><h2>השיעורים של '+esc(meta.name)+'</h2><p>כל שיעור כולל מילים, משפטים, כרטיסיות, תרגול ואתגר מסכם.</p></div><div class="lesson-dashboard-legend"><span>✓ הושלם</span><span>▶ נוכחי</span><span>🔒 בהמשך — עדיין ניתן לדלג</span></div></div>'+
+      '<div class="lesson-courses">'+courseHtml(activeLang,state)+'</div>'+
+      '<div class="lesson-weekly"><div><span class="language-hub-eyebrow">7 ימים אחרונים</span><h3>גרף התקדמות</h3><p>מספר שיעורים שהושלמו בכל השפות.</p></div>'+weeklyChart(state)+'</div>';
   }
   function renderStudyTrack(lang,n){
     const root=document.getElementById('study-lesson-track');
