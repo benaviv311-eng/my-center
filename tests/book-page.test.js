@@ -109,3 +109,6 @@ assert.ok(html.includes('id="book-refresh-all"') && html.includes('aria-label="×
 assert.ok(/id="book-refresh-all"[^>]*>ðŸ”„<\/button>/.test(html), 'refresh-all should render as an icon-only button');
 assert.ok(pageCss.includes('left:16px'), 'refresh icon should be pinned to the physical left edge');
 assert.ok(pageCss.includes('width:46px') && pageCss.includes('height:46px'), 'refresh icon should be compact');
+
+assert.ok(pageCss.includes('bottom:calc(154px + env(safe-area-inset-bottom))'), 'desktop refresh icon should sit above the site chat button');
+assert.ok(pageCss.includes('bottom:calc(144px + env(safe-area-inset-bottom))'), 'mobile refresh icon should sit above the site chat button');
