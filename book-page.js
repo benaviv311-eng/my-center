@@ -186,9 +186,15 @@ function setReadStatus(message){
   const status=$('book-read-status');if(status)status.textContent=message||'';
 }
 function setReadControls(active,paused){
-  const pause=$('book-read-pause'),stop=$('book-read-stop');
+  const pause=$('book-read-pause'),stop=$('book-read-stop'),floating=$('book-read-floating');
   if(pause){pause.disabled=!active;pause.textContent=paused?'המשך':'השהה'}
   if(stop)stop.disabled=!active;
+  if(floating){
+    floating.classList.toggle('is-active',!!active);
+    floating.textContent=active?(paused?'▶':'⏸'):'🔊';
+    floating.setAttribute('aria-label',active?(paused?'המשך הקראה':'השהה הקראה'):'הקרא את הפרק');
+    floating.title=active?(paused?'המשך הקראה':'השהה הקראה'):'הקרא את הפרק';
+  }
 }
 function stopReadAloud(message){
   if('speechSynthesis' in window)window.speechSynthesis.cancel();
@@ -476,6 +482,7 @@ $('book-surprise').addEventListener('click',()=>refreshAll('surprise'));
 $('book-feed-more').addEventListener('click',appendFeed);
 $('book-save-note').addEventListener('click',()=>{if(!state.book)return;state.notes[state.book.slug||state.book.id]=$('book-note').value;localStorage.setItem(notesKey,JSON.stringify(state.notes));toast('ההערה נשמרה')});
 $('book-read-aloud').addEventListener('click',speakCurrentChapter);
+$('book-read-floating').addEventListener('click',()=>{state.speechUtterance?toggleReadPause():speakCurrentChapter()});
 $('book-read-pause').addEventListener('click',toggleReadPause);
 $('book-read-stop').addEventListener('click',()=>stopReadAloud('ההקראה נעצרה.'));
 $('book-read-rate').addEventListener('change',()=>{
