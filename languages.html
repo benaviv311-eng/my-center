@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="app-icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="languages-feed.css?v=5">
+  <link rel="stylesheet" href="languages-feed.css?v=6">
 </head>
 <body>
 <div class="app language-feed-page">
@@ -49,22 +49,24 @@
     </div>
     <div class="language-cards">
       <button class="language-card language-card-ar" type="button" data-language-card="ar">
-        <span class="language-card-code">AR</span><strong>ערבית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">AR</span><strong>ערבית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
       </button>
       <button class="language-card language-card-it" type="button" data-language-card="it">
-        <span class="language-card-code">IT</span><strong>איטלקית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">IT</span><strong>איטלקית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
       </button>
       <button class="language-card language-card-ru" type="button" data-language-card="ru">
-        <span class="language-card-code">RU</span><strong>רוסית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">RU</span><strong>רוסית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
       </button>
       <button class="language-card language-card-es" type="button" data-language-card="es">
-        <span class="language-card-code">ES</span><strong>ספרדית</strong><small>מילים · משפטים · תרגול</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">ES</span><strong>ספרדית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
       </button>
       <button class="language-card language-card-four" type="button" data-language-card="four">
         <span class="language-card-code">4×</span><strong>4 שפות יחד</strong><small>אותו רעיון בכל השפות</small><span>פתח בפיד ←</span>
       </button>
     </div>
   </section>
+
+  <section id="language-lessons-dashboard" class="language-lessons-dashboard" aria-label="מסלולי שיעורים"></section>
 
   <section class="daily-path-card">
     <div>
@@ -129,8 +131,10 @@
 <script src="app.js?v=3"></script>
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
-<script src="languages-feed.js?v=6"></script>
+<script src="language-lessons.js?v=1"></script>
+<script src="languages-feed.js?v=7"></script>
 <script src="language-audio.js?v=2"></script>
+<script>window.LanguageLessons&&window.LanguageLessons.renderDashboard();</script>
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';}catch(e){}})();
 </script>
