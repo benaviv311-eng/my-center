@@ -33,6 +33,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-read-pause',
   'book-read-stop',
   'book-read-rate',
+  'book-read-language',
   'book-takeaways',
   'book-summary',
   'book-ideas',
@@ -112,3 +113,8 @@ assert.ok(pageCss.includes('width:46px') && pageCss.includes('height:46px'), 're
 
 assert.ok(pageCss.includes('bottom:calc(154px + env(safe-area-inset-bottom))'), 'desktop refresh icon should sit above the site chat button');
 assert.ok(pageCss.includes('bottom:calc(144px + env(safe-area-inset-bottom))'), 'mobile refresh icon should sit above the site chat button');
+
+assert.ok(html.includes('he-IL') && html.includes('ar-SA') && html.includes('it-IT') && html.includes('ru-RU') && html.includes('es-ES'), 'read-aloud should offer language switching across the site language set');
+assert.ok(js.includes('function readLanguage()'), 'reader should resolve the selected read-aloud language');
+assert.ok(js.includes('utterance.lang=readLanguage()'), 'speech synthesis should use the selected language');
+assert.ok(js.includes('compactSummaryText(value,88)'), 'chapter key sentences should be noticeably shorter');
