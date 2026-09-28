@@ -96,7 +96,7 @@
     }else if(which==='levels'){
       better=value>old.value || (value===old.value&&secondary>Number(old.secondary||0));
     }else if(which==='knockout'){
-      better=value>old.value;
+      better=value>old.value || (value===old.value&&secondary>Number(old.secondary||0));
     }
 
     if(better){
@@ -379,7 +379,7 @@
     if(mode==='knockout'){
       score++;
       if(matches>=knockoutTarget){
-        const isBest=commitBest('knockout',time);
+        const isBest=commitBest('knockout',knockoutTarget,time);
         endGame('🏆 נוקאאוט הושלם!','נשארו '+time+' שניות'+(isBest?' · שיא חדש! 🏆':''));
         return false;
       }
@@ -465,7 +465,11 @@
     if(!best) return '';
     if(mode==='classic') return 'שיא: '+best.value;
     if(mode==='levels') return 'שיא: שלב '+best.value;
-    if(mode==='knockout') return 'שיא: '+best.value+(best.value>cfg().knockoutTarget?'':' שנ׳/התקדמות');
+    if(mode==='knockout'){
+      return best.value>=cfg().knockoutTarget
+        ? 'שיא: הושלם · '+Number(best.secondary||0)+' שנ׳ נותרו'
+        : 'שיא: '+best.value+'/'+cfg().knockoutTarget;
+    }
     if(mode==='survival') return 'שיא: '+best.value+' התאמות';
     return '';
   }
@@ -602,6 +606,9 @@
     panel.querySelectorAll('[data-mode]').forEach(btn=>{
       btn.addEventListener('click',()=>startGame(btn.dataset.mode));
     });
+
+    const strip=panel.querySelector('#bestStrip');
+    if(strip) strip.textContent=bestOverview();
 
     panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
       const key=btn.dataset.difficulty;
