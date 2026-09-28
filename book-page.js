@@ -73,7 +73,7 @@ function chapterSummaryPoints(chapter){
   const candidates=Array.isArray(chapter.keySentences)?chapter.keySentences:[];
   const seen=new Set(),points=[];
   for(const value of candidates){
-    const point=compactSummaryText(value,155);
+    const point=compactSummaryText(value,88);
     const key=point.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
     if(!point||!key||seen.has(key))continue;
     seen.add(key);points.push(point);
@@ -118,6 +118,10 @@ function readRate(){
   const value=control?Number(control.value):1;
   return Number.isFinite(value)&&value>0?value:1;
 }
+function readLanguage(){
+  const control=$('book-read-language');
+  return control&&control.value?control.value:'he-IL';
+}
 function setReadStatus(message){
   const status=$('book-read-status');if(status)status.textContent=message||'';
 }
@@ -142,11 +146,13 @@ function speakCurrentChapter(){
   if(!text)return;
   window.speechSynthesis.cancel();
   const utterance=new SpeechSynthesisUtterance(text);
-  utterance.lang='he-IL';
+  utterance.lang=readLanguage();
   utterance.rate=readRate();
   const voices=window.speechSynthesis.getVoices?window.speechSynthesis.getVoices():[];
-  const hebrewVoice=voices.find(voice=>/^he(?:-|$)/i.test(voice.lang||''));
-  if(hebrewVoice)utterance.voice=hebrewVoice;
+  const selectedLang=readLanguage().toLowerCase();
+  const matchingVoice=voices.find(voice=>String(voice.lang||'').toLowerCase()===selectedLang)
+    || voices.find(voice=>String(voice.lang||'').toLowerCase().startsWith(selectedLang.split('-')[0]));
+  if(matchingVoice)utterance.voice=matchingVoice;
   utterance.onstart=()=>{state.speechPaused=false;setReadControls(true,false);setReadStatus(`מקריא את הפרק הנוכחי · ${readRate()}×`)};
   utterance.onend=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('ההקראה הסתיימה.')};
   utterance.onerror=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('לא הצלחתי להפעיל את ההקראה.')};
@@ -409,6 +415,11 @@ $('book-read-pause').addEventListener('click',toggleReadPause);
 $('book-read-stop').addEventListener('click',()=>stopReadAloud('ההקראה נעצרה.'));
 $('book-read-rate').addEventListener('change',()=>{
   setReadStatus(`קצב ההקראה נקבע ל־${readRate()}×`);
+});
+$('book-read-language').addEventListener('change',()=>{
+  const control=$('book-read-language');
+  const label=control&&control.options[control.selectedIndex]?control.options[control.selectedIndex].textContent:'';
+  setReadStatus(`שפת ההקראה: ${label}`);
 });
 window.addEventListener('beforeunload',()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel()});
 
