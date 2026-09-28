@@ -34,6 +34,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-read-stop',
   'book-read-rate',
   'book-read-language',
+  'book-read-floating',
   'book-takeaways',
   'book-summary',
   'book-ideas',
@@ -124,3 +125,8 @@ assert.ok(js.includes('utterance.onboundary'), 'read-aloud should follow speech 
 assert.ok(js.includes('data-speech-start'), 'reader should mark spoken words with character offsets');
 assert.ok(js.includes('scrollIntoView({behavior:\'smooth\',block:\'center\''), 'spoken word tracking should auto-scroll the current word into view');
 assert.ok(pageCss.includes('.speech-word.is-speaking-word'), 'current spoken word should have a visible highlight style');
+
+assert.ok(html.includes('<option value="en-US">אנגלית</option>'), 'read-aloud language selector should include English');
+assert.ok(pageCss.includes('.book-prototype-reading #book-read-floating') && pageCss.includes('position:fixed'), 'read-aloud should have a fixed floating control in the prototype');
+assert.ok(pageCss.includes('bottom:calc(212px + env(safe-area-inset-bottom))'), 'floating read control should sit above refresh on desktop');
+assert.ok(js.includes("$('book-read-floating').addEventListener"), 'floating read control should trigger read-aloud');
