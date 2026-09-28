@@ -101,10 +101,63 @@
             <textarea id="editor-raika" rows="3"></textarea>
           </div>
 
-          <div class="editor-field full" data-editor-for="verse">
-            <label for="editor-quote">משפט שהדמות הייתה אומרת</label>
-            <textarea id="editor-quote" rows="2"></textarea>
+          <div class="editor-field" data-editor-for="verse">
+            <label for="editor-speaker">מי אומר את המשפט</label>
+            <input id="editor-speaker" type="text" list="raika-character-options" placeholder="בחר דמות או הקלד שם">
           </div>
+
+          <div class="editor-field" data-editor-for="verse">
+            <label for="editor-recipient">למי נאמר המשפט</label>
+            <input id="editor-recipient" type="text" list="raika-recipient-options" placeholder="בחר דמות / לעצמה / לכולם">
+          </div>
+
+          <div class="editor-field full" data-editor-for="verse">
+            <label for="editor-quote">המשפט עצמו</label>
+            <textarea id="editor-quote" rows="2" placeholder="כתוב את המשפט בלי שם הדמות בתחילתו"></textarea>
+          </div>
+
+          <datalist id="raika-character-options">
+            <option value="ראיקה"></option>
+            <option value="ראי"></option>
+            <option value="היקארי"></option>
+            <option value="טומו"></option>
+            <option value="נאזו יוקאן"></option>
+            <option value="מדושי"></option>
+            <option value="קאמינארי"></option>
+            <option value="שיזוקה"></option>
+            <option value="סיירן"></option>
+            <option value="גנזו"></option>
+            <option value="איקטרו"></option>
+            <option value="אוקנה"></option>
+            <option value="טאקאקי"></option>
+            <option value="גנבו"></option>
+            <option value="יוגאן"></option>
+            <option value="איוואו"></option>
+            <option value="גנקי"></option>
+            <option value="רוגה"></option>
+            <option value="הייאטה"></option>
+            <option value="קיבה"></option>
+            <option value="קאגה"></option>
+            <option value="אראשי"></option>
+          </datalist>
+
+          <datalist id="raika-recipient-options">
+            <option value="לעצמו/לעצמה"></option>
+            <option value="לכולם"></option>
+            <option value="ראיקה"></option>
+            <option value="ראי"></option>
+            <option value="היקארי"></option>
+            <option value="טומו"></option>
+            <option value="נאזו יוקאן"></option>
+            <option value="מדושי"></option>
+            <option value="קאמינארי"></option>
+            <option value="שיזוקה"></option>
+            <option value="סיירן"></option>
+            <option value="גנזו"></option>
+            <option value="איקטרו"></option>
+            <option value="אוקנה"></option>
+            <option value="טאקאקי"></option>
+          </datalist>
 
           <div class="editor-field full" data-editor-for="quote,book,idea,scene,character,exercise,language,music">
             <label for="editor-generic">תוכן מרכזי / תקציר</label>
