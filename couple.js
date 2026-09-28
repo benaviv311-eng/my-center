@@ -606,24 +606,30 @@ $$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function go(tab){$$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
 function openAllFeatures(){
- openModal(`<p class="eyebrow">כל האפשרויות</p><h2>רוצה יותר שליטה?</h2><p>הפעולה היומית נשארת פשוטה. כאן נמצאים כל הכלים למי שרוצה להעמיק.</p><div class="feature-hub-grid">
-   <button data-hub-go="courtship"><span>❤️</span><strong>חיזור</strong><small>שבוע חיזור ופעולות</small></button>
-   <button data-hub-go="plans"><span>📅</span><strong>תוכניות</strong><small>שבוע, חודש ותקציב</small></button>
-   <button data-hub-flow="gift"><span>🎁</span><strong>מתנה</strong><small>לבחור ידנית</small></button>
-   <button data-hub-flow="date"><span>🥂</span><strong>דייט</strong><small>לבנות ידנית</small></button>
+ openModal(`<p class="eyebrow">כל האפשרויות</p><h2>עוד דברים שאפשר לעשות</h2><p>התוכניות המרכזיות נמצאות תמיד בתפריט התחתון. כאן נמצאים הפרופיל, ההגדרות ובחירה ידנית.</p><div class="feature-hub-grid">
+   <button data-hub-go="home"><span>☀️</span><strong>יומי</strong><small>מה לעשות היום</small></button>
+   <button data-hub-go="courtship"><span>🗓️</span><strong>שבועי</strong><small>תוכנית 7 ימים</small></button>
+   <button data-hub-go="plans"><span>📆</span><strong>חודשי</strong><small>תקציב ותוכנית חודש</small></button>
+   <button data-hub-go="spontaneous"><span>⚡</span><strong>ספונטני</strong><small>משהו לעשות עכשיו</small></button>
+   <button data-hub-flow="gift"><span>🎁</span><strong>מתנה ידנית</strong><small>לבחור בעצמך</small></button>
+   <button data-hub-flow="date"><span>🥂</span><strong>דייט ידני</strong><small>לבנות בעצמך</small></button>
    <button data-hub-go="partner"><span>♥</span><strong>היא</strong><small>העדפות ורמזים</small></button>
    <button data-hub-go="me"><span>⚙</span><strong>הגדרות</strong><small>זמן, תקציב ומיקום</small></button>
  </div><button class="ghost full" id="hubHintBtn">＋ היא אמרה משהו</button>`);
- $$('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
- $$('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
+ $('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
+ $('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
  $('#hubHintBtn').onclick=addHint
 }
-$('#openAllFeaturesBtn').onclick=openAllFeatures;
-$('#allFeaturesNavBtn').onclick=openAllFeatures;
+if($('#openAllFeaturesBtn'))$('#openAllFeaturesBtn').onclick=openAllFeatures;
 $$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
 $('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#quickSetupBtn').onclick=quickSetup;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
+if($('#spontaneousNowBtn'))$('#spontaneousNowBtn').onclick=()=>showAction();
+if($('#spontaneousFreeBtn'))$('#spontaneousFreeBtn').onclick=()=>showAction();
+if($('#spontaneousGestureBtn'))$('#spontaneousGestureBtn').onclick=gestureFlow;
+if($('#spontaneousGiftBtn'))$('#spontaneousGiftBtn').onclick=giftFlow;
+if($('#spontaneousDateBtn'))$('#spontaneousDateBtn').onclick=dateFlow;
 $('#quickAddBtn').onclick=addHint;$('#addHintBtn').onclick=addHint;$('#partnerHintBtn').onclick=addHint;$('#addEventBtn').onclick=addEvent;
 $('#buildWeek').onclick=buildWeek;$('#regenerateWeek').onclick=buildWeek;
 $('#autoCourtship').onclick=()=>{state.plan.autoPlanner=true;ensureAutomaticPlanning(true);persistOnly();fillForms();render();go('plans');toast('התכנון האוטומטי הופעל')};
