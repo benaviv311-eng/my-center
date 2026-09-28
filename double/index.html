@@ -133,6 +133,9 @@
     .sprint-card span{font-size:12px;font-weight:800;opacity:.78}
     .sprint-card:active{transform:translateY(2px);box-shadow:0 3px 0 #0003}
     @media(max-width:520px){.sprint-grid{grid-template-columns:1fr}.sprint-card{min-height:78px}}
+  
+    .assist-btn{background:linear-gradient(180deg,#ffe48a,#ffc94d);color:#171717;border:1px solid #fff2b2!important;box-shadow:0 4px 0 #0003}
+    .assist-btn:disabled{opacity:.5;filter:grayscale(.45);box-shadow:none;cursor:not-allowed}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -185,6 +188,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=12"></script>
+  <script src="game.js?v=13"></script>
 </body>
 </html>
