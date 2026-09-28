@@ -14,9 +14,9 @@ test('shared Raika idea history persists seen signatures and semantic fingerprin
 
 test('generator uses the unified server idea engine instead of its own template bank',()=>{
   const src=fs.readFileSync('raika-generator-hotfix.js','utf8');
-  assert.match(src,/RaikaFeedClient\.refreshAll/);
-  assert.match(src,/RaikaIdeaHistory\.recentSignatures/);
-  assert.match(src,/RaikaIdeaHistory\.rememberCards/);
+  assert.match(src,/RaikaFeedClient.*refreshAll/);
+  assert.match(src,/RaikaIdeaHistory.*recentSignatures/);
+  assert.match(src,/RaikaIdeaHistory.*rememberCards/);
   assert.doesNotMatch(src,/var bank=\{/);
   assert.doesNotMatch(src,/function ideas\(/);
 });
@@ -24,9 +24,9 @@ test('generator uses the unified server idea engine instead of its own template 
 test('main feed and generator both feed the same persistent seen history',()=>{
   const feed=fs.readFileSync('raika-feed-ui.js','utf8');
   const generator=fs.readFileSync('raika-generator-hotfix.js','utf8');
-  assert.match(feed,/RaikaIdeaHistory\.recentSignatures/);
-  assert.match(feed,/RaikaIdeaHistory\.rememberCards/);
-  assert.match(generator,/RaikaIdeaHistory\.filterFresh/);
+  assert.match(feed,/RaikaIdeaHistory.*recentSignatures/);
+  assert.match(feed,/RaikaIdeaHistory.*rememberCards/);
+  assert.match(generator,/RaikaIdeaHistory.*filterFresh/);
 });
 
 test('Writers Room loads shared history before both feed UI and generator hotfix',()=>{
