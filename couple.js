@@ -616,8 +616,8 @@ function openAllFeatures(){
    <button data-hub-go="partner"><span>♥</span><strong>היא</strong><small>העדפות ורמזים</small></button>
    <button data-hub-go="me"><span>⚙</span><strong>הגדרות</strong><small>זמן, תקציב ומיקום</small></button>
  </div><button class="ghost full" id="hubHintBtn">＋ היא אמרה משהו</button>`);
- $('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
- $('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
+ $$('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
+ $$('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
  $('#hubHintBtn').onclick=addHint
 }
 if($('#openAllFeaturesBtn'))$('#openAllFeaturesBtn').onclick=openAllFeatures;
