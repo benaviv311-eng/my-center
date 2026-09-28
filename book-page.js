@@ -169,8 +169,8 @@ function setupReaderPrototype(){
   if(enabled&&state.readingChapters.length)setActiveReadingChapter(state.activeChapterId||state.readingChapters[0].id);
   if(!enabled)stopReadAloud('');
 }
-function renderReading(seed){
-  const chapters=R.buildReadingChapters(state.book,{seed});
+function renderReading(seed,options){
+  const chapters=R.buildReadingChapters(state.book,Object.assign({seed},options||{}));
   state.readingChapters=chapters;
   $('book-reading-toc').innerHTML=chapters.map(ch=>`<a href="#chapter-${esc(ch.id)}" data-toc-target="${esc(ch.id)}">${esc(ch.title)}</a>`).join('');
   $('book-reading-body').innerHTML=chapters.length?chapters.map(readingChapter).join(''):'<div class="book-page-empty">אין עדיין חומר קריאה לספר הזה.</div>';
@@ -284,8 +284,11 @@ function renderStatic(){
 }
 function newSeed(mode){return `${state.today}|${state.book.slug||state.book.id}|${mode}|${Date.now()}|${Math.random()}`}
 function refreshAll(mode){
-  state.seed=newSeed(mode);renderReading(state.seed);resetFeed('all');
-  toast(mode==='surprise'?'פתחתי זוויות חדשות':mode==='random'?'נוצר מסלול קריאה רנדומלי חדש':'כל חלקי הספר רועננו');
+  const excludeTitles=isReaderPrototype()?state.readingChapters.map(ch=>ch.title):[];
+  state.seed=newSeed(mode);
+  renderReading(state.seed,isReaderPrototype()?{fullRefresh:true,excludeTitles}:null);
+  resetFeed('all');
+  toast(isReaderPrototype()?'קיבלת סט פרקים חדש לגמרי':mode==='surprise'?'פתחתי זוויות חדשות':mode==='random'?'נוצר מסלול קריאה רנדומלי חדש':'כל חלקי הספר רועננו');
   if(mode==='surprise')$('book-reading-body').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function resolveBook(books){const params=new URLSearchParams(window.location.search),key=params.get('book');if(!key)return null;return books.find(book=>String(book.id)===key||String(book.slug||'')===key)||null}
