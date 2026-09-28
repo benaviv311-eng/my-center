@@ -113,6 +113,11 @@ function chapterSpeechText(chapter){
   });
   return parts.filter(Boolean).join('. ');
 }
+function readRate(){
+  const control=$('book-read-rate');
+  const value=control?Number(control.value):1;
+  return Number.isFinite(value)&&value>0?value:1;
+}
 function setReadStatus(message){
   const status=$('book-read-status');if(status)status.textContent=message||'';
 }
@@ -138,11 +143,11 @@ function speakCurrentChapter(){
   window.speechSynthesis.cancel();
   const utterance=new SpeechSynthesisUtterance(text);
   utterance.lang='he-IL';
-  utterance.rate=.96;
+  utterance.rate=readRate();
   const voices=window.speechSynthesis.getVoices?window.speechSynthesis.getVoices():[];
   const hebrewVoice=voices.find(voice=>/^he(?:-|$)/i.test(voice.lang||''));
   if(hebrewVoice)utterance.voice=hebrewVoice;
-  utterance.onstart=()=>{state.speechPaused=false;setReadControls(true,false);setReadStatus('מקריא את הפרק הנוכחי…')};
+  utterance.onstart=()=>{state.speechPaused=false;setReadControls(true,false);setReadStatus(`מקריא את הפרק הנוכחי · ${readRate()}×`)};
   utterance.onend=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('ההקראה הסתיימה.')};
   utterance.onerror=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('לא הצלחתי להפעיל את ההקראה.')};
   state.speechUtterance=utterance;
@@ -402,6 +407,9 @@ $('book-save-note').addEventListener('click',()=>{if(!state.book)return;state.no
 $('book-read-aloud').addEventListener('click',speakCurrentChapter);
 $('book-read-pause').addEventListener('click',toggleReadPause);
 $('book-read-stop').addEventListener('click',()=>stopReadAloud('ההקראה נעצרה.'));
+$('book-read-rate').addEventListener('change',()=>{
+  setReadStatus(`קצב ההקראה נקבע ל־${readRate()}×`);
+});
 window.addEventListener('beforeunload',()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel()});
 
 loadBook();
