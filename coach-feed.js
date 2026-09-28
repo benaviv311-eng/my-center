@@ -8,7 +8,7 @@
   const KNOWN_TOPICS=['sport-psychology','coaching-psychology','movement-psychology','explosive-power','coaching-language','volleyball-approaches'];
 
   function normalizeCard(card){
-    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:'',image:'',imageAlt:'',challenge:false,deepDive:[]},card||{});
+    return Object.assign({tags:[],body:'',application:'',applicationDetails:'',source:'',sourceKind:'',evidenceStrength:'',image:'',imageAlt:'',challenge:false,deepDive:[],contentKind:'',labId:'',audience:null},card||{});
   }
 
   function filterCards(cards,topic){
@@ -56,7 +56,27 @@
 
   function buildFeedCycle(cards,seed,cycleIndex){
     const cycle=Number.isInteger(cycleIndex)&&cycleIndex>=0?cycleIndex:0;
-    return mixFeed(cards,`${seed}|cycle:${cycle}`,Array.isArray(cards)?cards.length:0);
+    const mixed=mixFeed(cards,`${seed}|cycle:${cycle}`,Array.isArray(cards)?cards.length:0);
+    const buckets=new Map();
+    mixed.forEach(card=>{const key=card.type||'other';if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(card);});
+    const pattern=['practice','concept','scenario','question','research','application','practice','concept'];
+    const out=[];let lastTopic='';
+    while(out.length<mixed.length){
+      let added=false;
+      for(const type of pattern){
+        const bucket=buckets.get(type)||[];
+        if(!bucket.length)continue;
+        let ix=bucket.findIndex(x=>x.topic!==lastTopic);
+        if(ix<0)ix=0;
+        const [card]=bucket.splice(ix,1);out.push(card);lastTopic=card.topic;added=true;
+        if(out.length>=mixed.length)break;
+      }
+      if(!added){
+        for(const bucket of buckets.values()){if(bucket.length){out.push(bucket.shift());added=true;break;}}
+      }
+      if(!added)break;
+    }
+    return out;
   }
 
   function answerQuestion(card,optionIndex){
@@ -84,7 +104,9 @@
   }
 
   function renderMeta(card,topics){
+    const typeLabels={practice:'תרגיל',concept:'עיקרון',scenario:'סיטואציה',question:'שאלת מאמן',research:'מחקר ומדע',application:'יישום'};
     const parts=[`<span class="coach-pill">${escapeHtml(topicLabel(card.topic,topics))}</span>`];
+    if(card.contentKind||typeLabels[card.type]) parts.push(`<span class="coach-pill coach-type-pill">${escapeHtml(card.contentKind||typeLabels[card.type])}</span>`);
     if(card.evidenceStrength) parts.push(`<span class="coach-pill coach-evidence">ראיות: ${escapeHtml(card.evidenceStrength)}</span>`);
     if(card.source) parts.push(`<span class="coach-source">מקור: ${escapeHtml(card.source)}</span>`);
     return `<div class="coach-card-meta">${parts.join('')}</div>`;
@@ -194,6 +216,29 @@
     </div>`;
   }
 
+  function currentContext(){
+    try{return JSON.parse(localStorage.getItem('coachProContext:v1')||'{}')||{};}catch(_){return{};}
+  }
+  function contextHint(card){
+    const c=currentContext();if(!c.group&&!c.level&&!c.players)return'';
+    const groups={elementary:'יסודי',youth:'נוער',adult:'בוגרים',women:'בוגרות'};
+    const levels={beginner:'מתחילים',developing:'מתפתחים',intermediate:'ביניים',advanced:'מתקדמים'};
+    const parts=[groups[c.group],levels[c.level],c.players?c.players+' שחקנים':''].filter(Boolean);
+    let tip='בחר מדד הצלחה אחד והתאם את הקושי לפי איכות הביצוע.';
+    if(c.group==='elementary')tip='שמור הסבר קצר, הרבה תנועה ומטרה אחת ברורה.';
+    else if(c.level==='advanced')tip='הוסף אי־ודאות, החלטה או אילוץ שמקרבים את המשימה למשחק.';
+    else if(c.level==='beginner')tip='פשט את המרחב ואת מספר האפשרויות לפני העלאת מהירות.';
+    return `<div class="coach-card-context"><b>מותאם ל־${escapeHtml(parts.join(' · '))}:</b> ${escapeHtml(tip)}</div>`;
+  }
+  function savedPracticeIds(){
+    try{return new Set((JSON.parse(localStorage.getItem('coachPro:nextPractice:v1')||'{}').items||[]).map(x=>x.id));}catch(_){return new Set();}
+  }
+  function renderCardActions(card){
+    const saved=savedPracticeIds().has(card.id);
+    const lab=card.labId?`<a class="coach-save-practice" href="coach-training-lab.html">🧪 פתח במעבדה</a>`:'';
+    return `<div class="coach-card-actions"><button type="button" class="coach-save-practice ${saved?'saved':''}" data-save-practice="${escapeHtml(card.id)}">${saved?'✓ באימון הבא':'🏐 לקחת לאימון'}</button>${lab}</div>`;
+  }
+
   function renderQuestion(card,topics){
     const options=card.options.map((option,index)=>`<button type="button" class="coach-option" data-question-option="${index}">${escapeHtml(option)}</button>`).join('');
     const classes=`coach-feed-card coach-question-card${card.challenge?' coach-challenge-card':''}`;
@@ -206,7 +251,9 @@
       <p class="coach-question-text">${escapeHtml(card.question)}</p>
       <div class="coach-options">${options}</div>
       <div class="coach-question-feedback" data-question-feedback hidden></div>
+      ${contextHint(card)}
       ${renderQuestionDeepDive(card)}
+      ${renderCardActions(card)}
     </article>`;
   }
 
@@ -216,7 +263,9 @@
       ${renderMeta(card,topics)}
       <h3>${escapeHtml(card.title)}</h3>
       <p>${escapeHtml(card.body)}</p>
+      ${contextHint(card)}
       ${renderApplication(card)}
+      ${renderCardActions(card)}
     </article>`;
   }
 
@@ -301,6 +350,20 @@
         return;
       }
 
+      const saveButton=event.target.closest('[data-save-practice]');
+      if(saveButton){
+        const id=saveButton.getAttribute('data-save-practice');
+        const card=cards.find(item=>item.id===id);if(!card)return;
+        let store={items:[]};try{store=JSON.parse(localStorage.getItem('coachPro:nextPractice:v1')||'{"items":[]}');}catch(_){}
+        store.items=Array.isArray(store.items)?store.items:[];
+        const ix=store.items.findIndex(x=>x.id===id);
+        if(ix>=0)store.items.splice(ix,1);else store.items.push({id,title:card.title,topic:card.topic,application:card.application||''});
+        localStorage.setItem('coachPro:nextPractice:v1',JSON.stringify(store));
+        const saved=ix<0;saveButton.classList.toggle('saved',saved);saveButton.textContent=saved?'✓ באימון הבא':'🏐 לקחת לאימון';
+        document.dispatchEvent(new CustomEvent('coach:next-practice-changed'));
+        return;
+      }
+
       const option=event.target.closest('[data-question-option]');
       if(!option) return;
       const article=option.closest('[data-card-id]');
@@ -336,6 +399,7 @@
       }
     }
 
+    doc.addEventListener('coach:context-changed',()=>renderFeed());
     renderFeed();
     return {renderFeed,appendBatch,getActiveTopic:()=>activeTopic,getCycleIndex:()=>cycleIndex};
   }
