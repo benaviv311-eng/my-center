@@ -83,6 +83,7 @@ export function isBlockedCard(card={},blockedRows=[]) {
     if(row?.scope==='family'&&family&&text(row.plot_family,180)===family)return true;
     if(text(row?.semantic_fingerprint,300)&&text(row.semantic_fingerprint,300)===fp)return true;
     if(text(row?.signature,1400)&&text(row.signature,1400)===sig)return true;
+    if((text(row?.title,220)||text(row?.body,5000))&&similarity(row,card)>=0.5)return true;
     return false;
   });
 }
@@ -161,7 +162,7 @@ export function buildFeedPrompt({
     type:c.card_type,title:c.title,body:c.body,signature:c.signature,creativity_distance:c.creativity_distance
   }));
   const blocked=(blockedRows||[]).slice(0,120).map(row=>({
-    signature:row.signature||'',semantic_fingerprint:row.semantic_fingerprint||'',plot_family:row.plot_family||''
+    signature:row.signature||'',semantic_fingerprint:row.semantic_fingerprint||'',plot_family:row.plot_family||'',title:row.title||'',body:row.body||''
   }));
   const seed=seedCard?compact(seedCard,5000):'אין';
   return `אתה שותף יצירתי בחדר הכותבים של עולם ראיקה. החזר בדיוק ${n} רעיונות מובנים לפי סכמת ה-JSON שסופקה.
