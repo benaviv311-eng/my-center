@@ -271,12 +271,23 @@
     langRoot.querySelectorAll('[data-frozen-language]').forEach(btn=>btn.addEventListener('click',()=>setLanguageFilter(btn.dataset.frozenLanguage)));
 
     if(M.LANGUAGE_CODES.includes(state.filter)&&window.LanguageLessons){
-      const meta=M.LANGUAGES[state.filter];
-      catRoot.innerHTML=`<a class="language-nav-home-chip" href="#languages-feed-section">📰 פיד ${esc(meta.name)}</a>`+
-        window.LanguageLessons.LESSONS.map(l=>`<a class="language-nav-category" href="${window.LanguageLessons.url(state.filter,l.n)}" title="שיעור ${l.n} · ${esc(l.name)}"><span>${l.icon}</span><b>${l.n}</b><small>${esc(l.name)}</small></a>`).join('')+
-        `<a class="language-nav-category nav-tool" href="language-games.html?lang=${state.filter}"><span>🎮</span><small>משחקים</small></a><a class="language-nav-category nav-tool" href="language-vocabulary.html?lang=${state.filter}"><span>📚</span><small>מילים</small></a>`;
+      const lang=state.filter;
+      const meta=M.LANGUAGES[lang];
+      const feature=(icon,label,href,sub='')=>`<a class="language-nav-category nav-feature" href="${href}" title="${esc(label)} · ${esc(meta.name)}"><span>${icon}</span><strong>${esc(label)}</strong>${sub?`<small>${esc(sub)}</small>`:''}</a>`;
+      catRoot.innerHTML=
+        feature('📰','פיד', '#languages-feed-section', meta.name)+
+        feature('📘','שיעורים', '#language-lessons-dashboard', '1–10')+
+        feature('📚','אוצר מילים', `language-vocabulary.html?lang=${lang}`, meta.name)+
+        feature('🃏','כרטיסיות', `language-games.html?lang=${lang}&game=flashcards`, 'הפוך ותרגם')+
+        feature('🎮','משחקים', `language-games.html?lang=${lang}`, 'כל המשחקים')+
+        feature('⚡','מסלול יומי', `language-games.html?lang=${lang}&game=daily-mix`, '5 דקות')+
+        feature('⏱️','60 שניות', `language-games.html?lang=${lang}&game=translation-rush&mode=60`, '4 אפשרויות')+
+        feature('💥','נוקאאוט', `language-games.html?lang=${lang}&game=translation-rush&mode=ko`, 'טעות ונגמר')+
+        feature('🔥','הישרדות', `language-games.html?lang=${lang}&game=translation-rush&mode=survival`, '+3 שניות')+
+        feature('🗂️','נושאים', `language-topics.html?lang=${lang}`, meta.name)+
+        feature('↻','חזרות', `language-archive.html?lang=${lang}`, 'טעויות ושמורים');
     }else{
-      catRoot.innerHTML=`<a class="language-nav-category nav-tool" href="#languages-home"><span>🏠</span><small>בית</small></a><a class="language-nav-category nav-tool" href="#languages-feed-section"><span>📰</span><small>פיד</small></a><a class="language-nav-category nav-tool" href="language-games.html"><span>🎮</span><small>משחקים</small></a><a class="language-nav-category nav-tool" href="language-vocabulary.html"><span>📚</span><small>אוצר מילים</small></a>`;
+      catRoot.innerHTML=`<a class="language-nav-category nav-feature" href="#languages-home"><span>🏠</span><strong>בית</strong></a><a class="language-nav-category nav-feature" href="#languages-feed-section"><span>📰</span><strong>פיד</strong></a><a class="language-nav-category nav-feature" href="four-languages.html"><span>🌐</span><strong>4 שפות</strong></a><a class="language-nav-category nav-feature" href="language-games.html"><span>🎮</span><strong>משחקים</strong></a><a class="language-nav-category nav-feature" href="language-games.html?game=flashcards"><span>🃏</span><strong>כרטיסיות</strong></a><a class="language-nav-category nav-feature" href="language-vocabulary.html"><span>📚</span><strong>אוצר מילים</strong></a>`;
     }
     catRoot.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
       const target=document.querySelector(link.getAttribute('href'));
