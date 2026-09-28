@@ -379,14 +379,20 @@
 }
 .book-prototype-reading #book-refresh-all{
   position:fixed;
-  inset-inline-start:50%;
+  left:16px;
+  right:auto;
   bottom:calc(76px + env(safe-area-inset-bottom));
-  transform:translateX(-50%);
   z-index:70;
-  min-width:190px;
-  padding:13px 22px;
-  border-radius:999px;
-  box-shadow:0 12px 34px rgba(0,0,0,.18);
+  width:46px;
+  height:46px;
+  min-width:0;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:21px;
+  line-height:1;
+  box-shadow:0 10px 26px rgba(0,0,0,.16);
   background:var(--text);
   color:var(--bg);
   border-color:var(--text);
@@ -618,8 +624,9 @@
   .book-prototype-reading .book-summary-points{grid-template-columns:1fr}
   .book-prototype-reading .book-read-aloud{grid-template-columns:1fr}
   .book-prototype-reading #book-refresh-all{
-    width:calc(100% - 32px);
-    max-width:420px;
+    left:12px;
+    width:44px;
+    height:44px;
     bottom:calc(82px + env(safe-area-inset-bottom));
   }
 }
