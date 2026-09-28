@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-title" content="המרכז שלי">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="app-icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="app-icon-192.png"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="coach-feed.css"><link rel="stylesheet" href="coach-hub.css"></head><body class="coach-hub-page"><div class="app coach-app">
+<link rel="apple-touch-icon" href="app-icon-192.png"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="coach-feed.css?v=2"><link rel="stylesheet" href="coach-hub.css?v=2"><link rel="stylesheet" href="coach-pro.css?v=1"></head><body class="coach-hub-page"><div class="app coach-app">
 <div class="back coach-back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
 
 <section class="coach-hero" aria-labelledby="coach-hero-title">
@@ -24,6 +24,50 @@
     </div>
   </div>
 </section>
+
+<nav class="coach-pro-nav" aria-label="ניווט מצב מאמן">
+  <a href="#coach-feed-home">📰 פיד</a>
+  <a href="#coach-academy">🎓 אקדמיה</a>
+  <a href="coach-training-lab.html">🧪 אימונים</a>
+  <a href="coach-training-lab.html">🏐 תרגילים</a>
+  <a href="coach-volleyball-approaches.html">🧭 טקטיקה</a>
+  <a href="coach-sport-psychology.html">🧠 פסיכולוגיה</a>
+  <a href="#coach-today">👥 שחקנים</a>
+  <a href="#coach-next-practice">🔎 ניתוח</a>
+  <a href="library.html">📚 ספרייה</a>
+</nav>
+
+<section class="coach-learning-console" id="coach-learning-console">
+  <article class="coach-context-card">
+    <p class="coach-section-kicker">הפיד שלך</p>
+    <h2>התאם לקבוצה הנוכחית</h2>
+    <p>הבחירה נשמרת ומשמשת את פיד המאמן כדי לתת הקשר מעשי לכל רעיון.</p>
+    <form id="coach-context-form" class="coach-context-form">
+      <label>קבוצה<select name="group"><option value="elementary">יסודי</option><option value="youth">נוער</option><option value="adult">בוגרים</option><option value="women">בוגרות</option></select></label>
+      <label>רמה<select name="level"><option value="beginner">מתחילים</option><option value="developing">מתפתחים</option><option value="intermediate">ביניים</option><option value="advanced">מתקדמים</option></select></label>
+      <label>מספר שחקנים<input name="players" type="number" min="2" max="30" value="12"></label>
+      <label>מטרה<select name="goal"><option value="all">כללי</option><option value="reception">קבלה</option><option value="defense">הגנה</option><option value="attack">התקפה</option><option value="serve">הגשה</option><option value="tactics">טקטיקה</option><option value="psychology">פסיכולוגיה</option></select></label>
+    </form>
+    <div id="coach-context-live" class="coach-context-live"></div>
+  </article>
+  <article class="coach-five-minute">
+    <p class="coach-section-kicker">למידה קצרה</p>
+    <h2>למד אותי משהו ב־5 דקות</h2>
+    <p>עיקרון → מה לראות → איך ליישם.</p>
+    <div id="coach-five-minute-content"></div>
+    <button id="coach-five-minute-refresh" type="button">תן לי נושא אחר ↻</button>
+  </article>
+</section>
+
+<section class="coach-academy-section" id="coach-academy">
+  <div class="coach-academy-top">
+    <div><p class="coach-section-kicker">מסלול עומק</p><h2>🎓 אקדמיית מאמנים 1–10</h2><p>מסלול מסודר מהתבוננות ושפת אימון ועד טקטיקה, מדעי האימון וניהול משחק.</p></div>
+    <div class="coach-academy-progress"><strong id="coach-academy-progress-text">0/10 · 0%</strong><div class="coach-academy-progress-track"><i id="coach-academy-progress-bar"></i></div></div>
+  </div>
+  <div id="coach-academy-grid" class="coach-academy-grid"></div>
+</section>
+
+<div class="coach-saved-strip"><div><strong>🏐 האימון הבא</strong><span id="coach-saved-count">עדיין לא שמרת רעיונות מהפיד</span></div><a href="coach-training-lab.html">פתח מעבדת אימון ←</a></div>
 
 <section class="coach-worlds-section" id="coach-worlds" aria-labelledby="coach-worlds-title">
   <div class="coach-section-heading"><p class="coach-section-kicker">תחומי הליבה</p><h2 id="coach-worlds-title">ששת עולמות המאמן</h2><p>בחר תחום והיכנס לפיד מקצועי שמוקדש רק אליו.</p></div>
@@ -65,7 +109,7 @@
   <div class="coach-next-practice-card" id="coach-next-practice-card" aria-live="polite"></div>
 </section>
 
-<section class="coach-feed-shell coach-feed-home" aria-labelledby="coach-feed-heading">
+<section class="coach-feed-shell coach-feed-home" id="coach-feed-home" aria-labelledby="coach-feed-heading">
   <div class="coach-feed-intro coach-feed-intro-premium"><p class="eyebrow">למידה מתמשכת</p><h2 id="coach-feed-heading">פיד המאמן</h2><p>רעיונות, מחקר, תרחישים ושאלות מקצועיות — בגלילה אחת שמתחדשת בלי סוף.</p></div>
   <div class="coach-topic-nav" id="coach-topic-nav" aria-label="תחומי מאמן"></div>
   <p class="coach-feed-status" id="coach-feed-status" aria-live="polite"></p>
@@ -82,5 +126,5 @@
 <a class="nav-item " href="music.html"><span>🎵</span>מוזיקה</a>
 <a class="nav-item " href="library.html"><span>📚</span>ספרייה</a>
 </div></nav>
-</div><div class="toast" id="toast"></div><script src="coach-feed-data.js"></script><script src="coach-hub.js"></script><script src="coach-feed.js"></script><script src="app.js"></script><script src="mobile-app-shell.js?v=1"></script>
+</div><div class="toast" id="toast"></div><script src="coach-feed-data.js?v=2"></script><script src="coach-training-lab-data.js?v=1"></script><script src="coach-pro.js?v=1"></script><script src="coach-hub.js?v=2"></script><script src="coach-feed.js?v=2"></script><script src="app.js"></script><script src="mobile-app-shell.js?v=1"></script>
 </body></html>
