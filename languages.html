@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="app-icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
-  <link rel="stylesheet" href="languages-feed.css?v=6">
+  <link rel="stylesheet" href="languages-feed.css?v=7">
 </head>
 <body>
 <div class="app language-feed-page">
@@ -34,12 +34,9 @@
     </div>
   </section>
 
-  <nav class="language-section-nav" aria-label="ניווט באזור השפות">
-    <a href="#languages-home">🏠 בית</a>
-    <a href="#languages-learn">📘 לומדים</a>
-    <a href="#languages-feed-section">📰 פיד</a>
-    <a href="language-games.html">🎮 משחקים</a>
-    <a href="language-vocabulary.html">📚 אוצר מילים</a>
+  <nav id="language-section-nav" class="language-section-nav" aria-label="ניווט באזור השפות">
+    <div id="language-nav-languages" class="language-nav-row language-nav-languages" aria-label="מעבר בין שפות"></div>
+    <div id="language-nav-categories" class="language-nav-row language-nav-categories" aria-label="קטגוריות בשפה הנוכחית"></div>
   </nav>
 
   <section id="languages-learn" class="language-dashboard">
@@ -132,7 +129,7 @@
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
 <script src="language-lessons.js?v=2"></script>
-<script src="languages-feed.js?v=8"></script>
+<script src="languages-feed.js?v=9"></script>
 <script src="language-audio.js?v=2"></script>
 
 <script>
