@@ -131,7 +131,8 @@
       }
 
       const saved=isSaved(item);
-      button.textContent=saved?'✅ נשמר':'💾 שמור';
+      const label=saved?'✅ נשמר':'💾 שמור';
+      if(button.textContent!==label)button.textContent=label;
       button.classList.toggle('active',saved);
       button.setAttribute('aria-pressed',saved?'true':'false');
     });
