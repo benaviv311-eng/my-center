@@ -69,6 +69,18 @@
     .submenu-head{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:right;margin-bottom:12px}
     .submenu-head h2{margin:0;font-size:28px}
     .submenu-head small{opacity:.72}
+  
+    .encouragement{position:fixed;left:50%;top:28%;transform:translate(-50%,-50%) scale(.7);z-index:20;pointer-events:none;font-weight:1000;letter-spacing:.04em;text-shadow:0 4px 18px #0009;opacity:0;animation:encourage .72s ease-out}
+    .encouragement.level-1{font-size:clamp(30px,8vw,56px)}
+    .encouragement.level-2{font-size:clamp(36px,10vw,68px)}
+    .encouragement.level-3{font-size:clamp(44px,12vw,82px)}
+    .encouragement.level-4{font-size:clamp(52px,14vw,96px)}
+    @keyframes encourage{0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}72%{opacity:1;transform:translate(-50%,-58%) scale(1)}100%{opacity:0;transform:translate(-50%,-72%) scale(.9)}}
+    .coin-pop{position:fixed;z-index:22;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);animation:coinBurst .95s cubic-bezier(.2,.8,.2,1) forwards}
+    .coin-amount{position:fixed;z-index:23;pointer-events:none;font-size:24px;font-weight:1000;transform:translate(-50%,-50%);text-shadow:0 3px 12px #000b;animation:coinAmount .9s ease-out forwards}
+    @keyframes coinBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}15%{opacity:1}70%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1.18) rotate(240deg)}100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) - 24px)) scale(.75) rotate(360deg)}}
+    @keyframes coinAmount{0%{opacity:0;transform:translate(-50%,-20%) scale(.7)}25%{opacity:1;transform:translate(-50%,-70%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-150%) scale(.95)}}
+    @media (prefers-reduced-motion:reduce){.encouragement,.coin-pop,.coin-amount{animation-duration:.01ms!important}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -121,6 +133,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=8"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=9"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
