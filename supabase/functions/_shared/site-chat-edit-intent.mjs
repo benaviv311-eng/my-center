@@ -4,7 +4,7 @@ function hasSelectedElement(value){
   return Boolean(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length);
 }
 
-const HEBREW_MUTATION=/\b(?:שנה|שני|תשנה|עדכן|תעדכן|הוסף|תוסיף|הסר|תסיר|מחק|תמחק|עצב|תעצב|תקן|תתקן|הגדל|תגדיל|הקטן|תקטין|הזז|תזיז|החלף|תחליף|צור|תיצור|בנה|תבנה|יישר|תיישר|סדר|תסדר|פתח|תפתח|סגור|תסגור)\b/u;
+const HEBREW_MUTATION=/(?:^|[\s"'׳״.,!?():;—-])(?:שנה|שני|תשנה|עדכן|תעדכן|הוסף|תוסיף|הסר|תסיר|מחק|תמחק|עצב|תעצב|תקן|תתקן|הגדל|תגדיל|הקטן|תקטין|הזז|תזיז|החלף|תחליף|צור|תיצור|בנה|תבנה|יישר|תיישר|סדר|תסדר|פתח|תפתח|סגור|תסגור)(?=$|[\s"'׳״.,!?():;—-])/u;
 const ENGLISH_MUTATION=/\b(?:change|update|add|remove|delete|edit|redesign|fix|resize|move|replace|create|build|align|reorder|open|close)\b/i;
 
 export function hasDirectEditIntent(question=''){
