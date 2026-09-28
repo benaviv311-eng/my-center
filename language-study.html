@@ -6,7 +6,7 @@
   <title>שיעור שפה | המרכז שלי</title>
   <meta name="theme-color" content="#f7f3ea">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="language-pages.css?v=1">
+  <link rel="stylesheet" href="language-pages.css?v=2">
 </head>
 <body>
 <div class="app">
@@ -26,6 +26,7 @@
     </div>
     <div class="study-meta-row"><span id="study-topic-chip" class="study-chip"></span><span id="study-progress-chip" class="study-chip">שיעור אינטראקטיבי ארוך</span></div>
     <div id="study-language-switch" class="sticky-language-switch"></div>
+    <div id="study-lesson-track" class="study-lesson-track"></div>
   </section>
 
   <main id="study-sections" class="language-shell">
@@ -43,7 +44,7 @@
     <section class="section study-section" id="mistakes-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>12. הטעויות שלי</h2><p class="meta">המערכת אוספת את מה שטעית בו במהלך הלימוד.</p></div><button class="btn small refresh-btn" type="button" data-refresh="mistakes">↻ רענן</button></div><div id="mistakes-content"></div></article></section>
     <section class="section study-section" id="challenge-section"><article class="card study-section-card"><div class="study-section-head"><div><h2>13. אתגר סוף גלילה</h2><p class="meta">שאלות מעורבות בלי הרבה רמזים.</p></div><button class="btn small refresh-btn" type="button" data-refresh="challenge">↻ אתגר חדש</button></div><div id="challenge-content"></div></article></section>
     <section class="section"><button id="append-more" class="append-more" type="button">↓ המשך לעוד תרגילים</button><div id="extra-batches" class="language-shell"></div></section>
-    <section class="section"><article class="card"><div class="study-section-head"><div><h2>סיימתי להיום</h2><p class="meta">סמן את השפה כהושלמה להיום.</p></div><button id="complete-language" class="btn study-primary" type="button">סיימתי ✓</button></div></article></section>
+    <section class="section"><article class="card lesson-complete-card"><div class="study-section-head"><div><h2 id="lesson-complete-title">סיימתי את השיעור</h2><p id="lesson-complete-copy" class="meta">סמן את השיעור כהושלם והמשך לשלב הבא.</p></div><button id="complete-language" class="btn study-primary" type="button">סיימתי שיעור ✓</button></div><a id="lesson-next-link" class="lesson-next-link hidden" href="#">לשיעור הבא ←</a></article></section>
   </main>
 
   <nav class="bottom-nav"><div class="inner">
@@ -59,7 +60,8 @@
 <script src="app.js?v=3"></script>
 <script src="language-core.js?v=1"></script>
 <script src="language-topic-expansion.js?v=1"></script>
-<script src="language-study.js?v=1"></script>
+<script src="language-lessons.js?v=1"></script>
+<script src="language-study.js?v=2"></script>
 <script src="language-audio.js?v=2"></script>
 </body>
 </html>
