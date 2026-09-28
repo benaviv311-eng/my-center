@@ -69,8 +69,35 @@ function bankNoteHtml(item){
     </div>`;
 }
 
+function legacyQuoteParts(content){
+  const raw=String(content?.character_quote||'').trim();
+  let speaker=String(content?.quote_speaker||'').trim();
+  const recipient=String(content?.quote_recipient||'').trim();
+  let quote=raw;
+
+  if(!speaker){
+    const match=raw.match(/^([^:：]{1,40})[:：]\s*(.+)$/s);
+    if(match){
+      speaker=match[1].trim();
+      quote=match[2].trim();
+    }
+  }else{
+    const prefix=speaker+':';
+    if(quote.startsWith(prefix)) quote=quote.slice(prefix.length).trim();
+  }
+
+  return {speaker,recipient,quote};
+}
+
+function quoteHeading(content){
+  const parts=legacyQuoteParts(content);
+  if(!parts.speaker) return 'משפט הדמות';
+  return `משפט של ${parts.speaker}${parts.recipient?' אל '+parts.recipient:''}`;
+}
+
 function bankVerseCard(item,index){
   const c=item.content||{};
+  const quoteParts=legacyQuoteParts(c);
   return `
     <article class="card" data-bank-id="${bankEsc(item.id)}">
       <div class="label">📖 פסוק ${index+1}</div>
@@ -79,7 +106,7 @@ function bankVerseCard(item,index){
       ${c.literary?`<details><summary>פירוש ספרותי</summary><p>${bankEsc(c.literary)}</p></details>`:''}
       ${c.human?`<details><summary>מבט אנושי</summary><p>${bankEsc(c.human)}</p></details>`:''}
       ${c.raika_context?`<details><summary>החיבור לעולם ראיקה</summary><p>${bankEsc(c.raika_context)}</p></details>`:''}
-      ${c.character_quote?`<details><summary>משפט הדמות</summary><p>${bankEsc(c.character_quote)}</p></details>`:''}
+      ${quoteParts.quote?`<details><summary>${bankEsc(quoteHeading(c))}</summary><p>${bankEsc(quoteParts.quote)}</p></details>`:''}
       ${bankBaseActions(item)}
       ${bankNoteHtml(item)}
     </article>`;
@@ -382,7 +409,10 @@ function openItemEditor(item=null){
   document.getElementById('editor-literary').value=c.literary||'';
   document.getElementById('editor-human').value=c.human||'';
   document.getElementById('editor-raika').value=c.raika_context||'';
-  document.getElementById('editor-quote').value=c.character_quote||'';
+  const quoteParts=legacyQuoteParts(c);
+  document.getElementById('editor-speaker').value=quoteParts.speaker||'';
+  document.getElementById('editor-recipient').value=quoteParts.recipient||'';
+  document.getElementById('editor-quote').value=quoteParts.quote||'';
   document.getElementById('editor-generic').value=c.summary||c.text||c.description||c.body||'';
   updateEditorVisibility();
   document.getElementById('bank-editor').classList.remove('hidden');
@@ -403,6 +433,8 @@ function editorContent(type,existing={}){
       literary:formValue('editor-literary'),
       human:formValue('editor-human'),
       raika_context:formValue('editor-raika'),
+      quote_speaker:formValue('editor-speaker'),
+      quote_recipient:formValue('editor-recipient'),
       character_quote:formValue('editor-quote')
     };
   }
