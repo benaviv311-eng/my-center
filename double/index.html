@@ -108,6 +108,23 @@
       .stage-node{width:56px;min-height:56px}
       .stage-node strong{font-size:16px}
     }
+  
+    .encouragement{position:fixed;left:50%;top:27%;transform:translate(-50%,-50%);z-index:30;pointer-events:none;font-weight:1000;letter-spacing:.05em;opacity:0;text-align:center;white-space:nowrap;animation:encouragePop .85s cubic-bezier(.18,.9,.2,1)}
+    .encouragement span{display:inline-block;background:linear-gradient(90deg,#fff7a8,#fff,#ffd95c,#fff,#ffec83);background-size:260% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:1px #fff8;filter:drop-shadow(0 0 8px #ffe56b) drop-shadow(0 5px 14px #000b);animation:shineText .55s linear infinite}
+    .encouragement.level-1{font-size:clamp(32px,8vw,56px)}
+    .encouragement.level-2{font-size:clamp(40px,10vw,70px)}
+    .encouragement.level-3{font-size:clamp(48px,12vw,84px)}
+    .encouragement.level-4{font-size:clamp(56px,14vw,98px)}
+    .encouragement.level-5{font-size:clamp(62px,16vw,112px)}
+    @keyframes encouragePop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-4deg)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.22) rotate(2deg)}48%{opacity:1;transform:translate(-50%,-54%) scale(.98)}78%{opacity:1;transform:translate(-50%,-59%) scale(1.04)}100%{opacity:0;transform:translate(-50%,-72%) scale(.88)}}
+    @keyframes shineText{0%{background-position:0 0}100%{background-position:260% 0}}
+    .success-spark{position:fixed;z-index:29;pointer-events:none;font-size:24px;transform:translate(-50%,-50%);animation:sparkFly .82s ease-out forwards;text-shadow:0 0 10px currentColor}
+    .spark-1{color:#fff4a3}.spark-2{color:#fff}.spark-3{color:#ffd84d}
+    @keyframes sparkFly{0%{opacity:0;transform:translate(-50%,-50%) scale(.25) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--sx)),calc(-50% + var(--sy))) scale(1.35) rotate(220deg)}}
+    .side-coin{position:fixed;z-index:28;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 6px #ffd84d);animation:sideCoinBurst 1.12s cubic-bezier(.12,.8,.2,1) forwards}
+    @keyframes sideCoinBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0)}12%{opacity:1}65%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1.25) rotate(var(--coin-r))}100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) - 30px)) scale(.7) rotate(var(--coin-r))}}
+    .side-total{font-size:30px!important;font-weight:1000;text-shadow:0 0 12px #ffd84d,0 4px 12px #000b;animation:coinAmount 1.05s ease-out forwards!important}
+    @media (prefers-reduced-motion:reduce){.encouragement,.encouragement span,.success-spark,.side-coin,.side-total{animation-duration:.01ms!important;animation-iteration-count:1!important}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -160,6 +177,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=10"></script>
+  <script src="game.js?v=11"></script>
 </body>
 </html>
