@@ -63,6 +63,13 @@
           <ul id="book-summary-points" class="book-summary-points"></ul>
           <div class="book-read-aloud" aria-label="הקראת הפרק">
             <strong>🔊 הקראה</strong>
+            <label class="book-read-rate-label" for="book-read-rate">קצב הקראה</label>
+            <select id="book-read-rate" class="book-read-rate">
+              <option value="0.75">0.75× · רגוע</option>
+              <option value="1" selected>1× · רגיל</option>
+              <option value="1.25">1.25× · מהיר</option>
+              <option value="1.5">1.5× · מהיר מאוד</option>
+            </select>
             <button id="book-read-aloud" type="button" class="book-read-button">הקרא את הפרק</button>
             <div class="book-read-secondary">
               <button id="book-read-pause" type="button" class="book-read-mini" disabled>השהה</button>
