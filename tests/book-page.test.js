@@ -95,3 +95,6 @@ assert.ok(pageCss.includes('.book-chapter-summary-wrap{') && pageCss.includes('p
 assert.ok(pageCss.includes('.book-prototype-reading .book-reading-toc-wrap{') && pageCss.includes('position:sticky'), 'prototype TOC wrapper should stay fixed while scrolling on desktop');
 assert.ok(js.includes('excludeTitles'), 'prototype refresh should exclude the chapter titles currently on screen');
 assert.ok(js.includes('fullRefresh:true'), 'prototype refresh should request a completely fresh chapter set');
+
+assert.ok(js.includes('chapter.keySentences'), 'left rail should render key sentences supplied by the chapter model');
+assert.ok(js.includes('משפטי מפתח'), 'left rail should be labeled as key sentences rather than a chapter explanation');
