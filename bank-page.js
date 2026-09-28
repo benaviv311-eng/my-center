@@ -124,7 +124,7 @@ function bankBaseActions(item){
   const favorited=bankState.favorites.has(item.id);
   return `
     <div class="bank-actions">
-      <button class="bank-btn ${favorited?'active':''}" data-bank-action="favorite">${favorited?'♥ מועדף':'♡ מועדף'}</button>
+      <button class="bank-btn ${favorited?'active':''}" data-bank-action="favorite">${favorited?'✅ נשמר':'💾 שמור'}</button>
       <button class="bank-btn" data-bank-action="folder">📁 תיקייה</button>
       ${bankManagerControls(item)}
     </div>`;
