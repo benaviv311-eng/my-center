@@ -7,13 +7,15 @@ const F=window.BookInfiniteFeed;
 const R=window.BookReading;
 const notesKey='my-center-library-notes';
 const savedFeedKey='my-center-book-feed-saved';
+const PROTOTYPE_READER_BOOK_ID='c8596613-aa90-49f3-8410-09d305926710';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const state={
   today:'',book:null,history:[],seed:'',readingChapters:[],
   notes:JSON.parse(localStorage.getItem(notesKey)||'{}'),
   feedSeed:'',feedOffset:0,feedFilter:'all',feedLoading:false,feedObserver:null,
-  chapterObserver:null,progressBound:false,progressRaf:0,
+  chapterObserver:null,progressBound:false,progressRaf:0,activeChapterId:'',
+  speechUtterance:null,speechPaused:false,
   savedFeed:new Set(JSON.parse(localStorage.getItem(savedFeedKey)||'[]'))
 };
 
@@ -53,6 +55,120 @@ function readingChapter(chapter,index){
     </div>
   </article>`;
 }
+function isReaderPrototype(){
+  return Boolean(state.book&&String(state.book.id)===PROTOTYPE_READER_BOOK_ID);
+}
+function compactSummaryText(value,max){
+  const clean=String(value||'').replace(/\s+/g,' ').trim();
+  if(!clean)return '';
+  const first=(clean.split(/(?<=[.!?])\s+/)[0]||clean).trim();
+  const limit=Math.max(70,Number(max)||150);
+  if(first.length<=limit)return first;
+  const sliced=first.slice(0,limit);
+  const cut=sliced.lastIndexOf(' ');
+  return (cut>70?sliced.slice(0,cut):sliced).trim()+'…';
+}
+function chapterSummaryPoints(chapter){
+  if(!chapter)return [];
+  const candidates=[];
+  (Array.isArray(chapter.bodyParagraphs)?chapter.bodyParagraphs:[]).forEach(text=>candidates.push(text));
+  (Array.isArray(chapter.supportBlocks)?chapter.supportBlocks:[]).forEach(block=>{
+    if(block&&block.text)candidates.push(block.text);
+  });
+  if(chapter.deep&&chapter.deep.takeaway)candidates.push(chapter.deep.takeaway);
+  const seen=new Set(),points=[];
+  for(const value of candidates){
+    const point=compactSummaryText(value,155);
+    const key=point.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    if(!point||!key||seen.has(key))continue;
+    seen.add(key);points.push(point);
+    if(points.length===4)break;
+  }
+  return points;
+}
+function renderChapterSummary(chapterId){
+  if(!isReaderPrototype())return;
+  const chapters=state.readingChapters||[];
+  const index=Math.max(0,chapters.findIndex(ch=>String(ch.id)===String(chapterId)));
+  const chapter=chapters[index]||chapters[0];
+  if(!chapter)return;
+  state.activeChapterId=String(chapter.id);
+  const title=$('book-summary-title'),position=$('book-summary-position'),list=$('book-summary-points');
+  if(title)title.textContent=chapter.title||'סיכום קצר';
+  if(position)position.textContent=`פרק ${index+1} מתוך ${chapters.length}`;
+  const points=chapterSummaryPoints(chapter);
+  if(list)list.innerHTML=points.length?points.map(point=>`<li>${esc(point)}</li>`).join(''):'<li>הסיכום הקצר יופיע כאן.</li>';
+}
+function setActiveReadingChapter(chapterId){
+  state.activeChapterId=String(chapterId||'');
+  document.querySelectorAll('[data-toc-target]').forEach(link=>link.classList.toggle('active',link.dataset.tocTarget===state.activeChapterId));
+  renderChapterSummary(state.activeChapterId);
+}
+function currentReadingChapter(){
+  const chapters=state.readingChapters||[];
+  return chapters.find(ch=>String(ch.id)===String(state.activeChapterId))||chapters[0]||null;
+}
+function chapterSpeechText(chapter){
+  if(!chapter)return '';
+  const parts=[chapter.title];
+  (Array.isArray(chapter.bodyParagraphs)?chapter.bodyParagraphs:[]).forEach(text=>parts.push(text));
+  (Array.isArray(chapter.supportBlocks)?chapter.supportBlocks:[]).forEach(block=>{
+    if(block?.title)parts.push(block.title);
+    if(block?.text)parts.push(block.text);
+  });
+  return parts.filter(Boolean).join('. ');
+}
+function setReadStatus(message){
+  const status=$('book-read-status');if(status)status.textContent=message||'';
+}
+function setReadControls(active,paused){
+  const pause=$('book-read-pause'),stop=$('book-read-stop');
+  if(pause){pause.disabled=!active;pause.textContent=paused?'המשך':'השהה'}
+  if(stop)stop.disabled=!active;
+}
+function stopReadAloud(message){
+  if('speechSynthesis' in window)window.speechSynthesis.cancel();
+  state.speechUtterance=null;state.speechPaused=false;
+  setReadControls(false,false);
+  setReadStatus(message||'');
+}
+function speakCurrentChapter(){
+  if(!isReaderPrototype())return;
+  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+    setReadStatus('הקראה אינה נתמכת בדפדפן הזה.');
+    return;
+  }
+  const chapter=currentReadingChapter(),text=chapterSpeechText(chapter);
+  if(!text)return;
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(text);
+  utterance.lang='he-IL';
+  utterance.rate=.96;
+  const voices=window.speechSynthesis.getVoices?window.speechSynthesis.getVoices():[];
+  const hebrewVoice=voices.find(voice=>/^he(?:-|$)/i.test(voice.lang||''));
+  if(hebrewVoice)utterance.voice=hebrewVoice;
+  utterance.onstart=()=>{state.speechPaused=false;setReadControls(true,false);setReadStatus('מקריא את הפרק הנוכחי…')};
+  utterance.onend=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('ההקראה הסתיימה.')};
+  utterance.onerror=()=>{state.speechUtterance=null;state.speechPaused=false;setReadControls(false,false);setReadStatus('לא הצלחתי להפעיל את ההקראה.')};
+  state.speechUtterance=utterance;
+  window.speechSynthesis.speak(utterance);
+}
+function toggleReadPause(){
+  if(!state.speechUtterance||!('speechSynthesis' in window))return;
+  if(state.speechPaused){
+    window.speechSynthesis.resume();state.speechPaused=false;setReadControls(true,false);setReadStatus('ממשיך להקריא…');
+  }else{
+    window.speechSynthesis.pause();state.speechPaused=true;setReadControls(true,true);setReadStatus('ההקראה מושהית.');
+  }
+}
+function setupReaderPrototype(){
+  const summary=$('book-chapter-summary');
+  const enabled=isReaderPrototype();
+  document.body.classList.toggle('book-prototype-reading',enabled);
+  if(summary)summary.classList.toggle('hidden',!enabled);
+  if(enabled&&state.readingChapters.length)setActiveReadingChapter(state.activeChapterId||state.readingChapters[0].id);
+  if(!enabled)stopReadAloud('');
+}
 function renderReading(seed){
   const chapters=R.buildReadingChapters(state.book,{seed});
   state.readingChapters=chapters;
@@ -61,6 +177,7 @@ function renderReading(seed){
   const takeaways=R.buildTakeaways(state.book,chapters);
   $('book-takeaways').innerHTML=takeaways.length?takeaways.map(item=>`<li>${esc(item)}</li>`).join(''):'<li>נוסיף סיכום בהמשך.</li>';
   setupChapterObserver();
+  setupReaderPrototype();
   updateReadingProgress();
 }
 function setupChapterObserver(){
@@ -70,7 +187,7 @@ function setupChapterObserver(){
     const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
     if(!visible)return;
     const id=visible.target.dataset.readingChapter;
-    document.querySelectorAll('[data-toc-target]').forEach(link=>link.classList.toggle('active',link.dataset.tocTarget===id));
+    setActiveReadingChapter(id);
   },{rootMargin:'-20% 0px -60% 0px',threshold:[0,.1,.3,.6]});
   document.querySelectorAll('[data-reading-chapter]').forEach(chapter=>state.chapterObserver.observe(chapter));
 }
@@ -184,7 +301,7 @@ async function loadBook(){
     if(!state.book){$('book-status').textContent='הספר לא נמצא';$('book-title').textContent='הספר לא נמצא';$('book-reading-body').innerHTML='<div class="book-page-empty book-page-error">חזור לספרייה ובחר ספר מחדש.</div>';return}
     state.seed=`${state.today}|${state.book.slug||state.book.id}|daily`;
     renderStatic();renderReading(state.seed);resetFeed('all');setupInfiniteFeed();setupReadingProgress();
-    $('book-status').textContent='קריאה רציפה · העמקות · עוד מהספר';
+    $('book-status').textContent=isReaderPrototype()?'אב־טיפוס קריאה · סיכום פרק · תוכן עניינים · הקראה':'קריאה רציפה · העמקות · עוד מהספר';
   }catch(error){
     console.error(error);$('book-status').textContent='שגיאה בטעינת הספר';
     if($('book-reading-body'))$('book-reading-body').innerHTML='<div class="book-page-empty book-page-error">לא ניתן כרגע לטעון את הספר.</div>';
@@ -265,7 +382,7 @@ document.addEventListener('click',event=>{
   const closeExpansion=event.target.closest('[data-source-expansion-close]');
   if(closeExpansion){const card=sourceCardFor(closeExpansion);if(card){const badge=card.querySelector('[data-source-expand]');const panel=card.querySelector(':scope > .source-expansion-panel');if(panel)panel.remove();if(badge)badge.setAttribute('aria-expanded','false')}return}
   const source=event.target.closest('[data-source-expand]');if(source){toggleSourceExpansion(source);return}
-  const toc=event.target.closest('[data-toc-target]');if(toc){event.preventDefault();const target=document.getElementById(`chapter-${toc.dataset.tocTarget}`);if(target)target.scrollIntoView({behavior:'smooth',block:'start'});return}
+  const toc=event.target.closest('[data-toc-target]');if(toc){event.preventDefault();const target=document.getElementById(`chapter-${toc.dataset.tocTarget}`);if(target){setActiveReadingChapter(toc.dataset.tocTarget);target.scrollIntoView({behavior:'smooth',block:'start'})}return}
   const filter=event.target.closest('[data-book-feed-filter]');if(filter){resetFeed(filter.dataset.bookFeedFilter);return}
   const card=event.target.closest('[data-feed-card]');if(!card)return;
   if(event.target.closest('[data-feed-deepen]')){const deep=card.querySelector('.book-feed-deep'),btn=event.target.closest('[data-feed-deepen]');deep.classList.toggle('hidden');btn.textContent=deep.classList.contains('hidden')?'העמק':'סגור';return}
@@ -284,6 +401,10 @@ $('book-random').addEventListener('click',()=>refreshAll('random'));
 $('book-surprise').addEventListener('click',()=>refreshAll('surprise'));
 $('book-feed-more').addEventListener('click',appendFeed);
 $('book-save-note').addEventListener('click',()=>{if(!state.book)return;state.notes[state.book.slug||state.book.id]=$('book-note').value;localStorage.setItem(notesKey,JSON.stringify(state.notes));toast('ההערה נשמרה')});
+$('book-read-aloud').addEventListener('click',speakCurrentChapter);
+$('book-read-pause').addEventListener('click',toggleReadPause);
+$('book-read-stop').addEventListener('click',()=>stopReadAloud('ההקראה נעצרה.'));
+window.addEventListener('beforeunload',()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel()});
 
 loadBook();
 })();
