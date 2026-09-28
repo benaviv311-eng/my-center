@@ -1,7 +1,7 @@
 const KEY='coupleApp.v1';
 const defaults={
   me:{name:'',homeAddress:'',maxDistance:30,giftBudget:200,dateBudget:400,gestureBudget:70,location:null,availability:{}},
-  partner:{name:'',years:'',likes:'',dislikes:'',foodPrefs:'',giftPrefs:'',emotionalPrefs:'',preferenceTags:[],avoidTags:[],hints:[],social:[]},
+  partner:{name:'',phone:'',years:'',likes:'',dislikes:'',foodPrefs:'',giftPrefs:'',emotionalPrefs:'',preferenceTags:[],avoidTags:[],hints:[],social:[]},
   plan:{budget:800,gifts:1,dates:2,gestures:4,courtship:8,automation:'prepare',autoLimit:70,style:'משולב',autoPlanner:true},
   progress:{gifts:0,dates:0,gestures:0,courtship:0,spent:0},
   orders:[],
@@ -13,6 +13,112 @@ const defaults={
 };
 let state=load();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const COUPLE_CLOUD_URL='https://iwemlxvjyhffumzcqrxf.supabase.co';
+const COUPLE_CLOUD_KEY='sb_publishable_pU7OWc6Yoba6xQIYYROAxg_pJAliQDk';
+const COUPLE_ORDER_API=COUPLE_CLOUD_URL+'/functions/v1/couple-order';
+let coupleCloudClient=null;
+let coupleCloudSession=null;
+
+async function ensureCoupleCloud(){
+  if(coupleCloudClient)return coupleCloudClient;
+  try{
+    const mod=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+    coupleCloudClient=mod.createClient(COUPLE_CLOUD_URL,COUPLE_CLOUD_KEY);
+    const r=await coupleCloudClient.auth.getSession();
+    coupleCloudSession=r&&r.data?r.data.session:null;
+    coupleCloudClient.auth.onAuthStateChange(function(_event,session){coupleCloudSession=session||null});
+    return coupleCloudClient
+  }catch(e){
+    throw new Error('לא הצלחתי להתחבר לענן כרגע')
+  }
+}
+async function coupleCloudApi(body){
+  const client=await ensureCoupleCloud();
+  const r=await client.auth.getSession();
+  coupleCloudSession=r&&r.data?r.data.session:null;
+  if(!coupleCloudSession)throw new Error('login_required');
+  const res=await fetch(COUPLE_ORDER_API,{
+    method:'POST',
+    headers:{
+      'apikey':COUPLE_CLOUD_KEY,
+      'Authorization':'Bearer '+coupleCloudSession.access_token,
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify(body)
+  });
+  let data={};try{data=await res.json()}catch(e){}
+  if(!res.ok)throw new Error(data.message||data.error||'הפעולה בענן נכשלה');
+  return data
+}
+async function coupleLoginThen(callback){
+  try{
+    const client=await ensureCoupleCloud();
+    const current=await client.auth.getSession();
+    if(current&&current.data&&current.data.session){
+      coupleCloudSession=current.data.session;
+      return callback()
+    }
+    openModal('<p class="eyebrow">כניסה חד־פעמית</p><h2>כדי שאוכל לשמור ולבצע בשבילך</h2><p>הזן את המייל שלך. אחרי הכניסה האפליקציה תישאר מחוברת במכשיר הזה.</p><input id="coupleLoginEmail" type="email" autocomplete="email" placeholder="המייל שלך"><button class="primary full" style="margin-top:12px" id="coupleLoginSend">שלח קישור כניסה</button><p class="muted" id="coupleLoginStatus"></p>');
+    $('#coupleLoginSend').onclick=async function(){
+      const email=$('#coupleLoginEmail').value.trim();
+      if(!email)return;
+      const status=$('#coupleLoginStatus');
+      status.textContent='שולח...';
+      const out=await client.auth.signInWithOtp({email:email,options:{shouldCreateUser:true,emailRedirectTo:location.href.split('#')[0]}});
+      status.textContent=out.error?'לא הצלחתי לשלוח קישור כניסה.':'נשלח קישור למייל. אחרי שתפתח אותו חזור לכאן ולחץ שוב על הפעולה.'
+    }
+  }catch(e){toast(e.message||'לא הצלחתי להתחבר')}
+}
+async function syncCoupleProfile(){
+  try{
+    const client=await ensureCoupleCloud();
+    const s=await client.auth.getSession();
+    if(!(s&&s.data&&s.data.session))return false;
+    await coupleCloudApi({action:'profile_upsert',profile:{
+      partner_name:state.partner.name||'',
+      partner_phone:state.partner.phone||'',
+      delivery_address:state.me.homeAddress||'',
+      monthly_budget:+state.plan.budget||0,
+      gift_budget:+state.me.giftBudget||0,
+      date_budget:+state.me.dateBudget||0,
+      gesture_budget:+state.me.gestureBudget||0,
+      preferences:{
+        likes:state.partner.likes||'',
+        dislikes:state.partner.dislikes||'',
+        food:state.partner.foodPrefs||'',
+        gifts:state.partner.giftPrefs||'',
+        emotional:state.partner.emotionalPrefs||'',
+        preferenceTags:state.partner.preferenceTags||[],
+        avoidTags:state.partner.avoidTags||[]
+      },
+      availability:state.me.availability||{},
+      automation_level:state.plan.automation==='oneTap'?'one_tap':state.plan.automation,
+      auto_limit:+state.plan.autoLimit||0
+    }});
+    return true
+  }catch(e){return false}
+}
+async function hydrateCloudOrders(){
+  try{
+    const client=await ensureCoupleCloud();
+    const s=await client.auth.getSession();
+    if(!(s&&s.data&&s.data.session))return;
+    const out=await coupleCloudApi({action:'list_orders',limit:30});
+    const remote=(out.orders||[]).filter(function(x){return x.status==='pending'||x.status==='ready'||x.status==='processing'}).map(function(x){
+      return {
+        id:x.id,cloudId:x.id,createdAt:x.created_at,status:'pending',type:x.action_type,
+        title:x.title,buy:x.action_text,cost:+x.price||0,
+        priceLabel:x.price?x.price+' ₪':'ללא עלות',provider:x.provider||'',
+        message:x.greeting_message||'',sourceId:x.catalog_item_id||null,cloud:true
+      }
+    });
+    const local=Array.isArray(state.orders)?state.orders:[];
+    const seen={};remote.forEach(function(x){seen[String(x.id)]=true});
+    state.orders=remote.concat(local.filter(function(x){return !seen[String(x.id)]}));
+    persistOnly();render()
+  }catch(e){}
+}
+
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])){a[k]=merge(a[k]||{},b[k])}else if(b[k]!==undefined)a[k]=b[k]}return a}
 function load(){try{return merge(clone(defaults),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){return clone(defaults)}}
@@ -270,21 +376,47 @@ function oneTapPlan(){
  const fallback=chooseSmartAction(state.planner.dailyVariant||0);
  return {kind:fallback.type,icon:fallback.icon,title:fallback.title,buy:fallback.body,cost:fallback.cost||0,priceLabel:fallback.cost?fallback.cost+' ₪':'ללא עלות',url:null,provider:'',reason:fallback.reason||inferReason(fallback),message:oneTapMessage(fallback.type)}
 }
-function executeOneTap(plan){
+async function executeOneTap(plan){
  const normalizedType=(plan.kind==='flower'||plan.kind==='sweet'||plan.kind==='card')?'gesture':plan.kind;
- const order={
-   id:Date.now(),createdAt:new Date().toISOString(),status:'pending',
-   type:normalizedType,title:plan.title,buy:plan.buy,cost:plan.cost||0,
-   priceLabel:plan.priceLabel||(plan.cost?plan.cost+' ₪':'ללא עלות'),
-   provider:plan.provider||'',message:plan.message||'',sourceId:plan.id||null
- };
- state.orders=Array.isArray(state.orders)?state.orders:[];
- state.orders.unshift(order);
- rememberType(normalizedType);rememberItem(plan.id);
- state.planner.dailyKey='';
- persistOnly();render();
- openModal(`<p class="eyebrow">נשארים בתוך האפליקציה</p><h2>✓ הפעולה מוכנה לביצוע</h2><div class="one-tap-result"><div class="decision-label">מה הוכן</div><strong>${esc(plan.buy)}</strong><div class="decision-grid"><div><small>תקציב</small><b>${esc(order.priceLabel)}</b></div><div><small>ספק</small><b>${esc(order.provider||'לא נדרש')}</b></div></div><div class="decision-label">ברכה</div><blockquote>${esc(order.message||'אין צורך בברכה')}</blockquote></div><p class="muted">לא יצאנו לאתר חיצוני. הפעולה נשמרה בתוך האפליקציה כ״ממתין לביצוע״. רכישה אמיתית תתבצע רק אחרי שנחבר ספק שתומך בהזמנה ישירה מתוך האפליקציה.</p><button class="primary full" id="closePreparedOrder">הבנתי</button>`);
- $('#closePreparedOrder').onclick=closeModal
+ try{
+   const client=await ensureCoupleCloud();
+   const sessionResult=await client.auth.getSession();
+   if(!(sessionResult&&sessionResult.data&&sessionResult.data.session)){
+     return coupleLoginThen(function(){return executeOneTap(plan)})
+   }
+   coupleCloudSession=sessionResult.data.session;
+   await syncCoupleProfile();
+   const cloud=await coupleCloudApi({action:'create_order',order:{
+     action_type:['gift','date','gesture','free','message','other'].indexOf(normalizedType)>=0?normalizedType:'other',
+     catalog_item_id:plan.id||null,
+     title:plan.title||'פינוק',
+     action_text:plan.buy||'',
+     price:+plan.cost||0,
+     provider:plan.provider||'',
+     partner_name:state.partner.name||'',
+     partner_phone:state.partner.phone||'',
+     delivery_address:state.me.homeAddress||'',
+     greeting_message:plan.message||'',
+     metadata:{reason:plan.reason||'',price_label:plan.priceLabel||'',source:'couple-app'}
+   }});
+   const saved=cloud.order;
+   const order={
+     id:saved.id,cloudId:saved.id,createdAt:saved.created_at,status:'pending',
+     type:normalizedType,title:saved.title||plan.title,buy:saved.action_text||plan.buy,cost:+saved.price||0,
+     priceLabel:plan.priceLabel||(saved.price?saved.price+' ₪':'ללא עלות'),
+     provider:saved.provider||plan.provider||'',message:saved.greeting_message||plan.message||'',sourceId:plan.id||null,cloud:true
+   };
+   state.orders=Array.isArray(state.orders)?state.orders:[];
+   state.orders.unshift(order);
+   rememberType(normalizedType);rememberItem(plan.id);
+   state.planner.dailyKey='';
+   persistOnly();render();
+   openModal('<p class="eyebrow">נשמר בענן</p><h2>✓ ההזמנה מוכנה</h2><div class="one-tap-result"><div class="decision-label">מה הוכן</div><strong>'+esc(plan.buy)+'</strong><div class="decision-grid"><div><small>תקציב</small><b>'+esc(order.priceLabel)+'</b></div><div><small>סטטוס</small><b>ממתין לחיבור ספק</b></div></div><div class="decision-label">ברכה</div><blockquote>'+esc(order.message||'אין צורך בברכה')+'</blockquote></div><p class="muted">ההזמנה נוצרה בפועל בחשבון שלך בענן. כשנחבר ספק ותשלום, אותו כפתור ישלח אותה ישירות לביצוע.</p><button class="primary full" id="closePreparedOrder">הבנתי</button>');
+   $('#closePreparedOrder').onclick=closeModal
+ }catch(e){
+   if(e&&e.message==='login_required')return coupleLoginThen(function(){return executeOneTap(plan)});
+   toast(e&&e.message?e.message:'לא הצלחתי ליצור הזמנה')
+ }
 }
 function oneTapCourtship(){
  const plan=oneTapPlan();
@@ -301,8 +433,8 @@ function quickSetup(){
  const avoid=['פרחים','מתוקים','מקומות רועשים','הפתעות גדולות'];
  const selected=new Set(state.partner.preferenceTags||[]);
  const avoided=new Set(state.partner.avoidTags||[]);
- openModal(`<p class="eyebrow">הגדרה חד־פעמית</p><h2>דקה אחת ואני חושב במקומך</h2><label>איך קוראים לה?</label><input id="qsName" value="${esc(state.partner.name)}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><div class="decision-label">מה היא אוהבת? בחר 2–4</div><div class="quick-setup-grid" id="qsPrefs">${pref.map(x=>`<button type="button" data-qs-pref="${esc(x)}" class="${selected.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><div class="decision-label">מה לא לשלוח / לא להציע?</div><div class="quick-setup-grid" id="qsAvoid">${avoid.map(x=>`<button type="button" data-qs-avoid="${esc(x)}" class="${avoided.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><label>כמה מותר לי להוציא בחודש בלי שתצטרך לחשב?</label><select id="qsBudget" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><option value="400">400 ₪</option><option value="800">800 ₪</option><option value="1200">1,200 ₪</option><option value="2000">2,000 ₪</option></select><button class="primary full" id="qsSave">סיימנו — תחשוב במקומי</button>`);
- $('#qsBudget').value=String(state.plan.budget||800);
+ openModal(`<p class="eyebrow">הגדרה חד־פעמית</p><h2>דקה אחת ואני חושב במקומך</h2><label>איך קוראים לה?</label><input id="qsName" value="${esc(state.partner.name)}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><div class="decision-label">מה היא אוהבת? בחר 2–4</div><div class="quick-setup-grid" id="qsPrefs">${pref.map(x=>`<button type="button" data-qs-pref="${esc(x)}" class="${selected.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><div class="decision-label">מה לא לשלוח / לא להציע?</div><div class="quick-setup-grid" id="qsAvoid">${avoid.map(x=>`<button type="button" data-qs-avoid="${esc(x)}" class="${avoided.has(x)?'selected':''}">${esc(x)}</button>`).join('')}</div><label>כמה מותר לי להוציא בחודש בלי שתצטרך לחשב?</label><select id="qsBudget" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:7px 0 14px"><option value="0">0 ₪</option><option value="50">50 ₪</option><option value="100">100 ₪</option><option value="150">150 ₪</option><option value="200">200 ₪</option><option value="250">250 ₪</option><option value="300">300 ₪</option><option value="350">350 ₪</option><option value="400">400 ₪</option><option value="600">600 ₪</option><option value="800">800 ₪</option><option value="1200">1,200 ₪</option><option value="2000">2,000 ₪</option></select><button class="primary full" id="qsSave">סיימנו — תחשוב במקומי</button>`);
+ $('#qsBudget').value=String(state.plan.budget==null?800:state.plan.budget);
  $$('[data-qs-pref]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
  $$('[data-qs-avoid]').forEach(b=>b.onclick=()=>b.classList.toggle('selected'));
  $('#qsSave').onclick=()=>{
@@ -310,7 +442,7 @@ function quickSetup(){
    state.partner.preferenceTags=$$('[data-qs-pref].selected').map(b=>b.dataset.qsPref);
    state.partner.avoidTags=$$('[data-qs-avoid].selected').map(b=>b.dataset.qsAvoid);
    state.partner.likes=[state.partner.likes,state.partner.preferenceTags.join(', ')].filter(Boolean).join(', ');
-   state.plan.budget=+$('#qsBudget').value||800;
+   state.plan.budget=Number($('#qsBudget').value);
    state.plan.autoPlanner=true;
    state.planner.dailyKey='';
    ensureAutomaticPlanning(true);persistOnly();closeModal();fillForms();render();toast('מוכן. מעכשיו האפליקציה חושבת במקומך')
@@ -368,11 +500,12 @@ function renderPendingOrders(){
  if($('#pendingOrdersCount'))$('#pendingOrdersCount').textContent=String(list.length);
  if(!$('#pendingOrdersList'))return;
  $('#pendingOrdersList').innerHTML=list.length?list.map(o=>`<div class="pending-order-card"><div class="pending-order-main"><span class="emoji">${o.type==='gift'?'🎁':o.type==='date'?'🥂':o.type==='gesture'?'🌹':'❤️'}</span><div><strong>${esc(o.title)}</strong><small>${esc(o.priceLabel||'')}</small><p>${esc(o.buy||'')}</p></div></div><div class="pending-order-actions"><button class="primary" data-order-done="${o.id}">בוצע</button><button class="ghost" data-order-cancel="${o.id}">בטל</button></div></div>`).join(''):'';
- $('[data-order-done]').forEach(b=>b.onclick=()=>completePreparedOrder(+b.dataset.orderDone));
- $('[data-order-cancel]').forEach(b=>b.onclick=()=>cancelPreparedOrder(+b.dataset.orderCancel));
+ $$('[data-order-done]').forEach(b=>b.onclick=()=>completePreparedOrder(b.dataset.orderDone));
+ $$('[data-order-cancel]').forEach(b=>b.onclick=()=>cancelPreparedOrder(b.dataset.orderCancel));
 }
-function completePreparedOrder(id){
- const order=(state.orders||[]).find(o=>o.id===id);if(!order)return;
+async function completePreparedOrder(id){
+ const order=(state.orders||[]).find(function(o){return String(o.id)===String(id)});if(!order)return;
+ try{if(order.cloudId)await coupleCloudApi({action:'complete_order',order_id:order.cloudId})}catch(e){}
  order.status='done';order.completedAt=new Date().toISOString();
  state.progress.courtship++;
  if(order.type==='gesture')state.progress.gestures++;
@@ -382,8 +515,9 @@ function completePreparedOrder(id){
  state.planner.dailyKey='';
  ensureAutomaticPlanning(true);persistOnly();render();toast('סומן כבוצע ♥')
 }
-function cancelPreparedOrder(id){
- const order=(state.orders||[]).find(o=>o.id===id);if(!order)return;
+async function cancelPreparedOrder(id){
+ const order=(state.orders||[]).find(function(o){return String(o.id)===String(id)});if(!order)return;
+ try{if(order.cloudId)await coupleCloudApi({action:'cancel_order',order_id:order.cloudId})}catch(e){}
  order.status='cancelled';persistOnly();render();toast('הפעולה בוטלה')
 }
 function renderHints(){
@@ -434,7 +568,7 @@ function giftFlow(){
  }
 }
 function dateFlow(){
- const b=state.me.dateBudget||400;
+ const b=(state.me.dateBudget==null?400:state.me.dateBudget);
  openModal(`<p class="eyebrow">דייט</p><h2>תן לי לארגן ערב</h2><div class="modal-options"><button class="modal-option selected" data-date-style="רומנטי">רומנטי</button><button class="modal-option" data-date-style="מצחיק">מצחיק</button><button class="modal-option" data-date-style="רגוע">רגוע</button><button class="modal-option" data-date-style="חדש">חדש לנו</button></div><label>תקציב כולל</label><input id="dateFlowBudget" type="number" value="${b}" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px;margin:8px 0 14px"><button class="primary full" id="buildDate">בנה לי דייט</button>`);
  let style='רומנטי';
  $$('[data-date-style]').forEach(x=>x.onclick=()=>{$$('[data-date-style]').forEach(y=>y.classList.remove('selected'));x.classList.add('selected');style=x.dataset.dateStyle});
@@ -468,9 +602,9 @@ function buildWeek(){autoBuildWeek(true);save();toast('נבנה שבוע חדש 
 function buildMonth(){autoBuildMonth(true);save()}
 function surprise(){const options=[giftFlow,dateFlow,gestureFlow,()=>showAction()];options[Math.floor(Math.random()*options.length)]()}
 
-$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+$$('.bottom-nav button[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-function go(tab){$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
+function go(tab){$$('.bottom-nav button[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));$$('.tab-page').forEach(x=>x.classList.toggle('active',x.dataset.page===tab));scrollTo({top:0,behavior:'smooth'})}
 function openAllFeatures(){
  openModal(`<p class="eyebrow">כל האפשרויות</p><h2>רוצה יותר שליטה?</h2><p>הפעולה היומית נשארת פשוטה. כאן נמצאים כל הכלים למי שרוצה להעמיק.</p><div class="feature-hub-grid">
    <button data-hub-go="courtship"><span>❤️</span><strong>חיזור</strong><small>שבוע חיזור ופעולות</small></button>
@@ -480,13 +614,13 @@ function openAllFeatures(){
    <button data-hub-go="partner"><span>♥</span><strong>היא</strong><small>העדפות ורמזים</small></button>
    <button data-hub-go="me"><span>⚙</span><strong>הגדרות</strong><small>זמן, תקציב ומיקום</small></button>
  </div><button class="ghost full" id="hubHintBtn">＋ היא אמרה משהו</button>`);
- $('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
- $('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
+ $$('[data-hub-go]').forEach(b=>b.onclick=()=>{closeModal();go(b.dataset.hubGo)});
+ $$('[data-hub-flow]').forEach(b=>b.onclick=()=>{const fn={gift:giftFlow,date:dateFlow,gesture:gestureFlow}[b.dataset.hubFlow];if(fn)fn()});
  $('#hubHintBtn').onclick=addHint
 }
 $('#openAllFeaturesBtn').onclick=openAllFeatures;
 $('#allFeaturesNavBtn').onclick=openAllFeatures;
-$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
+$$('[data-flow]').forEach(b=>b.onclick=()=>({gift:giftFlow,date:dateFlow,gesture:gestureFlow,surprise}[b.dataset.flow])());
 $('#oneTapCourtshipBtn').onclick=oneTapCourtship;
 $('#quickSetupBtn').onclick=quickSetup;
 $('#doNowBtn').onclick=()=>showAction();$('#courtshipNow').onclick=()=>showAction();$('#refreshDailyBtn').onclick=nextDailyAlternative;
@@ -496,16 +630,16 @@ $('#autoCourtship').onclick=()=>{state.plan.autoPlanner=true;ensureAutomaticPlan
 $$('#styleChips button').forEach(b=>b.onclick=()=>{$$('#styleChips button').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.plan.style=b.dataset.style;save()});
 
 function fillForms(){
- $('#partnerName').value=state.partner.name;$('#relationshipYears').value=state.partner.years;$('#likes').value=state.partner.likes;$('#dislikes').value=state.partner.dislikes;$('#foodPrefs').value=state.partner.foodPrefs;$('#giftPrefs').value=state.partner.giftPrefs;$('#emotionalPrefs').value=state.partner.emotionalPrefs;
+ $('#partnerName').value=state.partner.name;if($('#partnerPhone'))$('#partnerPhone').value=state.partner.phone||'';$('#relationshipYears').value=state.partner.years;$('#likes').value=state.partner.likes;$('#dislikes').value=state.partner.dislikes;$('#foodPrefs').value=state.partner.foodPrefs;$('#giftPrefs').value=state.partner.giftPrefs;$('#emotionalPrefs').value=state.partner.emotionalPrefs;
  $('#myName').value=state.me.name;$('#homeAddress').value=state.me.homeAddress;$('#maxDistance').value=state.me.maxDistance;$('#giftBudget').value=state.me.giftBudget;$('#dateBudget').value=state.me.dateBudget;$('#gestureBudget').value=state.me.gestureBudget;
  $('#monthlyBudget').value=state.plan.budget;$('#budgetValue').textContent=state.plan.budget;$('#autoPlannerEnabled').checked=state.plan.autoPlanner!==false;$('#planGifts').value=state.plan.gifts;$('#planDates').value=state.plan.dates;$('#planGestures').value=state.plan.gestures;$('#planCourtship').value=state.plan.courtship;$('#automationLevel').value=state.plan.automation;$('#autoLimit').value=state.plan.autoLimit;$('#autoLimitWrap').hidden=state.plan.automation!=='limited';
  const active=$$('#styleChips button').find(x=>x.dataset.style===state.plan.style);if(active)active.classList.add('active')
 }
-$('#savePartnerBtn').onclick=()=>{Object.assign(state.partner,{name:$('#partnerName').value.trim(),years:$('#relationshipYears').value,likes:$('#likes').value.trim(),dislikes:$('#dislikes').value.trim(),foodPrefs:$('#foodPrefs').value.trim(),giftPrefs:$('#giftPrefs').value.trim(),emotionalPrefs:$('#emotionalPrefs').value.trim()});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast('פרופיל בת הזוג נשמר והתכנון עודכן')};
-$('#saveMeBtn').onclick=()=>{Object.assign(state.me,{name:$('#myName').value.trim(),homeAddress:$('#homeAddress').value.trim(),maxDistance:+$('#maxDistance').value,giftBudget:+$('#giftBudget').value||0,dateBudget:+$('#dateBudget').value||0,gestureBudget:+$('#gestureBudget').value||0});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast('ההגדרות נשמרו והתכנון עודכן')};
+$('#savePartnerBtn').onclick=()=>{Object.assign(state.partner,{name:$('#partnerName').value.trim(),phone:$('#partnerPhone')?$('#partnerPhone').value.trim():'',years:$('#relationshipYears').value,likes:$('#likes').value.trim(),dislikes:$('#dislikes').value.trim(),foodPrefs:$('#foodPrefs').value.trim(),giftPrefs:$('#giftPrefs').value.trim(),emotionalPrefs:$('#emotionalPrefs').value.trim()});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();syncCoupleProfile();toast('פרופיל בת הזוג נשמר והתכנון עודכן')};
+$('#saveMeBtn').onclick=()=>{Object.assign(state.me,{name:$('#myName').value.trim(),homeAddress:$('#homeAddress').value.trim(),maxDistance:+$('#maxDistance').value,giftBudget:+$('#giftBudget').value||0,dateBudget:+$('#dateBudget').value||0,gestureBudget:+$('#gestureBudget').value||0});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();syncCoupleProfile();toast('ההגדרות נשמרו והתכנון עודכן')};
 $('#monthlyBudget').oninput=e=>$('#budgetValue').textContent=e.target.value;
 $('#automationLevel').onchange=e=>$('#autoLimitWrap').hidden=e.target.value!=='limited';$('#autoPlannerEnabled').onchange=e=>{state.plan.autoPlanner=e.target.checked;if(state.plan.autoPlanner)ensureAutomaticPlanning(true);persistOnly();render()};
-$('#savePlanBtn').onclick=()=>{Object.assign(state.plan,{budget:+$('#monthlyBudget').value,gifts:+$('#planGifts').value,dates:+$('#planDates').value,gestures:+$('#planGestures').value,courtship:+$('#planCourtship').value,automation:$('#automationLevel').value,autoLimit:+$('#autoLimit').value||0,autoPlanner:$('#autoPlannerEnabled').checked});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();toast(state.plan.autoPlanner?'התוכנית נשמרה והתכנון האוטומטי עודכן':'התוכנית נשמרה')};
+$('#savePlanBtn').onclick=()=>{Object.assign(state.plan,{budget:+$('#monthlyBudget').value,gifts:+$('#planGifts').value,dates:+$('#planDates').value,gestures:+$('#planGestures').value,courtship:+$('#planCourtship').value,automation:$('#automationLevel').value,autoLimit:+$('#autoLimit').value||0,autoPlanner:$('#autoPlannerEnabled').checked});state.planner.dailyKey='';ensureAutomaticPlanning(true);save();syncCoupleProfile();toast(state.plan.autoPlanner?'התוכנית נשמרה והתכנון האוטומטי עודכן':'התוכנית נשמרה')};
 
 $('#locationBtn').onclick=()=>{
  if(!navigator.geolocation){toast('המכשיר לא תומך במיקום');return}
@@ -515,4 +649,4 @@ const dayNames=['ראשון','שני','שלישי','רביעי','חמישי','ש
 $('#calendarBtn').onclick=()=>{const box=$('#availabilityEditor');box.hidden=!box.hidden;if(!box.innerHTML)box.innerHTML=dayNames.map((d,i)=>`<label class="availability-row"><span>${d}</span><input type="checkbox" data-avail="${i}" ${state.me.availability[i]?'checked':''}></label>`).join('');$$('[data-avail]').forEach(x=>x.onchange=()=>{state.me.availability[x.dataset.avail]=x.checked;save()})};
 $('#addSocialBtn').onclick=()=>{openModal(`<p class="eyebrow">אות מהרשת</p><h2>שמור קישור או רעיון</h2><p>רק תוכן שאתה או בת הזוג בחרתם לשתף.</p><input id="socialLink" placeholder="קישור / תיאור" style="width:100%;padding:11px;border:1px solid #e8dfdd;border-radius:14px"><button class="primary full" style="margin-top:12px" id="saveSocial">שמור</button>`);$('#saveSocial').onclick=()=>{const v=$('#socialLink').value.trim();if(!v)return;state.partner.social.push({value:v,date:new Date().toISOString()});save();closeModal();toast('נשמר אות חדש')}}
 if(state.me.location)$('#locationStatus').textContent='קיימת הרשאת מיקום שמורה במכשיר.';
-ensureAutomaticPlanning(false);fillForms();render();
+ensureAutomaticPlanning(false);fillForms();render();setTimeout(function(){hydrateCloudOrders()},400);

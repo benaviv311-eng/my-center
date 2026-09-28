@@ -13,3 +13,10 @@ assert.ok(ui.includes('sourceLabel'));
 assert.ok(ui.includes('data-refresh-section'));
 assert.ok(ui.includes('loadLibrary()'));
 console.log('library discovery integration tests: OK');
+
+const css=fs.readFileSync(path.join(root,'library-discovery.css'),'utf8');
+assert.ok(ui.includes('nugget-headline'), 'library UI should render concise nugget headlines');
+assert.ok(ui.includes('nugget-topic'), 'library UI should expose the nugget topic');
+assert.ok(css.includes('.nugget-headline'), 'nugget feed should have dedicated editorial styling');
+assert.ok(css.includes('.nugget-topic'), 'topic styling should be present');
+assert.ok(html.includes('נאגטס מכל הספרייה'), 'discovery heading should describe the feed as book nuggets');
