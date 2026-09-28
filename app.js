@@ -596,8 +596,51 @@ function bankToolbar(){
   );
 }
 
+function bankQuoteParts(content){
+  const raw=String(content?.character_quote||'').trim();
+  let speaker=String(content?.quote_speaker||'').trim();
+  const recipient=String(content?.quote_recipient||'').trim();
+  let quote=raw;
+
+  if(!speaker){
+    const match=raw.match(/^([^:：]{1,40})[:：]\s*(.+)$/s);
+    if(match){
+      speaker=match[1].trim();
+      quote=match[2].trim();
+    }
+  }else{
+    const prefix=speaker+':';
+    if(quote.startsWith(prefix)) quote=quote.slice(prefix.length).trim();
+  }
+
+  return {speaker,recipient,quote};
+}
+
+function bankQuoteHeading(content){
+  const parts=bankQuoteParts(content);
+  if(!parts.speaker) return 'משפט הדמות';
+  return `משפט של ${parts.speaker}${parts.recipient?' אל '+parts.recipient:''}`;
+}
+
+function bankCharacterOptions(selected='',recipient=false){
+  const base=[
+    'ראיקה','ראי','היקארי','טומו','נאזו יוקאן','מדושי','קאמינארי','שיזוקה',
+    'סיירן','גנזו','איקטרו','אוקנה','טאקאקי','גנבו','יוגאן','איוואו','גנקי',
+    'רוגה','הייאטה','קיבה','קאגה','אראשי'
+  ];
+  const values=recipient?['','לעצמו/לעצמה','לכולם',...base]:['',...base];
+
+  if(selected && !values.includes(selected)) values.push(selected);
+
+  return values.map(value=>{
+    const label=value||'לא הוגדר';
+    return `<option value="${bankEsc(value)}" ${value===selected?'selected':''}>${bankEsc(label)}</option>`;
+  }).join('');
+}
+
 function bankRenderCard(item,index){
   const content=item.content||{};
+  const quoteParts=bankQuoteParts(content);
 
   const favorited=
     bankState.favorites.has(item.id);
@@ -663,14 +706,12 @@ function bankRenderCard(item,index){
       </details>
 
       <details>
-        <summary>
-          משפט שהדמות הייתה אומרת
+        <summary class="bank-quote-heading">
+          ${bankEsc(bankQuoteHeading(content))}
         </summary>
 
         <p class="bank-quote">
-          ${bankEsc(
-            content.character_quote||''
-          )}
+          ${bankEsc(quoteParts.quote||'')}
         </p>
       </details>
 
@@ -715,12 +756,32 @@ function bankRenderCard(item,index){
         </label>
 
         <label>
-          משפט שהדמות הייתה אומרת
+          מי אומר את המשפט
+
+          <select
+            class="bank-input"
+            data-bank-field="quote_speaker">
+            ${bankCharacterOptions(quoteParts.speaker,false)}
+          </select>
+        </label>
+
+        <label>
+          למי נאמר המשפט
+
+          <select
+            class="bank-input"
+            data-bank-field="quote_recipient">
+            ${bankCharacterOptions(quoteParts.recipient,true)}
+          </select>
+        </label>
+
+        <label>
+          המשפט עצמו
 
           <textarea
             rows="2"
             data-bank-field="character_quote">${bankEsc(
-              content.character_quote||''
+              quoteParts.quote||''
             )}</textarea>
         </label>
 
@@ -1066,31 +1127,16 @@ document.addEventListener(
             fields
           });
 
-        card
-          .querySelector('.bank-context')
-          .textContent=
-            result.item.content
-              .raika_context||'';
-
-        card
-          .querySelector('.bank-quote')
-          .textContent=
-            result.item.content
-              .character_quote||'';
-
         const item=
           bankState.items.find(
             x=>x.id===itemId
           );
 
         if(item){
-          item.content=
-            result.item.content;
+          item.content=result.item.content;
+          const itemIndex=Math.max(0,bankState.items.findIndex(x=>x.id===itemId));
+          card.outerHTML=bankRenderCard(item,itemIndex);
         }
-
-        card
-          .querySelector('.bank-edit')
-          .hidden=true;
 
         toast('השינוי נשמר בבנק');
       }
