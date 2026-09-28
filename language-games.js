@@ -347,5 +347,10 @@
   const requestedGame=params.get('game');
   const requestedMode=params.get('mode');
   if(['60','ko','survival'].includes(requestedMode))rushMode=requestedMode;
-  if(requestedGame==='translation-rush')render('translation-rush');
+  if(requestedGame==='daily-mix'){
+    mixIndex=0;
+    render(mixTypes[0],{fromMix:true});
+  }else if(Object.prototype.hasOwnProperty.call(LABELS,requestedGame)){
+    render(requestedGame);
+  }
 })();
