@@ -183,23 +183,82 @@
   }
 
   function encouragementFor(seconds){
-    if(seconds<=0.85) return {text:'INCREDIBLE!',level:4,rate:1.18,pitch:1.22};
-    if(seconds<=1.45) return {text:'AMAZING!',level:3,rate:1.12,pitch:1.16};
-    if(seconds<=2.5) return {text:'GREAT!',level:2,rate:1.06,pitch:1.08};
-    return {text:'GOOD!',level:1,rate:1,pitch:1};
+    const tiers=[
+      {max:.65,level:5,rate:1.28,pitch:1.32,words:['LIGHTNING!','PERFECT!','UNBELIEVABLE!','LEGENDARY!']},
+      {max:1.0,level:4,rate:1.22,pitch:1.26,words:['INCREDIBLE!','PHENOMENAL!','BRILLIANT!','OUTSTANDING!']},
+      {max:1.55,level:3,rate:1.16,pitch:1.19,words:['AMAZING!','AWESOME!','FANTASTIC!','SUPERB!']},
+      {max:2.6,level:2,rate:1.1,pitch:1.12,words:['GREAT!','NICE!','EXCELLENT!','WELL DONE!']},
+      {max:99,level:1,rate:1.04,pitch:1.06,words:['GOOD!','KEEP GOING!','YOU GOT IT!','NICE ONE!']}
+    ];
+    const tier=tiers.find(x=>seconds<=x.max)||tiers[tiers.length-1];
+    const bonusLevel=streak>=10?1:0;
+    const level=Math.min(5,tier.level+bonusLevel);
+    const text=tier.words[Math.floor(Math.random()*tier.words.length)];
+    return {text,level,rate:tier.rate+(bonusLevel*.03),pitch:tier.pitch+(bonusLevel*.04)};
+  }
+
+  function excitingVoice(){
+    if(!('speechSynthesis' in window)) return null;
+    const voices=window.speechSynthesis.getVoices()||[];
+    const english=voices.filter(v=>/^en[-_]/i.test(v.lang||''));
+    const preferred=english.find(v=>/Google US English|Samantha|Alex|Aaron|Daniel|Karen|Moira/i.test(v.name||''));
+    return preferred||english[0]||voices[0]||null;
+  }
+
+  function playSuccessChime(level){
+    try{
+      const AudioCtx=window.AudioContext||window.webkitAudioContext;
+      if(!AudioCtx) return;
+      if(!window.__doubleAudioCtx) window.__doubleAudioCtx=new AudioCtx();
+      const ctx=window.__doubleAudioCtx;
+      if(ctx.state==='suspended') ctx.resume();
+      const now=ctx.currentTime;
+      const notes=[523.25,659.25,783.99,1046.5,1318.5];
+      const count=Math.max(1,Math.min(5,level));
+      for(let i=0;i<count;i++){
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+        osc.type=i===count-1?'triangle':'sine';
+        osc.frequency.setValueAtTime(notes[Math.min(i,notes.length-1)],now+i*.055);
+        gain.gain.setValueAtTime(.0001,now+i*.055);
+        gain.gain.exponentialRampToValueAtTime(.08+(level*.01),now+i*.055+.015);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+i*.055+.18);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(now+i*.055);osc.stop(now+i*.055+.2);
+      }
+    }catch(_){}
   }
 
   function speakEncouragement(item){
+    playSuccessChime(item.level);
     if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
     try{
       window.speechSynthesis.cancel();
-      const utterance=new SpeechSynthesisUtterance(item.text.replace('!',''));
+      const utterance=new SpeechSynthesisUtterance(item.text.replace(/!/g,''));
       utterance.lang='en-US';
+      const voice=excitingVoice();
+      if(voice) utterance.voice=voice;
       utterance.rate=item.rate;
       utterance.pitch=item.pitch;
-      utterance.volume=.82;
+      utterance.volume=1;
       window.speechSynthesis.speak(utterance);
     }catch(_){}
+  }
+
+  function sparkleBurst(level){
+    const count=8+(level*4);
+    for(let i=0;i<count;i++){
+      const spark=document.createElement('span');
+      spark.className='success-spark spark-'+((i%3)+1);
+      spark.textContent=i%3===0?'✦':i%3===1?'✧':'★';
+      spark.style.left=(35+Math.random()*30)+'vw';
+      spark.style.top=(24+Math.random()*24)+'vh';
+      spark.style.setProperty('--sx',((Math.random()-.5)*180)+'px');
+      spark.style.setProperty('--sy',((Math.random()-.5)*150)+'px');
+      spark.style.animationDelay=(Math.random()*90)+'ms';
+      document.body.appendChild(spark);
+      setTimeout(()=>spark.remove(),900);
+    }
   }
 
   function showEncouragement(reward){
@@ -213,41 +272,44 @@
       document.body.appendChild(el);
     }
     el.className='encouragement level-'+item.level;
-    el.textContent=item.text;
+    el.innerHTML='<span>'+item.text+'</span>';
     el.style.animation='none';
     void el.offsetWidth;
     el.style.animation='';
     clearTimeout(el._t);
-    el._t=setTimeout(()=>{el.textContent=''},720);
+    el._t=setTimeout(()=>{el.textContent=''},850);
+    sparkleBurst(item.level);
     speakEncouragement(item);
   }
 
   function burstCoins(sourceEl,count){
-    const rect=sourceEl&&sourceEl.getBoundingClientRect?sourceEl.getBoundingClientRect():null;
-    const x=rect?rect.left+rect.width/2:window.innerWidth/2;
-    const y=rect?rect.top+rect.height/2:window.innerHeight/2;
-    const visible=Math.max(1,Math.min(7,count));
+    const visible=Math.max(4,Math.min(12,count+4));
+    const screenH=Math.max(420,window.innerHeight||700);
 
-    for(let i=0;i<visible;i++){
-      const coin=document.createElement('span');
-      coin.className='coin-pop';
-      coin.textContent='🪙';
-      coin.style.left=x+'px';
-      coin.style.top=y+'px';
-      coin.style.setProperty('--coin-x',((i-(visible-1)/2)*28+(Math.random()*16-8))+'px');
-      coin.style.setProperty('--coin-y',(-72-Math.random()*54)+'px');
-      coin.style.animationDelay=(i*35)+'ms';
-      document.body.appendChild(coin);
-      setTimeout(()=>coin.remove(),1050);
+    for(let side=0;side<2;side++){
+      for(let i=0;i<visible;i++){
+        const coin=document.createElement('span');
+        coin.className='side-coin '+(side===0?'from-left':'from-right');
+        coin.textContent='🪙';
+        coin.style.left=side===0?'18px':'calc(100vw - 18px)';
+        coin.style.top=(screenH*(.42+Math.random()*.38))+'px';
+        const inward=(90+Math.random()*130)*(side===0?1:-1);
+        coin.style.setProperty('--coin-x',inward+'px');
+        coin.style.setProperty('--coin-y',(-90-Math.random()*140)+'px');
+        coin.style.setProperty('--coin-r',((Math.random()*520)-260)+'deg');
+        coin.style.animationDelay=(i*28+Math.random()*70)+'ms';
+        document.body.appendChild(coin);
+        setTimeout(()=>coin.remove(),1250);
+      }
     }
 
     const amount=document.createElement('span');
-    amount.className='coin-amount';
-    amount.textContent='+'+count;
-    amount.style.left=x+'px';
-    amount.style.top=y+'px';
+    amount.className='coin-amount side-total';
+    amount.textContent='🪙 +'+count;
+    amount.style.left='50vw';
+    amount.style.top='58vh';
     document.body.appendChild(amount);
-    setTimeout(()=>amount.remove(),950);
+    setTimeout(()=>amount.remove(),1100);
   }
 
   function celebrateSuccess(reward,sourceEl){
