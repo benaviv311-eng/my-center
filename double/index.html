@@ -125,6 +125,14 @@
     @keyframes sideCoinBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0)}12%{opacity:1}65%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1.25) rotate(var(--coin-r))}100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) - 30px)) scale(.7) rotate(var(--coin-r))}}
     .side-total{font-size:30px!important;font-weight:1000;text-shadow:0 0 12px #ffd84d,0 4px 12px #000b;animation:coinAmount 1.05s ease-out forwards!important}
     @media (prefers-reduced-motion:reduce){.encouragement,.encouragement span,.success-spark,.side-coin,.side-total{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+  
+    .mode-card.sprint{background:#ffcf6b}
+    .sprint-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+    .sprint-card{border:0;border-radius:18px;padding:18px 12px;background:linear-gradient(180deg,#ffd86a,#ffb83e);color:#171717;display:grid;gap:6px;cursor:pointer;min-height:96px;box-shadow:0 6px 0 #0003}
+    .sprint-card b{font-size:20px}
+    .sprint-card span{font-size:12px;font-weight:800;opacity:.78}
+    .sprint-card:active{transform:translateY(2px);box-shadow:0 3px 0 #0003}
+    @media(max-width:520px){.sprint-grid{grid-template-columns:1fr}.sprint-card{min-height:78px}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -177,6 +185,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=11"></script>
+  <script src="game.js?v=12"></script>
 </body>
 </html>
