@@ -371,12 +371,150 @@
 .book-page-empty{background:transparent;border:1px dashed var(--line);border-radius:0;padding:26px;text-align:center;color:var(--muted)}
 .book-page-error{border-color:#e3b7b7}
 
+
+/* Prototype: three-column reader for one approved book */
+.book-prototype-reading .book-page-shell{
+  max-width:1540px;
+}
+.book-prototype-reading .book-reading-layout{
+  grid-template-columns:minmax(210px,250px) minmax(0,760px) minmax(220px,270px);
+  grid-template-areas:"toc reader summary";
+  gap:clamp(28px,3vw,54px);
+  justify-content:center;
+}
+.book-prototype-reading .book-reading-toc-wrap{grid-area:toc}
+.book-prototype-reading .book-reading-main{grid-area:reader}
+.book-chapter-summary-wrap{
+  grid-area:summary;
+  min-width:0;
+  align-self:start;
+}
+.book-chapter-summary-card{
+  position:sticky;
+  top:24px;
+  padding:0 0 18px;
+  border-top:3px solid var(--text);
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(to bottom,var(--bg) 0%,var(--bg) 88%,transparent 100%);
+}
+.book-chapter-summary-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:15px 0 10px;
+}
+.book-summary-position{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
+.book-chapter-summary-card h3{
+  margin:0 0 13px;
+  font-family:"Noto Serif Hebrew","Frank Ruhl Libre",Georgia,"Times New Roman",serif;
+  font-size:20px;
+  line-height:1.35;
+}
+.book-summary-points{
+  display:grid;
+  gap:10px;
+  margin:0;
+  padding:0 18px 0 0;
+}
+.book-summary-points li{
+  color:var(--muted);
+  font-size:13.5px;
+  line-height:1.68;
+}
+.book-read-aloud{
+  display:grid;
+  gap:9px;
+  margin-top:18px;
+  padding-top:15px;
+  border-top:1px solid var(--line);
+}
+.book-read-aloud>strong{
+  font-size:12px;
+  letter-spacing:.04em;
+}
+.book-read-button,
+.book-read-mini{
+  border:1px solid var(--text);
+  background:transparent;
+  color:var(--text);
+  font:inherit;
+  cursor:pointer;
+}
+.book-read-button{
+  width:100%;
+  padding:10px 12px;
+  font-size:13px;
+  font-weight:800;
+}
+.book-read-button:hover,
+.book-read-mini:hover:not(:disabled){
+  background:var(--text);
+  color:var(--bg);
+}
+.book-read-secondary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.book-read-mini{
+  min-height:36px;
+  padding:7px 9px;
+  font-size:12px;
+  font-weight:750;
+  border-color:var(--line);
+}
+.book-read-mini:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+}
+.book-read-status{
+  min-height:1.4em;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+.book-prototype-reading .book-reading-toc-card{
+  top:24px;
+}
+@media(max-width:1180px){
+  .book-prototype-reading .book-reading-layout{
+    grid-template-columns:minmax(180px,220px) minmax(0,720px) minmax(190px,225px);
+    gap:24px;
+  }
+}
+
 @media(max-width:900px){
   .book-page-shell{max-width:780px}
   .book-reading-layout{
     grid-template-columns:1fr;
     grid-template-areas:"toc" "reader";
     gap:18px;
+  }
+  .book-prototype-reading .book-reading-layout{
+    grid-template-columns:1fr;
+    grid-template-areas:"toc" "summary" "reader";
+    gap:18px;
+  }
+  .book-prototype-reading .book-chapter-summary-card{
+    position:static;
+    padding:0 0 14px;
+  }
+  .book-prototype-reading .book-summary-points{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px 22px;
+  }
+  .book-prototype-reading .book-read-aloud{
+    grid-template-columns:auto minmax(150px,220px) auto;
+    align-items:center;
+  }
+  .book-prototype-reading .book-read-secondary{
+    grid-template-columns:auto auto;
   }
   .book-reading-toc-card{
     position:sticky;
@@ -419,4 +557,6 @@
   .reading-deepen-button{width:100%}
   .reading-deep-panel{padding:20px}
   .book-reference{grid-template-columns:1fr}
+  .book-prototype-reading .book-summary-points{grid-template-columns:1fr}
+  .book-prototype-reading .book-read-aloud{grid-template-columns:1fr}
 }
