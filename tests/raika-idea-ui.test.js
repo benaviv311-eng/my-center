@@ -36,3 +36,15 @@ test('Raika feed UI refreshes 24 ideas and blocks a card only after server succe
   const hideIndex=src.indexOf('rfuHide(id)',blockIndex);
   assert.ok(blockIndex>=0&&hideIndex>blockIndex,'server block must succeed before local hide');
 });
+
+
+test('Raika idea cards keep their existing feed actions wired',()=>{
+  const src=read('raika-feed-ui.js');
+  for(const action of ['save','like','more','develop','scene','less','hide']){
+    assert.match(src,new RegExp(`data-rf-action=["']${action}["']`));
+  }
+  assert.match(src,/RaikaWorkspaceClient\.save/);
+  assert.match(src,/RaikaFeedClient\.moreLike/);
+  assert.match(src,/RaikaFeedClient\.expandScene/);
+  assert.match(src,/RaikaFeedClient\.feedback/);
+});
