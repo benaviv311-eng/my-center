@@ -49,16 +49,16 @@
     </div>
     <div class="language-cards">
       <button class="language-card language-card-ar" type="button" data-language-card="ar">
-        <span class="language-card-code">AR</span><strong>ערבית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">AR</span><strong>ערבית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח שפה ←</span>
       </button>
       <button class="language-card language-card-it" type="button" data-language-card="it">
-        <span class="language-card-code">IT</span><strong>איטלקית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">IT</span><strong>איטלקית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח שפה ←</span>
       </button>
       <button class="language-card language-card-ru" type="button" data-language-card="ru">
-        <span class="language-card-code">RU</span><strong>רוסית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">RU</span><strong>רוסית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח שפה ←</span>
       </button>
       <button class="language-card language-card-es" type="button" data-language-card="es">
-        <span class="language-card-code">ES</span><strong>ספרדית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח בפיד ←</span>
+        <span class="language-card-code">ES</span><strong>ספרדית</strong><small data-card-progress>שיעור 1 מתוך 10</small><span>פתח שפה ←</span>
       </button>
       <button class="language-card language-card-four" type="button" data-language-card="four">
         <span class="language-card-code">4×</span><strong>4 שפות יחד</strong><small>אותו רעיון בכל השפות</small><span>פתח בפיד ←</span>
@@ -131,10 +131,10 @@
 <script src="app.js?v=3"></script>
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
-<script src="language-lessons.js?v=1"></script>
-<script src="languages-feed.js?v=7"></script>
+<script src="language-lessons.js?v=2"></script>
+<script src="languages-feed.js?v=8"></script>
 <script src="language-audio.js?v=2"></script>
-<script>window.LanguageLessons&&window.LanguageLessons.renderDashboard();</script>
+
 <script>
 (function(){try{const s=JSON.parse(localStorage.getItem('my-center-languages-v1')||'{}');const d=new Date();const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const n=(s.completedByDate&&s.completedByDate[k]||[]).length;const e=document.getElementById('languages-daily-progress');if(e)e.textContent=n+'/4 שפות הושלמו היום';const b=document.getElementById('languages-progress-bar');if(b)b.style.width=(n/4*100)+'%';}catch(e){}})();
 </script>
