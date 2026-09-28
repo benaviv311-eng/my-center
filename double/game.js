@@ -18,6 +18,7 @@
   let deck=[], pair=[], timer=null, active=false, mode='classic', claim=null;
   let score=0, streak=0, time=60, matches=0, level=1, levelProgress=0, scores=[0,0];
   let knockoutTarget=12, bossActive=false, bossGoal=0, bossProgress=0, bossTimeBefore=0;
+  let levelAssistUses=0, levelAssisted=false;
   let sprintTarget=5, sprintStartedAt=0;
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
@@ -368,6 +369,7 @@
     mode=nextMode;
     score=0;streak=0;matches=0;levelProgress=0;scores=[0,0];claim=null;
     bossActive=false;bossGoal=0;bossProgress=0;
+    levelAssistUses=0;levelAssisted=false;
     level=mode==='levels'?Math.min(profile.unlockedLevel,Math.max(1,Number(startLevel)||profile.unlockedLevel)):1;
 
     if(mode==='classic') time=cfg().classicTime;
@@ -437,9 +439,69 @@
     endGame();
   }
 
+  function assistCost(){
+    const base=8+(Math.floor((level-1)/4)*4);
+    return bossActive?base*2:base;
+  }
+  function assistLimit(){return bossActive?1:2}
+  function assistSkipAmount(){
+    if(bossActive) return 1;
+    return Math.max(1,Math.ceil(levelGoal()*.25));
+  }
+  function assistRemaining(){
+    const goal=bossActive?bossGoal:levelGoal();
+    const progress=bossActive?bossProgress:levelProgress;
+    return Math.max(0,(goal-1)-progress);
+  }
+  function updateAssistButton(){
+    const btn=$('levelAssistBtn');
+    if(!btn) return;
+    const amount=Math.min(assistSkipAmount(),assistRemaining());
+    const cost=assistCost();
+    const exhausted=levelAssistUses>=assistLimit()||amount<=0;
+    const poor=profile.coins<cost;
+    btn.disabled=exhausted||poor;
+    btn.textContent=exhausted
+      ? '🪙 אין עוד דילוגים בשלב'
+      : poor
+        ? '🪙 דילוג מקטע — צריך '+cost
+        : '🪙 דלג +'+amount+' — '+cost+' מטבעות';
+  }
+  function buyLevelAssist(){
+    if(mode!=='levels'||!active) return;
+    const amount=Math.min(assistSkipAmount(),assistRemaining());
+    const cost=assistCost();
+    if(levelAssistUses>=assistLimit()||amount<=0){flash('צריך להשלים את סוף השלב לבד');updateAssistButton();return}
+    if(profile.coins<cost){flash('אין מספיק מטבעות');updateAssistButton();return}
+
+    profile.coins-=cost;
+    saveProfile();
+    levelAssistUses++;
+    levelAssisted=true;
+
+    if(bossActive) bossProgress+=amount;
+    else levelProgress+=amount;
+
+    flash('🛟 דילגת על '+amount+' התאמות · 🪙-'+cost);
+    update();
+    updateAssistButton();
+  }
+
   function renderPlayerButtons(){
     const wrap=$('playerButtons');
     wrap.innerHTML='';
+
+    if(mode==='levels'){
+      const assist=document.createElement('button');
+      assist.type='button';
+      assist.id='levelAssistBtn';
+      assist.className='action assist-btn';
+      assist.addEventListener('click',buyLevelAssist);
+      wrap.appendChild(assist);
+      updateAssistButton();
+      return;
+    }
+
     if(mode!=='versus') return;
     [['🔵 שחקן 1 מצא!','blue',0],['🔴 שחקן 2 מצא!','pink',1]].forEach(([label,cls,p])=>{
       const btn=document.createElement('button');
@@ -514,6 +576,8 @@
     level++;
     unlockLevel(level);
     levelProgress=0;
+    levelAssistUses=0;
+    levelAssisted=false;
     flash('👑 הבוס הובס! שלב '+level+' נפתח');
     return true;
   }
@@ -528,6 +592,8 @@
     level++;
     unlockLevel(level);
     levelProgress=0;
+    levelAssistUses=0;
+    levelAssisted=false;
 
     if(isBossLevel()){
       enterBoss();
@@ -673,8 +739,10 @@
     }
 
     const challenge=$('challengeText'),best=bestText();
+    if(mode==='levels') updateAssistButton();
     if(mode==='levels'){
-      challenge.textContent=bossActive?'👑 בוס שלב '+level+' — '+bossGoal+' התאמות':('שלב '+level+' מתוך '+MAX_STAGE+(best?' · '+best:''));
+      const assistMark=levelAssisted?' · 🛟 נעזרת בדילוג':'';
+      challenge.textContent=(bossActive?'👑 בוס שלב '+level+' — '+bossGoal+' התאמות':('שלב '+level+' מתוך '+MAX_STAGE+(best?' · '+best:'')))+assistMark;
     }else if(mode==='knockout'){
       challenge.textContent='השג '+knockoutTarget+' התאמות לפני שהזמן נגמר'+(best?' · '+best:'');
     }else if(mode==='survival'){
