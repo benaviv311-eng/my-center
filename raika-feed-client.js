@@ -13,4 +13,7 @@ async function generate({count=10,recentSignatures=[]}={}){return rfcCall({actio
 async function moreLike(seedCardId,{count=3,recentSignatures=[]}={}){return rfcCall({action:'more_like',seed_card_id:seedCardId,count,recent_signatures:recentSignatures,base_context:rfcContext()});}
 async function feedback(cardId,feedbackAction,metadata={},promotedItemId=''){return rfcCall({action:'feedback',card_id:cardId,feedback_action:feedbackAction,metadata,promoted_item_id:promotedItemId});}
 async function expandScene(seedCardId){return rfcCall({action:'expand_scene',seed_card_id:seedCardId,base_context:rfcContext()});}
-window.RaikaFeedClient={call:rfcCall,generate,moreLike,feedback,expandScene,context:rfcContext};
+async function refreshAll({count=24,filterType='all',recentSignatures=[]}={}){return rfcCall({action:'refresh_all',count,filter_type:filterType,novelty_target:filterType==='new'?0.9:0.4,recent_signatures:recentSignatures,base_context:rfcContext()});}
+async function blockForever(seedCardId){return rfcCall({action:'block_forever',seed_card_id:seedCardId});}
+async function generateNew({count=24,recentSignatures=[]}={}){return refreshAll({count,filterType:'new',recentSignatures});}
+window.RaikaFeedClient={call:rfcCall,generate,moreLike,feedback,expandScene,refreshAll,blockForever,generateNew,context:rfcContext};

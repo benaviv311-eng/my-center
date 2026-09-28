@@ -72,3 +72,58 @@ test('OpenAI errors preserve HTTP status in a stable code', async () => {
   assert.equal(c.mapOpenAIError(429),'openai_429');
   assert.equal(c.mapOpenAIError(500),'openai_500');
 });
+
+test('refresh_all supports 24 cards while normal generation remains capped at 12', async () => {
+  const c=await core();
+  assert.equal(c.normalizeFeedRequest({action:'refresh_all',count:24}).count,24);
+  assert.equal(c.normalizeFeedRequest({action:'generate',count:24}).count,12);
+});
+
+test('block_forever requires a seed card id', async () => {
+  const c=await core();
+  assert.throws(()=>c.normalizeFeedRequest({action:'block_forever'}),/seed/i);
+  assert.equal(c.normalizeFeedRequest({action:'block_forever',seed_card_id:'abc'}).seed_card_id,'abc');
+});
+
+test('request bounds blocked context and carries novelty filters', async () => {
+  const c=await core();
+  const many=Array.from({length:200},(_,i)=>`x-${i}`);
+  const out=c.normalizeFeedRequest({
+    action:'refresh_all',count:24,blocked_signatures:many,blocked_fingerprints:many,
+    filter_type:'new',novelty_target:0.9
+  });
+  assert.ok(out.blocked_signatures.length<=120);
+  assert.ok(out.blocked_fingerprints.length<=120);
+  assert.equal(out.filter_type,'new');
+  assert.equal(out.novelty_target,0.9);
+});
+
+test('semantic fingerprint and block matching reject normalized near equivalents', async () => {
+  const c=await core();
+  const a={card_type:'relationship',characters:['raika','okane'],plot_family:'trust',title:'ראיקה מבקשת עזרה מאוקנה',body:'ראיקה נאלצת לבקש עזרה'};
+  const b={card_type:'relationship',characters:['okane','raika'],plot_family:'trust',title:'ראיקה מבקשת את עזרת אוקנה',body:'ראיקה חייבת לבקש עזרה'};
+  const fp=c.semanticFingerprint(a);
+  assert.equal(typeof fp,'string');
+  assert.ok(fp.length>0);
+  assert.equal(c.isBlockedCard(b,[{semantic_fingerprint:fp,plot_family:'trust',scope:'family'}]),true);
+});
+
+test('feed prompt includes blocked context and novelty target', async () => {
+  const c=await core();
+  const prompt=c.buildFeedPrompt({
+    count:8,baseContext:{},workspace:[],recentCards:[],preferences:{},
+    blockedRows:[{semantic_fingerprint:'abc',plot_family:'family-secret'}],
+    noveltyTarget:0.8,filterType:'new'
+  });
+  assert.match(prompt,/0\.8/);
+  assert.match(prompt,/family-secret/);
+  assert.match(prompt,/חדש|novel/i);
+});
+
+
+test('permanent blocks reject a semantically close rewording using stored blocked text', async () => {
+  const coreModule=await core();
+  const blocked={title:'ראיקה מגלה יומן ישן של קאמינארי',body:'ראיקה מוצאת יומן עתיק של קאמינארי ובו סוד משפחתי.',semantic_fingerprint:'old-fp',plot_family:'journal-discovery',scope:'fingerprint'};
+  const candidate={card_type:'secret',characters:['raika','kaminari'],title:'ראיקה מוצאת מחברת עתיקה של קאמינארי',body:'ראיקה מגלה מחברת ישנה של קאמינארי שחושפת סוד משפחתי.',plot_family:'journal-discovery'};
+  assert.equal(coreModule.isBlockedCard(candidate,[blocked]),true);
+});
