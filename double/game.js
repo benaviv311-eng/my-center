@@ -6,6 +6,7 @@
   const BEST_KEY='double-best-v1';
   const DIFF_KEY='double-difficulty-v1';
   const PROFILE_KEY='double-profile-v1';
+  const SPRINT_KEY='double-sprint-best-v1';
   const MAX_STAGE=20;
 
   const difficultyConfig={
@@ -17,6 +18,7 @@
   let deck=[], pair=[], timer=null, active=false, mode='classic', claim=null;
   let score=0, streak=0, time=60, matches=0, level=1, levelProgress=0, scores=[0,0];
   let knockoutTarget=12, bossActive=false, bossGoal=0, bossProgress=0, bossTimeBefore=0;
+  let sprintTarget=5, sprintStartedAt=0;
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
 
@@ -50,6 +52,30 @@
     }
   }
   function saveProfile(){safeSet(PROFILE_KEY,JSON.stringify(profile))}
+  function readSprintBests(){
+    try{
+      const parsed=JSON.parse(safeGet(SPRINT_KEY)||'{}');
+      return parsed&&typeof parsed==='object'?parsed:{};
+    }catch(_){return {}}
+  }
+  function sprintBestKey(target=sprintTarget){
+    return difficulty+'-'+target;
+  }
+  function getSprintBest(target=sprintTarget){
+    const value=Number(readSprintBests()[sprintBestKey(target)]);
+    return Number.isFinite(value)&&value>0?value:null;
+  }
+  function saveSprintBest(seconds,target=sprintTarget){
+    const all=readSprintBests();
+    const key=sprintBestKey(target);
+    const old=Number(all[key]);
+    const isBest=!Number.isFinite(old)||old<=0||seconds<old;
+    if(isBest){
+      all[key]=Number(seconds.toFixed(2));
+      safeSet(SPRINT_KEY,JSON.stringify(all));
+    }
+    return {isBest,previous:Number.isFinite(old)&&old>0?old:null};
+  }
   function unlockLevel(n){
     const next=Math.min(MAX_STAGE,Math.max(1,n));
     if(next>profile.unlockedLevel){
@@ -132,7 +158,7 @@
   }
   function cfg(){return mode==='levels'?stageCfg(level):difficultyConfig[difficulty]}
   function modeLabel(){
-    return {classic:'קלאסי',levels:'שלבים',knockout:'נוקאאוט',survival:'הישרדות',versus:'שני שחקנים'}[mode]||'';
+    return {classic:'קלאסי',levels:'שלבים',knockout:'נוקאאוט',survival:'הישרדות',sprint:'מרוץ זמן',versus:'שני שחקנים'}[mode]||'';
   }
   function comboMultiplier(){
     if(streak>=10) return 3;
@@ -351,6 +377,7 @@
     }
     if(mode==='knockout'){time=cfg().knockoutTime;knockoutTarget=cfg().knockoutTarget}
     if(mode==='survival') time=cfg().survivalStart;
+    if(mode==='sprint') time=0;
     if(mode==='versus') time=60;
   }
 
@@ -362,12 +389,23 @@
     $('modeName').textContent=mode==='levels'?cfg().label:(modeLabel()+' · '+cfg().label);
 
     if(timer) clearInterval(timer);
-    timer=setInterval(()=>{
-      if(!active) return;
-      time--;
-      update();
-      if(time<=0) finishByTime();
-    },1000);
+
+    if(mode==='sprint'){
+      sprintStartedAt=nowMs();
+      time=0;
+      timer=setInterval(()=>{
+        if(!active) return;
+        time=(nowMs()-sprintStartedAt)/1000;
+        update();
+      },100);
+    }else{
+      timer=setInterval(()=>{
+        if(!active) return;
+        time--;
+        update();
+        if(mode!=='sprint'&&time<=0) finishByTime();
+      },1000);
+    }
 
     renderPlayerButtons();
     update();
@@ -531,6 +569,18 @@
     }else if(mode==='survival'){
       time+=cfg().survivalBonus;
       flash(rewardText(reward)+' · ⏱️+'+cfg().survivalBonus);
+    }else if(mode==='sprint'){
+      if(matches>=sprintTarget){
+        const elapsed=(nowMs()-sprintStartedAt)/1000;
+        const result=saveSprintBest(elapsed,sprintTarget);
+        const previous=result.previous;
+        const comparison=previous
+          ? (result.isBest?' · שיפרת ב־'+Math.max(0,previous-elapsed).toFixed(2)+' שנ׳!':' · השיא: '+previous.toFixed(2)+' שנ׳')
+          : '';
+        endGame(result.isBest?'🏆 שיא חדש!':'⏱️ סיום',elapsed.toFixed(2)+' שניות ל־'+sprintTarget+' הצלחות'+comparison);
+        return false;
+      }
+      flash(rewardText(reward));
     }else if(mode==='versus'){
       scores[claim]++;
       flash('✓ שחקן '+(claim+1)+' · 🪙+'+reward.coins);
@@ -556,6 +606,8 @@
     }else if(mode==='survival'){
       time=Math.max(0,time-penalty);
       flash('✕ קומבו אופס · -'+penalty+' שניות');
+    }else if(mode==='sprint'){
+      flash('✕ הקומבו נשבר');
     }else if(mode==='versus'){
       scores[claim]=Math.max(0,scores[claim]-1);
       flash('✕ טעות לשחקן '+(claim+1));
@@ -594,6 +646,10 @@
     if(mode==='levels') return 'שיא: שלב '+best.value;
     if(mode==='knockout') return best.value>=cfg().knockoutTarget?'שיא: הושלם · '+Number(best.secondary||0)+' שנ׳ נותרו':'שיא: '+best.value+'/'+cfg().knockoutTarget;
     if(mode==='survival') return 'שיא: '+best.value+' התאמות';
+    if(mode==='sprint'){
+      const sprintBest=getSprintBest();
+      return sprintBest?'שיא: '+sprintBest.toFixed(2)+' שנ׳':'';
+    }
     return '';
   }
 
@@ -610,6 +666,8 @@
       s.innerHTML='<div class="pill">🎯 '+matches+'/'+knockoutTarget+'</div><div class="pill">⭐ '+score+'</div><div class="pill">🪙 '+profile.coins+'</div><div class="pill">⏱️ '+time+'</div>'+(combo?'<div class="pill combo-pill">'+combo+'</div>':'');
     }else if(mode==='survival'){
       s.innerHTML='<div class="pill">🛡️ '+matches+'</div><div class="pill">⭐ '+score+'</div><div class="pill">🪙 '+profile.coins+'</div><div class="pill">⏱️ '+time+'</div>'+(combo?'<div class="pill combo-pill">'+combo+'</div>':'');
+    }else if(mode==='sprint'){
+      s.innerHTML='<div class="pill">🎯 '+matches+'/'+sprintTarget+'</div><div class="pill">⏱️ '+time.toFixed(1)+'</div><div class="pill">🪙 '+profile.coins+'</div>'+(combo?'<div class="pill combo-pill">'+combo+'</div>':'');
     }else{
       s.innerHTML='<div class="pill p1">🔵 '+scores[0]+'</div><div class="pill">🪙 '+profile.coins+'</div><div class="pill">⏱️ '+time+'</div><div class="pill p2">🔴 '+scores[1]+'</div>';
     }
@@ -621,6 +679,9 @@
       challenge.textContent='השג '+knockoutTarget+' התאמות לפני שהזמן נגמר'+(best?' · '+best:'');
     }else if(mode==='survival'){
       challenge.textContent='כל הצלחה מוסיפה '+cfg().survivalBonus+' שניות'+(best?' · '+best:'');
+    }else if(mode==='sprint'){
+      const sprintBest=getSprintBest();
+      challenge.textContent='השלם '+sprintTarget+' התאמות בזמן הקצר ביותר'+(sprintBest?' · השיא שלך '+sprintBest.toFixed(2)+' שנ׳':'');
     }else if(mode==='versus'){
       challenge.textContent='בוחרים מי מצא ואז לוחצים על הסמל המשותף.';
     }else{
@@ -719,6 +780,7 @@
         <button type="button" class="mode-card levels" data-open-levels><b>🗺️ עולם השלבים</b><small>שלב ${profile.unlockedLevel}/${MAX_STAGE} · הקושי עולה בדרך</small></button>
         <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן מוגבל</small></button>
         <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
+        <button type="button" class="mode-card sprint" data-open-sprint><b>⏱️ מרוץ זמן</b><small>5 / 10 / 15 הצלחות · שבור את השיא שלך</small></button>
         <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
       </div>
     `;
@@ -774,6 +836,54 @@
     });
   }
 
+  function showSprintMenu(){
+    const best5=getSprintBest(5);
+    const best10=getSprintBest(10);
+    const best15=getSprintBest(15);
+
+    $('menuPanel').innerHTML=`
+      <div class="submenu-head">
+        <button type="button" class="action secondary" data-back-main>← חזור</button>
+        <div>
+          <h2>⏱️ מרוץ זמן</h2>
+          <small>המטרה: כמה שפחות זמן</small>
+        </div>
+      </div>
+
+      <div class="sprint-grid">
+        <button type="button" class="sprint-card" data-sprint-target="5">
+          <b>5 הצלחות</b>
+          <span>${best5?('שיא '+best5.toFixed(2)+' שנ׳'):'אין שיא עדיין'}</span>
+        </button>
+        <button type="button" class="sprint-card" data-sprint-target="10">
+          <b>10 הצלחות</b>
+          <span>${best10?('שיא '+best10.toFixed(2)+' שנ׳'):'אין שיא עדיין'}</span>
+        </button>
+        <button type="button" class="sprint-card" data-sprint-target="15">
+          <b>15 הצלחות</b>
+          <span>${best15?('שיא '+best15.toFixed(2)+' שנ׳'):'אין שיא עדיין'}</span>
+        </button>
+      </div>
+
+      <div class="score-rules">
+        <b>🏁 איך זה עובד?</b>
+        <span>השעון מתחיל ב־0 ועוצר כשמגיעים ליעד.</span>
+        <small>אפשר לשחק שוב ושוב ולנסות לשפר את השיא הקודם.</small>
+      </div>
+    `;
+
+    const panel=$('menuPanel');
+    const back=panel.querySelector('[data-back-main]');
+    if(back) back.addEventListener('click',restoreMenuMarkup);
+
+    panel.querySelectorAll('[data-sprint-target]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        sprintTarget=Number(btn.dataset.sprintTarget)||5;
+        startGame('sprint');
+      });
+    });
+  }
+
   function bindMenuControls(){
     const panel=$('menuPanel');
 
@@ -783,6 +893,9 @@
 
     const levels=panel.querySelector('[data-open-levels]');
     if(levels) levels.addEventListener('click',showLevelsMenu);
+
+    const sprint=panel.querySelector('[data-open-sprint]');
+    if(sprint) sprint.addEventListener('click',showSprintMenu);
 
     panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
       const key=btn.dataset.difficulty;
