@@ -82,7 +82,7 @@ function chapterSummaryPoints(chapter){
     const key=point.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
     if(!point||!key||seen.has(key))continue;
     seen.add(key);points.push(point);
-    if(points.length===4)break;
+    if(points.length===5)break;
   }
   return points;
 }
@@ -94,7 +94,7 @@ function renderChapterSummary(chapterId){
   if(!chapter)return;
   state.activeChapterId=String(chapter.id);
   const title=$('book-summary-title'),position=$('book-summary-position'),list=$('book-summary-points');
-  if(title)title.textContent=chapter.title||'סיכום קצר';
+  if(title)title.textContent=`נאגטס מהפרק · ${chapter.title||'סיכום קצר'}`;
   if(position)position.textContent=`פרק ${index+1} מתוך ${chapters.length}`;
   const points=chapterSummaryPoints(chapter);
   if(list)list.innerHTML=points.length?points.map(point=>`<li>${esc(point)}</li>`).join(''):'<li>הסיכום הקצר יופיע כאן.</li>';
