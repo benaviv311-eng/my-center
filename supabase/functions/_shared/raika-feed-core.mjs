@@ -14,7 +14,15 @@ const FEEDBACK_WEIGHT = {
 
 const text = (v,max=6000) => String(v ?? '').trim().slice(0,max);
 const arr = (v,max=24) => Array.isArray(v) ? v.slice(0,max).map(x => text(x,120)).filter(Boolean) : [];
-const tokens = v => new Set(text(v,12000).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/).filter(Boolean));
+const tokens = v => {
+  const out=new Set();
+  const raw=text(v,12000).toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu,' ').split(/\s+/).filter(Boolean);
+  for(const token of raw){
+    if(token.length>2)out.add(token);
+    if(token.length>4&&/^[ובלכמהש]/u.test(token))out.add(token.slice(1));
+  }
+  return out;
+};
 function hash(value=''){
   let h=2166136261;
   for(const ch of String(value)){h^=ch.codePointAt(0)||0;h=Math.imul(h,16777619);}
