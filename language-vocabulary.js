@@ -24,7 +24,7 @@
 
   function display(word){
     const target=lang==='ar'?arabicTarget(word):(word[lang]?.target||'');
-    if(lang==='ar')return{primary:transliterateArabic(target),secondary:target};
+    if(lang==='ar')return{primary:word.ar?.translit||transliterateArabic(target),secondary:target};
     if(lang==='ru')return{primary:transliterateRussian(target),secondary:target};
     return{primary:target,secondary:''};
   }
@@ -113,7 +113,7 @@
       const d=display(entry.word);
       const key=entry.topicId+'|'+entry.word.id;
       if(seen.has(key))return;
-      const text=[entry.word.he,d.primary,d.secondary,entry.topic.name,entry.word.ar?.target,entry.word.ar?.spoken].filter(Boolean).join(' ').toLowerCase();
+      const text=[entry.word.he,d.primary,d.secondary,entry.topic.name,entry.word.ar?.target,entry.word.ar?.spoken,entry.word.ar?.translit].filter(Boolean).join(' ').toLowerCase();
       if(text.includes(q)){seen.add(key);results.push(entry);}
     });
     return results;
