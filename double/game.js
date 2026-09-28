@@ -538,14 +538,7 @@
   function restoreMenuMarkup(){
     $('menuPanel').innerHTML=`
       <h1>DOUBLE</h1>
-      <div class="profile-line"><b>🪙 ${profile.coins}</b><span>${profile.totalSuccess} הצלחות</span><span>${profile.totalScore} נק׳ מצטברות</span></div>
-
-      <section class="progress-card">
-        <div class="progress-head"><b>🚀 מסלול השלבים</b><span>${progressPercent()}%</span></div>
-        <div class="progress-bar"><i style="width:${progressPercent()}%"></i></div>
-        <div class="stage-map">${stageGraphHtml()}</div>
-        <small>לחץ על שלב פתוח כדי לשחק בו. כל שלב 5 הוא בוס.</small>
-      </section>
+      <div class="profile-line"><b>🪙 ${profile.coins}</b><span>${profile.totalSuccess} הצלחות</span><span>${profile.totalScore} נק׳</span></div>
 
       <div class="difficulty-wrap">
         <span>רמת קושי</span>
@@ -556,37 +549,69 @@
         </div>
       </div>
 
-      <div class="score-rules">
-        <b>⭐ איך מקבלים נקודות?</b>
-        <span>100 בסיס · מהירות +25/+50 · קושי ×1/×1.25/×1.6 · קומבו ×1.5/×2/×3</span>
-        <small>כל הצלחה נותנת לפחות 🪙1. בקומבו 5: +2 מטבעות, ובכל קומבו 10: +5.</small>
-      </div>
-
       <div class="best-strip" id="bestStrip">${bestOverview()}</div>
 
       <div class="mode-grid">
         <button type="button" class="mode-card classic" data-mode="classic"><b>⚡ קלאסי</b><small>צבור כמה שיותר נקודות</small></button>
-        <button type="button" class="mode-card levels" data-mode="levels"><b>🚀 המשך שלבים</b><small>המשך משלב ${profile.unlockedLevel}</small></button>
+        <button type="button" class="mode-card levels" data-open-levels><b>🚀 שלבים</b><small>שלב ${profile.unlockedLevel}/${MAX_STAGE} · ${progressPercent()}% הושלם</small></button>
         <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן מוגבל</small></button>
         <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
         <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
       </div>
-      <p class="menu-note">טעות שוברת את הקומבו. המטבעות וההתקדמות נשמרים במכשיר.</p>
+
+      <div class="score-rules compact-rules">
+        <b>⭐ ניקוד</b>
+        <span>100 בסיס · בונוס מהירות · מכפיל קושי · קומבו עד ×3</span>
+        <small>כל הצלחה גם נותנת מטבעות. טעות שוברת קומבו.</small>
+      </div>
     `;
     bindMenuControls();
+  }
+
+  function showLevelsMenu(){
+    $('menuPanel').innerHTML=`
+      <div class="submenu-head">
+        <button type="button" class="action secondary" data-back-main>← חזור</button>
+        <div>
+          <h2>🚀 שלבים</h2>
+          <small>מסלול נפרד בתוך DOUBLE</small>
+        </div>
+      </div>
+
+      <section class="progress-card">
+        <div class="progress-head"><b>התקדמות</b><span>${progressPercent()}%</span></div>
+        <div class="progress-bar"><i style="width:${progressPercent()}%"></i></div>
+        <div class="stage-map">${stageGraphHtml()}</div>
+        <small>שלבים אפורים נעולים. כל שלב 5 הוא בוס 👑.</small>
+      </section>
+
+      <div class="modes">
+        <button type="button" class="action primary big" data-continue-levels>המשך משלב ${profile.unlockedLevel}</button>
+      </div>
+    `;
+
+    const panel=$('menuPanel');
+    const back=panel.querySelector('[data-back-main]');
+    if(back) back.addEventListener('click',restoreMenuMarkup);
+
+    const cont=panel.querySelector('[data-continue-levels]');
+    if(cont) cont.addEventListener('click',()=>startGame('levels',profile.unlockedLevel));
+
+    panel.querySelectorAll('[data-stage]').forEach(btn=>{
+      if(btn.disabled) return;
+      btn.addEventListener('click',()=>startGame('levels',Number(btn.dataset.stage)));
+    });
   }
 
   function bindMenuControls(){
     const panel=$('menuPanel');
 
     panel.querySelectorAll('[data-mode]').forEach(btn=>{
-      btn.addEventListener('click',()=>startGame(btn.dataset.mode,btn.dataset.mode==='levels'?profile.unlockedLevel:undefined));
+      btn.addEventListener('click',()=>startGame(btn.dataset.mode));
     });
 
-    panel.querySelectorAll('[data-stage]').forEach(btn=>{
-      if(btn.disabled) return;
-      btn.addEventListener('click',()=>startGame('levels',Number(btn.dataset.stage)));
-    });
+    const levels=panel.querySelector('[data-open-levels]');
+    if(levels) levels.addEventListener('click',showLevelsMenu);
 
     panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
       const key=btn.dataset.difficulty;
