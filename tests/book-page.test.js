@@ -26,6 +26,12 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-reading-toc',
   'book-reading-body',
   'book-reading-progress',
+  'book-chapter-summary',
+  'book-summary-title',
+  'book-summary-points',
+  'book-read-aloud',
+  'book-read-pause',
+  'book-read-stop',
   'book-takeaways',
   'book-summary',
   'book-ideas',
@@ -71,3 +77,13 @@ const library = fs.readFileSync(path.join(root, 'library.html'), 'utf8');
 assert.ok(library.includes('library-book-links.js'), 'library.html should load standalone-book navigation');
 
 console.log('standalone book page tests: OK');
+
+
+assert.ok(js.includes('c8596613-aa90-49f3-8410-09d305926710'), 'reader prototype should be limited to the approved prototype book');
+assert.ok(js.includes('renderChapterSummary'), 'prototype should update a short summary for the active chapter');
+assert.ok(js.includes('speechSynthesis'), 'prototype should support browser read-aloud');
+assert.ok(js.includes('SpeechSynthesisUtterance'), 'prototype should create speech utterances');
+assert.ok(js.includes('book-read-aloud'), 'prototype should wire a chapter read-aloud control');
+assert.ok(pageCss.includes('book-prototype-reading'), 'prototype should have an opt-in three-column reading layout');
+assert.ok(pageCss.includes('grid-template-areas:"toc reader summary"'), 'prototype desktop layout should place TOC on the physical right and summary on the physical left in RTL');
+assert.ok(pageCss.includes('book-chapter-summary-card'), 'prototype should style a sticky chapter summary');
