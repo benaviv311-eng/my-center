@@ -136,6 +136,32 @@
   
     .assist-btn{background:linear-gradient(180deg,#ffe48a,#ffc94d);color:#171717;border:1px solid #fff2b2!important;box-shadow:0 4px 0 #0003}
     .assist-btn:disabled{opacity:.5;filter:grayscale(.45);box-shadow:none;cursor:not-allowed}
+  
+    .mode-card.versus{background:linear-gradient(135deg,#55c8ff,#ff6b91)!important}
+    .versus-setup{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+    .key-player{border-radius:20px;padding:14px;background:#ffffff0d;border:1px solid #ffffff1f}
+    .key-player h3{margin:0 0 10px}
+    .p1-setup{box-shadow:inset 0 0 0 2px #55c8ff44}
+    .p2-setup{box-shadow:inset 0 0 0 2px #ff6b9144}
+    .key-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .key-bind{border:1px solid #ffffff26;background:#ffffff12;color:#fff;border-radius:14px;padding:10px;display:grid;gap:4px;cursor:pointer;min-height:58px}
+    .key-bind span{font-size:11px;opacity:.72}.key-bind b{font-size:16px}
+    .key-bind.listening{background:#ffd84d;color:#171717;border-color:#fff3a0}
+    .versus-live-help{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+    .versus-live-help span{border-radius:999px;padding:8px 11px;font-size:12px;font-weight:900}
+    .p1-help{background:#55c8ff33;border:1px solid #55c8ff88}
+    .p2-help{background:#ff6b9133;border:1px solid #ff6b9188}
+    .versus-card.player-1{box-shadow:0 0 0 4px #55c8ff,0 10px 35px #0008,inset 0 0 0 8px #eee}
+    .versus-card.player-2{box-shadow:0 0 0 4px #ff6b91,0 10px 35px #0008,inset 0 0 0 8px #eee}
+    .sym.cursor-p1:after,.sym.cursor-p2:after{position:absolute;content:"➤";font-size:22px;top:-16px;left:50%;transform:translateX(-50%) rotate(90deg);filter:drop-shadow(0 2px 3px #0008);pointer-events:none}
+    .sym.cursor-p1:after{color:#169fe8}.sym.cursor-p2:after{color:#ff3f75}
+    .sym.cursor-p1{outline:3px solid #55c8ff;border-radius:50%;background:#55c8ff1f}
+    .sym.cursor-p2{outline:3px solid #ff6b91;border-radius:50%;background:#ff6b911f}
+    .sym.versus-winner{animation:versusWin .6s ease-out}
+    .sym.versus-wrong{animation:versusWrong .28s linear}
+    @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
+    @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
+    @media(max-width:520px){.versus-setup{grid-template-columns:1fr}.key-grid{grid-template-columns:repeat(2,1fr)}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -188,6 +214,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=13"></script>
+  <script src="game.js?v=14"></script>
 </body>
 </html>
