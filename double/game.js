@@ -569,6 +569,7 @@
   function render(){
     const board=$('board');
     board.innerHTML='';
+    board.classList.toggle('versus-board',mode==='versus');
     const spin=rotating(),speed=spinSpeed();
 
     pair.forEach((card,cardIndex)=>{
