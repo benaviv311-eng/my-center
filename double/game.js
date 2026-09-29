@@ -7,6 +7,7 @@
   const DIFF_KEY='double-difficulty-v1';
   const PROFILE_KEY='double-profile-v1';
   const SPRINT_KEY='double-sprint-best-v1';
+  const VERSUS_KEYS_KEY='double-versus-keys-v1';
   const MAX_STAGE=20;
 
   const difficultyConfig={
@@ -20,6 +21,7 @@
   let knockoutTarget=12, bossActive=false, bossGoal=0, bossProgress=0, bossTimeBefore=0;
   let levelAssistUses=0, levelAssisted=false;
   let sprintTarget=5, sprintStartedAt=0;
+  let versusKeys=readVersusKeys(), versusCursor=[0,0], versusLocked=false;
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
 
@@ -33,6 +35,35 @@
   }
   function safeSet(key,value){
     try{localStorage.setItem(key,value)}catch(_){}
+  }
+  function defaultVersusKeys(){
+    return {
+      p1:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',select:'Space'},
+      p2:{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',select:'Enter'}
+    };
+  }
+  function readVersusKeys(){
+    try{
+      const raw=JSON.parse(safeGet(VERSUS_KEYS_KEY)||'null');
+      const def=defaultVersusKeys();
+      if(!raw||!raw.p1||!raw.p2) return def;
+      return {
+        p1:Object.assign({},def.p1,raw.p1),
+        p2:Object.assign({},def.p2,raw.p2)
+      };
+    }catch(_){return defaultVersusKeys()}
+  }
+  function saveVersusKeys(){safeSet(VERSUS_KEYS_KEY,JSON.stringify(versusKeys))}
+  function keyLabel(code){
+    const map={
+      Space:'רווח',Enter:'Enter',
+      ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',
+      Escape:'Esc',Tab:'Tab'
+    };
+    if(map[code]) return map[code];
+    if(/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if(/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code||'?';
   }
   function readDifficulty(){
     const saved=safeGet(DIFF_KEY);
@@ -370,6 +401,7 @@
     score=0;streak=0;matches=0;levelProgress=0;scores=[0,0];claim=null;
     bossActive=false;bossGoal=0;bossProgress=0;
     levelAssistUses=0;levelAssisted=false;
+    versusCursor=[0,0];versusLocked=false;
     level=mode==='levels'?Math.min(profile.unlockedLevel,Math.max(1,Number(startLevel)||profile.unlockedLevel)):1;
 
     if(mode==='classic') time=cfg().classicTime;
@@ -502,24 +534,30 @@
       return;
     }
 
-    if(mode!=='versus') return;
-    [['🔵 שחקן 1 מצא!','blue',0],['🔴 שחקן 2 מצא!','pink',1]].forEach(([label,cls,p])=>{
-      const btn=document.createElement('button');
-      btn.type='button';btn.className='action '+cls;btn.textContent=label;
-      btn.addEventListener('click',()=>claimPlayer(p));
-      wrap.appendChild(btn);
-    });
+    if(mode==='versus'){
+      const info=document.createElement('div');
+      info.className='versus-live-help';
+      info.innerHTML=
+        '<span class="p1-help">🔵 1: '+keyLabel(versusKeys.p1.up)+keyLabel(versusKeys.p1.left)+keyLabel(versusKeys.p1.down)+keyLabel(versusKeys.p1.right)+' · '+keyLabel(versusKeys.p1.select)+'</span>'+
+        '<span class="p2-help">🔴 2: '+keyLabel(versusKeys.p2.up)+keyLabel(versusKeys.p2.left)+keyLabel(versusKeys.p2.down)+keyLabel(versusKeys.p2.right)+' · '+keyLabel(versusKeys.p2.select)+'</span>';
+      wrap.appendChild(info);
+      return;
+    }
   }
   function claimPlayer(p){
-    if(!active) return;
     claim=p;
-    $('turn').textContent='שחקן '+(p+1)+' — לחץ על ההתאמה!';
   }
 
   function newRound(){
     if(!active) return;
     claim=null;
-    $('turn').textContent=mode==='versus'?'מי מוצא ראשון?':'';
+    if(mode==='versus'){
+      versusLocked=false;
+      versusCursor=[0,0];
+      $('turn').textContent='מי מוצא ראשון? הזז את הסמן ולחץ בחירה';
+    }else{
+      $('turn').textContent='';
+    }
 
     let a=deck[Math.floor(Math.random()*deck.length)],b;
     do b=deck[Math.floor(Math.random()*deck.length)];while(b===a);
@@ -533,13 +571,17 @@
     board.innerHTML='';
     const spin=rotating(),speed=spinSpeed();
 
-    pair.forEach(card=>{
+    pair.forEach((card,cardIndex)=>{
       const el=document.createElement('div');
-      el.className='card'+(bossActive?' boss-card':'');
+      el.className='card'+(bossActive?' boss-card':'')+(mode==='versus'?' versus-card player-'+(cardIndex+1):'');
+      el.dataset.cardIndex=String(cardIndex);
       shuffle(card).forEach((id,i)=>{
         const p=spots[i],bt=document.createElement('button');
         bt.type='button';bt.className='sym';bt.style.left=p[0]+'%';bt.style.top=p[1]+'%';
         bt.style.fontSize=(36+Math.random()*18)+'px';bt.setAttribute('aria-label','סמל '+icons[id]);
+        bt.dataset.symbolId=String(id);
+        bt.dataset.slot=String(i);
+        bt.dataset.cardIndex=String(cardIndex);
 
         const glyph=document.createElement('span');
         glyph.className='glyph'+(spin?' spinning':'');glyph.textContent=icons[id];
@@ -554,6 +596,114 @@
       });
       board.appendChild(el);
     });
+    if(mode==='versus') updateVersusCursors();
+  }
+
+  function cardSymbols(player){
+    const card=$('board').querySelector('.card[data-card-index="'+player+'"]');
+    return card?[...card.querySelectorAll('.sym')]:[];
+  }
+
+  function updateVersusCursors(){
+    for(let p=0;p<2;p++){
+      const symbols=cardSymbols(p);
+      symbols.forEach((el,i)=>{
+        el.classList.toggle(p===0?'cursor-p1':'cursor-p2',i===versusCursor[p]);
+      });
+    }
+  }
+
+  function moveVersusCursor(player,direction){
+    if(mode!=='versus'||!active||versusLocked) return;
+    const symbols=cardSymbols(player);
+    if(!symbols.length) return;
+
+    const current=symbols[versusCursor[player]]||symbols[0];
+    const cr=current.getBoundingClientRect();
+    const cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
+    let best=-1,bestScore=Infinity;
+
+    symbols.forEach((el,i)=>{
+      if(i===versusCursor[player]) return;
+      const r=el.getBoundingClientRect();
+      const x=r.left+r.width/2, y=r.top+r.height/2;
+      const dx=x-cx, dy=y-cy;
+      let valid=false, primary=0, secondary=0;
+
+      if(direction==='left'&&dx<0){valid=true;primary=-dx;secondary=Math.abs(dy)}
+      if(direction==='right'&&dx>0){valid=true;primary=dx;secondary=Math.abs(dy)}
+      if(direction==='up'&&dy<0){valid=true;primary=-dy;secondary=Math.abs(dx)}
+      if(direction==='down'&&dy>0){valid=true;primary=dy;secondary=Math.abs(dx)}
+      if(!valid) return;
+
+      const score=primary+(secondary*1.35);
+      if(score<bestScore){bestScore=score;best=i}
+    });
+
+    if(best<0){
+      // Wrap to the opposite edge when no symbol exists in that direction.
+      let candidate=0;
+      let extreme=direction==='left'||direction==='up'?Infinity:-Infinity;
+      symbols.forEach((el,i)=>{
+        const r=el.getBoundingClientRect();
+        const val=(direction==='left'||direction==='right')?(r.left+r.width/2):(r.top+r.height/2);
+        if(direction==='left'||direction==='up'){
+          if(val<extreme){extreme=val;candidate=i}
+        }else{
+          if(val>extreme){extreme=val;candidate=i}
+        }
+      });
+      best=candidate;
+    }
+
+    versusCursor[player]=best;
+    updateVersusCursors();
+  }
+
+  function selectVersus(player){
+    if(mode!=='versus'||!active||versusLocked) return;
+    const symbols=cardSymbols(player);
+    const selected=symbols[versusCursor[player]];
+    if(!selected) return;
+    const id=Number(selected.dataset.symbolId);
+    const common=pair[0].find(x=>pair[1].includes(x));
+
+    if(id===common){
+      versusLocked=true;
+      scores[player]++;
+      claim=player;
+      selected.classList.add('versus-winner');
+      flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!');
+      update();
+      setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
+    }else{
+      selected.classList.add('versus-wrong');
+      flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
+      setTimeout(()=>selected.classList.remove('versus-wrong'),280);
+    }
+  }
+
+  function versusActionForCode(code){
+    for(let p=0;p<2;p++){
+      const keys=p===0?versusKeys.p1:versusKeys.p2;
+      for(const action of ['up','down','left','right','select']){
+        if(keys[action]===code) return {player:p,action};
+      }
+    }
+    return null;
+  }
+
+  function handleVersusKeydown(event){
+    if(mode!=='versus'||!active) return;
+    const target=event.target;
+    if(target&&/INPUT|TEXTAREA|SELECT|BUTTON/.test(target.tagName)) return;
+    const match=versusActionForCode(event.code);
+    if(!match) return;
+    event.preventDefault();
+    if(event.repeat&&match.action==='select') return;
+
+    if(match.action==='select') selectVersus(match.player);
+    else moveVersusCursor(match.player,match.action);
   }
 
   function enterBoss(silent=false){
@@ -684,7 +834,17 @@
 
   function hit(id,sourceEl){
     if(!active) return;
-    if(mode==='versus'&&claim===null){flash('בחרו קודם מי מצא');return}
+    if(mode==='versus'){
+      const common=pair[0].find(x=>pair[1].includes(x));
+      if(id===common&&!versusLocked){
+        versusLocked=true;
+        scores[0]++;
+        flash('✓ לחיצה על ההתאמה');
+        update();
+        setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
+      }
+      return;
+    }
 
     const common=pair[0].find(x=>pair[1].includes(x));
     if(id===common){
@@ -751,7 +911,7 @@
       const sprintBest=getSprintBest();
       challenge.textContent='השלם '+sprintTarget+' התאמות בזמן הקצר ביותר'+(sprintBest?' · השיא שלך '+sprintBest.toFixed(2)+' שנ׳':'');
     }else if(mode==='versus'){
-      challenge.textContent='בוחרים מי מצא ואז לוחצים על הסמל המשותף.';
+      challenge.textContent='לכל שחקן סמן על הקלף שלו. הראשון שבוחר את הסמל המשותף מנצח את הסיבוב.';
     }else{
       challenge.textContent='100 בסיס · בונוס מהירות · מכפיל קושי · קומבו'+(best?' · '+best:'');
     }
@@ -849,7 +1009,7 @@
         <button type="button" class="mode-card knockout" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן מוגבל</small></button>
         <button type="button" class="mode-card survival" data-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
         <button type="button" class="mode-card sprint" data-open-sprint><b>⏱️ מרוץ זמן</b><small>5 / 10 / 15 הצלחות · שבור את השיא שלך</small></button>
-        <button type="button" class="mode-card versus" data-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש על אותו מסך</small></button>
+        <button type="button" class="mode-card versus" data-open-versus><b>👥 שני שחקנים</b><small>שני סמנים · שתי מקלדות · הראשון שבוחר מנצח</small></button>
       </div>
     `;
     bindMenuControls();
@@ -952,6 +1112,101 @@
     });
   }
 
+  function showVersusMenu(){
+    $('menuPanel').innerHTML=`
+      <div class="submenu-head">
+        <button type="button" class="action secondary" data-back-main>← חזור</button>
+        <div>
+          <h2>👥 שני שחקנים</h2>
+          <small>כל שחקן שולט בסמן על הקלף שלו</small>
+        </div>
+      </div>
+
+      <div class="versus-setup">
+        <section class="key-player p1-setup">
+          <h3>🔵 שחקן 1</h3>
+          <div class="key-grid">
+            ${keyBindingButtons('p1')}
+          </div>
+        </section>
+        <section class="key-player p2-setup">
+          <h3>🔴 שחקן 2</h3>
+          <div class="key-grid">
+            ${keyBindingButtons('p2')}
+          </div>
+        </section>
+      </div>
+
+      <p class="menu-note">ברירת מחדל: שחקן 1 — WASD + רווח · שחקן 2 — חצים + Enter</p>
+      <div class="modes">
+        <button type="button" class="action primary big" data-start-versus>▶ התחל דו־קרב</button>
+        <button type="button" class="action secondary" data-reset-keys>איפוס מקשים</button>
+      </div>
+    `;
+
+    const panel=$('menuPanel');
+    panel.querySelector('[data-back-main]').addEventListener('click',restoreMenuMarkup);
+    panel.querySelector('[data-start-versus]').addEventListener('click',()=>startGame('versus'));
+    panel.querySelector('[data-reset-keys]').addEventListener('click',()=>{
+      versusKeys=defaultVersusKeys();
+      saveVersusKeys();
+      showVersusMenu();
+    });
+
+    panel.querySelectorAll('[data-key-player][data-key-action]').forEach(btn=>{
+      btn.addEventListener('click',()=>captureVersusKey(btn));
+    });
+  }
+
+  function keyBindingButtons(player){
+    const labels={up:'למעלה',down:'למטה',left:'שמאלה',right:'ימינה',select:'בחירה'};
+    return ['up','left','down','right','select'].map(action=>
+      '<button type="button" class="key-bind" data-key-player="'+player+'" data-key-action="'+action+'">'+
+      '<span>'+labels[action]+'</span><b>'+keyLabel(versusKeys[player][action])+'</b></button>'
+    ).join('');
+  }
+
+  function codeInUse(code,exceptPlayer,exceptAction){
+    for(const player of ['p1','p2']){
+      for(const action of ['up','down','left','right','select']){
+        if(player===exceptPlayer&&action===exceptAction) continue;
+        if(versusKeys[player][action]===code) return true;
+      }
+    }
+    return false;
+  }
+
+  function captureVersusKey(btn){
+    const player=btn.dataset.keyPlayer,action=btn.dataset.keyAction;
+    const old=btn.innerHTML;
+    btn.classList.add('listening');
+    btn.innerHTML='<span>לחץ מקש…</span><b>⌨️</b>';
+
+    const handler=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      document.removeEventListener('keydown',handler,true);
+
+      if(event.code==='Escape'){
+        btn.classList.remove('listening');
+        btn.innerHTML=old;
+        return;
+      }
+
+      if(codeInUse(event.code,player,action)){
+        btn.classList.remove('listening');
+        btn.innerHTML=old;
+        flash('המקש הזה כבר בשימוש');
+        return;
+      }
+
+      versusKeys[player][action]=event.code;
+      saveVersusKeys();
+      showVersusMenu();
+    };
+    document.addEventListener('keydown',handler,true);
+  }
+
   function bindMenuControls(){
     const panel=$('menuPanel');
 
@@ -964,6 +1219,9 @@
 
     const sprint=panel.querySelector('[data-open-sprint]');
     if(sprint) sprint.addEventListener('click',showSprintMenu);
+
+    const versus=panel.querySelector('[data-open-versus]');
+    if(versus) versus.addEventListener('click',showVersusMenu);
 
     panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
       const key=btn.dataset.difficulty;
@@ -987,6 +1245,7 @@
     $('shuffleBtn').addEventListener('click',newRound);
     $('menuBtn').textContent='← חזור';
     $('menuBtn').addEventListener('click',showMenu);
+    document.addEventListener('keydown',handleVersusKeydown);
   }
 
   deck=buildDeck();
