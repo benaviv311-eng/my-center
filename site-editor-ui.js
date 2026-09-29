@@ -3,7 +3,7 @@
 if(window.SiteEditorUI)return;
 
 const MODE_KEY='site-editor-mode';
-const MODES=['consult','edit','work'];
+const MODES=['consult','edit'];
 const EDITOR_ERRORS={
   owner_required:'אין הרשאת עריכת אתר.',
   stale_plan:'הקבצים השתנו מאז האישור. צריך להכין הצעה חדשה.',
@@ -66,11 +66,10 @@ function renderModeControls(){
     host.className='site-editor-modes';
     host.dataset.siteEditorModes='1';
     host.setAttribute('role','group');
-    host.setAttribute('aria-label','מצב עבודה בצ׳אט');
+    host.setAttribute('aria-label','מצב הצ׳אט');
     host.innerHTML=[
       '<button type="button" data-site-editor-mode="consult" aria-pressed="false">🛡️ ייעוץ בלבד</button>',
-      '<button type="button" data-site-editor-mode="edit" aria-pressed="false">✏️ עריכה</button>',
-      '<button type="button" data-site-editor-mode="work" aria-pressed="false">⚡ עבודה</button>',
+      '<button type="button" data-site-editor-mode="edit" aria-pressed="false">💬 צ׳אט</button>',
       '<button type="button" class="site-editor-inspect-btn" data-site-editor-inspect>🎯 בחר מהעמוד</button>',
       '<button type="button" data-site-editor-history>🧾 שינויים באתר</button>'
     ].join('');
