@@ -38,8 +38,8 @@
   }
   function defaultVersusKeys(){
     return {
-      p1:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',select:'Space'},
-      p2:{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',select:'Enter'}
+      p1:{up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight',select:'Enter'},
+      p2:{up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',select:'Space'}
     };
   }
   function readVersusKeys(){
@@ -1138,7 +1138,7 @@
         </section>
       </div>
 
-      <p class="menu-note">ברירת מחדל: שחקן 1 — WASD + רווח · שחקן 2 — חצים + Enter</p>
+      <p class="menu-note">ברירת מחדל: שחקן 1 — חצים + Enter · שחקן 2 — WASD + רווח</p>
       <div class="modes">
         <button type="button" class="action primary big" data-start-versus>▶ התחל דו־קרב</button>
         <button type="button" class="action secondary" data-reset-keys>איפוס מקשים</button>
