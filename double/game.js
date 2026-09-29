@@ -47,6 +47,14 @@
       const raw=JSON.parse(safeGet(VERSUS_KEYS_KEY)||'null');
       const def=defaultVersusKeys();
       if(!raw||!raw.p1||!raw.p2) return def;
+
+      const legacyP1=raw.p1.up==='KeyW'&&raw.p1.down==='KeyS'&&raw.p1.left==='KeyA'&&raw.p1.right==='KeyD'&&raw.p1.select==='Space';
+      const legacyP2=raw.p2.up==='ArrowUp'&&raw.p2.down==='ArrowDown'&&raw.p2.left==='ArrowLeft'&&raw.p2.right==='ArrowRight'&&raw.p2.select==='Enter';
+      if(legacyP1&&legacyP2){
+        safeSet(VERSUS_KEYS_KEY,JSON.stringify(def));
+        return def;
+      }
+
       return {
         p1:Object.assign({},def.p1,raw.p1),
         p2:Object.assign({},def.p2,raw.p2)
