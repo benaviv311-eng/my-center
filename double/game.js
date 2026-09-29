@@ -621,7 +621,13 @@
         }else glyph.style.transform='rotate('+(-25+Math.random()*50)+'deg)';
 
         bt.appendChild(glyph);
-        bt.addEventListener('click',()=>hit(id,bt));
+        bt.addEventListener('click',()=>{
+          if(mode==='versus'){
+            versusCursor[cardIndex]=i;
+            updateVersusCursors();
+            selectVersus(cardIndex);
+          }else hit(id,bt);
+        });
         el.appendChild(bt);
       });
       board.appendChild(el);
