@@ -166,7 +166,7 @@
     .sym.versus-wrong{animation:versusWrong .28s linear}
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
-    @media(max-width:520px){.versus-setup{grid-template-columns:1fr}.p1-setup,.p2-setup{grid-column:1}.p1-setup{order:1}.p2-setup{order:2}.key-grid{grid-template-columns:repeat(2,1fr)}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
+    @media(max-width:520px){.versus-setup{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.p1-setup{grid-column:2;order:1}.p2-setup{grid-column:1;order:2}.key-player{padding:10px}.key-player h3{font-size:16px}.key-grid{grid-template-columns:1fr;gap:6px}.key-bind{padding:8px 6px;min-height:50px}.key-bind span{font-size:10px}.key-bind b{font-size:14px}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -219,6 +219,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=17"></script>
+  <script src="game.js?v=18"></script>
 </body>
 </html>
