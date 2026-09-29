@@ -22,6 +22,7 @@
   let levelAssistUses=0, levelAssisted=false;
   let sprintTarget=5, sprintStartedAt=0;
   let versusKeys=readVersusKeys(), versusCursor=[0,0], versusLocked=false;
+  let versusVariant='duel', versusTarget=10, versusLives=[3,3], versusRound=0, versusDeckOrder=[], versusDeckIndex=0, versusStreak=[0,0];
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
 
@@ -420,7 +421,17 @@
     if(mode==='knockout'){time=cfg().knockoutTime;knockoutTarget=cfg().knockoutTarget}
     if(mode==='survival') time=cfg().survivalStart;
     if(mode==='sprint') time=0;
-    if(mode==='versus') time=60;
+    if(mode==='versus'){
+      time=0;
+      versusRound=0;
+      versusLives=[3,3];
+      versusStreak=[0,0];
+      versusTarget=versusVariant==='race'?15:versusVariant==='combo'?5:10;
+      if(versusVariant==='deck'){
+        versusDeckOrder=shuffle(buildDeck());
+        versusDeckIndex=1;
+      }
+    }
   }
 
   function startGame(nextMode,startLevel){
@@ -440,7 +451,7 @@
         time=(nowMs()-sprintStartedAt)/1000;
         update();
       },100);
-    }else{
+    }else if(mode!=='versus'){
       timer=setInterval(()=>{
         if(!active) return;
         time--;
@@ -567,8 +578,18 @@
       $('turn').textContent='';
     }
 
-    let a=deck[Math.floor(Math.random()*deck.length)],b;
-    do b=deck[Math.floor(Math.random()*deck.length)];while(b===a);
+    let a,b;
+    if(mode==='versus'&&versusVariant==='deck'){
+      if(versusDeckIndex>=versusDeckOrder.length){
+        endVersusMatch();
+        return;
+      }
+      a=versusDeckOrder[0];
+      b=versusDeckOrder[versusDeckIndex++];
+    }else{
+      a=deck[Math.floor(Math.random()*deck.length)];
+      do b=deck[Math.floor(Math.random()*deck.length)];while(b===a);
+    }
     pair=[a,b];
     roundStartedAt=nowMs();
     render();
@@ -679,17 +700,66 @@
 
     if(id===common){
       versusLocked=true;
-      scores[player]++;
       claim=player;
+      versusRound++;
+      versusStreak[player]++;
+      versusStreak[1-player]=0;
+      const points=(versusVariant==='gold'&&versusRound%5===0)?3:1;
+      scores[player]+=points;
       selected.classList.add('versus-winner');
-      flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!');
+      flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!'+(points>1?' +'+points+' נק׳ ⭐':''));
       update();
+      if(checkVersusEnd()) return;
       setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
     }else{
       selected.classList.add('versus-wrong');
-      flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
+      versusStreak[player]=0;
+      if(versusVariant==='knockout'){
+        versusLives[player]=Math.max(0,versusLives[player]-1);
+        flash((player===0?'🔵':'🔴')+' טעות — נשארו '+versusLives[player]+' חיים');
+        update();
+        if(versusLives[player]<=0){endVersusMatch(1-player);return;}
+      }else if(versusVariant==='sudden'){
+        flash('💥 טעות! שחקן '+(2-player)+' מנצח');
+        endVersusMatch(1-player);
+        return;
+      }else{
+        flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
+      }
       setTimeout(()=>selected.classList.remove('versus-wrong'),280);
     }
+  }
+
+  function versusVariantLabel(){
+    return {duel:'דו־קרב קלאסי',deck:'חפיסה מלאה',knockout:'נוקאאוט',race:'מרוץ ל־15',combo:'קומבו',sudden:'מוות פתאומי',gold:'קלף זהב'}[versusVariant]||'שני שחקנים';
+  }
+
+  function checkVersusEnd(){
+    if(versusVariant==='deck'){
+      if(versusDeckIndex>=versusDeckOrder.length){endVersusMatch();return true}
+      return false;
+    }
+    if(versusVariant==='knockout') return false;
+    if(versusVariant==='sudden'){endVersusMatch(claim);return true}
+    if(versusVariant==='combo'){
+      if(versusStreak[claim]>=versusTarget){endVersusMatch(claim);return true}
+      return false;
+    }
+    const target=versusVariant==='race'?15:versusVariant==='gold'?15:10;
+    if(scores[claim]>=target){endVersusMatch(claim);return true}
+    return false;
+  }
+
+  function endVersusMatch(forcedWinner){
+    if(!active) return;
+    let winner=Number.isInteger(forcedWinner)?forcedWinner:null;
+    if(winner===null&&scores[0]!==scores[1]) winner=scores[0]>scores[1]?0:1;
+    const title=winner===null?'🤝 תיקו!':'🏆 שחקן '+(winner+1);
+    let detail=scores[0]+' : '+scores[1];
+    if(versusVariant==='deck') detail+=' · החפיסה הסתיימה';
+    if(versusVariant==='knockout') detail+=' · חיים '+versusLives[0]+' : '+versusLives[1];
+    if(versusVariant==='combo') detail+=' · רצף מנצח '+Math.max(...versusStreak);
+    endGame(title,detail);
   }
 
   function versusActionForCode(code){
@@ -904,7 +974,12 @@
     }else if(mode==='sprint'){
       s.innerHTML='<div class="pill">🎯 '+matches+'/'+sprintTarget+'</div><div class="pill">⏱️ '+time.toFixed(1)+'</div><div class="pill">🪙 '+profile.coins+'</div>'+(combo?'<div class="pill combo-pill">'+combo+'</div>':'');
     }else{
-      s.innerHTML='<div class="pill p1">🔵 '+scores[0]+'</div><div class="pill">🪙 '+profile.coins+'</div><div class="pill">⏱️ '+time+'</div><div class="pill p2">🔴 '+scores[1]+'</div>';
+      let center='';
+      if(versusVariant==='deck') center='<div class="pill">🃏 '+Math.max(0,versusDeckOrder.length-versusDeckIndex)+' נותרו</div>';
+      else if(versusVariant==='knockout') center='<div class="pill">❤️ '+versusLives[0]+' : '+versusLives[1]+'</div>';
+      else if(versusVariant==='combo') center='<div class="pill">🔥 '+versusStreak[0]+' : '+versusStreak[1]+'</div>';
+      else center='<div class="pill">🎯 '+(versusVariant==='race'?15:versusVariant==='gold'?15:10)+'</div>';
+      s.innerHTML='<div class="pill p1">🔵 '+scores[0]+'</div>'+center+'<div class="pill p2">🔴 '+scores[1]+'</div>';
     }
 
     const challenge=$('challengeText'),best=bestText();
@@ -920,7 +995,8 @@
       const sprintBest=getSprintBest();
       challenge.textContent='השלם '+sprintTarget+' התאמות בזמן הקצר ביותר'+(sprintBest?' · השיא שלך '+sprintBest.toFixed(2)+' שנ׳':'');
     }else if(mode==='versus'){
-      challenge.textContent='לכל שחקן סמן על הקלף שלו. הראשון שבוחר את הסמל המשותף מנצח את הסיבוב.';
+      const details={duel:'הראשון ל־10 נקודות',deck:'כל החפיסה · בלי הגבלת זמן',knockout:'3 חיים לכל שחקן · טעות מורידה חיים',race:'הראשון ל־15 נקודות',combo:'הראשון שמגיע לרצף של 5',sudden:'סיבוב אחד · טעות אחת ואתה בחוץ',gold:'כל סיבוב חמישי שווה 3 נקודות'};
+      challenge.textContent=versusVariantLabel()+' · '+details[versusVariant];
     }else{
       challenge.textContent='100 בסיס · בונוס מהירות · מכפיל קושי · קומבו'+(best?' · '+best:'');
     }
@@ -1125,46 +1201,50 @@
     $('menuPanel').innerHTML=`
       <div class="submenu-head">
         <button type="button" class="action secondary" data-back-main>← חזור</button>
-        <div>
-          <h2>👥 שני שחקנים</h2>
-          <small>כל שחקן שולט בסמן על הקלף שלו</small>
-        </div>
+        <div><h2>⚔️ עולם שני שחקנים</h2><small>עולם תחרותי נפרד · בחרו את סוג הקרב</small></div>
       </div>
+      <div class="mode-grid versus-world-grid">
+        <button type="button" class="mode-card versus-world duel" data-versus-variant="duel"><b>⚔️ דו־קרב קלאסי</b><small>הראשון ל־10 נקודות</small></button>
+        <button type="button" class="mode-card versus-world deck" data-versus-variant="deck"><b>🃏 חפיסה מלאה</b><small>כל החפיסה · ללא הגבלת זמן</small></button>
+        <button type="button" class="mode-card versus-world knockout" data-versus-variant="knockout"><b>❤️ נוקאאוט</b><small>3 חיים · טעות מורידה חיים</small></button>
+        <button type="button" class="mode-card versus-world race" data-versus-variant="race"><b>🏁 מרוץ ל־15</b><small>מי מגיע ראשון ליעד</small></button>
+        <button type="button" class="mode-card versus-world combo" data-versus-variant="combo"><b>🔥 קומבו</b><small>הראשון לרצף של 5 הצלחות</small></button>
+        <button type="button" class="mode-card versus-world sudden" data-versus-variant="sudden"><b>💥 מוות פתאומי</b><small>סיבוב אחד · טעות אחת ואתה בחוץ</small></button>
+        <button type="button" class="mode-card versus-world gold" data-versus-variant="gold"><b>⭐ קלף זהב</b><small>כל סיבוב חמישי שווה 3 נקודות</small></button>
+      </div>
+      <div class="score-rules compact-rules">
+        <b>🎮 איך משחקים?</b>
+        <span>לכל שחקן סמן נפרד על הקלף שלו. שחקן 1 בצד ימין, שחקן 2 בצד שמאל.</span>
+        <small>אחרי בחירת מצב מגדירים מקשים ומתחילים.</small>
+      </div>
+    `;
+    const panel=$('menuPanel');
+    panel.querySelector('[data-back-main]').addEventListener('click',restoreMenuMarkup);
+    panel.querySelectorAll('[data-versus-variant]').forEach(btn=>btn.addEventListener('click',()=>showVersusSetup(btn.dataset.versusVariant)));
+  }
 
+  function showVersusSetup(variant){
+    versusVariant=variant||'duel';
+    $('menuPanel').innerHTML=`
+      <div class="submenu-head">
+        <button type="button" class="action secondary" data-back-versus>← למצבי המשחק</button>
+        <div><h2>👥 ${versusVariantLabel()}</h2><small>שחקן 1 ימין · שחקן 2 שמאל</small></div>
+      </div>
       <div class="versus-setup">
-        <section class="key-player p1-setup">
-          <h3>🔵 שחקן 1</h3>
-          <div class="key-grid">
-            ${keyBindingButtons('p1')}
-          </div>
-        </section>
-        <section class="key-player p2-setup">
-          <h3>🔴 שחקן 2</h3>
-          <div class="key-grid">
-            ${keyBindingButtons('p2')}
-          </div>
-        </section>
+        <section class="key-player p1-setup"><h3>🔵 שחקן 1 — ימין</h3><div class="key-grid">${keyBindingButtons('p1')}</div></section>
+        <section class="key-player p2-setup"><h3>🔴 שחקן 2 — שמאל</h3><div class="key-grid">${keyBindingButtons('p2')}</div></section>
       </div>
-
-      <p class="menu-note">ברירת מחדל: שחקן 1 — חצים + Enter · שחקן 2 — WASD + רווח</p>
+      <p class="menu-note">ברירת מחדל: שחקן 1 — WASD + רווח · שחקן 2 — חצים + Enter</p>
       <div class="modes">
-        <button type="button" class="action primary big" data-start-versus>▶ התחל דו־קרב</button>
+        <button type="button" class="action primary big" data-start-versus>▶ התחל</button>
         <button type="button" class="action secondary" data-reset-keys>איפוס מקשים</button>
       </div>
     `;
-
     const panel=$('menuPanel');
-    panel.querySelector('[data-back-main]').addEventListener('click',restoreMenuMarkup);
+    panel.querySelector('[data-back-versus]').addEventListener('click',showVersusMenu);
     panel.querySelector('[data-start-versus]').addEventListener('click',()=>startGame('versus'));
-    panel.querySelector('[data-reset-keys]').addEventListener('click',()=>{
-      versusKeys=defaultVersusKeys();
-      saveVersusKeys();
-      showVersusMenu();
-    });
-
-    panel.querySelectorAll('[data-key-player][data-key-action]').forEach(btn=>{
-      btn.addEventListener('click',()=>captureVersusKey(btn));
-    });
+    panel.querySelector('[data-reset-keys]').addEventListener('click',()=>{versusKeys=defaultVersusKeys();saveVersusKeys();showVersusSetup(versusVariant);});
+    panel.querySelectorAll('[data-key-player][data-key-action]').forEach(btn=>btn.addEventListener('click',()=>captureVersusKey(btn)));
   }
 
   function keyBindingButtons(player){
@@ -1211,7 +1291,7 @@
 
       versusKeys[player][action]=event.code;
       saveVersusKeys();
-      showVersusMenu();
+      showVersusSetup(versusVariant);
     };
     document.addEventListener('keydown',handler,true);
   }
