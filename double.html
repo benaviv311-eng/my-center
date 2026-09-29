@@ -166,8 +166,8 @@
     .versus-card.player-2{box-shadow:0 0 0 4px #ff6b91,0 10px 35px #0008,inset 0 0 0 8px #eee;grid-column:1}
     .versus-card{direction:rtl}
     .versus-setup{direction:ltr}
-    .p1-setup{grid-column:2;direction:rtl}
-    .p2-setup{grid-column:1;direction:rtl}
+    .p1-setup{grid-column:2;grid-row:1;direction:rtl}
+    .p2-setup{grid-column:1;grid-row:1;direction:rtl}
     .sym.cursor-p1:after,.sym.cursor-p2:after{position:absolute;content:"➤";font-size:22px;top:-16px;left:50%;transform:translateX(-50%) rotate(90deg);filter:drop-shadow(0 2px 3px #0008);pointer-events:none}
     .sym.cursor-p1:after{color:#169fe8}.sym.cursor-p2:after{color:#ff3f75}
     .sym.cursor-p1{outline:3px solid #55c8ff;border-radius:50%;background:#55c8ff1f}
@@ -176,7 +176,7 @@
     .sym.versus-wrong{animation:versusWrong .28s linear}
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
-    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr}.p1-setup,.p2-setup{grid-column:1}.p1-setup{order:1}.p2-setup{order:2}.key-grid{grid-template-columns:repeat(2,1fr)}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
+    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr 1fr;gap:8px}.p1-setup{grid-column:2;grid-row:1}.p2-setup{grid-column:1;grid-row:1}.key-player{padding:9px}.key-player h3{font-size:16px;line-height:1.2}.key-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.key-bind{padding:7px 4px;min-height:52px}.key-bind span{font-size:10px}.key-bind b{font-size:15px}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
