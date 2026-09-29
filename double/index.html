@@ -167,6 +167,111 @@
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
     @media(max-width:520px){.versus-setup{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.p1-setup{grid-column:2;order:1}.p2-setup{grid-column:1;order:2}.key-player{padding:10px}.key-player h3{font-size:16px}.key-grid{grid-template-columns:1fr;gap:6px}.key-bind{padding:8px 6px;min-height:50px}.key-bind span{font-size:10px}.key-bind b{font-size:14px}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
+  
+    :root{--accent:#8b7cff;--accent2:#43d8ff}
+    body{
+      --accent:#8b7cff;--accent2:#43d8ff;
+      position:relative;overflow-x:hidden;
+      background:linear-gradient(-45deg,#0d1230,#22285f,#40205f,#07596b,#12152f);
+      background-size:420% 420%;
+      animation:doubleBgFlow 18s ease infinite;
+    }
+    body[data-mode="classic"]{--accent:#ffd84d;--accent2:#55c8ff}
+    body[data-mode="levels"]{--accent:#b8a6ff;--accent2:#63e6be}
+    body[data-mode="knockout"]{--accent:#ff7d5d;--accent2:#ffbf57}
+    body[data-mode="survival"]{--accent:#63e6be;--accent2:#4bd1ff}
+    body[data-mode="sprint"]{--accent:#ffd34d;--accent2:#ff8b45}
+    body[data-mode="versus"]{--accent:#55c8ff;--accent2:#ff5f8e}
+    body:before{
+      content:"";position:fixed;inset:-15%;z-index:0;pointer-events:none;opacity:.28;
+      background-image:
+        radial-gradient(circle,#fff 1px,transparent 1.8px),
+        radial-gradient(circle,#fff8 1px,transparent 1.5px);
+      background-size:42px 42px,71px 71px;
+      background-position:0 0,21px 16px;
+      animation:doubleStars 28s linear infinite;
+      mask-image:linear-gradient(to bottom,#000,transparent 92%);
+    }
+    body:after{
+      content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.48;filter:blur(18px);
+      background:
+        radial-gradient(circle at 16% 28%,var(--accent) 0 5%,transparent 18%),
+        radial-gradient(circle at 82% 34%,var(--accent2) 0 5%,transparent 19%),
+        radial-gradient(circle at 52% 82%,#ffffff22 0 4%,transparent 17%);
+      animation:doubleGlowDrift 13s ease-in-out infinite alternate;
+    }
+    @keyframes doubleBgFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes doubleStars{from{transform:translate3d(0,0,0) rotate(0)}to{transform:translate3d(42px,71px,0) rotate(1deg)}}
+    @keyframes doubleGlowDrift{0%{transform:translate3d(-2%,-2%,0) scale(1)}100%{transform:translate3d(4%,3%,0) scale(1.08)}}
+    .app{position:relative;z-index:1}
+    .start{
+      isolation:isolate;
+      background:
+        radial-gradient(circle at 15% 18%,#8d7bff55,transparent 28%),
+        radial-gradient(circle at 86% 28%,#43d8ff45,transparent 26%),
+        radial-gradient(circle at 50% 90%,#ff6ba633,transparent 30%),
+        linear-gradient(145deg,#15183de8,#0c1029f2);
+      background-size:140% 140%;
+      animation:menuGlow 14s ease-in-out infinite alternate;
+    }
+    @keyframes menuGlow{0%{background-position:0% 0%}100%{background-position:100% 100%}}
+    .panel{
+      position:relative;
+      background:linear-gradient(180deg,#ffffff12,#ffffff08);
+      border:1px solid #ffffff22;
+      border-radius:30px;
+      box-shadow:0 24px 70px #0008,inset 0 1px 0 #ffffff22;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+    }
+    .panel:before{
+      content:"";position:absolute;inset:8px;border-radius:24px;pointer-events:none;
+      border:1px solid #ffffff10;
+    }
+    .logo,.panel h1{
+      text-shadow:0 0 18px color-mix(in srgb,var(--accent) 70%,transparent),0 4px 18px #0008;
+    }
+    .pill,.challenge,.turn{backdrop-filter:blur(8px)}
+    .mode-card{
+      position:relative;overflow:hidden;
+      box-shadow:0 8px 20px #0004,inset 0 1px 0 #ffffff88;
+      transition:transform .18s ease,box-shadow .18s ease;
+    }
+    .mode-card:before{
+      content:"";position:absolute;inset:-60% auto -60% -40%;width:32%;
+      background:linear-gradient(90deg,transparent,#ffffffa8,transparent);
+      transform:rotate(18deg);
+      animation:modeShine 4.6s ease-in-out infinite;
+      pointer-events:none;
+    }
+    .mode-card:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 12px 28px #0005,inset 0 1px 0 #fff}
+    @keyframes modeShine{0%,68%{left:-45%;opacity:0}72%{opacity:.7}88%{left:125%;opacity:.7}100%{left:125%;opacity:0}}
+    .card{
+      isolation:isolate;
+      box-shadow:0 14px 42px #0009,0 0 34px color-mix(in srgb,var(--accent) 35%,transparent),inset 0 0 0 8px #eee;
+    }
+    .card:before{
+      content:"";position:absolute;inset:-40%;z-index:-1;pointer-events:none;opacity:.16;
+      background:conic-gradient(from 0deg,transparent,#b8efff,transparent,#ffe6a8,transparent);
+      animation:cardAura 11s linear infinite;
+    }
+    @keyframes cardAura{to{transform:rotate(360deg)}}
+    .side-coin{
+      animation:sideCoinFall 2.15s cubic-bezier(.18,.72,.2,1) forwards!important;
+      filter:drop-shadow(0 0 9px #ffd84d) drop-shadow(0 5px 5px #0007)!important;
+    }
+    @keyframes sideCoinFall{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0)}
+      10%{opacity:1}
+      42%{opacity:1;transform:translate(calc(-50% + var(--coin-x)*.62),calc(-50% + var(--coin-y)*.22)) scale(1.22) rotate(calc(var(--coin-r)*.45))}
+      78%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1) rotate(var(--coin-r))}
+      100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) + 58px)) scale(.78) rotate(calc(var(--coin-r) + 120deg))}
+    }
+    .side-total{animation-duration:1.45s!important}
+    @media (prefers-reduced-motion:reduce){
+      body,.start,.mode-card:before,.card:before{animation:none!important}
+      body:before,body:after{animation:none!important}
+    }
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
@@ -219,6 +324,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="game.js?v=18"></script>
+  <script src="game.js?v=19"></script>
 </body>
 </html>
