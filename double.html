@@ -161,7 +161,7 @@
     .versus-live-help span{border-radius:999px;padding:8px 11px;font-size:12px;font-weight:900}
     .p1-help{background:#55c8ff33;border:1px solid #55c8ff88}
     .p2-help{background:#ff6b9133;border:1px solid #ff6b9188}
-    .versus-board{direction:ltr}
+    .versus-board{direction:ltr;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
     .versus-card.player-1{box-shadow:0 0 0 4px #55c8ff,0 10px 35px #0008,inset 0 0 0 8px #eee;grid-column:2}
     .versus-card.player-2{box-shadow:0 0 0 4px #ff6b91,0 10px 35px #0008,inset 0 0 0 8px #eee;grid-column:1}
     .versus-card{direction:rtl}
@@ -176,7 +176,7 @@
     .sym.versus-wrong{animation:versusWrong .28s linear}
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
-    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr 1fr;gap:8px}.p1-setup{grid-column:2;grid-row:1}.p2-setup{grid-column:1;grid-row:1}.key-player{padding:9px}.key-player h3{font-size:16px;line-height:1.2}.key-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.key-bind{padding:7px 4px;min-height:52px}.key-bind span{font-size:10px}.key-bind b{font-size:15px}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
+    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr 1fr;gap:8px}.p1-setup{grid-column:2;grid-row:1}.p2-setup{grid-column:1;grid-row:1}.key-player{padding:9px}.key-player h3{font-size:16px;line-height:1.2}.key-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.key-bind{padding:7px 4px;min-height:52px}.key-bind span{font-size:10px}.key-bind b{font-size:15px}.versus-board{grid-template-columns:1fr 1fr;gap:10px}.versus-card.player-1{grid-column:2}.versus-card.player-2{grid-column:1}.versus-board .card{width:min(44vw,220px)}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
