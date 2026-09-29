@@ -654,45 +654,57 @@
     const symbols=cardSymbols(player);
     if(!symbols.length) return;
 
-    const current=symbols[versusCursor[player]]||symbols[0];
-    const cr=current.getBoundingClientRect();
-    const cx=cr.left+cr.width/2, cy=cr.top+cr.height/2;
-    let best=-1,bestScore=Infinity;
+    const card=$('board').querySelector('.card[data-card-index="'+player+'"]');
+    if(!card) return;
+    const cardRect=card.getBoundingClientRect();
+    const centerX=cardRect.left+cardRect.width/2;
+    const centerY=cardRect.top+cardRect.height/2;
 
-    symbols.forEach((el,i)=>{
-      if(i===versusCursor[player]) return;
+    const points=symbols.map((el,index)=>{
       const r=el.getBoundingClientRect();
-      const x=r.left+r.width/2, y=r.top+r.height/2;
-      const dx=x-cx, dy=y-cy;
-      let valid=false, primary=0, secondary=0;
-
-      if(direction==='left'&&dx<0){valid=true;primary=-dx;secondary=Math.abs(dy)}
-      if(direction==='right'&&dx>0){valid=true;primary=dx;secondary=Math.abs(dy)}
-      if(direction==='up'&&dy<0){valid=true;primary=-dy;secondary=Math.abs(dx)}
-      if(direction==='down'&&dy>0){valid=true;primary=dy;secondary=Math.abs(dx)}
-      if(!valid) return;
-
-      const score=primary+(secondary*1.35);
-      if(score<bestScore){bestScore=score;best=i}
+      const x=r.left+r.width/2;
+      const y=r.top+r.height/2;
+      const dx=x-centerX;
+      const dy=y-centerY;
+      return {
+        index,
+        dist:Math.hypot(dx,dy),
+        angle:Math.atan2(dy,dx)
+      };
     });
 
-    if(best<0){
-      // Wrap to the opposite edge when no symbol exists in that direction.
-      let candidate=0;
-      let extreme=direction==='left'||direction==='up'?Infinity:-Infinity;
-      symbols.forEach((el,i)=>{
-        const r=el.getBoundingClientRect();
-        const val=(direction==='left'||direction==='right')?(r.left+r.width/2):(r.top+r.height/2);
-        if(direction==='left'||direction==='up'){
-          if(val<extreme){extreme=val;candidate=i}
-        }else{
-          if(val>extreme){extreme=val;candidate=i}
-        }
-      });
-      best=candidate;
+    const centerPoint=points.reduce((best,p)=>p.dist<best.dist?p:best,points[0]);
+
+    if(direction==='up'||direction==='down'){
+      versusCursor[player]=centerPoint.index;
+      updateVersusCursors();
+      return;
     }
 
-    versusCursor[player]=best;
+    const ring=points
+      .filter(p=>p.index!==centerPoint.index)
+      .sort((a,b)=>a.angle-b.angle);
+
+    if(!ring.length) return;
+
+    const currentIndex=versusCursor[player];
+    let ringPos=ring.findIndex(p=>p.index===currentIndex);
+
+    if(ringPos<0){
+      // From the center, re-enter the ring from the topmost symbol.
+      ringPos=ring.reduce((bestPos,p,pos)=>{
+        const best=ring[bestPos];
+        const pScore=Math.abs(p.angle+Math.PI/2);
+        const bestScore=Math.abs(best.angle+Math.PI/2);
+        return pScore<bestScore?pos:bestPos;
+      },0);
+    }else{
+      ringPos=direction==='right'
+        ? (ringPos+1)%ring.length
+        : (ringPos-1+ring.length)%ring.length;
+    }
+
+    versusCursor[player]=ring[ringPos].index;
     updateVersusCursors();
   }
 
