@@ -350,7 +350,7 @@
   }
 
   function burstCoins(sourceEl,count){
-    const visible=Math.max(4,Math.min(12,count+4));
+    const visible=Math.max(4,Math.min(10,count+4));
     const screenH=Math.max(420,window.innerHeight||700);
 
     for(let side=0;side<2;side++){
@@ -358,15 +358,15 @@
         const coin=document.createElement('span');
         coin.className='side-coin '+(side===0?'from-left':'from-right');
         coin.textContent='🪙';
-        coin.style.left=side===0?'18px':'calc(100vw - 18px)';
-        coin.style.top=(screenH*(.42+Math.random()*.38))+'px';
-        const inward=(90+Math.random()*130)*(side===0?1:-1);
+        coin.style.left=side===0?'-12px':'calc(100vw + 12px)';
+        coin.style.top=(screenH*(.20+Math.random()*.34))+'px';
+        const inward=(110+Math.random()*150)*(side===0?1:-1);
         coin.style.setProperty('--coin-x',inward+'px');
-        coin.style.setProperty('--coin-y',(-90-Math.random()*140)+'px');
-        coin.style.setProperty('--coin-r',((Math.random()*520)-260)+'deg');
-        coin.style.animationDelay=(i*28+Math.random()*70)+'ms';
+        coin.style.setProperty('--coin-y',(120+Math.random()*150)+'px');
+        coin.style.setProperty('--coin-r',((Math.random()*560)-280)+'deg');
+        coin.style.animationDelay=(i*55+Math.random()*110)+'ms';
         document.body.appendChild(coin);
-        setTimeout(()=>coin.remove(),1250);
+        setTimeout(()=>coin.remove(),2450);
       }
     }
 
@@ -376,7 +376,7 @@
     amount.style.left='50vw';
     amount.style.top='58vh';
     document.body.appendChild(amount);
-    setTimeout(()=>amount.remove(),1100);
+    setTimeout(()=>amount.remove(),1550);
   }
 
   function celebrateSuccess(reward,sourceEl){
@@ -438,6 +438,7 @@
     configureMode(nextMode,startLevel);
     deck=shuffle(buildDeck());
     active=true;
+    document.body.dataset.mode=mode;
     $('start').style.display='none';
     $('modeName').textContent=mode==='levels'?cfg().label:(modeLabel()+' · '+cfg().label);
 
@@ -1344,6 +1345,7 @@
   function showMenu(){
     active=false;
     if(timer) clearInterval(timer);
+    delete document.body.dataset.mode;
     restoreMenuMarkup();
     $('start').style.display='grid';
   }
