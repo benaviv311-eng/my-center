@@ -93,3 +93,13 @@ test('publish control appears only after validation and keeps polling through de
   assert.match(js,/deploying/);
   assert.match(js,/deployed/);
 });
+
+
+test('chat UI defaults to one automatic edit mode without Work controls',()=>{
+  const js=read('site-editor-ui.js');
+  assert.match(js,/const MODES=\['edit'\]/);
+  assert.match(js,/currentMode='edit'/);
+  assert.match(js,/site-chat-consult-only','0'/);
+  assert.doesNotMatch(js,/⚡ עבודה/);
+  assert.doesNotMatch(js,/🛡️ ייעוץ בלבד/);
+});
