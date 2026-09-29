@@ -138,6 +138,16 @@
     .assist-btn:disabled{opacity:.5;filter:grayscale(.45);box-shadow:none;cursor:not-allowed}
   
     .mode-card.versus{background:linear-gradient(135deg,#55c8ff,#ff6b91)!important}
+    .versus-world-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .mode-card.versus-world{position:relative;overflow:hidden;min-height:102px;border:1px solid #ffffff33;color:#fff;box-shadow:0 7px 0 #0003;text-shadow:0 1px 4px #0005}
+    .mode-card.versus-world:active{transform:translateY(2px);box-shadow:0 4px 0 #0003}
+    .mode-card.versus-world.duel{background:linear-gradient(135deg,#2878d8,#55c8ff)}
+    .mode-card.versus-world.deck{background:linear-gradient(135deg,#6a4acb,#a78bfa)}
+    .mode-card.versus-world.knockout{background:linear-gradient(135deg,#d74861,#ff7d95)}
+    .mode-card.versus-world.race{background:linear-gradient(135deg,#de7b19,#ffc454)}
+    .mode-card.versus-world.combo{background:linear-gradient(135deg,#d13f0c,#ff8b3d)}
+    .mode-card.versus-world.sudden{background:linear-gradient(135deg,#252538,#555577)}
+    .mode-card.versus-world.gold{background:linear-gradient(135deg,#a66a00,#ffd84d);grid-column:1/-1;color:#171717;text-shadow:none}
     .versus-setup{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
     .key-player{border-radius:20px;padding:14px;background:#ffffff0d;border:1px solid #ffffff1f}
     .key-player h3{margin:0 0 10px}
@@ -166,7 +176,7 @@
     .sym.versus-wrong{animation:versusWrong .28s linear}
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
-    @media(max-width:520px){.versus-setup{grid-template-columns:1fr}.p1-setup,.p2-setup{grid-column:1}.p1-setup{order:1}.p2-setup{order:2}.key-grid{grid-template-columns:repeat(2,1fr)}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
+    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr}.p1-setup,.p2-setup{grid-column:1}.p1-setup{order:1}.p2-setup{order:2}.key-grid{grid-template-columns:repeat(2,1fr)}.versus-card.player-1,.versus-card.player-2{grid-column:1}}
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
   </style>
