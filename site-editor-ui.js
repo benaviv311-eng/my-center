@@ -3,7 +3,7 @@
 if(window.SiteEditorUI)return;
 
 const MODE_KEY='site-editor-mode';
-const MODES=['consult','edit','work'];
+const MODES=['edit'];
 const EDITOR_ERRORS={
   owner_required:'אין הרשאת עריכת אתר.',
   stale_plan:'הקבצים השתנו מאז האישור. צריך להכין הצעה חדשה.',
@@ -29,7 +29,8 @@ const STATUS_STAGE={
   cancelled:'בוטל',
   rolled_back:'הוחזר'
 };
-let currentMode=MODES.includes(localStorage.getItem(MODE_KEY))?localStorage.getItem(MODE_KEY):'edit';
+let currentMode='edit';
+try{localStorage.setItem(MODE_KEY,'edit');localStorage.setItem('site-chat-consult-only','0')}catch{}
 let activeRequest=null;
 let activeRequestData=null;
 let pollTimer=null;
@@ -39,20 +40,15 @@ let inspectHover=null;
 let installed=false;
 let ctx={chatState:null,api:null,pageContext:null};
 
-function setMode(mode,{persist=true}={}){
-  currentMode=MODES.includes(mode)?mode:'edit';
-  if(persist)localStorage.setItem(MODE_KEY,currentMode);
+function setMode(_mode,{persist=true}={}){
+  currentMode='edit';
+  if(persist)localStorage.setItem(MODE_KEY,'edit');
   if(ctx.chatState){
-    ctx.chatState.consultOnly=currentMode==='consult';
-    localStorage.setItem('site-chat-consult-only',ctx.chatState.consultOnly?'1':'0');
+    ctx.chatState.consultOnly=false;
+    localStorage.setItem('site-chat-consult-only','0');
   }
-  document.querySelectorAll('[data-site-editor-mode]').forEach(btn=>{
-    const active=btn.dataset.siteEditorMode===currentMode;
-    btn.classList.toggle('active',active);
-    btn.setAttribute('aria-pressed',active?'true':'false');
-  });
-  document.dispatchEvent(new CustomEvent('site-editor-mode-change',{detail:{mode:currentMode}}));
-  return currentMode;
+  document.dispatchEvent(new CustomEvent('site-editor-mode-change',{detail:{mode:'edit'}}));
+  return 'edit';
 }
 
 function renderModeControls(){
@@ -63,28 +59,23 @@ function renderModeControls(){
   let host=toolbar.querySelector('[data-site-editor-modes]');
   if(!host){
     host=document.createElement('div');
-    host.className='site-editor-modes';
+    host.className='site-editor-modes site-editor-simple-controls';
     host.dataset.siteEditorModes='1';
     host.setAttribute('role','group');
-    host.setAttribute('aria-label','מצב עבודה בצ׳אט');
+    host.setAttribute('aria-label','כלי עריכת האתר');
     host.innerHTML=[
-      '<button type="button" data-site-editor-mode="consult" aria-pressed="false">🛡️ ייעוץ בלבד</button>',
-      '<button type="button" data-site-editor-mode="edit" aria-pressed="false">✏️ עריכה</button>',
-      '<button type="button" data-site-editor-mode="work" aria-pressed="false">⚡ עבודה</button>',
       '<button type="button" class="site-editor-inspect-btn" data-site-editor-inspect>🎯 בחר מהעמוד</button>',
       '<button type="button" data-site-editor-history>🧾 שינויים באתר</button>'
     ].join('');
     toolbar.appendChild(host);
     host.addEventListener('click',event=>{
-      const modeBtn=event.target.closest('[data-site-editor-mode]');
-      if(modeBtn){setMode(modeBtn.dataset.siteEditorMode);return}
       const inspectBtn=event.target.closest('[data-site-editor-inspect]');
       if(inspectBtn){beginInspect();return}
       const historyBtn=event.target.closest('[data-site-editor-history]');
       if(historyBtn)showChanges();
     });
   }
-  setMode(currentMode,{persist:false});
+  setMode('edit',{persist:false});
 }
 
 function cssEscape(value){
