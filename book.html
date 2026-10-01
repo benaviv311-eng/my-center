@@ -26,8 +26,22 @@
       <button id="book-refresh-all" class="btn primary" aria-label="רענן הכול" title="רענן הכול">🔄</button>
       <button id="book-random" class="btn">🎲 רנדומלי</button>
       <button id="book-surprise" class="btn">✨ משהו שלא חשבתי עליו</button>
+      <button id="book-key-points-toggle" class="btn">⭐ הנקודות החשובות</button>
     </div>
   </header>
+
+  <section id="book-key-points-section" class="book-key-points-section hidden" aria-live="polite">
+    <div class="book-key-points-head">
+      <div>
+        <span class="reading-eyebrow">קריאה מהירה</span>
+        <h2>הנקודות החשובות ביותר בספר</h2>
+        <p id="book-key-points-count" class="meta"></p>
+      </div>
+      <button id="book-key-points-close" class="book-key-points-close" type="button" aria-label="סגור">×</button>
+    </div>
+    <ol id="book-key-points-list" class="book-key-points-list"></ol>
+    <button id="book-key-points-more" class="book-key-points-more hidden" type="button">הצג את כל הנקודות</button>
+  </section>
 
   <section id="book-original-section" class="book-page-section book-original-section hidden">
     <div class="section-head">
