@@ -16,6 +16,7 @@ const state={
   feedSeed:'',feedOffset:0,feedFilter:'all',feedLoading:false,feedObserver:null,
   chapterObserver:null,progressBound:false,progressRaf:0,activeChapterId:'',
   speechUtterance:null,speechPaused:false,speechWords:[],speechWord:null,
+  keyPointsExpanded:false,
   savedFeed:new Set(JSON.parse(localStorage.getItem(savedFeedKey)||'[]'))
 };
 
@@ -345,6 +346,56 @@ function setupInfiniteFeed(){
   }
 }
 
+function normalizeBookPoint(value,index){
+  if(typeof value==='string')return {title:'',text:value,index:index+1};
+  if(value&&typeof value==='object')return {
+    title:String(value.title||value.heading||''),
+    text:String(value.text||value.description||value.summary||''),
+    index:index+1
+  };
+  return {title:'',text:'',index:index+1};
+}
+function dedupeBookPoints(values){
+  const seen=new Set(),result=[];
+  (Array.isArray(values)?values:[]).forEach((value,index)=>{
+    const point=normalizeBookPoint(value,index);
+    const key=(point.title+' '+point.text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    if(!key||seen.has(key))return;
+    seen.add(key);result.push(point);
+  });
+  return result;
+}
+function bookPointSets(){
+  const c=content(state.book);
+  const curated=dedupeBookPoints(c.key_points);
+  const learning=dedupeBookPoints(c.learning_points);
+  const fallback=dedupeBookPoints([
+    ...(Array.isArray(c.ideas)?c.ideas:[]),
+    ...(Array.isArray(c.feed_posts)?c.feed_posts:[])
+  ]);
+  const highlights=(curated.length?curated:fallback).slice(0,10);
+  const all=learning.length?learning:(curated.length?curated:fallback);
+  return {highlights,all};
+}
+function renderBookKeyPoints(){
+  const list=$('book-key-points-list'),count=$('book-key-points-count'),more=$('book-key-points-more');
+  if(!list||!count||!more)return;
+  const sets=bookPointSets();
+  const points=state.keyPointsExpanded&&sets.all.length?sets.all:sets.highlights;
+  list.innerHTML=points.length?points.map((point,index)=>`<li><span class="book-key-point-number">${String(index+1).padStart(2,'0')}</span><div>${point.title?`<strong>${esc(point.title.replace(/^\\d+\\.\\s*/,''))}</strong>`:''}<p>${esc(point.text)}</p></div></li>`).join(''):'<li class="meta">נוסיף נקודות מפתח בהמשך.</li>';
+  count.textContent=state.keyPointsExpanded&&sets.all.length>sets.highlights.length?`${sets.all.length} נקודות ללמידה מעמיקה`:`${sets.highlights.length} נקודות מפתח לקריאה מהירה`;
+  const hasMore=sets.all.length>sets.highlights.length;
+  more.classList.toggle('hidden',!hasMore);
+  more.textContent=state.keyPointsExpanded?'הצג רק את החשובות ביותר':`הצג את כל ${sets.all.length} הנקודות`;
+}
+function setKeyPointsOpen(open){
+  const section=$('book-key-points-section'),toggle=$('book-key-points-toggle');
+  if(!section||!toggle)return;
+  section.classList.toggle('hidden',!open);
+  toggle.classList.toggle('active',open);
+  toggle.textContent=open?'⭐ סגור נקודות חשובות':'⭐ הנקודות החשובות';
+  if(open)setTimeout(()=>section.scrollIntoView({behavior:'smooth',block:'start'}),20);
+}
 function renderStatic(){
   const book=state.book,c=content(book),ideas=Array.isArray(c.ideas)?c.ideas:[],topics=Array.isArray(c.topics)?c.topics:[];
   $('book-category').textContent=c.category||'ספר';
@@ -357,6 +408,9 @@ function renderStatic(){
   const dates=[...new Set(state.history.filter(r=>r.item_id===book.id).map(r=>r.feed_date))];
   $('book-history').innerHTML=dates.length?dates.map(d=>`<span class="pill">${esc(d)}</span>`).join(' '):'<span class="meta">הספר עדיין לא הופיע בפיד היומי.</span>';
   $('book-note').value=state.notes[book.slug||book.id]||'';
+  state.keyPointsExpanded=false;
+  renderBookKeyPoints();
+  setKeyPointsOpen(false);
 }
 function newSeed(mode){return `${state.today}|${state.book.slug||state.book.id}|${mode}|${Date.now()}|${Math.random()}`}
 function refreshAll(mode){
@@ -479,6 +533,9 @@ document.addEventListener('keydown',event=>{
 $('book-refresh-all').addEventListener('click',()=>refreshAll('refresh'));
 $('book-random').addEventListener('click',()=>refreshAll('random'));
 $('book-surprise').addEventListener('click',()=>refreshAll('surprise'));
+$('book-key-points-toggle').addEventListener('click',()=>setKeyPointsOpen($('book-key-points-section').classList.contains('hidden')));
+$('book-key-points-close').addEventListener('click',()=>setKeyPointsOpen(false));
+$('book-key-points-more').addEventListener('click',()=>{state.keyPointsExpanded=!state.keyPointsExpanded;renderBookKeyPoints()});
 $('book-feed-more').addEventListener('click',appendFeed);
 $('book-save-note').addEventListener('click',()=>{if(!state.book)return;state.notes[state.book.slug||state.book.id]=$('book-note').value;localStorage.setItem(notesKey,JSON.stringify(state.notes));toast('ההערה נשמרה')});
 $('book-read-aloud').addEventListener('click',speakCurrentChapter);

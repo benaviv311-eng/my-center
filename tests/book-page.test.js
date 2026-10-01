@@ -23,6 +23,10 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-refresh-all',
   'book-random',
   'book-surprise',
+  'book-key-points-toggle',
+  'book-key-points-section',
+  'book-key-points-list',
+  'book-key-points-more',
   'book-reading-toc',
   'book-reading-body',
   'book-reading-progress',
@@ -133,3 +137,10 @@ assert.ok(js.includes("$('book-read-floating').addEventListener"), 'floating rea
 
 assert.ok(pageCss.includes('.book-summary-points li::marker'), 'nugget bullets should have an explicit marker style');
 assert.ok(pageCss.includes('color:#111'), 'nugget text and bullets should render in solid black');
+
+assert.ok(js.includes('function bookPointSets()'), 'book page should derive a universal key-points view for every book');
+assert.ok(js.includes('c.key_points'), 'book page should prefer curated key points when a book provides them');
+assert.ok(js.includes('c.learning_points'), 'book page should support an expanded learning-points collection');
+assert.ok(js.includes('c.feed_posts'), 'book page should fall back to existing book material when curated key points are absent');
+assert.ok(pageCss.includes('.book-key-points-section'), 'book page should style the quick key-points section');
+assert.ok(pageCss.includes('.book-key-points-list'), 'book page should style key points as an editorial reading list');
