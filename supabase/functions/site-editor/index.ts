@@ -10,8 +10,10 @@ import {
   githubDispatchWorkflow,
   githubMergePR,
   githubPagesRunForSha,
+  githubCommitChangedPaths,
   githubReadFile,
   githubReadFileBase64,
+  githubReadFileMaybe,
   githubTree,
   githubWorkflowRunForSha
 } from "../_shared/site-editor/github.ts";
@@ -229,6 +231,43 @@ ${fileContext.slice(0,260000)}`;
       input:[{role:"user",content:[{type:"input_text",text:prompt}]}],
       reasoning:{effort:"medium"},
       text:{format:{type:"json_schema",name:"site_edit_repair",strict:true,schema:EDIT_PLAN_SCHEMA}}
+    })
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new EditorError("editor_unavailable",503);
+  const output=answerText(data);
+  if(!output)throw new EditorError("editor_unavailable",503);
+  try{return normalizeModelPlan(JSON.parse(output))}
+  catch{throw new EditorError("editor_unavailable",503)}
+}
+
+async function callRollbackPlanner(
+  original:any,
+  snapshots:any[],
+  currentFiles:Record<string,{sha:string;content:string}>
+){
+  if(!OPENAI_API_KEY||!SITE_EDITOR_MODEL_STRONG)throw new EditorError("editor_unavailable",503);
+  const prompt=`Create a safe rollback proposal for a previously deployed site edit.
+The goal is to restore the intent and content that existed before the original request while preserving unrelated later changes.
+Only touch paths listed in the snapshots. If a file was changed later, make the smallest compatible rollback.
+Return the same strict edit-plan JSON schema.
+
+Original request:
+${JSON.stringify({id:original.id,summary:original.summary,prompt:original.prompt,risk_level:original.risk_level}).slice(0,16000)}
+
+Snapshots (before original change, published result, current main):
+${JSON.stringify(snapshots).slice(0,220000)}
+
+Current file SHAs:
+${JSON.stringify(Object.fromEntries(Object.entries(currentFiles).map(([path,file])=>[path,file.sha])))}`;
+  const response=await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:SITE_EDITOR_MODEL_STRONG,
+      input:[{role:"user",content:[{type:"input_text",text:prompt}]}],
+      reasoning:{effort:"medium"},
+      text:{format:{type:"json_schema",name:"site_edit_rollback",strict:true,schema:EDIT_PLAN_SCHEMA}}
     })
   });
   const data=await response.json().catch(()=>({}));
@@ -896,6 +935,128 @@ async function listRequests(userId:string){
   }));
 }
 
+function sameSnapshot(a:any,b:any){
+  if(!a&&!b)return true;
+  if(!a||!b)return false;
+  return a.content===b.content;
+}
+
+async function createRollbackRequest(user:{id:string},requestId:string){
+  const original=await ownedRequest(user.id,requestId);
+  if(original.status!=="deployed"||!original.merge_commit_sha||!original.base_sha){
+    throw new EditorError("bad_request",409,"rollback_requires_deployed_request");
+  }
+
+  const existing=await admin.from("site_edit_requests")
+    .select("id,status")
+    .eq("user_id",user.id)
+    .eq("undo_of_request_id",original.id)
+    .not("status","in","(cancelled,rolled_back)")
+    .order("created_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(existing.error)throw new EditorError("editor_unavailable",500);
+  if(existing.data)return requestView(user.id,existing.data.id);
+
+  const currentMain=await githubBranchHead("main");
+  const changedPaths=new Set(await githubCommitChangedPaths(original.merge_commit_sha));
+  const originalOperations=await requestOperations(original.id);
+  const operationPaths=[...new Set(originalOperations.map((op:any)=>String(op.path)).filter(Boolean))];
+  const paths=operationPaths.filter(path=>changedPaths.size===0||changedPaths.has(path));
+  if(!paths.length)throw new EditorError("bad_request",409,"rollback_has_no_paths");
+
+  const snapshots:any[]=[];
+  const currentFiles:Record<string,{sha:string;content:string}>={};
+  for(const path of paths){
+    const [before,published,current]=await Promise.all([
+      githubReadFileMaybe(path,original.base_sha),
+      githubReadFileMaybe(path,original.merge_commit_sha),
+      githubReadFileMaybe(path,currentMain)
+    ]);
+    if(current)currentFiles[path]={sha:current.sha,content:current.content};
+    snapshots.push({
+      path,
+      before:before?{sha:before.sha,content:before.content}:null,
+      published:published?{sha:published.sha,content:published.content}:null,
+      current:current?{sha:current.sha,content:current.content}:null
+    });
+  }
+
+  const unchanged=snapshots.every(snapshot=>sameSnapshot(snapshot.current,snapshot.published));
+  let plan:any;
+  if(unchanged){
+    const operations:any[]=[];
+    for(const snapshot of snapshots){
+      if(snapshot.current&&snapshot.before){
+        operations.push({
+          operation_type:"replace_file",
+          path:snapshot.path,
+          expected_sha:snapshot.current.sha,
+          payload:{new_content:snapshot.before.content},
+          diff_summary:"Restore the file content from before the original request."
+        });
+      }else if(snapshot.current&&!snapshot.before){
+        operations.push({
+          operation_type:"delete_file",
+          path:snapshot.path,
+          expected_sha:snapshot.current.sha,
+          payload:{},
+          diff_summary:"Remove the file created by the original request."
+        });
+      }else if(!snapshot.current&&snapshot.before){
+        operations.push({
+          operation_type:"create_file",
+          path:snapshot.path,
+          expected_sha:null,
+          payload:{content:snapshot.before.content},
+          diff_summary:"Restore the file deleted by the original request."
+        });
+      }
+    }
+    if(!operations.length)throw new EditorError("bad_request",409,"rollback_already_effective");
+    plan={summary:`Rollback: ${original.summary||original.id}`,risk_level:original.risk_level,operations};
+  }else{
+    const modelPlan=await callRollbackPlanner(original,snapshots,currentFiles);
+    const allowed=new Set(paths);
+    if((modelPlan.operations||[]).some((op:any)=>!allowed.has(String(op.path)))){
+      throw new EditorError("unsafe_plan",409,"rollback_broadened_paths");
+    }
+    plan=modelPlan;
+  }
+
+  const validated=validateEditPlan(plan,new Map(Object.entries(currentFiles)));
+  const created=await admin.from("site_edit_requests").insert({
+    user_id:user.id,
+    thread_id:original.thread_id||null,
+    prompt:`Rollback deployed request ${original.id}: ${original.prompt}`,
+    area:original.area||"global",
+    page_context:original.page_context||{},
+    selected_element:null,
+    summary:plan.summary||`Rollback: ${original.summary}`,
+    risk_level:validated.risk_level,
+    status:"awaiting_plan_approval",
+    base_sha:currentMain,
+    undo_of_request_id:original.id,
+    deploy_status:"not_started"
+  }).select("*").single();
+  if(created.error)throw new EditorError("editor_unavailable",500);
+
+  const rows=validated.operations.map((op:any,index:number)=>({
+    request_id:created.data.id,
+    sequence:index,
+    operation_type:op.operation_type,
+    path:op.path,
+    expected_sha:op.expected_sha||null,
+    payload:op.payload||{},
+    diff_summary:op.diff_summary||"",
+    status:"pending"
+  }));
+  const inserted=await admin.from("site_edit_operations").insert(rows);
+  if(inserted.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(created.data.id,user.id,"rollback_proposed",{undo_of_request_id:original.id,base_sha:currentMain,source_merge_sha:original.merge_commit_sha});
+  return requestView(user.id,created.data.id);
+}
+
 async function requestRevision(user:{id:string},requestId:string,instructions:string){
   const request=await ownedRequest(user.id,requestId);
   if(!["awaiting_plan_approval","needs_replan","preview_ready","awaiting_publish_approval"].includes(request.status)){
@@ -988,6 +1149,10 @@ Deno.serve(async(req:Request)=>{
     if(action==='request_revision'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await requestRevision(user,id,text(b.instructions,8000))});
+    }
+    if(action==='create_rollback'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await createRollbackRequest(user,id)});
     }
     if(action==='cancel'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
