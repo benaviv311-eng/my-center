@@ -941,6 +941,102 @@ function sameSnapshot(a:any,b:any){
   return a.content===b.content;
 }
 
+async function createCompensatingMigrationRollback(user:{id:string},original:any,originalOperations:any[],currentMain:string){
+  const migrationOps=originalOperations.filter((op:any)=>String(op.path||"").startsWith("supabase/migrations/"));
+  if(!migrationOps.length)throw new EditorError("bad_request",409,"rollback_has_no_migrations");
+
+  const tree=await githubTree(currentMain);
+  const recentMigrationPaths=tree
+    .filter((item:any)=>item.type==="blob"&&String(item.path||"").startsWith("supabase/migrations/")&&String(item.path).endsWith(".sql"))
+    .map((item:any)=>String(item.path))
+    .sort()
+    .slice(-12);
+
+  const contextFiles:Record<string,{sha:string;content:string}>={};
+  for(const path of [...new Set([...migrationOps.map((op:any)=>String(op.path)),...recentMigrationPaths])]){
+    const current=await githubReadFileMaybe(path,currentMain);
+    if(current)contextFiles[path]={sha:current.sha,content:current.content};
+  }
+
+  const stamp=new Date().toISOString().replace(/[-:TZ.]/g,"").slice(0,14);
+  const targetPath=`supabase/migrations/${stamp}_compensating_${safeSlug(original.summary||"rollback")}.sql`;
+  if(tree.some((item:any)=>item.type==="blob"&&item.path===targetPath))throw new EditorError("stale_plan",409);
+
+  const originalMigrationText=migrationOps.map((op:any)=>{
+    const file=contextFiles[String(op.path)];
+    return `Migration: ${op.path}\n${file?.content||JSON.stringify(op.payload||{})}`;
+  }).join("\n\n");
+
+  const prompt=`Create a compensating migration for a previously deployed database change.
+This is a database rollback, but it MUST NOT reverse SQL automatically or remove schema objects destructively.
+Produce exactly one create_file operation at this exact path:
+${targetPath}
+
+The SQL must be additive/backward-compatible and safe under the repository migration policy. If true reversal would require DROP, TRUNCATE, destructive ALTER, automatic data deletion, or another unsafe operation, create a forward-compatible compensating change instead and document the limitation in SQL comments.
+
+Original deployed request:
+${original.summary||original.id}
+
+Original migration context:
+${originalMigrationText.slice(0,120000)}
+
+Recent migration files are supplied as repository context. Do not modify existing migration files.`;
+
+  const modelPlan=await callPlanner(prompt,{area:original.area||"global",rollback_kind:"compensating"},contextFiles);
+  const operations=Array.isArray(modelPlan.operations)?modelPlan.operations:[];
+  if(
+    operations.length!==1||
+    operations[0]?.operation_type!=="create_file"||
+    String(operations[0]?.path)!==targetPath||
+    typeof operations[0]?.payload?.content!=="string"||
+    !operations[0].payload.content.trim()
+  ){
+    throw new EditorError("unsafe_plan",409,"compensating_migration_required");
+  }
+
+  const validated=validateEditPlan(
+    {summary:modelPlan.summary||`Compensating migration: ${original.summary||original.id}`,risk_level:"high",operations},
+    new Map(Object.entries(contextFiles))
+  );
+  if(validated.risk_level!=="high")throw new EditorError("unsafe_plan",409,"migration_requires_high_risk");
+
+  const created=await admin.from("site_edit_requests").insert({
+    user_id:user.id,
+    thread_id:original.thread_id||null,
+    prompt:`Create compensating migration for deployed request ${original.id}: ${original.prompt}`,
+    area:original.area||"global",
+    page_context:original.page_context||{},
+    selected_element:null,
+    summary:modelPlan.summary||`Compensating migration: ${original.summary||original.id}`,
+    risk_level:"high",
+    status:"awaiting_plan_approval",
+    base_sha:currentMain,
+    undo_of_request_id:original.id,
+    deploy_status:"not_started"
+  }).select("*").single();
+  if(created.error)throw new EditorError("editor_unavailable",500);
+
+  const op=validated.operations[0];
+  const inserted=await admin.from("site_edit_operations").insert({
+    request_id:created.data.id,
+    sequence:0,
+    operation_type:op.operation_type,
+    path:op.path,
+    expected_sha:null,
+    payload:op.payload||{},
+    diff_summary:op.diff_summary||"Add a compensating migration for the deployed database change.",
+    status:"pending"
+  });
+  if(inserted.error)throw new EditorError("editor_unavailable",500);
+
+  await insertEvent(created.data.id,user.id,"compensating_migration_proposed",{
+    undo_of_request_id:original.id,
+    base_sha:currentMain,
+    target_path:targetPath
+  });
+  return requestView(user.id,created.data.id);
+}
+
 async function createRollbackRequest(user:{id:string},requestId:string){
   const original=await ownedRequest(user.id,requestId);
   if(original.status!=="deployed"||!original.merge_commit_sha||!original.base_sha){
@@ -959,8 +1055,11 @@ async function createRollbackRequest(user:{id:string},requestId:string){
   if(existing.data)return requestView(user.id,existing.data.id);
 
   const currentMain=await githubBranchHead("main");
-  const changedPaths=new Set(await githubCommitChangedPaths(original.merge_commit_sha));
   const originalOperations=await requestOperations(original.id);
+  if(originalOperations.some((op:any)=>String(op.path||"").startsWith("supabase/migrations/"))){
+    return createCompensatingMigrationRollback(user,original,originalOperations,currentMain);
+  }
+  const changedPaths=new Set(await githubCommitChangedPaths(original.merge_commit_sha));
   const operationPaths=[...new Set(originalOperations.map((op:any)=>String(op.path)).filter(Boolean))];
   const paths=operationPaths.filter(path=>changedPaths.size===0||changedPaths.has(path));
   if(!paths.length)throw new EditorError("bad_request",409,"rollback_has_no_paths");
