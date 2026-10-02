@@ -102,6 +102,11 @@
 
   <section class="section" id="volleyball-feed-section">
     <div class="section-head"><h2 id="volleyball-feed-title">פיד כדורעף</h2><small id="volleyball-feed-count">טוען...</small></div>
+    <div class="vb-feed-modes" aria-label="מצב פיד">
+      <button type="button" class="active" data-vb-feed-mode="all" aria-pressed="true">✨ הכול</button>
+      <button type="button" data-vb-feed-mode="saved" aria-pressed="false">🔖 שמורים <span id="vb-saved-count">0</span></button>
+      <button type="button" data-vb-feed-mode="practice" aria-pressed="false">🎯 ליישום <span id="vb-practice-count">0</span></button>
+    </div>
     <div id="volleyball-feed" class="vb-feed" aria-live="polite"></div>
     <div id="volleyball-feed-sentinel" class="vb-feed-sentinel" aria-label="טעינת תוכן נוסף"><span></span><span></span><span></span></div>
   </section>
