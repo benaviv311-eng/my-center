@@ -252,10 +252,28 @@ function renderTermExpansion(entry){
 
 function renderCard(card){
   const kindLabels={concept:'עיקרון',drill:'תרגיל',scenario:'סיטואציה',research:'מחקר ומדע',myth:'מיתוס',question:'שאלה','problem-solution':'בעיה → פתרון'};
+  const kindIcons={concept:'🧠',drill:'🏐',scenario:'🎬',research:'🔬',myth:'🧯',question:'❓','problem-solution':'🛠️'};
   const populations=typeof window!=='undefined'?window.VOLLEYBALL_POPULATIONS:[];
   const pops=card.populations.includes('all')?'כל האוכלוסיות':card.populations.map(id=>labelFor(populations,id)).join(' · ');
   const tags=(card.tags||[]).map(tag=>`<button type="button" class="vb-term-chip" data-term="${escapeHtml(tag)}" aria-expanded="false" title="פתח הסבר מלא על ${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join('');
-  return `<article class="vb-feed-card vb-kind-${escapeHtml(card.kind)}"><div class="vb-card-top"><span class="vb-kind">${escapeHtml(kindLabels[card.kind]||card.kind)}</span><span class="vb-pop">${escapeHtml(pops)}</span></div><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><div class="vb-tags">${tags}</div><div class="vb-term-expansion-slot" aria-live="polite"></div></article>`;
+  const detail=card.detail?`<div class="vb-card-detail"><span>💡 נקודת מפתח</span><p>${escapeHtml(card.detail)}</p></div>`:'';
+  return `<article class="vb-feed-card vb-kind-${escapeHtml(card.kind)}" data-card-id="${escapeHtml(card.id)}">
+    <div class="vb-card-top">
+      <div class="vb-kind-wrap"><span class="vb-kind-icon" aria-hidden="true">${kindIcons[card.kind]||'🏐'}</span><span class="vb-kind">${escapeHtml(kindLabels[card.kind]||card.kind)}</span></div>
+      <span class="vb-pop">${escapeHtml(pops)}</span>
+    </div>
+    <h3>${escapeHtml(card.title)}</h3>
+    <p class="vb-card-summary">${escapeHtml(card.text)}</p>
+    ${detail}
+    <div class="vb-tags">${tags}</div>
+    <div class="vb-card-actions" aria-label="פעולות לכרטיס">
+      <button type="button" class="vb-card-action vb-card-expand" data-vb-card-expand aria-expanded="false"><span>↕</span><b>פתח</b></button>
+      <button type="button" class="vb-card-action" data-vb-card-save aria-pressed="false"><span>🔖</span><b>שמור</b></button>
+      <button type="button" class="vb-card-action" data-vb-card-practice aria-pressed="false"><span>🎯</span><b>ליישום</b></button>
+    </div>
+    <div class="vb-card-feedback" aria-live="polite"></div>
+    <div class="vb-term-expansion-slot" aria-live="polite"></div>
+  </article>`;
 }
 
 function initVolleyballHub(){
@@ -282,6 +300,78 @@ function initVolleyballHub(){
   let rendered=0;
   let loading=false;
   const feedSeed=new Date().toISOString().slice(0,10);
+  const VB_SAVED_KEY='volleyball-saved-cards-v1';
+  const VB_PRACTICE_KEY='volleyball-practice-cards-v1';
+  const readCardSet=key=>{
+    try{return new Set(JSON.parse(localStorage.getItem(key)||'[]'));}catch{return new Set();}
+  };
+  const savedCards=readCardSet(VB_SAVED_KEY);
+  const practiceCards=readCardSet(VB_PRACTICE_KEY);
+  const persistCardSet=(key,set)=>{
+    try{localStorage.setItem(key,JSON.stringify([...set]));}catch{}
+  };
+  const syncInteractiveCardStates=(root=feed)=>{
+    root?.querySelectorAll?.('.vb-feed-card[data-card-id]').forEach(cardEl=>{
+      const id=cardEl.dataset.cardId;
+      const saved=savedCards.has(id);
+      const practice=practiceCards.has(id);
+      const saveBtn=cardEl.querySelector('[data-vb-card-save]');
+      const practiceBtn=cardEl.querySelector('[data-vb-card-practice]');
+      if(saveBtn){
+        saveBtn.classList.toggle('active',saved);
+        saveBtn.setAttribute('aria-pressed',String(saved));
+        const label=saveBtn.querySelector('b');if(label)label.textContent=saved?'נשמר':'שמור';
+      }
+      if(practiceBtn){
+        practiceBtn.classList.toggle('active',practice);
+        practiceBtn.setAttribute('aria-pressed',String(practice));
+        const label=practiceBtn.querySelector('b');if(label)label.textContent=practice?'ברשימה':'ליישום';
+      }
+      cardEl.classList.toggle('is-saved',saved);
+      cardEl.classList.toggle('is-practice',practice);
+    });
+  };
+  const showCardFeedback=(cardEl,message)=>{
+    const box=cardEl?.querySelector('.vb-card-feedback');
+    if(!box)return;
+    box.textContent=message;
+    box.classList.add('show');
+    clearTimeout(box._hideTimer);
+    box._hideTimer=setTimeout(()=>box.classList.remove('show'),1400);
+  };
+  const handleCardAction=event=>{
+    const action=event.target.closest('[data-vb-card-expand],[data-vb-card-save],[data-vb-card-practice]');
+    if(!action)return false;
+    const cardEl=action.closest('.vb-feed-card');
+    const id=cardEl?.dataset.cardId;
+    if(!cardEl||!id)return false;
+    event.preventDefault();
+
+    if(action.hasAttribute('data-vb-card-expand')){
+      const open=!cardEl.classList.contains('is-open');
+      cardEl.classList.toggle('is-open',open);
+      action.setAttribute('aria-expanded',String(open));
+      const label=action.querySelector('b');if(label)label.textContent=open?'סגור':'פתח';
+      if(open)cardEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+      return true;
+    }
+
+    if(action.hasAttribute('data-vb-card-save')){
+      const active=!savedCards.has(id);
+      if(active)savedCards.add(id);else savedCards.delete(id);
+      persistCardSet(VB_SAVED_KEY,savedCards);
+      syncInteractiveCardStates(cardEl);
+      showCardFeedback(cardEl,active?'נשמר בפיד שלך':'הוסר מהשמורים');
+      return true;
+    }
+
+    const active=!practiceCards.has(id);
+    if(active)practiceCards.add(id);else practiceCards.delete(id);
+    persistCardSet(VB_PRACTICE_KEY,practiceCards);
+    syncInteractiveCardStates(cardEl);
+    showCardFeedback(cardEl,active?'נוסף לרשימת היישום':'הוסר מרשימת היישום');
+    return true;
+  };
 
   const populationOptions=[{id:'all',label:'הכול',icon:'🏐'},...window.VOLLEYBALL_POPULATIONS];
   tabs.innerHTML=populationOptions.map((p,index)=>`<button class="vb-pop-tab${index===0?' active':''}" type="button" data-population="${p.id}" aria-pressed="${index===0?'true':'false'}"><span>${p.icon||'🏐'}</span>${p.label}</button>`).join('');
@@ -329,6 +419,7 @@ function initVolleyballHub(){
     const batch=buildInfiniteBatch(window.VOLLEYBALL_FEED_CARDS,{population,topic,query:search.value},feedSeed,page,8);
     if(batch.length){
       feed.insertAdjacentHTML('beforeend',batch.map(renderCard).join(''));
+      syncInteractiveCardStates(feed);
       page+=1;
       rendered+=batch.length;
       const populationLabel=population==='all'?'כל הכדורעף':labelFor(window.VOLLEYBALL_POPULATIONS,population);
@@ -420,7 +511,7 @@ function initVolleyballHub(){
   });
 
   search.addEventListener('input',resetFeed);
-  feed.addEventListener('click',handleTermInteraction);
+  feed.addEventListener('click',event=>{if(handleCardAction(event))return;handleTermInteraction(event);});
 
   discoveryShell.addEventListener('click',event=>{
     if(handleTermInteraction(event))return;
