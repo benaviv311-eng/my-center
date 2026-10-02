@@ -50,3 +50,17 @@ test('rollback creates a new request and never force resets main',()=>{
   assert.match(ui,/החזר שינוי/);
   assert.doesNotMatch(gh,/force\s*:\s*true/);
 });
+
+
+test('database rollback is compensating and never automatic reverse SQL',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  assert.match(fn,/compensating/i);
+  assert.match(fn,/risk_level\s*:\s*["']high["']/i);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.doesNotMatch(fn,/reverseSql|autoReverseMigration/);
+});
+
+test('normal site edit validation also screens migrations',()=>{
+  const yml=read('.github/workflows/site-editor-validation.yml');
+  assert.match(yml,/site-editor-migration-check\.mjs/);
+});
