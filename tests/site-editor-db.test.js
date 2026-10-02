@@ -26,3 +26,15 @@ test('supabase deployment is manual exact-sha and pinned',()=>{
   assert.doesNotMatch(yml,/pull_request:/);
   assert.doesNotMatch(yml,/push:/);
 });
+
+
+test('migration requests cannot merge before db deploy succeeds',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(fn,/site-editor-supabase-deploy\.yml/);
+  assert.match(fn,/db_deploy/);
+  assert.match(fn,/head_sha/);
+  assert.match(fn,/success/);
+  assert.match(fn,/githubMergePR/);
+  assert.match(gh,/githubDispatchWorkflow/);
+});
