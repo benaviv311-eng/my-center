@@ -54,10 +54,16 @@
     <button type="button" data-vb-jump="#volleyball-feed-section"><span>📚</span><b>פיד</b><small>לימוד מתמשך</small></button>
   </section>
 
-  <section id="volleyball-population-shell" class="vb-population-shell" aria-label="קבוצות איכות">
-    <div class="vb-population-caption"><b>בחר עולם</b><small>יסודי · נוער · נשים · גברים</small></div>
+  <section id="volleyball-population-shell" class="vb-population-shell vb-population-dropdown-shell" aria-label="בחירת אוכלוסייה">
+    <div class="vb-population-dropdown">
+      <button id="volleyball-population-menu-toggle" class="vb-population-menu-toggle" type="button" aria-expanded="false" aria-controls="volleyball-population-menu">
+        <span class="vb-population-menu-label"><small>אוכלוסייה</small><strong id="volleyball-population-menu-current">🏐 הכול</strong></span>
+        <span class="vb-population-menu-chevron" aria-hidden="true">⌄</span>
+      </button>
+      <div id="volleyball-population-menu" class="vb-population-menu" role="menu" hidden></div>
+    </div>
     <div id="volleyball-current-population-badge" class="vb-current-population-badge" aria-live="polite">עכשיו: הכול</div>
-    <div id="volleyball-population-tabs" class="vb-population-tabs"></div>
+    <div id="volleyball-population-tabs" class="vb-population-tabs vb-population-tabs-controller" aria-hidden="true"></div>
   </section>
 
   <section class="section vb-population-world" aria-labelledby="volleyball-population-title">
