@@ -8,6 +8,7 @@ const EDITOR_ERRORS={
   owner_required:'אין הרשאת עריכת אתר.',
   stale_plan:'הקבצים השתנו מאז האישור. צריך להכין הצעה חדשה.',
   unsafe_plan:'השינוי המוצע נחסם מטעמי בטיחות.',
+  api_credits_exhausted:'נגמרה יתרת ה-OpenAI API. יש להוסיף קרדיטים ל-API כדי להמשיך לערוך דרך הצ׳אט.',
   editor_unavailable:'עורך האתר אינו זמין כרגע.'
 };
 const TERMINAL_STATUSES=new Set(['deployed','failed','cancelled','rolled_back']);
