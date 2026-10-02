@@ -76,3 +76,37 @@ test('deployment state is pinned to the merge sha and waits for GitHub Pages suc
   assert.match(gh,/head_sha/);
   assert.match(fn,/pages build and deployment/);
 });
+
+
+test('preview internal reads keep GitHub credentials out of the preview function',()=>{
+  const preview=read('supabase/functions/site-preview/index.ts');
+  const editor=read('supabase/functions/site-editor/index.ts');
+  assert.match(preview,/x-site-editor-internal-secret/);
+  assert.match(editor,/preview_read/);
+  assert.match(editor,/SITE_EDITOR_INTERNAL_SECRET/);
+  assert.doesNotMatch(preview,/GITHUB_APP_PRIVATE_KEY/);
+});
+
+test('medium and high risk require second approval while low risk can auto publish',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(fn,/approve_publish/);
+  assert.match(fn,/awaiting_publish_approval/);
+  assert.match(fn,/risk_level\s*===\s*["']low["']/);
+  assert.match(fn,/githubPagesRunForSha/);
+  assert.match(fn,/deploying/);
+  assert.match(fn,/deployed/);
+  assert.match(gh,/githubCreateOrUpdatePR/);
+  assert.match(gh,/githubMergePR/);
+  assert.match(gh,/githubPagesRunForSha/);
+});
+
+test('automatic repair is capped and cannot broaden risk silently',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const policy=read('supabase/functions/_shared/site-editor/policy.ts');
+  assert.match(fn,/repair_pass/);
+  assert.match(fn,/>=\s*2/);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.match(fn,/approvedPaths/);
+  assert.match(policy,/riskAtMost/);
+});
