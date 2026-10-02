@@ -23,7 +23,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.4</div></div><div style="display:flex;gap:8px;align-items:center"><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.4</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -58,7 +58,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> המשחק משתמש עכשיו בהקלטה האמיתית “אבא שוב ממציא כאן”. אבא מתחיל בכל מפגש ממקטע אחר מהשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> המשחק משתמש עכשיו בהקלטה האמיתית “אבא שוב ממציא כאן”. אבא מתחיל בכל מפגש ממקטע אחר מהשיר.<br><strong>מוזיקת רקע:</strong> לופ קליל ושובב פועל בזמן החקירה ונחלש אוטומטית כשאבא מתחיל לשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -208,6 +208,57 @@ function useSelectedItem(){
    msg(it.icon+' '+it.name+' שמור לשימוש מול הדמות המתאימה');
  }
 }
+let bgCtx=null,bgGain=null,bgTimer=null,bgStep=0,bgMusicOn=true;
+const bgMelody=[261.63,329.63,392.00,329.63,293.66,349.23,440.00,349.23,261.63,329.63,392.00,523.25,440.00,392.00,329.63,293.66];
+const bgBass=[130.81,130.81,146.83,146.83,174.61,174.61,146.83,146.83];
+
+function bgNote(freq,when,dur=.22,type='triangle',vol=.035){
+ if(!bgCtx||!bgGain)return;
+ const o=bgCtx.createOscillator(),g=bgCtx.createGain();
+ o.type=type;o.frequency.setValueAtTime(freq,when);
+ g.gain.setValueAtTime(.0001,when);
+ g.gain.exponentialRampToValueAtTime(vol,when+.015);
+ g.gain.exponentialRampToValueAtTime(.0001,when+dur);
+ o.connect(g);g.connect(bgGain);o.start(when);o.stop(when+dur+.03);
+}
+async function startBgMusic(){
+ if(!bgMusicOn)return;
+ try{
+   if(!bgCtx)bgCtx=new (window.AudioContext||window.webkitAudioContext)();
+   if(bgCtx.state==='suspended')await bgCtx.resume();
+   if(!bgGain){
+     bgGain=bgCtx.createGain();
+     bgGain.gain.value=.10;
+     bgGain.connect(bgCtx.destination);
+   }
+   if(bgTimer)return;
+   bgTimer=setInterval(()=>{
+     if(!bgMusicOn||!bgCtx||bgCtx.state!=='running')return;
+     const t=bgCtx.currentTime+.02;
+     const m=bgMelody[bgStep%bgMelody.length];
+     bgNote(m,t,.24,'triangle',.028);
+     if(bgStep%2===0){
+       const b=bgBass[Math.floor(bgStep/2)%bgBass.length];
+       bgNote(b,t,.34,'sine',.018);
+     }
+     if(bgStep%4===2) bgNote(m*2,t+.12,.10,'sine',.010);
+     bgStep++;
+   },360);
+ }catch(e){}
+}
+function setBgDuck(ducked){
+ if(!bgGain||!bgCtx)return;
+ const target=ducked?.025:.10;
+ bgGain.gain.cancelScheduledValues(bgCtx.currentTime);
+ bgGain.gain.linearRampToValueAtTime(target,bgCtx.currentTime+.18);
+}
+function toggleBgMusic(){
+ bgMusicOn=!bgMusicOn;
+ const b=document.getElementById('musicToggle');
+ if(b)b.textContent=bgMusicOn?'🎵 מוזיקה: פעילה':'🎵 מוזיקה: כבויה';
+ if(bgMusicOn){startBgMusic();if(bgGain)bgGain.gain.value=.10}
+ else if(bgGain)bgGain.gain.value=0;
+}
 const dadTrack=new Audio('assets/audio/abba-shuv-mamtzi-kan.mp3');
 dadTrack.preload='auto';
 dadTrack.volume=.92;
@@ -238,13 +289,14 @@ async function primeDadAudio(){
 }
 function startDadSongClip(){
  clearTimeout(dadClipStopTimer);
+ setBgDuck(true);
  const duration=Number.isFinite(dadTrack.duration)?dadTrack.duration:167;
  const start=dadClipStarts[Math.floor(Math.random()*dadClipStarts.length)];
  try{dadTrack.currentTime=Math.min(start,Math.max(0,duration-10))}catch(e){}
  dadTrack.volume=.92;
  dadTrack.play().catch(()=>{});
 }
-function stopDadSong(){clearTimeout(dadClipStopTimer);dadTrack.pause()}
+function stopDadSong(){clearTimeout(dadClipStopTimer);dadTrack.pause();setBgDuck(false)}
 function singDadLine(line){if(dadTrack.paused)startDadSongClip()}
 function chooseDadTarget(now){
  if(now<dad.targetAt)return;
@@ -382,13 +434,14 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
-addEventListener('pointerdown',()=>{primeDadAudio()},{once:true});
+addEventListener('pointerdown',()=>{primeDadAudio();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
+document.getElementById('musicToggle').onclick=toggleBgMusic;
 document.getElementById('audioTest').onclick=async()=>{
  const ok=await primeDadAudio();
  clearTimeout(dadClipStopTimer);
