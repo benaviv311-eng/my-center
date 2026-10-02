@@ -9,6 +9,7 @@
   const SPRINT_KEY='double-sprint-best-v1';
   const VERSUS_KEYS_KEY='double-versus-keys-v1';
   const VERSUS_AVATARS_KEY='double-versus-avatars-v1';
+  const ANNOUNCER_KEY='double-announcer-pack-v1';
   const MAX_STAGE=20;
 
   const AVATAR_CATEGORIES={
@@ -105,6 +106,7 @@
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
   let lastAnnouncerLine='';
+  let announcerPack=readAnnouncerPack();
   let cachedNaturalVoice=null;
   let lastVoiceAt=0;
 
@@ -393,22 +395,29 @@
     return {text,level};
   }
 
+  function readAnnouncerPack(){
+    const saved=safeGet(ANNOUNCER_KEY);
+    return ['british','russian','italian','american','japanese','arcade'].includes(saved)?saved:'british';
+  }
+  function announcerLang(){
+    const p=ANNOUNCER_PACKS[announcerPack];
+    return p?.language||'en-GB';
+  }
   function voiceScore(v){
     const n=(v.name||'').toLowerCase();
     const l=(v.lang||'').toLowerCase();
-    if(!/^en[-_]/i.test(v.lang||'')) return -1000;
+    const wanted=announcerLang().toLowerCase();
+    const root=wanted.split('-')[0];
     let score=0;
-    // Prefer a natural British English voice above every other English voice.
-    if(/^en-gb/.test(l)) score+=220;
-    if(/uk english|english united kingdom|british/.test(n)) score+=170;
-    if(/sonia|ryan|libby|daniel|george|serena|kate|malcolm/.test(n)) score+=125;
+    if(l===wanted) score+=300;
+    else if(l.startsWith(root+'-')||l===root) score+=220;
+    else if(root==='en'&&/^en[-_]/.test(l)) score+=80;
+    else score-=500;
     if(/natural|neural|online/.test(n)) score+=120;
-    if(/google uk english/.test(n)) score+=115;
-    if(/aria|jenny|guy|ava|emma|andrew|brian/.test(n)) score+=35;
     if(v.localService) score+=18;
-    if(/^en-us/.test(l)) score-=45;
-    if(/google us english|samantha|alex|karen|moira/.test(n)) score-=35;
-    if(/compact|espeak|festival|david|zira|mark desktop/.test(n)) score-=70;
+    if(announcerPack==='british'&&(/^en-gb/.test(l)||/british|uk english/.test(n))) score+=160;
+    if(announcerPack==='american'&&(/^en-us/.test(l)||/american|us english/.test(n))) score+=150;
+    if(/compact|espeak|festival/.test(n)) score-=70;
     return score;
   }
 
@@ -416,9 +425,7 @@
     if(!('speechSynthesis' in window)) return null;
     const voices=window.speechSynthesis.getVoices()||[];
     if(!voices.length) return cachedNaturalVoice;
-    const english=voices.filter(v=>/^en[-_]/i.test(v.lang||''));
-    const pool=english.length?english:voices;
-    cachedNaturalVoice=[...pool].sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null;
+    cachedNaturalVoice=[...voices].sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null;
     return cachedNaturalVoice;
   }
 
@@ -438,11 +445,12 @@
       if(!clean) return;
       const u=new SpeechSynthesisUtterance(clean);
       const voice=excitingVoice();
-      if(voice){u.voice=voice;u.lang=voice.lang||'en-GB'}
-      else u.lang='en-GB';
+      const lang=announcerLang();
+      if(voice){u.voice=voice;u.lang=voice.lang||lang}
+      else u.lang=lang;
 
-      u.rate=kind==='boss'?.96:kind==='win'?1.0:1.04;
-      u.pitch=1.0;
+      u.rate=kind==='boss'?.96:kind==='win'?1.0:(announcerPack==='italian'?1.08:announcerPack==='russian'?.98:1.04);
+      u.pitch=announcerPack==='arcade'?1.12:1.0;
       u.volume=.96;
       lastVoiceAt=now;
       synth.speak(u);
@@ -510,24 +518,83 @@
   };
 
   const ANNOUNCER_PACKS={
-    british:{label:'British',language:'en',accent:'British',character:'authoritative sports commentator',status:'ready'},
-    russian:{label:'Russian',language:'en',accent:'Russian',character:'deep, tough, dramatic',status:'planned'},
-    italian:{label:'Italian',language:'en',accent:'Italian',character:'fast, warm, highly excited',status:'planned'},
-    american:{label:'American Hype',language:'en',accent:'American',character:'high-energy arena announcer',status:'planned'},
-    japanese:{label:'Japanese',language:'en',accent:'Japanese',character:'precise, energetic, focused',status:'planned'},
-    arcade:{label:'Arcade',language:'en',accent:'stylised',character:'over-the-top game announcer',status:'planned'}
+    british:{label:'British',flag:'🇬🇧',language:'en-GB',character:'שדר ספורט בריטי סמכותי'},
+    russian:{label:'Русский',flag:'🇷🇺',language:'ru-RU',character:'עמוק, קשוח ודרמטי'},
+    italian:{label:'Italiano',flag:'🇮🇹',language:'it-IT',character:'מהיר, חם ומתלהב'},
+    american:{label:'American Hype',flag:'🇺🇸',language:'en-US',character:'הייפ של אולם ספורט'},
+    japanese:{label:'日本語',flag:'🇯🇵',language:'ja-JP',character:'חד, מדויק ואנרגטי'},
+    arcade:{label:'Arcade',flag:'🎮',language:'en-US',character:'מוגזם ומשחקי'}
   };
 
-  function pickAnnouncerLine(kind,player){
-    const pool=(ANNOUNCER_LINES[kind]||ANNOUNCER_LINES.start).map(line=>{
-      if(player===0) return 'Player one, '+line.charAt(0).toLowerCase()+line.slice(1);
-      if(player===1) return 'Player two, '+line.charAt(0).toLowerCase()+line.slice(1);
-      return line;
-    });
-    const choices=pool.filter(x=>x!==lastAnnouncerLine);
-    const line=(choices.length?choices:pool)[Math.floor(Math.random()*(choices.length?choices.length:pool.length))];
-    lastAnnouncerLine=line;
-    return line;
+  const ANNOUNCER_LOCAL={
+    russian:{
+      start:['Поехали!','Готовы? Вперёд!','Игра началась!'],
+      versusStart:['Битва начинается!','Готовы? Вперёд!','Начинаем дуэль!'],
+      versusSuccess:['Отлично!','Хорошо!','Блестяще!','Превосходно!'],
+      fast:['Быстро!','Молниеносно!'],
+      streakSmall:['Продолжай!','Отличная серия!'],
+      combo:['Ты в огне!','Тебя не остановить!','Вот это серия!'],
+      rare:['Легендарно!','Феноменально!','Идеально!'],
+      level:['Новый уровень!','Следующий уровень!'],
+      boss:['Раунд с боссом!','Босс приближается!'],
+      bossWin:['Босс побеждён!','Победа над боссом!'],
+      gold:['Золотой удар!','Джекпот!'],
+      wrong:['Почти!','Соберись!','Продолжай!'],
+      oneMore:['Ещё один!'],
+      lead:['Выходит вперёд!'],
+      comeback:['Вот это возвращение!'],
+      record:['Новый рекорд!'],
+      win:['Победа!','Чемпион!'],
+      finish:['Отличная игра!']
+    },
+    italian:{
+      start:['Andiamo!','Pronti? Via!','Si comincia!'],
+      versusStart:['Inizia la sfida!','Pronti? Via!','Che la battaglia cominci!'],
+      versusSuccess:['Bravo!','Grande!','Bravissimo!','Eccellente!'],
+      fast:['Veloce!','Fulmine!'],
+      streakSmall:['Continua così!','Bella serie!'],
+      combo:['Sei scatenato!','Inarrestabile!','Che serie!'],
+      rare:['Leggendario!','Fenomenale!','Perfetto!'],
+      level:['Livello superato!','Prossimo livello!'],
+      boss:['Round del boss!','Arriva il boss!'],
+      bossWin:['Boss sconfitto!','Hai battuto il boss!'],
+      gold:["Colpo d'oro!",'Jackpot!'],
+      wrong:['Quasi!','Attento!','Continua!'],
+      oneMore:['Ancora uno!'],
+      lead:['Passa in vantaggio!'],
+      comeback:['Che rimonta!'],
+      record:['Nuovo record!'],
+      win:['Vittoria!','Campione!'],
+      finish:['Grande partita!']
+    },
+    japanese:{
+      start:['いくぞ！','準備はいい？ スタート！','ゲーム開始！'],
+      versusStart:['バトル開始！','準備はいい？ スタート！','勝負だ！'],
+      versusSuccess:['いいね！','すごい！','素晴らしい！','完璧だ！'],
+      fast:['速い！','電光石火！'],
+      streakSmall:['その調子！','いい流れだ！'],
+      combo:['絶好調だ！','止められない！','すごい連続だ！'],
+      rare:['伝説級！','驚異的！','完璧！'],
+      level:['レベルアップ！','次のレベル！'],
+      boss:['ボス戦！','ボスが来る！'],
+      bossWin:['ボス撃破！','ボスに勝った！'],
+      gold:['ゴールデンヒット！','ジャックポット！'],
+      wrong:['惜しい！','集中！','その調子！'],
+      oneMore:['あと一つ！'],
+      lead:['リードした！'],
+      comeback:['大逆転！'],
+      record:['新記録！'],
+      win:['勝利！','チャンピオン！'],
+      finish:['ナイスゲーム！']
+    }
+  };
+
+  function announcerPickerHtml(){
+    return '<div class="announcer-wrap"><span>🎙️ בחר כרוז</span><div class="announcer-picker">'+
+      Object.entries(ANNOUNCER_PACKS).map(([key,p])=>
+        '<button type="button" class="announcer-pack'+(key===announcerPack?' active':'')+'" data-announcer-pack="'+key+'"><b>'+p.flag+' '+p.label+'</b><small>'+p.character+'</small></button>'
+      ).join('')+
+    '</div></div>';
   }
 
   function playEventSound(kind){
@@ -1450,6 +1517,8 @@
       <h1>DOUBLE</h1>
       <div class="wallet-line">🪙 <b>${profile.coins}</b> מטבעות</div>
 
+      ${announcerPickerHtml()}
+
       <div class="difficulty-wrap">
         <span>רמת קושי למצבים החופשיים</span>
         <div class="difficulty-picker">
@@ -1733,6 +1802,19 @@
 
     const versus=panel.querySelector('[data-open-versus]');
     if(versus) versus.addEventListener('click',showVersusMenu);
+
+    panel.querySelectorAll('[data-announcer-pack]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        announcerPack=btn.dataset.announcerPack;
+        safeSet(ANNOUNCER_KEY,announcerPack);
+        cachedNaturalVoice=null;
+        prepareNaturalVoice();
+        const preview=pickAnnouncerLine('start');
+        showAnnouncerText(preview,'start');
+        speakNatural(preview,'start',true);
+        restoreMenuMarkup();
+      });
+    });
 
     panel.querySelectorAll('[data-difficulty]').forEach(btn=>{
       const key=btn.dataset.difficulty;
