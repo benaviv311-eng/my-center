@@ -15,3 +15,14 @@ test('migration paths are always high risk',()=>{
   assert.match(policy,/supabase\/migrations\//);
   assert.match(policy,/high/);
 });
+
+
+test('supabase deployment is manual exact-sha and pinned',()=>{
+  const yml=read('.github/workflows/site-editor-supabase-deploy.yml');
+  assert.match(yml,/workflow_dispatch/);
+  for(const input of ['request_id','branch','head_sha']) assert.ok(yml.includes(input));
+  assert.match(yml,/supabase@2\.117\.0/);
+  assert.match(yml,/site-editor-migration-check\.mjs/);
+  assert.doesNotMatch(yml,/pull_request:/);
+  assert.doesNotMatch(yml,/push:/);
+});
