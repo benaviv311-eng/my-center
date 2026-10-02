@@ -28,6 +28,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
     <div class="meters">
       <div class="pill meterbox"><div class="label">כוח לריצה</div><div class="meter"><i id="stamina"></i></div></div>
       <div class="pill meterbox"><div class="label">מגן</div><div class="meter blue"><i id="shield"></i></div></div>
+      <div class="pill meterbox"><div class="label">סחרחורת מאבא</div><div class="meter"><i id="dizzyMeter" style="width:0%;background:linear-gradient(90deg,#b28cff,#ff8ec3)"></i></div></div>
     </div>
   </div>
 
@@ -46,6 +47,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
           <button class="cbtn right" data-key="ArrowRight">→</button>
         </div>
         <div class="actions">
+          <button class="abtn blue" id="itemUse">חפץ<br>✦</button>
           <button class="abtn blue" id="action">פעולה<br>✋</button>
           <button class="abtn" id="run">ריצה<br>⚡</button>
         </div>
@@ -54,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.</div></div>
     </aside>
   </div>
 </main>
@@ -62,9 +64,9 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 <script>
 (()=>{
 const c=document.getElementById('game'),ctx=c.getContext('2d'),W=960,H=600,keys={};
-const toast=document.getElementById('toast'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield');
+const toast=document.getElementById('toast'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield'),dizzyMeterEl=document.getElementById('dizzyMeter');
 const sceneTitle=document.getElementById('sceneTitle'),roomTitle=document.getElementById('roomTitle'),inventoryEl=document.getElementById('inventory'),floorsEl=document.getElementById('floors');
-let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null;
+let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null,dizzyCharge=0,dizzyUntil=0,noteClock=0;
 
 const scenes={
  yard:{name:'חצר',floor:-1,bg:'#b8d69d',spawn:{x:760,y:470},rooms:[{name:'דשא',x:0,y:0,w:650,h:600},{name:'פינת משחקים',x:650,y:0,w:310,h:600}],exits:[{x:790,y:440,w:120,h:105,to:'ground',spawn:{x:820,y:500},label:'להיכנס לבית'}]},
@@ -99,6 +101,8 @@ Object.entries(artSources).forEach(([k,src])=>{
 });
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
 const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
+const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
+const dadPhrases=['לה לה לה!','ליבי ליבי ליבי!','מי רוצה שיר חדש?','טם־טם־טם!'];
 const items={
  ground:[{x:210,y:205,id:'headphones',name:'אוזניות',icon:'🎧'},{x:720,y:185,id:'mirror',name:'מראה',icon:'🪞'},{x:355,y:445,id:'pan',name:'מחבת',icon:'🍳'}],
  basement:[{x:260,y:180,id:'radio',name:'רדיו',icon:'📻'}],
@@ -144,11 +148,106 @@ function findExit(){
 function transition(){if(!nearExit){msg('אין כאן מעבר');return}const e=nearExit;player.scene=e.to;player.x=e.spawn.x;player.y=e.spawn.y;nearExit=null;msg(scenes[player.scene].name);renderFloors()}
 function update(dt){
  let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
+ if(performance.now()<dizzyUntil){dx*=-1;dy*=-1;}
  const sprint=keys.Shift||runTouch;move(dx,dy,dt,sprint);if(!sprint||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
  if(player.ability&&performance.now()>=player.abilityUntil){if(player.ability==='invisible')player.invisible=false;player.ability=null}
+ updateDad(dt);
  collect();findExit();
  const r=roomAt(player.scene,player.x,player.y);sceneTitle.textContent=scenes[player.scene].name;roomTitle.textContent=r.name;
- staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';
+ staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';
+}
+function hasItem(id){return player.inventory.some(i=>i.id===id)}
+function removeSelected(){
+ if(!player.inventory[player.selected])return;
+ player.inventory.splice(player.selected,1);
+ player.selected=Math.min(player.selected,Math.max(0,player.inventory.length-1));
+ renderInv();
+}
+function useSelectedItem(){
+ const it=player.inventory[player.selected];
+ if(!it){msg('אין חפץ במשבצת הזאת');return}
+ if(it.id==='headphones'){
+   player.shield=Math.min(100,player.shield+70);
+   msg('🎧 האוזניות מגינות מהשירים של אבא');
+   removeSelected();
+ }else if(it.id==='radio'){
+   player.shield=Math.min(100,player.shield+45);
+   msg('📻 הרדיו מפריע לשיר של אבא');
+   removeSelected();
+ }else{
+   msg(it.icon+' '+it.name+' שמור לשימוש מול הדמות המתאימה');
+ }
+}
+function chooseDadTarget(now){
+ if(now<dad.targetAt)return;
+ dad.targetAt=now+1800+Math.random()*2500;
+ const pts=[[180,165],[350,205],[560,170],[735,215],[260,420],[590,410]];
+ const p=pts[Math.floor(Math.random()*pts.length)];
+ dad.targetX=p[0];dad.targetY=p[1];
+}
+function updateDad(dt){
+ if(player.scene!==dad.scene){dad.singing=false;dizzyCharge=Math.max(0,dizzyCharge-35*dt);return}
+ const now=performance.now();
+ chooseDadTarget(now);
+ const distToPlayer=Math.hypot(player.x-dad.x,player.y-dad.y);
+ if(!player.invisible && distToPlayer<210){
+   dad.singing=true;
+   dad.targetX=player.x;dad.targetY=player.y;
+   if(distToPlayer<155){
+     if(player.shield>0){
+       player.shield=Math.max(0,player.shield-28*dt);
+       dizzyCharge=Math.max(0,dizzyCharge-22*dt);
+     }else{
+       dizzyCharge=Math.min(100,dizzyCharge+32*dt);
+       if(dizzyCharge>=100 && now>=dizzyUntil){
+         dizzyUntil=now+5200;
+         dizzyCharge=25;
+         msg('😵‍💫 השיר של אבא סחרר את ליבי — המקשים התהפכו!');
+       }
+     }
+   } else dizzyCharge=Math.max(0,dizzyCharge-14*dt);
+ }else{
+   dad.singing=false;
+   dizzyCharge=Math.max(0,dizzyCharge-24*dt);
+ }
+ const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy);
+ if(len>5){dad.x+=vx/len*dad.speed*dt;dad.y+=vy/len*dad.speed*dt}
+ dad.phase+=dt*(dad.singing?8:3);
+ noteClock+=dt;
+ if(dad.singing && noteClock>.75){
+   noteClock=0;
+   dad.phrase=dadPhrases[Math.floor(Math.random()*dadPhrases.length)];
+ }
+}
+function drawDad(){
+ if(player.scene!==dad.scene)return;
+ const bob=Math.sin(dad.phase)*1.6;
+ ctx.save();ctx.translate(dad.x,dad.y+bob);
+ ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,22,20,8,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#5e443d';ctx.lineWidth=5;ctx.lineCap='round';
+ ctx.beginPath();ctx.moveTo(-7,12);ctx.lineTo(-9,28);ctx.moveTo(7,12);ctx.lineTo(9,28);ctx.stroke();
+ ctx.fillStyle='#5f86c9';ctx.strokeStyle='#344b73';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(-14,-3,28,24,8);ctx.fill();ctx.stroke();
+ ctx.fillStyle='#d7aa86';ctx.beginPath();ctx.arc(0,-18,15,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#4b352f';ctx.beginPath();ctx.arc(0,-23,15,Math.PI,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#2e2928';ctx.beginPath();ctx.arc(-5,-18,1.8,0,Math.PI*2);ctx.arc(5,-18,1.8,0,Math.PI*2);ctx.fill();
+ if(dad.singing){
+   ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle='#5a4855';ctx.lineWidth=2;
+   ctx.beginPath();ctx.roundRect(-60,-72,120,34,13);ctx.fill();ctx.stroke();
+   ctx.fillStyle='#3a3036';ctx.font='800 13px Arial';ctx.textAlign='center';ctx.fillText(dad.phrase,0,-50);
+   ctx.font='24px Arial';ctx.fillStyle='#9a4ccb';ctx.fillText('♪',-30,-82);ctx.fillText('♫',28,-78);
+ }
+ ctx.restore();
+}
+function drawDizzyFX(){
+ if(performance.now()>=dizzyUntil)return;
+ ctx.save();
+ ctx.strokeStyle='rgba(177,103,222,.78)';ctx.lineWidth=4;
+ for(let i=0;i<3;i++){
+   const r=25+i*10+Math.sin(performance.now()/120+i)*3;
+   ctx.beginPath();ctx.arc(player.x,player.y-8,r,0,Math.PI*1.55);ctx.stroke();
+ }
+ ctx.font='24px Arial';ctx.textAlign='center';ctx.fillStyle='#b15dda';ctx.fillText('✦',player.x-34,player.y-45);ctx.fillText('✧',player.x+32,player.y-39);
+ ctx.restore();
 }
 function drawBase(s){
  const sc=scenes[s];ctx.fillStyle=sc.bg;ctx.fillRect(0,0,W,H);
@@ -193,17 +292,18 @@ function draw(){
  }else{
    drawBase(player.scene);furniture(player.scene);
  }
- exits();pickups();libi();
+ exits();pickups();drawDad();libi();drawDizzyFX();
 }
 function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
+document.getElementById('itemUse').onclick=useSelectedItem;
 renderInv();renderFloors();requestAnimationFrame(loop);
 })();
 </script>
