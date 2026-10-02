@@ -550,6 +550,7 @@ function initVolleyballHub(){
   feed.addEventListener('click',event=>{if(handleCardAction(event))return;handleTermInteraction(event);});
 
   discoveryShell.addEventListener('click',event=>{
+    if(handleCardAction(event))return;
     if(handleTermInteraction(event))return;
     const btn=event.target.closest('[data-kind]');
     if(!btn)return;
