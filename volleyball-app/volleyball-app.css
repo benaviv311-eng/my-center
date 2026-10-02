@@ -164,3 +164,16 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
   .vb-population-menu-toggle{min-height:44px}
   .vb-standalone-app #volleyball-topic-shell{top:114px}
 }
+
+/* Remove large population collage */
+.vb-standalone-app .vb-population-world{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.vb-standalone-app .vb-population-world .vb-player-visual{
+  display:none!important;
+}
+.vb-standalone-app .vb-population-world .vb-world-content{
+  max-width:760px;
+  margin-inline:auto;
+  width:100%;
+}
