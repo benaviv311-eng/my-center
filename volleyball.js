@@ -1,9 +1,9 @@
 const VOLLEYBALL_VISUALS={
-  elementary:{imageUrl:'https://images.pexels.com/photos/15149190/pexels-photo-15149190.jpeg',creditUrl:'https://www.pexels.com/photo/students-practicing-with-volleyball-balls-15149190/',credit:'Pexels',alt:'ילדים מתרגלים עם כדורי כדורעף באולם'},
-  'youth-boys':{imageUrl:'https://images.pexels.com/photos/32681163/pexels-photo-32681163.jpeg',creditUrl:'https://www.pexels.com/photo/indoor-volleyball-player-spiking-ball-midair-32681163/',credit:'Pexels',alt:'שחקן כדורעף צעיר קופץ להנחתה באולם'},
-  'youth-girls':{imageUrl:'https://images.pexels.com/photos/17557540/pexels-photo-17557540.jpeg',creditUrl:'https://www.pexels.com/photo/teenager-girls-standing-at-an-indoor-volleyball-court-17557540/',credit:'Pexels',alt:'שחקניות כדורעף צעירות במגרש כדורעף באולם'},
-  women:{imageUrl:'https://images.pexels.com/photos/30446999/pexels-photo-30446999.jpeg',creditUrl:'https://www.pexels.com/photo/female-volleyball-player-in-indoor-gym-holding-ball-30446999/',credit:'Pexels',alt:'שחקנית כדורעף באולם מחזיקה כדור לפני משחק'},
-  men:{imageUrl:'https://images.pexels.com/photos/6203671/pexels-photo-6203671.jpeg',creditUrl:'https://www.pexels.com/photo/photograph-of-a-man-serving-a-volleyball-6203671/',credit:'Pexels',alt:'שחקן כדורעף גברים מגיש בכדורעף באולם'}
+  elementary:{imageUrl:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Hande%20Balad%C4%B1n%207%20Eczac%C4%B1ba%C5%9F%C4%B1%20SK%20WV%2020250409%20(3).jpg',creditUrl:'https://commons.wikimedia.org/wiki/Category:Hande_Baladin',credit:'Wikimedia Commons',alt:'שחקנית עילית בכדורעף אולמות'},
+  'youth-boys':{imageUrl:'https://commons.wikimedia.org/wiki/Special:Redirect/file/20240701%20Wilfredo%20Leon.jpg',creditUrl:'https://commons.wikimedia.org/wiki/Category:Wilfredo_Le%C3%B3n',credit:'Wikimedia Commons',alt:'שחקן עילית בכדורעף גברים'},
+  'youth-girls':{imageUrl:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Paf%20Open%202012%20%C3%81gatha%20Bednarczuk.jpg',creditUrl:'https://commons.wikimedia.org/wiki/File:Paf_Open_2012_%C3%81gatha_Bednarczuk.jpg',credit:'Wikimedia Commons',alt:'שחקנית עילית בכדורעף חופים מזווית אחורית'},
+  women:{imageUrl:'https://commons.wikimedia.org/wiki/Special:Redirect/file/2019-07-05%20BeachVolleyball%20Weltmeisterschaft%20Hamburg%202019%20StP%203506%20LR%20by%20Stepro.jpg',creditUrl:'https://commons.wikimedia.org/wiki/Category:April_Ross',credit:'Wikimedia Commons',alt:'שחקנית עילית בכדורעף חופים במהלך משחק'},
+  men:{imageUrl:'https://commons.wikimedia.org/wiki/Special:Redirect/file/At%20Katowice%202024%20266.jpg',creditUrl:'https://commons.wikimedia.org/wiki/Category:Wilfredo_Le%C3%B3n',credit:'Wikimedia Commons',alt:'שחקן עילית בכדורעף גברים'}
 };
 
 const VOLLEYBALL_TERM_PROFILES={
