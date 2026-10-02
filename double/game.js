@@ -707,7 +707,7 @@
     renderPlayerButtons();
     update();
     newRound();
-    setTimeout(()=>announceMoment(mode==='versus'?'versusStart':'start'),120);
+    setTimeout(()=>announceMoment(mode==='versus'?'versusStart':(mode==='levels'&&bossActive?'boss':'start')),120);
   }
 
   function finishByTime(){
@@ -987,6 +987,8 @@
       selected.classList.add('versus-wrong');
       avatarReact(player===0?'p1':'p2','wrong',520);
       versusStreak[player]=0;
+      playEventSound('wrong');
+      if(Math.random()<.35) announceMoment('wrong',player);
       if(versusVariant==='knockout'){
         versusLives[player]=Math.max(0,versusLives[player]-1);
         flash((player===0?'🔵':'🔴')+' טעות — נשארו '+versusLives[player]+' חיים');
@@ -997,8 +999,6 @@
         endVersusMatch(1-player);
         return;
       }else{
-        playEventSound('wrong');
-        if(Math.random()<.35) announceMoment('wrong',player);
         flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
       }
       setTimeout(()=>selected.classList.remove('versus-wrong'),280);
@@ -1167,6 +1167,8 @@
   function onWrong(){
     streak=0;
     const penalty=cfg().wrongPenalty;
+    playEventSound('wrong');
+    if(Math.random()<.22) announceMoment('wrong');
 
     if(mode==='classic'){
       score=Math.max(0,score-(difficulty==='hard'?100:50));
@@ -1285,6 +1287,7 @@
   function endGame(title,description){
     if(!active) return;
     active=false;
+    if(mode!=='versus') announceMoment('finish');
     if(timer) clearInterval(timer);
 
     let finalTitle=title,finalText=description;
