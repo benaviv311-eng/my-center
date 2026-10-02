@@ -9,32 +9,70 @@
   const wcFile=name=>'https://commons.wikimedia.org/wiki/Special:Redirect/file/'+encodeURIComponent(name);
   const VB_ELITE_SIDE_GALLERIES={
     women:{
-      player:'Zehra Güneş',
-      poses:[
-        wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (7).jpg'),
-        wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (8).jpg'),
-        wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (9).jpg'),
-        wcFile('Zehra Güneş 18 VakıfBank SK 20250409 (4).jpg'),
-        wcFile('Zehra Güneş 2018 01.jpg'),
-        wcFile('Zehra Güneş, 2024.jpg')
+      athletes:[
+        {player:'Zehra Güneş',kind:'indoor',poses:[
+          wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (7).jpg'),
+          wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (8).jpg'),
+          wcFile('Zehra Güneş 18 VakıfBank SK WV TWVL 20260416 (9).jpg'),
+          wcFile('Zehra Güneş 18 VakıfBank SK 20250409 (4).jpg'),
+          wcFile('Zehra Güneş 2018 01.jpg'),
+          wcFile('Zehra Güneş, 2024.jpg')
+        ]},
+        {player:'Hande Baladın',kind:'indoor',poses:[
+          wcFile('Hande Baladın 7 Eczacıbaşı SK WV 20250409 (1).jpg'),
+          wcFile('Hande Baladın 7 Eczacıbaşı SK WV 20250409 (2).jpg'),
+          wcFile('Hande Baladın 7 Eczacıbaşı SK WV 20250409 (3).jpg'),
+          wcFile('Hande Baladın 7 Eczacıbaşı SK WV 20250409 (4).jpg'),
+          wcFile('Hande Baladın 7 Eczacıbaşı SK WV 20250409 (5).jpg'),
+          wcFile('Hande Baladın 7 Fenerbahçe WV TWVL 20260416 (3).jpg'),
+          wcFile('Hande Baladın 7 Fenerbahçe WV TWVL 20260416 (4).jpg'),
+          wcFile('Hande Baladın 7 Fenerbahçe WV TWVL 20260416 (5).jpg'),
+          wcFile('Hande Baladın 7 Fenerbahçe WV TWVL 20260416 (6).jpg')
+        ]},
+        {player:'Ebrar Karakurt',kind:'indoor',poses:[
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (1).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (2).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (3).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (4).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (5).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (6).jpg'),
+          wcFile('Ebrar Karakurt 99 Eczacıbaşı SK CEV WCL 20251126 (7).jpg')
+        ]},
+        {player:'April Ross',kind:'beach',poses:[
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3477 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3478 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3501 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3506 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3509 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3652 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3688 LR by Stepro.jpg'),
+          wcFile('2019-07-05 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 3716 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0332 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0381 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0385 LR by Stepro.jpg'),
+          wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-19) (35430860896).jpg'),
+          wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-21) (35358759342).jpg'),
+          wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-19) (35340419471).jpg'),
+          wcFile('April Ross at the AVP Austin Open 2017.jpg'),
+          wcFile('April Ross at the AVP Austin Open 2017 (2).jpg')
+        ]}
       ]
     },
     men:{
-      player:'Wilfredo León',
-      poses:[
+      athletes:[{player:'Wilfredo León',kind:'indoor',poses:[
         wcFile('20240701 Wilfredo Leon.jpg'),
         wcFile('At Katowice 2024 266.jpg'),
         wcFile('Paris Volley - Zenith Kazan, CEV Champions League, 15 February 2017 - 22.jpg'),
         wcFile('Wilfredo Leon Venero (Legavolley 2019).jpg'),
         wcFile('Wilfredo Leon Venero.jpg'),
         wcFile("Zenit Kazan vs Halkbank - CEV Men's Volleyball Champions League (23547482665).jpg")
-      ]
+      ]}]
     }
   };
   VB_ELITE_SIDE_GALLERIES['youth-girls']=VB_ELITE_SIDE_GALLERIES.women;
   VB_ELITE_SIDE_GALLERIES.elementary=VB_ELITE_SIDE_GALLERIES.women;
   VB_ELITE_SIDE_GALLERIES['youth-boys']=VB_ELITE_SIDE_GALLERIES.men;
-  VB_ELITE_SIDE_GALLERIES.all=VB_ELITE_SIDE_GALLERIES.men;
+  VB_ELITE_SIDE_GALLERIES.all=VB_ELITE_SIDE_GALLERIES.women;
 
   const populationKeyFromLabel=label=>{
     const t=(label||'').trim();
@@ -50,14 +88,20 @@
     const active=populationTabs?.querySelector('.vb-pop-tab.active');
     const key=populationKeyFromLabel(active?.textContent||'');
     const gallery=VB_ELITE_SIDE_GALLERIES[key]||VB_ELITE_SIDE_GALLERIES.all;
-    const poses=gallery.poses||[];
+    const athletes=gallery.athletes||[];
+    if(!athletes.length)return;
+    const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7);
+    const athlete=athletes[seed%athletes.length];
+    const poses=athlete.poses||[];
     if(poses.length<2)return;
-    const base=(new Date().getDate()+new Date().getMonth()*31)%poses.length;
+    const base=(seed*3)%poses.length;
     const right=(base+Math.max(1,Math.floor(poses.length/2)))%poses.length;
     sideLeft.style.backgroundImage=`url("${poses[base]}")`;
     sideRight.style.backgroundImage=`url("${poses[right]}")`;
-    sideLeft.dataset.player=gallery.player;
-    sideRight.dataset.player=gallery.player;
+    sideLeft.dataset.player=athlete.player;
+    sideRight.dataset.player=athlete.player;
+    sideLeft.dataset.kind=athlete.kind||'indoor';
+    sideRight.dataset.kind=athlete.kind||'indoor';
   };
 
   if("serviceWorker" in navigator){
