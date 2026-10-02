@@ -597,6 +597,21 @@
     '</div></div>';
   }
 
+  function pickAnnouncerLine(kind,player){
+    const source=ANNOUNCER_LOCAL[announcerPack]||ANNOUNCER_LINES;
+    const raw=source[kind]||ANNOUNCER_LINES[kind]||ANNOUNCER_LINES.start;
+    const pool=raw.map(line=>{
+      if((announcerPack==='british'||announcerPack==='american'||announcerPack==='arcade')&&player===0) return 'Player one, '+line.charAt(0).toLowerCase()+line.slice(1);
+      if((announcerPack==='british'||announcerPack==='american'||announcerPack==='arcade')&&player===1) return 'Player two, '+line.charAt(0).toLowerCase()+line.slice(1);
+      return line;
+    });
+    const choices=pool.filter(x=>x!==lastAnnouncerLine);
+    const list=choices.length?choices:pool;
+    const line=list[Math.floor(Math.random()*list.length)];
+    lastAnnouncerLine=line;
+    return line;
+  }
+
   function playEventSound(kind){
     try{
       const AudioCtx=window.AudioContext||window.webkitAudioContext;
