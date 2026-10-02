@@ -8,7 +8,75 @@
   const PROFILE_KEY='double-profile-v1';
   const SPRINT_KEY='double-sprint-best-v1';
   const VERSUS_KEYS_KEY='double-versus-keys-v1';
+  const VERSUS_AVATARS_KEY='double-versus-avatars-v1';
   const MAX_STAGE=20;
+
+  const AVATAR_CATEGORIES={
+    all:'הכול',emoji:'אימוג׳י',animals:'חיות',people:'אנשים',robots:'רובוטים',
+    fantasy:'פנטזיה',sports:'ספורט',food:'אוכל',symbols:'סמלים'
+  };
+  const AVATAR_CATALOG=[
+    {id:'smile',category:'emoji',label:'שמח',glyph:'😄'},
+    {id:'cool',category:'emoji',label:'מגניב',glyph:'😎'},
+    {id:'star-eyes',category:'emoji',label:'מתלהב',glyph:'🤩'},
+    {id:'mischief',category:'emoji',label:'שובב',glyph:'😈'},
+    {id:'angry',category:'emoji',label:'קרבי',glyph:'😤'},
+    {id:'crazy',category:'emoji',label:'משוגע',glyph:'🤪'},
+    {id:'lion',category:'animals',label:'אריה',glyph:'🦁'},
+    {id:'wolf',category:'animals',label:'זאב',glyph:'🐺'},
+    {id:'fox',category:'animals',label:'שועל',glyph:'🦊'},
+    {id:'bear',category:'animals',label:'דוב',glyph:'🐻'},
+    {id:'cat',category:'animals',label:'חתול',glyph:'🐱'},
+    {id:'dog',category:'animals',label:'כלב',glyph:'🐶'},
+    {id:'monkey',category:'animals',label:'קוף',glyph:'🐵'},
+    {id:'panda',category:'animals',label:'פנדה',glyph:'🐼'},
+    {id:'eagle',category:'animals',label:'נשר',glyph:'🦅'},
+    {id:'shark',category:'animals',label:'כריש',glyph:'🦈'},
+    {id:'rabbit',category:'animals',label:'ארנב',glyph:'🐰'},
+    {id:'tiger',category:'animals',label:'נמר',glyph:'🐯'},
+    {id:'boy',category:'people',label:'ילד',glyph:'👦'},
+    {id:'girl',category:'people',label:'ילדה',glyph:'👧'},
+    {id:'man',category:'people',label:'גבר',glyph:'👨'},
+    {id:'woman',category:'people',label:'אישה',glyph:'👩'},
+    {id:'runner',category:'people',label:'ספורטאי',glyph:'🏃'},
+    {id:'runner-w',category:'people',label:'ספורטאית',glyph:'🏃‍♀️'},
+    {id:'scientist',category:'people',label:'מדען',glyph:'🧑‍🔬'},
+    {id:'musician',category:'people',label:'מוזיקאי',glyph:'🧑‍🎤'},
+    {id:'gamer',category:'people',label:'גיימר',glyph:'🧑‍💻'},
+    {id:'ninja-human',category:'people',label:'נינג׳ה',glyph:'🥷'},
+    {id:'robot',category:'robots',label:'רובוט',glyph:'🤖'},
+    {id:'alienbot',category:'robots',label:'בוט חלל',glyph:'👾'},
+    {id:'armbot',category:'robots',label:'בוט כוח',glyph:'🦾'},
+    {id:'ufo',category:'robots',label:'בוט מעופף',glyph:'🛸'},
+    {id:'wizard',category:'fantasy',label:'קוסם',glyph:'🧙'},
+    {id:'elf',category:'fantasy',label:'אלף',glyph:'🧝'},
+    {id:'vampire',category:'fantasy',label:'ערפד',glyph:'🧛'},
+    {id:'pirate',category:'fantasy',label:'פיראט',glyph:'🏴‍☠️'},
+    {id:'dragon',category:'fantasy',label:'דרקון',glyph:'🐉'},
+    {id:'ghost',category:'fantasy',label:'רוח',glyph:'👻'},
+    {id:'alien',category:'fantasy',label:'חייזר',glyph:'👽'},
+    {id:'unicorn',category:'fantasy',label:'חד־קרן',glyph:'🦄'},
+    {id:'volleyball',category:'sports',label:'כדורעף',glyph:'🏐'},
+    {id:'football',category:'sports',label:'כדורגל',glyph:'⚽'},
+    {id:'basketball',category:'sports',label:'כדורסל',glyph:'🏀'},
+    {id:'tennis',category:'sports',label:'טניס',glyph:'🎾'},
+    {id:'boxing',category:'sports',label:'אגרוף',glyph:'🥊'},
+    {id:'skate',category:'sports',label:'סקייט',glyph:'🛹'},
+    {id:'pizza',category:'food',label:'פיצה',glyph:'🍕'},
+    {id:'burger',category:'food',label:'המבורגר',glyph:'🍔'},
+    {id:'donut',category:'food',label:'דונאט',glyph:'🍩'},
+    {id:'watermelon',category:'food',label:'אבטיח',glyph:'🍉'},
+    {id:'avocado',category:'food',label:'אבוקדו',glyph:'🥑'},
+    {id:'icecream',category:'food',label:'גלידה',glyph:'🍦'},
+    {id:'bolt',category:'symbols',label:'ברק',glyph:'⚡'},
+    {id:'star',category:'symbols',label:'כוכב',glyph:'⭐'},
+    {id:'crown',category:'symbols',label:'כתר',glyph:'👑'},
+    {id:'gem',category:'symbols',label:'יהלום',glyph:'💎'},
+    {id:'flame',category:'symbols',label:'אש',glyph:'🔥'},
+    {id:'heart',category:'symbols',label:'לב',glyph:'❤️'},
+    {id:'trophy',category:'symbols',label:'גביע',glyph:'🏆'},
+    {id:'rocket',category:'symbols',label:'טיל',glyph:'🚀'}
+  ];
 
   const difficultyConfig={
     easy:{label:'קל',classicTime:75,levelsTime:45,knockoutTime:40,knockoutTarget:10,survivalStart:14,survivalBonus:3,wrongPenalty:1,targetFactor:.85,spinFactor:1.25,pointMultiplier:1},
@@ -22,6 +90,7 @@
   let levelAssistUses=0, levelAssisted=false;
   let sprintTarget=5, sprintStartedAt=0;
   let versusKeys=readVersusKeys(), versusCursor=[0,0], versusLocked=false;
+  let versusAvatars=readVersusAvatars();
   let versusVariant='duel', versusTarget=10, versusLives=[3,3], versusRound=0, versusDeckOrder=[], versusDeckIndex=0, versusStreak=[0,0];
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
@@ -63,6 +132,45 @@
     }catch(_){return defaultVersusKeys()}
   }
   function saveVersusKeys(){safeSet(VERSUS_KEYS_KEY,JSON.stringify(versusKeys))}
+  function avatarById(id){return AVATAR_CATALOG.find(a=>a.id===id)||AVATAR_CATALOG[0]}
+  function defaultVersusAvatars(){return {p1:'lion',p2:'robot'}}
+  function readVersusAvatars(){
+    try{
+      const raw=JSON.parse(safeGet(VERSUS_AVATARS_KEY)||'null');
+      const def=defaultVersusAvatars();
+      if(!raw) return def;
+      return {
+        p1:avatarById(raw.p1).id,
+        p2:avatarById(raw.p2).id
+      };
+    }catch(_){return defaultVersusAvatars()}
+  }
+  function saveVersusAvatars(){safeSet(VERSUS_AVATARS_KEY,JSON.stringify(versusAvatars))}
+  function avatarSetupHtml(player){
+    const a=avatarById(versusAvatars[player]);
+    const num=player==='p1'?1:2;
+    return '<div class="avatar-setup-row">'+
+      '<div class="avatar-preview '+player+'-avatar"><span class="avatar-glyph">'+a.glyph+'</span><span><b>'+a.label+'</b><small>'+AVATAR_CATEGORIES[a.category]+'</small></span></div>'+
+      '<button type="button" class="avatar-change" data-change-avatar="'+player+'">החלף אווטר</button>'+
+    '</div>';
+  }
+  function liveAvatarHtml(player){
+    const a=avatarById(versusAvatars[player]);
+    const num=player==='p1'?1:2;
+    return '<div class="live-avatar-hud '+player+'-avatar" data-avatar-player="'+player+'">'+
+      '<span class="avatar-glyph" aria-hidden="true">'+a.glyph+'</span>'+
+      '<span class="avatar-live-copy"><b>שחקן '+num+'</b><small>'+a.label+'</small></span>'+
+    '</div>';
+  }
+  function avatarReact(player,state,duration=500){
+    const el=document.querySelector('.live-avatar-hud[data-avatar-player="'+player+'"]');
+    if(!el) return;
+    ['focus','win','wrong','champion'].forEach(x=>el.classList.remove(x));
+    void el.offsetWidth;
+    el.classList.add(state);
+    clearTimeout(el._avatarTimer);
+    el._avatarTimer=setTimeout(()=>el.classList.remove(state),duration);
+  }
   function keyLabel(code){
     const map={
       Space:'רווח',Enter:'Enter',
@@ -606,6 +714,12 @@
       const el=document.createElement('div');
       el.className='card'+(bossActive?' boss-card':'')+(mode==='versus'?' versus-card player-'+(cardIndex+1):'');
       el.dataset.cardIndex=String(cardIndex);
+      let zone=null;
+      if(mode==='versus'){
+        zone=document.createElement('section');
+        zone.className='versus-player-zone player-'+(cardIndex+1);
+        zone.innerHTML=liveAvatarHtml(cardIndex===0?'p1':'p2');
+      }
       shuffle(card).forEach((id,i)=>{
         const p=spots[i],bt=document.createElement('button');
         bt.type='button';bt.className='sym';bt.style.left=p[0]+'%';bt.style.top=p[1]+'%';
@@ -631,7 +745,7 @@
         });
         el.appendChild(bt);
       });
-      board.appendChild(el);
+      if(zone){zone.appendChild(el);board.appendChild(zone)}else board.appendChild(el);
     });
     if(mode==='versus') updateVersusCursors();
   }
@@ -707,6 +821,7 @@
 
     versusCursor[player]=ring[ringPos].index;
     updateVersusCursors();
+    avatarReact(player===0?'p1':'p2','focus',260);
   }
 
   function selectVersus(player){
@@ -726,12 +841,14 @@
       const points=(versusVariant==='gold'&&versusRound%5===0)?3:1;
       scores[player]+=points;
       selected.classList.add('versus-winner');
+      avatarReact(player===0?'p1':'p2','win',700);
       flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!'+(points>1?' +'+points+' נק׳ ⭐':''));
       update();
       if(checkVersusEnd()) return;
       setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
     }else{
       selected.classList.add('versus-wrong');
+      avatarReact(player===0?'p1':'p2','wrong',520);
       versusStreak[player]=0;
       if(versusVariant==='knockout'){
         versusLives[player]=Math.max(0,versusLives[player]-1);
@@ -771,6 +888,7 @@
 
   function endVersusMatch(forcedWinner){
     if(!active) return;
+    versusLocked=true;
     let winner=Number.isInteger(forcedWinner)?forcedWinner:null;
     if(winner===null&&scores[0]!==scores[1]) winner=scores[0]>scores[1]?0:1;
     const title=winner===null?'🤝 תיקו!':'🏆 שחקן '+(winner+1);
@@ -778,7 +896,8 @@
     if(versusVariant==='deck') detail+=' · החפיסה הסתיימה';
     if(versusVariant==='knockout') detail+=' · חיים '+versusLives[0]+' : '+versusLives[1];
     if(versusVariant==='combo') detail+=' · רצף מנצח '+Math.max(...versusStreak);
-    endGame(title,detail);
+    if(winner!==null) avatarReact(winner===0?'p1':'p2','champion',800);
+    setTimeout(()=>{if(active)endGame(title,detail)},560);
   }
 
   function versusActionForCode(code){
@@ -1250,10 +1369,18 @@
         <div><h2>👥 ${versusVariantLabel()}</h2><small>שחקן 1 ימין · שחקן 2 שמאל</small></div>
       </div>
       <div class="versus-setup">
-        <section class="key-player p1-setup"><h3>🔵 שחקן 1 — ימין</h3><div class="key-grid">${keyBindingButtons('p1')}</div></section>
-        <section class="key-player p2-setup"><h3>🔴 שחקן 2 — שמאל</h3><div class="key-grid">${keyBindingButtons('p2')}</div></section>
+        <section class="key-player p1-setup">
+          <h3>🔵 שחקן 1 — ימין</h3>
+          ${avatarSetupHtml('p1')}
+          <div class="key-grid">${keyBindingButtons('p1')}</div>
+        </section>
+        <section class="key-player p2-setup">
+          <h3>🔴 שחקן 2 — שמאל</h3>
+          ${avatarSetupHtml('p2')}
+          <div class="key-grid">${keyBindingButtons('p2')}</div>
+        </section>
       </div>
-      <p class="menu-note">ברירת מחדל: שחקן 1 — WASD + רווח · שחקן 2 — חצים + Enter</p>
+      <p class="menu-note">ברירת מחדל: שחקן 1 — חצים + Enter · שחקן 2 — WASD + רווח</p>
       <div class="modes">
         <button type="button" class="action primary big" data-start-versus>▶ התחל</button>
         <button type="button" class="action secondary" data-reset-keys>איפוס מקשים</button>
@@ -1264,6 +1391,49 @@
     panel.querySelector('[data-start-versus]').addEventListener('click',()=>startGame('versus'));
     panel.querySelector('[data-reset-keys]').addEventListener('click',()=>{versusKeys=defaultVersusKeys();saveVersusKeys();showVersusSetup(versusVariant);});
     panel.querySelectorAll('[data-key-player][data-key-action]').forEach(btn=>btn.addEventListener('click',()=>captureVersusKey(btn)));
+    panel.querySelectorAll('[data-change-avatar]').forEach(btn=>btn.addEventListener('click',()=>showAvatarPicker(btn.dataset.changeAvatar)));
+  }
+
+  function showAvatarPicker(player,category='all'){
+    const num=player==='p1'?1:2;
+    const current=avatarById(versusAvatars[player]);
+    const visible=category==='all'?AVATAR_CATALOG:AVATAR_CATALOG.filter(a=>a.category===category);
+    const categoryButtons=Object.entries(AVATAR_CATEGORIES).map(([key,label])=>
+      '<button type="button" class="avatar-category'+(key===category?' active':'')+'" data-avatar-category="'+key+'">'+label+'</button>'
+    ).join('');
+    const avatars=visible.map(a=>
+      '<button type="button" class="avatar-option'+(a.id===current.id?' selected':'')+'" data-avatar-id="'+a.id+'">'+
+        '<span class="avatar-glyph">'+a.glyph+'</span><small>'+a.label+'</small>'+
+      '</button>'
+    ).join('');
+
+    $('menuPanel').innerHTML=`
+      <div class="submenu-head">
+        <button type="button" class="action secondary" data-back-avatar>← חזור</button>
+        <div><h2>בחר אווטר — שחקן ${num}</h2><small>האוואטר נשמר אוטומטית לפעם הבאה</small></div>
+      </div>
+      <div class="avatar-picker-current ${player}-avatar">
+        <span class="avatar-glyph">${current.glyph}</span>
+        <div><b>${current.label}</b><small>${AVATAR_CATEGORIES[current.category]}</small></div>
+        <button type="button" class="action secondary" data-random-avatar>🎲 אקראי</button>
+      </div>
+      <div class="avatar-picker-categories">${categoryButtons}</div>
+      <div class="avatar-picker-grid">${avatars}</div>
+    `;
+
+    const panel=$('menuPanel');
+    panel.querySelector('[data-back-avatar]').addEventListener('click',()=>showVersusSetup(versusVariant));
+    panel.querySelector('[data-random-avatar]').addEventListener('click',()=>{
+      const choices=AVATAR_CATALOG.filter(a=>a.id!==versusAvatars[player]);
+      const pick=choices[Math.floor(Math.random()*choices.length)];
+      versusAvatars[player]=pick.id;saveVersusAvatars();showAvatarPicker(player,category);
+    });
+    panel.querySelectorAll('[data-avatar-category]').forEach(btn=>btn.addEventListener('click',()=>showAvatarPicker(player,btn.dataset.avatarCategory)));
+    panel.querySelectorAll('[data-avatar-id]').forEach(btn=>btn.addEventListener('click',()=>{
+      versusAvatars[player]=btn.dataset.avatarId;
+      saveVersusAvatars();
+      showVersusSetup(versusVariant);
+    }));
   }
 
   function keyBindingButtons(player){
