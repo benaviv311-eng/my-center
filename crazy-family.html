@@ -56,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.<br><strong>קול:</strong> המשחק משתמש עכשיו בהקלטה האמיתית “אבא שוב ממציא כאן”. אבא מתחיל בכל מפגש ממקטע אחר מהשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> המשחק משתמש עכשיו בהקלטה האמיתית “אבא שוב ממציא כאן”. אבא מתחיל בכל מפגש ממקטע אחר מהשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -315,10 +315,8 @@ function drawDad(){
  ctx.fillStyle='#4b352f';ctx.beginPath();ctx.arc(0,-23,15,Math.PI,Math.PI*2);ctx.fill();
  ctx.fillStyle='#2e2928';ctx.beginPath();ctx.arc(-5,-18,1.8,0,Math.PI*2);ctx.arc(5,-18,1.8,0,Math.PI*2);ctx.fill();
  if(dad.singing){
-   ctx.fillStyle='rgba(255,255,255,.94)';ctx.strokeStyle='#5a4855';ctx.lineWidth=2;
-   ctx.beginPath();ctx.roundRect(-60,-72,120,34,13);ctx.fill();ctx.stroke();
-   ctx.fillStyle='#3a3036';ctx.font='800 13px Arial';ctx.textAlign='center';ctx.fillText(dad.phrase,0,-50);
-   ctx.font='24px Arial';ctx.fillStyle='#9a4ccb';ctx.fillText('♪',-30,-82);ctx.fillText('♫',28,-78);
+   ctx.font='28px Arial';ctx.textAlign='center';ctx.fillStyle='#9a4ccb';
+   ctx.fillText('♪',-24,-52);ctx.fillText('♫',24,-60);
  }
  ctx.restore();
 }
@@ -378,7 +376,7 @@ function draw(){
  }
  exits();pickups();drawDad();libi();drawDizzyFX();
 }
-function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
+function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><small style="font-size:10px;color:#756a74">'+((it.id==='headphones'||it.id==='radio')?'בחר ולחץ חפץ':'')+'</small><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
