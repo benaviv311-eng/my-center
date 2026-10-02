@@ -21,7 +21,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <div id="load">TeamScore<small>טוען את האפליקציה…</small></div>
 <script>
 (async function(){
-  const VERSION="33";
+  const VERSION="34";
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
   const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
   const read=async n=>{const r=await fetch(n+"?v="+VERSION,{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
@@ -42,9 +42,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 
   // Apply the approved portrait image directly to the live app shell.
   // This cannot be hidden by an opaque full-screen wrapper above the page background.
-  html=html
-    .replace(/<link[^>]+href=["'][^"']*backgrounds\\.css[^"']*["'][^>]*>/gi,"")
-    .replace(/<script[^>]+src=["'][^"']*backgrounds\\.js[^"']*["'][^>]*>\\s*<\\/script>/gi,"");
+  // The old rotating layer is neutralized by CSS below; leave source tags untouched.
 
   const bgImgs=[
     'assets/mobile/p1.webp?v='+VERSION,
