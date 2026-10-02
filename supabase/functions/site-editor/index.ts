@@ -14,7 +14,7 @@ import {
   githubTree
 } from "../_shared/site-editor/github.ts";
 import { applyOperations, writesToArray } from "../_shared/site-editor/operations.ts";
-import { assertSafePath, validateEditPlan } from "../_shared/site-editor/policy.ts";
+import { assertSafePath, riskAtMost, validateEditPlan } from "../_shared/site-editor/policy.ts";
 
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")||"";
 const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")||"";
@@ -192,6 +192,50 @@ ${fileContext.slice(0,260000)}`;
   catch{throw new EditorError("editor_unavailable",503)}
 }
 
+async function callRepairPlanner(
+  request:any,
+  approvedOperations:any[],
+  files:Record<string,{sha:string;content:string}>,
+  failures:Array<{name:string;conclusion:string|null}>
+){
+  if(!OPENAI_API_KEY||!SITE_EDITOR_MODEL_STRONG)throw new EditorError("editor_unavailable",503);
+  const fileContext=Object.entries(files).map(([path,file])=>`--- ${path} (sha ${file.sha}) ---\n${file.content}`).join("\n\n");
+  const prompt=`Repair a previously approved site edit after automated validation failed.
+Do not broaden the user's goal. Do not add product features.
+You may modify only the supplied files. Prefer the originally approved paths; test files may be adjusted only when the existing test is genuinely coupled to the approved change.
+Return the same strict edit-plan JSON schema.
+
+User goal:
+${request.prompt}
+
+Original deterministic risk ceiling: ${request.risk_level}
+
+Approved operations:
+${JSON.stringify(approvedOperations).slice(0,30000)}
+
+Validation failures:
+${JSON.stringify(failures).slice(0,12000)}
+
+Current branch files:
+${fileContext.slice(0,260000)}`;
+  const response=await fetch("https://api.openai.com/v1/responses",{
+    method:"POST",
+    headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:SITE_EDITOR_MODEL_STRONG,
+      input:[{role:"user",content:[{type:"input_text",text:prompt}]}],
+      reasoning:{effort:"medium"},
+      text:{format:{type:"json_schema",name:"site_edit_repair",strict:true,schema:EDIT_PLAN_SCHEMA}}
+    })
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new EditorError("editor_unavailable",503);
+  const output=answerText(data);
+  if(!output)throw new EditorError("editor_unavailable",503);
+  try{return normalizeModelPlan(JSON.parse(output))}
+  catch{throw new EditorError("editor_unavailable",503)}
+}
+
 async function insertEvent(requestId:string,userId:string,eventType:string,details:Record<string,unknown>={}){
   const r=await admin.from("site_edit_events").insert({request_id:requestId,user_id:userId,event_type:eventType,details});
   if(r.error)throw new EditorError("editor_unavailable",500);
@@ -337,10 +381,30 @@ async function latestApproval(requestId:string,stage:"plan"|"publish"){
   return q.data;
 }
 
+async function safeRepairChainEndsAt(requestId:string,startSha:string,targetSha:string){
+  if(startSha===targetSha)return true;
+  const q=await admin.from("site_edit_events")
+    .select("details,created_at")
+    .eq("request_id",requestId)
+    .eq("event_type","repair_committed")
+    .order("created_at",{ascending:true});
+  if(q.error)throw new EditorError("editor_unavailable",500);
+  let cursor=startSha;
+  for(const event of q.data||[]){
+    const details=asObject(event.details);
+    if(details.parent_head_sha===cursor&&typeof details.new_head_sha==="string")cursor=details.new_head_sha;
+  }
+  return cursor===targetSha;
+}
+
 async function validationState(request:any,currentHead:string){
   if(currentHead!==request.head_sha)throw new EditorError("stale_plan",409);
   const planApproval=await latestApproval(request.id,"plan");
-  if(planApproval?.approved_head_sha!==currentHead)throw new EditorError("stale_plan",409);
+  if(!planApproval?.approved_head_sha)throw new EditorError("stale_plan",409);
+  if(planApproval.approved_head_sha!==currentHead){
+    const safeRepair=await safeRepairChainEndsAt(request.id,planApproval.approved_head_sha,currentHead);
+    if(!safeRepair)throw new EditorError("stale_plan",409);
+  }
   const checks=await githubChecksForRef(currentHead);
   const required=checks.filter(check=>check.name==="validate"||/site editor validation/i.test(check.name));
   const pending=!required.length||required.some(check=>check.status!=="completed");
@@ -474,6 +538,131 @@ async function refreshDeployment(user:{id:string},request:any){
   return requestView(user.id,request.id);
 }
 
+async function replanAfterUnsafeRepair(
+  user:{id:string},
+  request:any,
+  failures:Array<{name:string;conclusion:string|null}>
+){
+  const currentMain=await githubBranchHead("main");
+  const combinedPrompt=`${request.prompt}\n\nAutomated validation failed. Prepare a revised proposal that addresses these failures without assuming the previous branch can be published:\n${JSON.stringify(failures)}`;
+  const files=await collectRelevantFiles(combinedPrompt,asObject(request.page_context),currentMain);
+  const modelPlan=await callPlanner(combinedPrompt,{...asObject(request.page_context),selected_element:asObject(request.selected_element)},files);
+  const validated=validateEditPlan(modelPlan,new Map(Object.entries(files)));
+
+  const cleared=await admin.from("site_edit_operations").delete().eq("request_id",request.id);
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const rows=validated.operations.map((op:any,index:number)=>({
+    request_id:request.id,
+    sequence:index,
+    operation_type:op.operation_type,
+    path:op.path,
+    expected_sha:op.expected_sha||null,
+    payload:op.payload||{},
+    diff_summary:op.diff_summary||"",
+    status:"pending"
+  }));
+  const saved=await admin.from("site_edit_operations").insert(rows);
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+  await admin.from("site_edit_previews").update({revoked_at:new Date().toISOString()}).eq("request_id",request.id).is("revoked_at",null);
+  const updated=await admin.from("site_edit_requests").update({
+    prompt:combinedPrompt,
+    summary:modelPlan.summary||request.summary,
+    risk_level:validated.risk_level,
+    status:"awaiting_plan_approval",
+    base_sha:currentMain,
+    branch_name:null,
+    head_sha:null,
+    pr_number:null,
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id);
+  if(updated.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"repair_requires_approval",{failures});
+  return requestView(user.id,request.id);
+}
+
+async function attemptRepair(
+  user:{id:string},
+  request:any,
+  currentHead:string,
+  failures:Array<{name:string;conclusion:string|null}>
+){
+  const countQuery=await admin.from("site_edit_events")
+    .select("id",{count:"exact",head:true})
+    .eq("request_id",request.id)
+    .eq("event_type","repair_attempt");
+  if(countQuery.error)throw new EditorError("editor_unavailable",500);
+  const repair_pass=countQuery.count||0;
+  if(repair_pass>=2){
+    const update=await admin.from("site_edit_requests").update({status:"failed",updated_at:new Date().toISOString()}).eq("id",request.id);
+    if(update.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"repair_exhausted",{repair_pass,failures});
+    return requestView(user.id,request.id);
+  }
+
+  await insertEvent(request.id,user.id,"repair_attempt",{repair_pass:repair_pass+1,head_sha:currentHead,failures});
+  const approvedOperations=await requestOperations(request.id);
+  const approvedPaths=new Set(approvedOperations.map((op:any)=>String(op.path)));
+  const tree=await githubTree(request.branch_name);
+  const candidatePaths=[
+    ...approvedPaths,
+    ...tree.filter(item=>item.type==="blob"&&/^tests\/.*\.test\.js$/.test(item.path)).map(item=>item.path)
+  ];
+  const uniquePaths=[...new Set(candidatePaths)].slice(0,40);
+  const files:Record<string,{sha:string;content:string}>={};
+  for(const path of uniquePaths){
+    try{
+      const file=await githubReadFile(path,request.branch_name);
+      files[path]={sha:file.sha,content:file.content.slice(0,90000)};
+    }catch{}
+  }
+  if(!Object.keys(files).length){
+    return replanAfterUnsafeRepair(user,request,failures);
+  }
+
+  let modelPlan;
+  try{
+    modelPlan=await callRepairPlanner(request,approvedOperations,files,failures);
+  }catch{
+    return replanAfterUnsafeRepair(user,request,failures);
+  }
+
+  let validated;
+  try{
+    validated=validateEditPlan(modelPlan,new Map(Object.entries(files)));
+  }catch{
+    return replanAfterUnsafeRepair(user,request,failures);
+  }
+
+  const broadened=validated.operations.some((op:any)=>!approvedPaths.has(op.path)&&!/^tests\/.*\.test\.js$/.test(op.path));
+  if(broadened||!riskAtMost(validated.risk_level,request.risk_level)){
+    return replanAfterUnsafeRepair(user,request,failures);
+  }
+
+  const fileMap=new Map<string,{sha:string;content:string}>();
+  for(const [path,file] of Object.entries(files))fileMap.set(path,file);
+  const writes=applyOperations(fileMap,validated.operations,request.id);
+  const commit=await githubCommitFiles(
+    request.branch_name,
+    currentHead,
+    `site-edit: bounded repair ${repair_pass+1} [req ${request.id.slice(0,8)}]`,
+    writesToArray(writes)
+  );
+  const update=await admin.from("site_edit_requests").update({
+    status:"testing",
+    head_sha:commit.commitSha,
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id);
+  if(update.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"repair_committed",{
+    repair_pass:repair_pass+1,
+    parent_head_sha:currentHead,
+    new_head_sha:commit.commitSha,
+    risk_level:validated.risk_level,
+    paths:validated.operations.map((op:any)=>op.path)
+  });
+  return requestView(user.id,request.id);
+}
+
 async function refreshStatus(user:{id:string},requestId:string){
   const request=await ownedRequest(user.id,requestId);
   if(request.status==="deploying")return refreshDeployment(user,request);
@@ -494,10 +683,10 @@ async function refreshStatus(user:{id:string},requestId:string){
 
   await storeValidationRuns(request.id,currentHead,validation.checks);
   if(validation.failed){
-    const update=await admin.from("site_edit_requests").update({status:"failed",updated_at:new Date().toISOString()}).eq("id",request.id);
-    if(update.error)throw new EditorError("editor_unavailable",500);
-    await insertEvent(request.id,user.id,"validation_status",{status:"failed",head_sha:currentHead});
-    return requestView(user.id,request.id);
+    const repairing=await admin.from("site_edit_requests").update({status:"repairing",updated_at:new Date().toISOString()}).eq("id",request.id);
+    if(repairing.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"validation_status",{status:"repairing",head_sha:currentHead,failures:validation.required.map(check=>({name:check.name,conclusion:check.conclusion}))});
+    return attemptRepair(user,{...request,status:"repairing"},currentHead,validation.required.map(check=>({name:check.name,conclusion:check.conclusion})));
   }
   if(!validation.green){
     if(request.status!=="testing"){
