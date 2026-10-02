@@ -105,6 +105,8 @@
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
   let lastAnnouncerLine='';
+  let cachedNaturalVoice=null;
+  let lastVoiceAt=0;
 
   const $=id=>document.getElementById(id);
 
@@ -378,45 +380,88 @@
 
   function encouragementFor(seconds){
     const tiers=[
-      {max:.65,level:5,rate:1.28,pitch:1.32,words:['LIGHTNING!','PERFECT!','UNBELIEVABLE!','LEGENDARY!']},
-      {max:1.0,level:4,rate:1.22,pitch:1.26,words:['INCREDIBLE!','PHENOMENAL!','BRILLIANT!','OUTSTANDING!']},
-      {max:1.55,level:3,rate:1.16,pitch:1.19,words:['AMAZING!','AWESOME!','FANTASTIC!','SUPERB!']},
-      {max:2.6,level:2,rate:1.1,pitch:1.12,words:['GREAT!','NICE!','EXCELLENT!','WELL DONE!']},
-      {max:99,level:1,rate:1.04,pitch:1.06,words:['GOOD!','KEEP GOING!','YOU GOT IT!','NICE ONE!']}
+      {max:.65,level:5,words:['Perfect!','That was lightning fast!','Unbelievable!','Legendary!']},
+      {max:1.0,level:4,words:['Incredible!','Brilliant!','That was sharp!','Outstanding!']},
+      {max:1.55,level:3,words:['Amazing!','Awesome!','Fantastic!','Superb!']},
+      {max:2.6,level:2,words:['Great!','Nice one!','Excellent!','Well done!']},
+      {max:99,level:1,words:['Good!','Keep going!','You got it!','Nice one!']}
     ];
     const tier=tiers.find(x=>seconds<=x.max)||tiers[tiers.length-1];
     const bonusLevel=streak>=10?1:0;
     const level=Math.min(5,tier.level+bonusLevel);
     const text=tier.words[Math.floor(Math.random()*tier.words.length)];
-    return {text,level,rate:tier.rate+(bonusLevel*.03),pitch:tier.pitch+(bonusLevel*.04)};
+    return {text,level};
+  }
+
+  function voiceScore(v){
+    const n=(v.name||'').toLowerCase();
+    const l=(v.lang||'').toLowerCase();
+    if(!/^en[-_]/i.test(v.lang||'')) return -1000;
+    let score=0;
+    if(/natural|neural|online/.test(n)) score+=120;
+    if(/aria|jenny|guy|ava|emma|andrew|brian|sonia|libby|ryan/.test(n)) score+=90;
+    if(/samantha|alex|daniel|karen|moira|google us english/.test(n)) score+=65;
+    if(v.localService) score+=18;
+    if(/^en-us/.test(l)) score+=12;
+    if(/compact|espeak|festival|david|zira|mark desktop/.test(n)) score-=65;
+    return score;
+  }
+
+  function prepareNaturalVoice(){
+    if(!('speechSynthesis' in window)) return null;
+    const voices=window.speechSynthesis.getVoices()||[];
+    if(!voices.length) return cachedNaturalVoice;
+    const english=voices.filter(v=>/^en[-_]/i.test(v.lang||''));
+    const pool=english.length?english:voices;
+    cachedNaturalVoice=[...pool].sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null;
+    return cachedNaturalVoice;
   }
 
   function excitingVoice(){
-    if(!('speechSynthesis' in window)) return null;
-    const voices=window.speechSynthesis.getVoices()||[];
-    const english=voices.filter(v=>/^en[-_]/i.test(v.lang||''));
-    const preferred=english.find(v=>/Google US English|Samantha|Alex|Aaron|Daniel|Karen|Moira/i.test(v.name||''));
-    return preferred||english[0]||voices[0]||null;
+    return cachedNaturalVoice||prepareNaturalVoice();
+  }
+
+  function speakNatural(text,kind='success',priority=false){
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
+    try{
+      const synth=window.speechSynthesis;
+      const now=Date.now();
+      if(!priority&&(synth.speaking||now-lastVoiceAt<430)) return;
+      if(priority&&synth.speaking) synth.cancel();
+
+      const clean=String(text||'').replace(/!{2,}/g,'!').replace(/\s+/g,' ').trim();
+      if(!clean) return;
+      const u=new SpeechSynthesisUtterance(clean);
+      const voice=excitingVoice();
+      if(voice){u.voice=voice;u.lang=voice.lang||'en-US'}
+      else u.lang='en-US';
+
+      u.rate=kind==='boss'?.96:kind==='win'?1.0:1.04;
+      u.pitch=1.0;
+      u.volume=.96;
+      lastVoiceAt=now;
+      synth.speak(u);
+    }catch(_){}
   }
 
   const ANNOUNCER_LINES={
-    start:['LET’S GO!','READY? GO!','GAME ON!','LET THE GAME BEGIN!'],
-    versusStart:['BATTLE START!','HEAD TO HEAD!','LET’S BATTLE!','READY, PLAYERS!'],
-    versusSuccess:['NICE HIT!','GREAT FIND!','QUICK EYES!','THAT’S IT!','AWESOME!'],
-    combo:['ON FIRE!','KEEP IT GOING!','UNSTOPPABLE!','WHAT A STREAK!'],
-    level:['LEVEL UP!','NEXT LEVEL!','YOU’RE MOVING UP!','KEEP CLIMBING!'],
-    boss:['BOSS ROUND!','BIG CHALLENGE!','HERE COMES THE BOSS!'],
-    bossWin:['BOSS DEFEATED!','YOU BEAT THE BOSS!','WHAT A WIN!'],
-    gold:['GOLDEN HIT!','JACKPOT!','BIG POINTS!'],
-    wrong:['STAY SHARP!','KEEP GOING!','YOU’VE GOT THIS!'],
-    win:['CHAMPION!','WHAT A BATTLE!','VICTORY!','AMAZING WIN!'],
-    finish:['GREAT GAME!','NICE WORK!','WHAT A RUN!']
+    start:["Let's go!","Ready? Go!","Game on!","Here we go!"],
+    versusStart:["Battle starts now!","Head to head. Let's go!","Players ready? Go!","Let's battle!"],
+    versusSuccess:["Nice one!","Great find!","That was quick!","You got it!","Great eyes!"],
+    combo:["You're on fire!","Keep it going!","What a streak!","You're unstoppable!"],
+    level:["Level up!","Next level. Nice work!","You're moving up!","Keep climbing!"],
+    boss:["Boss round!","Big challenge coming up!","Here comes the boss!"],
+    bossWin:["Boss defeated!","You beat the boss!","What a win!"],
+    gold:["Golden hit!","Jackpot!","Big points!"],
+    wrong:["Stay sharp!","Keep going!","You've got this!"],
+    win:["Champion!","What a battle!","Victory!","Amazing win!"],
+    finish:["Great game!","Nice work!","What a run!"]
   };
 
   function pickAnnouncerLine(kind,player){
     const pool=(ANNOUNCER_LINES[kind]||ANNOUNCER_LINES.start).map(line=>{
-      if(player===0) return 'PLAYER ONE! '+line;
-      if(player===1) return 'PLAYER TWO! '+line;
+      if(player===0) return 'Player one, '+line.charAt(0).toLowerCase()+line.slice(1);
+      if(player===1) return 'Player two, '+line.charAt(0).toLowerCase()+line.slice(1);
       return line;
     });
     const choices=pool.filter(x=>x!==lastAnnouncerLine);
@@ -468,14 +513,8 @@
     const text=pickAnnouncerLine(kind,player);
     playEventSound(kind);
     showAnnouncerText(text,kind);
-    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
-    try{
-      window.speechSynthesis.cancel();
-      const u=new SpeechSynthesisUtterance(text.replace(/!/g,''));
-      u.lang='en-US';u.rate=kind==='boss'?.92:1.12;u.pitch=kind==='win'||kind==='gold'?1.2:1.08;u.volume=1;
-      const voice=excitingVoice();if(voice)u.voice=voice;
-      window.speechSynthesis.speak(u);
-    }catch(_){}
+    const priority=['start','versusStart','level','boss','bossWin','gold','win','finish'].includes(kind);
+    speakNatural(text,kind,priority);
   }
 
   function playSuccessChime(level){
@@ -504,18 +543,7 @@
 
   function speakEncouragement(item){
     playSuccessChime(item.level);
-    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
-    try{
-      window.speechSynthesis.cancel();
-      const utterance=new SpeechSynthesisUtterance(item.text.replace(/!/g,''));
-      utterance.lang='en-US';
-      const voice=excitingVoice();
-      if(voice) utterance.voice=voice;
-      utterance.rate=item.rate;
-      utterance.pitch=item.pitch;
-      utterance.volume=1;
-      window.speechSynthesis.speak(utterance);
-    }catch(_){}
+    speakNatural(item.text,'success',false);
   }
 
   function sparkleBurst(level){
@@ -1672,6 +1700,11 @@
     document.addEventListener('keydown',handleVersusKeydown);
   }
 
+  if('speechSynthesis' in window){
+    prepareNaturalVoice();
+    window.speechSynthesis.addEventListener?.('voiceschanged',prepareNaturalVoice);
+    setTimeout(prepareNaturalVoice,250);
+  }
   deck=buildDeck();
   bindStaticControls();
   restoreMenuMarkup();
