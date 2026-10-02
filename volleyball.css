@@ -187,3 +187,146 @@
   .vb-feed-modes{margin-bottom:10px;padding-inline:1px}
   .vb-feed-modes button{min-height:36px;padding:6px 11px}
 }
+
+/* Soft colorful feed palette */
+.vb-standalone-app #volleyball-feed-section{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  padding-inline:0;
+}
+.vb-feed{
+  gap:16px;
+}
+.vb-feed-card{
+  --card-tint:#f1faf7;
+  --card-tint-2:#fbfefd;
+  --card-accent:#5b9f92;
+  --card-accent-soft:rgba(91,159,146,.13);
+  background:linear-gradient(145deg,var(--card-tint) 0%,var(--card-tint-2) 58%,#fff 100%);
+  border-color:var(--card-accent-soft);
+  box-shadow:0 10px 28px rgba(43,74,69,.075);
+}
+.vb-feed-card:before{
+  content:"";
+  display:block;
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:auto;
+  width:auto;
+  height:4px;
+  background:linear-gradient(90deg,var(--card-accent),color-mix(in srgb,var(--card-accent) 42%, white));
+}
+.vb-feed-card .vb-card-top{
+  background:color-mix(in srgb,var(--card-tint) 70%, white);
+  border-bottom-color:var(--card-accent-soft);
+}
+.vb-feed-card .vb-kind-icon{
+  background:color-mix(in srgb,var(--card-accent) 12%, white);
+  box-shadow:inset 0 0 0 1px var(--card-accent-soft);
+}
+.vb-feed-card .vb-kind{
+  background:color-mix(in srgb,var(--card-accent) 12%, white);
+  color:color-mix(in srgb,var(--card-accent) 72%, #203b37);
+}
+.vb-feed-card .vb-pop{
+  background:rgba(255,255,255,.62);
+}
+.vb-feed-card>.vb-tags .vb-term-chip{
+  background:rgba(255,255,255,.58);
+  border-color:var(--card-accent-soft);
+  color:color-mix(in srgb,var(--card-accent) 62%, #3b514d);
+}
+.vb-feed-card .vb-card-detail{
+  background:linear-gradient(135deg,color-mix(in srgb,var(--card-tint) 82%, white),rgba(255,255,255,.78));
+  border-color:var(--card-accent-soft);
+}
+.vb-feed-card .vb-card-detail span{
+  color:color-mix(in srgb,var(--card-accent) 78%, #244b46);
+}
+.vb-feed-card .vb-card-actions{
+  background:rgba(255,255,255,.52);
+  border-top-color:var(--card-accent-soft);
+}
+.vb-feed-card .vb-card-action{
+  border-inline-start-color:var(--card-accent-soft);
+}
+.vb-feed-card .vb-card-action:hover,
+.vb-feed-card .vb-card-action.active{
+  background:color-mix(in srgb,var(--card-accent) 10%, white);
+  color:color-mix(in srgb,var(--card-accent) 78%, #173f3c);
+}
+
+/* Each content type has its own quiet pastel identity */
+.vb-kind-concept{
+  --card-tint:#eef9f4;
+  --card-tint-2:#f9fdfb;
+  --card-accent:#4f9b83;
+  --card-accent-soft:rgba(79,155,131,.16);
+}
+.vb-kind-drill{
+  --card-tint:#fff2e7;
+  --card-tint-2:#fffaf5;
+  --card-accent:#d8814e;
+  --card-accent-soft:rgba(216,129,78,.17);
+}
+.vb-kind-scenario{
+  --card-tint:#f1f4ff;
+  --card-tint-2:#fafbff;
+  --card-accent:#7185c7;
+  --card-accent-soft:rgba(113,133,199,.16);
+}
+.vb-kind-research{
+  --card-tint:#edf6fc;
+  --card-tint-2:#f9fcfe;
+  --card-accent:#5b8fb4;
+  --card-accent-soft:rgba(91,143,180,.16);
+}
+.vb-kind-myth{
+  --card-tint:#fff0f1;
+  --card-tint-2:#fff9f9;
+  --card-accent:#c56f78;
+  --card-accent-soft:rgba(197,111,120,.16);
+}
+.vb-kind-question{
+  --card-tint:#f5effb;
+  --card-tint-2:#fcfaff;
+  --card-accent:#9273b5;
+  --card-accent-soft:rgba(146,115,181,.16);
+}
+.vb-kind-problem-solution{
+  --card-tint:#fff6df;
+  --card-tint-2:#fffdf7;
+  --card-accent:#c19748;
+  --card-accent-soft:rgba(193,151,72,.18);
+}
+
+/* Saved and practice states stay subtle, not neon */
+.vb-feed-card.is-saved{
+  box-shadow:0 10px 30px rgba(196,143,61,.10);
+}
+.vb-feed-card.is-practice{
+  outline:1px solid color-mix(in srgb,var(--card-accent) 18%, transparent);
+  outline-offset:2px;
+}
+
+/* Softer mode chips */
+.vb-feed-modes button{
+  background:rgba(255,255,255,.68);
+  backdrop-filter:blur(8px);
+}
+.vb-feed-modes button:nth-child(2){background:#fff7ea;color:#7b6240;border-color:#eddfc7}
+.vb-feed-modes button:nth-child(3){background:#edf8f4;color:#34675c;border-color:#d1e7df}
+.vb-feed-modes button.active{
+  background:#0b4946;
+  color:#fff;
+  border-color:#0b4946;
+}
+@media(max-width:650px){
+  .vb-feed{gap:13px}
+  .vb-feed-card{
+    box-shadow:0 7px 20px rgba(43,74,69,.065);
+  }
+}
