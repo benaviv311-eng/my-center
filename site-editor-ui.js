@@ -235,6 +235,7 @@ function requestCardMarkup(request){
   const previewable=['preview_ready','awaiting_publish_approval'].includes(request?.status);
   const publishable=['preview_ready','awaiting_publish_approval'].includes(request?.status);
   const cancellable=request?.status&&!TERMINAL_STATUSES.has(request.status)&&!['merging','deploying'].includes(request.status);
+  const rollbackable=request?.status==='deployed';
   const warning=request?.public_asset_warning?'<div class="site-edit-warning">⚠️ קובץ פרטי יהפוך לנכס ציבורי באתר רק לאחר אישור מפורש.</div>':'';
   const preview=request?.requires_preview?'<div class="site-edit-requirement">🔎 נדרש Preview לפני פרסום.</div>':'<div class="site-edit-requirement">✓ אפשר להמשיך ללא Preview חובה בשלב התכנון.</div>';
   const fileHtml=files.length?'<ul class="site-edit-files">'+files.map(path=>'<li>'+escapeHtml(path)+'</li>').join('')+'</ul>':'<div class="site-edit-files-empty">לא צוינו קבצים.</div>';
@@ -256,6 +257,7 @@ function requestCardMarkup(request){
       <button type="button" data-site-edit-action="create_preview" ${previewable?'':'disabled'}>פתח Preview</button>
       <button type="button" class="site-edit-publish" data-site-edit-action="approve_publish" ${publishable?'':'disabled'}>אשר פרסום</button>
       <button type="button" data-site-edit-action="cancel" ${cancellable?'':'disabled'}>בטל</button>
+      <button type="button" data-site-edit-action="create_rollback" ${rollbackable?'':'disabled'}>החזר שינוי</button>
     </div>
   </article>`;
 }
