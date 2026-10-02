@@ -430,7 +430,7 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
   border-radius:0!important;
   box-shadow:none!important;
   backdrop-filter:none!important;
-  pointer-events:none!important;
+  pointer-events:auto!important;
   z-index:120!important;
 }
 .vb-filter-menu-toggle{
