@@ -710,7 +710,7 @@ Deno.serve(async(req:Request)=>{
     if(action==='cancel'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       const request=await ownedRequest(user.id,id);
-      if(["deployed","rolled_back"].includes(request.status))throw new EditorError("bad_request",409);
+      if(["merging","deploying","deployed","rolled_back"].includes(request.status))throw new EditorError("bad_request",409);
       const q=await admin.from("site_edit_requests").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id).eq("user_id",user.id).select("*").single();
       if(q.error)throw new EditorError("editor_unavailable",500);
       await admin.from("site_edit_previews").update({revoked_at:new Date().toISOString()}).eq("request_id",id).is("revoked_at",null);
