@@ -450,17 +450,72 @@
   }
 
   const ANNOUNCER_LINES={
-    start:["Let's go!","Ready? Go!","Game on!","Here we go!"],
-    versusStart:["Battle starts now!","Head to head. Let's go!","Players ready? Go!","Let's battle!"],
-    versusSuccess:["Nice one!","Great find!","That was quick!","You got it!","Great eyes!"],
-    combo:["You're on fire!","Keep it going!","What a streak!","You're unstoppable!"],
-    level:["Level up!","Next level. Nice work!","You're moving up!","Keep climbing!"],
-    boss:["Boss round!","Big challenge coming up!","Here comes the boss!"],
-    bossWin:["Boss defeated!","You beat the boss!","What a win!"],
-    gold:["Golden hit!","Jackpot!","Big points!"],
-    wrong:["Stay sharp!","Keep going!","You've got this!"],
-    win:["Champion!","What a battle!","Victory!","Amazing win!"],
-    finish:["Great game!","Nice work!","What a run!"]
+    start:[
+      "Let's go!","Ready? Go!","Game on!","Here we go!","Eyes up!","Get ready!","Let's play!","Showtime!"
+    ],
+    versusStart:[
+      "Battle starts now!","Head to head. Let's go!","Players ready? Go!","Let's battle!",
+      "Face off!","Two players. One winner!","Ready for the duel?","Let the battle begin!"
+    ],
+    versusSuccess:[
+      "Nice one!","Great find!","That was quick!","You got it!","Great eyes!","Good hit!",
+      "Brilliant!","Excellent!","Beautiful!","That's it!","Sharp!","Lovely!"
+    ],
+    fast:[
+      "Lightning fast!","What speed!","Quick hands!","So fast!","Instant!","Sharp reaction!"
+    ],
+    streakSmall:[
+      "Keep it going!","Nice streak!","On a roll!","Again!","Keep moving!","Stay hot!"
+    ],
+    combo:[
+      "You're on fire!","Keep it going!","What a streak!","You're unstoppable!",
+      "What a run!","Still going!","No stopping you!","That's a combo!"
+    ],
+    rare:[
+      "Legendary!","Phenomenal!","Unreal!","Perfect!","Incredible run!"
+    ],
+    level:[
+      "Level up!","Next level. Nice work!","You're moving up!","Keep climbing!","New level!"
+    ],
+    boss:[
+      "Boss round!","Big challenge coming up!","Here comes the boss!","Boss incoming!"
+    ],
+    bossWin:[
+      "Boss defeated!","You beat the boss!","What a win!","Boss down!"
+    ],
+    gold:[
+      "Golden hit!","Jackpot!","Big points!","Gold!"
+    ],
+    wrong:[
+      "Stay sharp!","Keep going!","You've got this!","Almost!","So close!","Try again!"
+    ],
+    oneMore:[
+      "One more!","Just one more!","Finish it!"
+    ],
+    lead:[
+      "Takes the lead!","Now in front!","Moves ahead!"
+    ],
+    comeback:[
+      "What a comeback!","Back in the game!","Here comes the comeback!"
+    ],
+    record:[
+      "New record!","Personal best!","A new best!"
+    ],
+    win:[
+      "Champion!","What a battle!","Victory!","Amazing win!","What a finish!","Winner!"
+    ],
+    finish:[
+      "Great game!","Nice work!","What a run!"
+    ]
+  };
+
+  const ANNOUNCER_PACKS={
+    british:{label:'British',language:'en',accent:'British',character:'authoritative sports commentator',status:'ready'},
+    russian:{label:'Russian',language:'en',accent:'Russian',character:'deep, tough, dramatic',status:'planned'},
+    italian:{label:'Italian',language:'en',accent:'Italian',character:'fast, warm, highly excited',status:'planned'},
+    american:{label:'American Hype',language:'en',accent:'American',character:'high-energy arena announcer',status:'planned'},
+    japanese:{label:'Japanese',language:'en',accent:'Japanese',character:'precise, energetic, focused',status:'planned'},
+    arcade:{label:'Arcade',language:'en',accent:'stylised',character:'over-the-top game announcer',status:'planned'}
   };
 
   function pickAnnouncerLine(kind,player){
