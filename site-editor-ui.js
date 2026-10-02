@@ -260,6 +260,8 @@ function requestCardMarkup(request){
   }else if(status==='testing'||status==='deploying'){
     actions='<button type="button" data-site-edit-action="refresh_status">רענן סטטוס</button>'+
       (cancellable?'<button type="button" data-site-edit-action="cancel">בטל</button>':'');
+  }else if(status==='deployed'){
+    actions='<button type="button" data-site-edit-action="create_rollback">החזר שינוי</button>';
   }else if(canRevise){
     actions='<button type="button" data-site-edit-action="request_revision">בקש תיקון</button>'+
       (cancellable?'<button type="button" data-site-edit-action="cancel">בטל</button>':'');
