@@ -269,3 +269,7 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
   .vb-topic-dropdown{width:100%}
   .vb-topic-menu-toggle{min-height:42px}
 }
+
+.vb-side-bg-changing{opacity:.035!important}
+@media(max-width:820px){.vb-side-bg{width:24vw;opacity:.18}}
+@media(max-width:680px){.vb-side-bg{width:21vw;opacity:.15}}
