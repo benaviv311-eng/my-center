@@ -7,6 +7,7 @@ import {
   githubCommitFiles,
   githubCreateEditBranch,
   githubReadFile,
+  githubReadFileBase64,
   githubTree
 } from "../_shared/site-editor/github.ts";
 import { applyOperations, writesToArray } from "../_shared/site-editor/operations.ts";
@@ -17,6 +18,7 @@ const SUPABASE_ANON_KEY=Deno.env.get("SUPABASE_ANON_KEY")||"";
 const OPENAI_API_KEY=Deno.env.get("OPENAI_API_KEY")||"";
 const SITE_EDITOR_MODEL_STRONG=Deno.env.get("SITE_EDITOR_MODEL_STRONG")||"";
 const SITE_EDITOR_MODEL_FAST=Deno.env.get("SITE_EDITOR_MODEL_FAST")||"";
+const SITE_EDITOR_INTERNAL_SECRET=Deno.env.get("SITE_EDITOR_INTERNAL_SECRET")||"";
 const admin=serviceClient();
 
 function cors(req:Request){
@@ -377,6 +379,72 @@ async function refreshStatus(user:{id:string},requestId:string){
   return requestView(user.id,request.id);
 }
 
+function randomToken(){
+  const bytes=crypto.getRandomValues(new Uint8Array(32));
+  let binary="";
+  for(const byte of bytes)binary+=String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+
+async function sha256Hex(value:string){
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,"0")).join("");
+}
+
+async function createPreview(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(!["preview_ready","awaiting_publish_approval"].includes(request.status)){
+    throw new EditorError("bad_request",409,"preview_not_ready");
+  }
+  if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_has_no_branch");
+  const currentHead=await githubBranchHead(request.branch_name);
+  if(currentHead!==request.head_sha)throw new EditorError("stale_plan",409);
+
+  const token=randomToken();
+  const tokenHash=await sha256Hex(token);
+  const expiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
+  const revoked=await admin.from("site_edit_previews")
+    .update({revoked_at:new Date().toISOString()})
+    .eq("request_id",request.id)
+    .is("revoked_at",null);
+  if(revoked.error)throw new EditorError("editor_unavailable",500);
+  const inserted=await admin.from("site_edit_previews").insert({
+    request_id:request.id,
+    token_hash:tokenHash,
+    expires_at:expiresAt
+  });
+  if(inserted.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"preview_created",{head_sha:currentHead,expires_at:expiresAt});
+  const previewUrl=`${SUPABASE_URL}/functions/v1/site-preview/${token}/index.html`;
+  return {request:await requestView(user.id,request.id),preview_url:previewUrl,expires_at:expiresAt};
+}
+
+async function previewReadInternal(req:Request,b:Record<string,unknown>){
+  const supplied=req.headers.get("x-site-editor-internal-secret")||"";
+  if(!SITE_EDITOR_INTERNAL_SECRET||supplied!==SITE_EDITOR_INTERNAL_SECRET){
+    throw new EditorError("auth_required",401);
+  }
+  const requestId=text(b.request_id,80);
+  const path=text(b.path,800)||"index.html";
+  if(!requestId)throw new EditorError("bad_request",400);
+  assertSafePath(path);
+  if(path==="sw.js")throw new EditorError("bad_request",404,"preview_service_worker_blocked");
+
+  const q=await admin.from("site_edit_requests")
+    .select("id,branch_name,head_sha,status")
+    .eq("id",requestId)
+    .maybeSingle();
+  if(q.error)throw new EditorError("editor_unavailable",500);
+  if(!q.data||!["preview_ready","awaiting_publish_approval"].includes(q.data.status)){
+    throw new EditorError("bad_request",404,"preview_not_available");
+  }
+  if(!q.data.branch_name||!q.data.head_sha)throw new EditorError("bad_request",404,"preview_not_available");
+  const currentHead=await githubBranchHead(q.data.branch_name);
+  if(currentHead!==q.data.head_sha)throw new EditorError("stale_plan",409);
+  const file=await githubReadFileBase64(path,q.data.branch_name);
+  return {path:file.path,head_sha:currentHead,content_base64:file.contentBase64};
+}
+
 async function listRequests(userId:string){
   const requests=await admin.from("site_edit_requests")
     .select("*")
@@ -454,10 +522,15 @@ Deno.serve(async(req:Request)=>{
   if(req.method==="OPTIONS")return new Response("ok",{headers:cors(req)});
   if(req.method!=="POST")return out(req,{code:"bad_request",error:"Method not allowed"},405);
   try{
-    const user=await requireOwner(req);
     let b:Record<string,unknown>;
     try{b=await req.json()}catch{throw new EditorError("bad_request",400)}
     const action=String(b.action||"");
+
+    if(action==='preview_read'){
+      return out(req,{ok:true,...await previewReadInternal(req,b)});
+    }
+
+    const user=await requireOwner(req);
 
     if(action==='propose')return out(req,{ok:true,request:await propose(user,b)});
     if(action==='list_requests'){
@@ -475,6 +548,10 @@ Deno.serve(async(req:Request)=>{
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await refreshStatus(user,id)});
     }
+    if(action==='create_preview'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,...await createPreview(user,id)});
+    }
     if(action==='request_revision'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await requestRevision(user,id,text(b.instructions,8000))});
@@ -485,6 +562,7 @@ Deno.serve(async(req:Request)=>{
       if(["deployed","rolled_back"].includes(request.status))throw new EditorError("bad_request",409);
       const q=await admin.from("site_edit_requests").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id).eq("user_id",user.id).select("*").single();
       if(q.error)throw new EditorError("editor_unavailable",500);
+      await admin.from("site_edit_previews").update({revoked_at:new Date().toISOString()}).eq("request_id",id).is("revoked_at",null);
       await insertEvent(id,user.id,"cancelled",{});
       return out(req,{ok:true,request:q.data});
     }
