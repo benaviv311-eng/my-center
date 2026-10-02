@@ -13,7 +13,7 @@
   <link rel="icon" href="app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="app-icon-192.png">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="home-feed.css?v=1">
+  <link rel="stylesheet" href="home-feed.css?v=1">\n  <link rel="stylesheet" href="home-double.css?v=1">
 </head>
 <body>
 <div class="app home-feed-app">
@@ -38,6 +38,11 @@
       <span>בחר לאן להיכנס</span>
     </div>
     <div class="home-app-grid">
+      <a class="home-app-tile tile-double" href="double.html" style="background:linear-gradient(135deg,#eaf3ff,#fff4cb);border-color:#bad4ff">
+        <span class="home-app-icon" aria-hidden="true">🎴</span>
+        <span class="home-app-copy"><strong>DOUBLE</strong><small>קלפים, מהירות, שלבים ושני שחקנים</small></span>
+        <span class="home-app-arrow" aria-hidden="true">←</span>
+      </a>
       <a class="home-app-tile tile-raika" href="raika.html">
         <span class="home-app-icon" aria-hidden="true">⚡</span>
         <span class="home-app-copy"><strong>ראיקה</strong><small>העולם, הדמויות וחדר הכותבים</small></span>
@@ -145,6 +150,6 @@ document.addEventListener('click',event=>{
   document.querySelector(`[data-home-filter="${shortcut.dataset.homeFilterShortcut}"]`)?.click();
 });
 </script>
-<script src="mobile-app-shell.js?v=8"></script>
+<script src="mobile-app-shell.js?v=8"></script>\n<script src="home-double.js?v=1"></script>
 </body>
 </html>
