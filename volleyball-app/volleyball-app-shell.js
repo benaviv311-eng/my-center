@@ -3,6 +3,9 @@
   const installBtn=document.getElementById("vb-install-app");
   const populationTabs=document.getElementById("volleyball-population-tabs");
   const populationBadge=document.getElementById("volleyball-current-population-badge");
+  const populationMenuToggle=document.getElementById("volleyball-population-menu-toggle");
+  const populationMenu=document.getElementById("volleyball-population-menu");
+  const populationMenuCurrent=document.getElementById("volleyball-population-menu-current");
   const sideLeft=document.getElementById("vb-side-left");
   const sideRight=document.getElementById("vb-side-right");
 
@@ -123,18 +126,65 @@
   });
   window.addEventListener("appinstalled",()=>{if(installBtn) installBtn.hidden=true;});
 
+  const closePopulationMenu=()=>{
+    if(!populationMenu||!populationMenuToggle)return;
+    populationMenu.hidden=true;
+    populationMenuToggle.setAttribute("aria-expanded","false");
+  };
+  const buildPopulationMenu=()=>{
+    if(!populationTabs||!populationMenu)return;
+    const buttons=[...populationTabs.querySelectorAll("[data-population]")];
+    if(!buttons.length)return;
+    populationMenu.innerHTML=buttons.map(btn=>{
+      const icon=btn.querySelector("span")?.textContent?.trim()||"🏐";
+      const label=btn.textContent.trim().replace(icon,"").trim();
+      const active=btn.classList.contains("active");
+      return `<button type="button" role="menuitemradio" aria-checked="${active}" class="${active?"active":""}" data-population-menu="${btn.dataset.population}"><span>${icon}</span><b>${label}</b></button>`;
+    }).join("");
+  };
   const syncPopulationContext=()=>{
     const active=populationTabs?.querySelector(".vb-pop-tab.active");
     if(!active)return;
-    const label=active.textContent.trim().replace(/^🏐|^👦|^👧|^👩|^👨/,"").trim();
+    const icon=active.querySelector("span")?.textContent?.trim()||"🏐";
+    const label=active.textContent.trim().replace(icon,"").trim();
     if(populationBadge) populationBadge.textContent="עכשיו: "+label;
-    active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    if(populationMenuCurrent) populationMenuCurrent.textContent=icon+" "+label;
+    if(populationMenu){
+      populationMenu.querySelectorAll("[data-population-menu]").forEach(btn=>{
+        const selected=btn.dataset.populationMenu===active.dataset.population;
+        btn.classList.toggle("active",selected);
+        btn.setAttribute("aria-checked",String(selected));
+      });
+    }
   };
+  populationMenuToggle?.addEventListener("click",()=>{
+    if(!populationMenu)return;
+    const open=populationMenu.hidden;
+    populationMenu.hidden=!open;
+    populationMenuToggle.setAttribute("aria-expanded",String(open));
+  });
+  populationMenu?.addEventListener("click",event=>{
+    const choice=event.target.closest("[data-population-menu]");
+    if(!choice)return;
+    const controller=populationTabs?.querySelector(`[data-population="${choice.dataset.populationMenu}"]`);
+    controller?.click();
+    closePopulationMenu();
+  });
+  document.addEventListener("click",event=>{
+    if(populationMenu?.hidden)return;
+    if(event.target.closest(".vb-population-dropdown"))return;
+    closePopulationMenu();
+  });
+  document.addEventListener("keydown",event=>{if(event.key==="Escape")closePopulationMenu();});
   populationTabs?.addEventListener("click",()=>setTimeout(()=>{syncPopulationContext();setEliteSideBackgrounds();},0));
   if(populationTabs){
-    const popObserver=new MutationObserver(()=>{syncPopulationContext();setEliteSideBackgrounds();});
+    const popObserver=new MutationObserver(()=>{
+      buildPopulationMenu();
+      syncPopulationContext();
+      setEliteSideBackgrounds();
+    });
     popObserver.observe(populationTabs,{subtree:true,attributes:true,attributeFilter:["class","aria-pressed"],childList:true});
-    setTimeout(()=>{syncPopulationContext();setEliteSideBackgrounds();},0);
+    setTimeout(()=>{buildPopulationMenu();syncPopulationContext();setEliteSideBackgrounds();},0);
   }
 
   const buttons=[...document.querySelectorAll("[data-vb-jump]")];
