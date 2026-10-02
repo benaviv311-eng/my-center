@@ -1,0 +1,86 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const read=p=>fs.readFileSync(p,'utf8');
+
+test('migration checker blocks destructive one-step SQL',()=>{
+  const src=read('scripts/site-editor-migration-check.mjs');
+  for(const marker of ['DROP TABLE','DROP COLUMN','TRUNCATE','ALTER COLUMN','DELETE FROM']) assert.ok(src.includes(marker));
+  assert.match(src,/SET NOT NULL/);
+  assert.match(src,/unsafe_migration/);
+});
+
+test('migration paths are always high risk',()=>{
+  const policy=read('supabase/functions/_shared/site-editor/policy.ts');
+  assert.match(policy,/supabase\/migrations\//);
+  assert.match(policy,/high/);
+});
+
+
+test('supabase deployment is manual exact-sha and pinned',()=>{
+  const yml=read('.github/workflows/site-editor-supabase-deploy.yml');
+  assert.match(yml,/workflow_dispatch/);
+  for(const input of ['request_id','branch','head_sha']) assert.ok(yml.includes(input));
+  assert.match(yml,/supabase@2\.117\.0/);
+  assert.match(yml,/site-editor-migration-check\.mjs/);
+  assert.doesNotMatch(yml,/pull_request:/);
+  assert.doesNotMatch(yml,/push:/);
+});
+
+
+test('migration requests cannot merge before db deploy succeeds',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(fn,/site-editor-supabase-deploy\.yml/);
+  assert.match(fn,/db_deploy/);
+  assert.match(fn,/head_sha/);
+  assert.match(fn,/success/);
+  assert.match(fn,/githubMergePR/);
+  assert.match(gh,/githubDispatchWorkflow/);
+});
+
+
+test('rollback creates a new request and never force resets main',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  const ui=read('site-editor-ui.js');
+  assert.match(fn,/create_rollback/);
+  assert.match(fn,/undo_of_request_id/);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.match(ui,/החזר שינוי/);
+  assert.doesNotMatch(gh,/force\s*:\s*true/);
+});
+
+
+test('database rollback is compensating and never automatic reverse SQL',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  assert.match(fn,/compensating/i);
+  assert.match(fn,/risk_level\s*:\s*["']high["']/i);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.doesNotMatch(fn,/reverseSql|autoReverseMigration/);
+});
+
+test('normal site edit validation also screens migrations',()=>{
+  const yml=read('.github/workflows/site-editor-validation.yml');
+  assert.match(yml,/site-editor-migration-check\.mjs/);
+});
+
+
+test('approved Edge Function changes deploy only from the merged sha',()=>{
+  const yml=read('.github/workflows/site-editor-edge-functions-deploy.yml');
+  assert.match(yml,/workflow_dispatch/);
+  assert.match(yml,/merge_sha/);
+  assert.match(yml,/function_names/);
+  assert.match(yml,/supabase@2\.117\.0/);
+  assert.match(yml,/functions deploy/);
+  assert.doesNotMatch(yml,/push:/);
+  assert.doesNotMatch(yml,/pull_request:/);
+});
+
+test('site editor waits for required Edge Function deployments',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  assert.match(fn,/site-editor-edge-functions-deploy\.yml/);
+  assert.match(fn,/functions_deploy/);
+  assert.match(fn,/merge_commit_sha/);
+  assert.match(fn,/function_names/);
+});
