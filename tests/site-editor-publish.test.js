@@ -60,3 +60,14 @@ test('medium and high risk require second approval while low risk can auto publi
   assert.match(gh,/githubMergePR/);
   assert.match(gh,/githubPagesRunForSha/);
 });
+
+
+test('automatic repair is capped and cannot broaden risk silently',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const policy=read('supabase/functions/_shared/site-editor/policy.ts');
+  assert.match(fn,/repair_pass/);
+  assert.match(fn,/>=\s*2/);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.match(fn,/approvedPaths/);
+  assert.match(policy,/riskAtMost/);
+});
