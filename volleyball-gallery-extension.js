@@ -54,7 +54,15 @@ const EXTRA_PROFESSIONAL_WOMEN_GALLERY=[
   extraGalleryItem('April Ross','AVP Professional Beach Volleyball in Austin, Texas (2017-05-21) (35358759342).jpg','CC BY 2.0','Ralph Arvesen · Wikimedia Commons','כדורעף חופים — הנחתה'),
   extraGalleryItem('April Ross','AVP Professional Beach Volleyball in Austin, Texas (2017-05-19) (35340419471).jpg','CC BY 2.0','Ralph Arvesen · Wikimedia Commons','כדורעף חופים — הגשה'),
   extraGalleryItem('April Ross','April Ross at the AVP Austin Open 2017.jpg','CC BY 2.0','Ralph Arvesen · Wikimedia Commons','כדורעף חופים — רגע משחק'),
-  extraGalleryItem('April Ross','April Ross at the AVP Austin Open 2017 (2).jpg','CC BY 2.0','Ralph Arvesen · Wikimedia Commons','כדורעף חופים — זווית נוספת')
+  extraGalleryItem('April Ross','April Ross at the AVP Austin Open 2017 (2).jpg','CC BY 2.0','Ralph Arvesen · Wikimedia Commons','כדורעף חופים — זווית נוספת'),
+  extraGalleryItem('April Ross','2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0493 LR by Stepro.jpg','CC license on file','Wikimedia Commons','כדורעף חופים — זווית משחק נוספת'),
+  extraGalleryItem('April Ross','2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0513 LR by Stepro.jpg','CC license on file','Wikimedia Commons','כדורעף חופים — תנועה על החול'),
+  extraGalleryItem('April Ross','2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0514 LR by Stepro.jpg','CC license on file','Wikimedia Commons','כדורעף חופים — גוף מלא בתנועה'),
+  extraGalleryItem('April Ross','2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0520 LR by Stepro.jpg','CC license on file','Wikimedia Commons','כדורעף חופים — רגע משחק נוסף'),
+  extraGalleryItem('Ágatha Bednarczuk','Paf Open 2012 Ágatha Bednarczuk.jpg','CC BY 2.0','Wikimedia Commons','כדורעף חופים — צילום משחק מזווית אחורית'),
+  extraGalleryItem('Ágatha Bednarczuk','Paf Open 2012 Ágatha Bednarczuk (cropped).jpg','CC BY 2.0','Wikimedia Commons','כדורעף חופים — זווית אחורית קרובה יותר'),
+  extraGalleryItem('Ágatha Bednarczuk','Agatha Bednarczuk.jpg','CC BY-SA 4.0','Wikimedia Commons','כדורעף חופים — זווית נוספת של שחקנית עילית'),
+  extraGalleryItem('Kerri Walsh & Misty May-Treanor','After the Battle.jpg','Creative Commons / Wikimedia Commons','Wikimedia Commons','כדורעף חופים אולימפי — צילום גוף מלא מאחור')
 
 ];
 
