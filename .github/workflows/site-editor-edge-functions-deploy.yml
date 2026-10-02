@@ -1,0 +1,63 @@
+name: Site Editor Edge Functions Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Site Editor request id
+        required: true
+        type: string
+      merge_sha:
+        description: Exact merged commit SHA to deploy
+        required: true
+        type: string
+      function_names:
+        description: Comma-separated approved Edge Function names
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: iwemlxvjyhffumzcqrxf
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.merge_sha }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact merged SHA
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ inputs.merge_sha }}"
+      - name: Validate approved function names
+        id: names
+        env:
+          FUNCTION_NAMES: ${{ inputs.function_names }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra names <<< "$FUNCTION_NAMES"
+          test "${#names[@]}" -gt 0
+          for raw in "${names[@]}"; do
+            name="$(printf '%s' "$raw" | xargs)"
+            [[ "$name" =~ ^[A-Za-z0-9_-]+$ ]]
+            test "$name" != "_shared"
+            test -d "supabase/functions/$name"
+          done
+      - name: Deploy approved Edge Functions
+        env:
+          FUNCTION_NAMES: ${{ inputs.function_names }}
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra names <<< "$FUNCTION_NAMES"
+          for raw in "${names[@]}"; do
+            name="$(printf '%s' "$raw" | xargs)"
+            npx supabase@2.117.0 functions deploy "$name" --project-ref "$SUPABASE_PROJECT_REF"
+          done

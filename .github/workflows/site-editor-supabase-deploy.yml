@@ -1,0 +1,55 @@
+name: Site Editor Supabase Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      request_id:
+        description: Site Editor request id
+        required: true
+        type: string
+      branch:
+        description: Approved site-edit branch
+        required: true
+        type: string
+      head_sha:
+        description: Exact approved branch SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: iwemlxvjyhffumzcqrxf
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact approved SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ inputs.head_sha }}"
+      - name: Fetch main
+        run: git fetch origin main:refs/remotes/origin/main
+      - name: Validate additive migrations
+        run: node scripts/site-editor-migration-check.mjs
+      - name: Link Supabase project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx supabase@2.117.0 link --project-ref "$SUPABASE_PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
+      - name: Apply approved migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx supabase@2.117.0 db push --linked -p "$SUPABASE_DB_PASSWORD"
