@@ -398,12 +398,17 @@
     const l=(v.lang||'').toLowerCase();
     if(!/^en[-_]/i.test(v.lang||'')) return -1000;
     let score=0;
+    // Prefer a natural British English voice above every other English voice.
+    if(/^en-gb/.test(l)) score+=220;
+    if(/uk english|english united kingdom|british/.test(n)) score+=170;
+    if(/sonia|ryan|libby|daniel|george|serena|kate|malcolm/.test(n)) score+=125;
     if(/natural|neural|online/.test(n)) score+=120;
-    if(/aria|jenny|guy|ava|emma|andrew|brian|sonia|libby|ryan/.test(n)) score+=90;
-    if(/samantha|alex|daniel|karen|moira|google us english/.test(n)) score+=65;
+    if(/google uk english/.test(n)) score+=115;
+    if(/aria|jenny|guy|ava|emma|andrew|brian/.test(n)) score+=35;
     if(v.localService) score+=18;
-    if(/^en-us/.test(l)) score+=12;
-    if(/compact|espeak|festival|david|zira|mark desktop/.test(n)) score-=65;
+    if(/^en-us/.test(l)) score-=45;
+    if(/google us english|samantha|alex|karen|moira/.test(n)) score-=35;
+    if(/compact|espeak|festival|david|zira|mark desktop/.test(n)) score-=70;
     return score;
   }
 
@@ -433,8 +438,8 @@
       if(!clean) return;
       const u=new SpeechSynthesisUtterance(clean);
       const voice=excitingVoice();
-      if(voice){u.voice=voice;u.lang=voice.lang||'en-US'}
-      else u.lang='en-US';
+      if(voice){u.voice=voice;u.lang=voice.lang||'en-GB'}
+      else u.lang='en-GB';
 
       u.rate=kind==='boss'?.96:kind==='win'?1.0:1.04;
       u.pitch=1.0;
