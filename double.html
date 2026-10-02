@@ -79,6 +79,11 @@
     .game-flow-choice b{font-size:15px}.game-flow-choice small{display:block;font-size:10px;opacity:.7;margin-top:2px}
     .game-flow-choice .choice-copy{display:grid;text-align:right}
     .game-flow-back{margin-bottom:8px!important;background:#ffffff08!important;justify-content:flex-start!important;font-size:12px!important;min-height:42px!important}
+    .difficulty-flow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+    .difficulty-choice{min-height:58px!important;display:grid!important;place-items:center!important;gap:2px!important;padding:9px 8px!important}
+    .difficulty-choice b{font-size:14px}.difficulty-choice small{font-size:9px;opacity:.68;text-align:center}
+    .difficulty-choice.active{background:#ffd84d1c!important;border-color:#ffd84d!important;box-shadow:inset 0 0 0 1px #ffd84d55}
+    @media(max-width:520px){.difficulty-flow-grid{grid-template-columns:1fr}}
     .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s ease}
     .game-shell.open{opacity:1;visibility:visible}
     .game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}
@@ -144,6 +149,22 @@
               <span>👥</span>
               <span class="choice-copy"><b>שני שחקנים</b><small>קרבות ראש בראש</small></span>
               <span>←</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="drop-section" id="difficultySection">
+          <button class="game-flow-back" type="button" data-back-player-choice>← חזרה לבחירת שחקנים</button>
+          <div class="drop-title">בחר רמת קושי</div>
+          <div class="difficulty-flow-grid">
+            <button class="difficulty-choice" type="button" data-difficulty-choice="easy">
+              <b>🌱 קל</b><small>יותר זמן וקצב רגוע</small>
+            </button>
+            <button class="difficulty-choice" type="button" data-difficulty-choice="normal">
+              <b>⚡ בינוני</b><small>הקצב הרגיל</small>
+            </button>
+            <button class="difficulty-choice" type="button" data-difficulty-choice="hard">
+              <b>🔥 קשה</b><small>פחות זמן וקצב מהיר</small>
             </button>
           </div>
         </div>
@@ -263,6 +284,7 @@
       
       const dropdown=document.getElementById('dropdown'),overlay=document.getElementById('overlay');
       const playerCountSection=document.getElementById('playerCountSection');
+      const difficultySection=document.getElementById('difficultySection');
       const onePlayerSection=document.getElementById('onePlayerSection');
       const twoPlayerSection=document.getElementById('twoPlayerSection');
       const voicesSection=document.getElementById('voicesSection');
@@ -270,6 +292,8 @@
       const gameShell=document.getElementById('gameShell');
       const gameFrame=document.getElementById('gameFrame');
       const VOICE_KEY='double-announcer-pack-v1';
+      const DIFF_KEY='double-difficulty-v1';
+      let pendingPlayers=null;
 
       const openMenu=()=>{dropdown.classList.add('open');overlay.classList.add('open');dropdown.setAttribute('aria-hidden','false')};
       const closeMenu=()=>{
@@ -277,6 +301,7 @@
         overlay.classList.remove('open');
         dropdown.setAttribute('aria-hidden','true');
         playerCountSection?.classList.remove('open');
+        difficultySection?.classList.remove('open');
         onePlayerSection?.classList.remove('open');
         twoPlayerSection?.classList.remove('open');
         voicesSection?.classList.remove('open');
@@ -287,6 +312,12 @@
         let selected='british';
         try{selected=localStorage.getItem(VOICE_KEY)||'british'}catch(_){}
         document.querySelectorAll('[data-voice]').forEach(b=>b.classList.toggle('active',b.dataset.voice===selected));
+      }
+
+      function updateDifficultyButtons(){
+        let selected='normal';
+        try{selected=localStorage.getItem(DIFF_KEY)||'normal'}catch(_){}
+        document.querySelectorAll('[data-difficulty-choice]').forEach(b=>b.classList.toggle('active',b.dataset.difficultyChoice===selected));
       }
 
       function launchGame(target,opts={}){
@@ -312,6 +343,7 @@
       overlay.onclick=closeMenu;
       const closeGameSections=()=>{
         playerCountSection.classList.remove('open');
+        difficultySection.classList.remove('open');
         onePlayerSection.classList.remove('open');
         twoPlayerSection.classList.remove('open');
         gamesToggle.classList.remove('open');
@@ -326,15 +358,31 @@
         }
       };
       document.querySelectorAll('[data-choose-player-count]').forEach(b=>b.addEventListener('click',()=>{
+        pendingPlayers=b.dataset.choosePlayerCount;
         playerCountSection.classList.remove('open');
-        if(b.dataset.choosePlayerCount==='1') onePlayerSection.classList.add('open');
-        else twoPlayerSection.classList.add('open');
+        onePlayerSection.classList.remove('open');
+        twoPlayerSection.classList.remove('open');
+        difficultySection.classList.add('open');
+        updateDifficultyButtons();
         gamesToggle.classList.add('open');
       }));
       document.querySelectorAll('[data-back-player-count]').forEach(b=>b.addEventListener('click',()=>{
         onePlayerSection.classList.remove('open');
         twoPlayerSection.classList.remove('open');
+        difficultySection.classList.add('open');
+        gamesToggle.classList.add('open');
+      }));
+      document.querySelector('[data-back-player-choice]').addEventListener('click',()=>{
+        difficultySection.classList.remove('open');
         playerCountSection.classList.add('open');
+        gamesToggle.classList.add('open');
+      });
+      document.querySelectorAll('[data-difficulty-choice]').forEach(b=>b.addEventListener('click',()=>{
+        try{localStorage.setItem(DIFF_KEY,b.dataset.difficultyChoice)}catch(_){}
+        updateDifficultyButtons();
+        difficultySection.classList.remove('open');
+        if(pendingPlayers==='1') onePlayerSection.classList.add('open');
+        else twoPlayerSection.classList.add('open');
         gamesToggle.classList.add('open');
       }));
       document.querySelector('[data-toggle-voices]').onclick=()=>{
@@ -355,6 +403,7 @@
         updateVoiceButtons();
       }));
       updateVoiceButtons();
+      updateDifficultyButtons();
       document.getElementById('gameShellClose').onclick=closeGame;
       document.getElementById('howBtn').onclick=()=>{closeMenu();const h=document.getElementById('how');h.classList.add('show');setTimeout(()=>h.classList.remove('show'),3500)};
       document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(gameShell.classList.contains('open'))closeGame();else closeMenu()}});
