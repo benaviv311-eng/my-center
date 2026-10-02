@@ -3,11 +3,12 @@
   const installBtn=document.getElementById("vb-install-app");
   const populationTabs=document.getElementById("volleyball-population-tabs");
   const populationBadge=document.getElementById("volleyball-current-population-badge");
-  const populationMenuToggle=document.getElementById("volleyball-population-menu-toggle");
+  const filterMenuToggle=document.getElementById("volleyball-filter-menu-toggle");
+  const filterMenu=document.getElementById("volleyball-filter-menu");
+  const filterMenuClose=document.getElementById("volleyball-filter-menu-close");
   const populationMenu=document.getElementById("volleyball-population-menu");
   const populationMenuCurrent=document.getElementById("volleyball-population-menu-current");
   const topicPanel=document.getElementById("volleyball-population-topics");
-  const topicMenuToggle=document.getElementById("volleyball-topic-menu-toggle");
   const topicMenu=document.getElementById("volleyball-topic-menu");
   const topicMenuCurrent=document.getElementById("volleyball-topic-menu-current");
   const sideLeft=document.getElementById("vb-side-left");
@@ -171,11 +172,6 @@
   });
   window.addEventListener("appinstalled",()=>{if(installBtn) installBtn.hidden=true;});
 
-  const closeTopicMenu=()=>{
-    if(!topicMenu||!topicMenuToggle)return;
-    topicMenu.hidden=true;
-    topicMenuToggle.setAttribute("aria-expanded","false");
-  };
   const buildTopicMenu=()=>{
     if(!topicPanel||!topicMenu)return;
     const buttons=[...topicPanel.querySelectorAll("[data-topic]")];
@@ -199,18 +195,12 @@
       btn.setAttribute("aria-checked",String(selected));
     });
   };
-  topicMenuToggle?.addEventListener("click",()=>{
-    if(!topicMenu)return;
-    const open=topicMenu.hidden;
-    topicMenu.hidden=!open;
-    topicMenuToggle.setAttribute("aria-expanded",String(open));
-  });
   topicMenu?.addEventListener("click",event=>{
     const choice=event.target.closest("[data-topic-menu]");
     if(!choice)return;
     const controller=topicPanel?.querySelector(`[data-topic="${choice.dataset.topicMenu}"]`);
     controller?.click();
-    closeTopicMenu();
+    closeFilterMenu();
   });
   if(topicPanel){
     const topicObserver=new MutationObserver(()=>{buildTopicMenu();syncTopicContext();});
@@ -218,11 +208,22 @@
     setTimeout(()=>{buildTopicMenu();syncTopicContext();},0);
   }
 
-  const closePopulationMenu=()=>{
-    if(!populationMenu||!populationMenuToggle)return;
-    populationMenu.hidden=true;
-    populationMenuToggle.setAttribute("aria-expanded","false");
+  const closeFilterMenu=()=>{
+    if(!filterMenu||!filterMenuToggle)return;
+    filterMenu.hidden=true;
+    filterMenuToggle.setAttribute("aria-expanded","false");
   };
+  const toggleFilterMenu=()=>{
+    if(!filterMenu||!filterMenuToggle)return;
+    const open=filterMenu.hidden;
+    filterMenu.hidden=!open;
+    filterMenuToggle.setAttribute("aria-expanded",String(open));
+  };
+  filterMenuToggle?.addEventListener("click",event=>{
+    event.stopPropagation();
+    toggleFilterMenu();
+  });
+  filterMenuClose?.addEventListener("click",closeFilterMenu);
   const buildPopulationMenu=()=>{
     if(!populationTabs||!populationMenu)return;
     const buttons=[...populationTabs.querySelectorAll("[data-population]")];
@@ -249,31 +250,20 @@
       });
     }
   };
-  populationMenuToggle?.addEventListener("click",()=>{
-    if(!populationMenu)return;
-    const open=populationMenu.hidden;
-    populationMenu.hidden=!open;
-    populationMenuToggle.setAttribute("aria-expanded",String(open));
-  });
   populationMenu?.addEventListener("click",event=>{
     const choice=event.target.closest("[data-population-menu]");
     if(!choice)return;
     const controller=populationTabs?.querySelector(`[data-population="${choice.dataset.populationMenu}"]`);
     controller?.click();
-    closePopulationMenu();
+    closeFilterMenu();
   });
   document.addEventListener("click",event=>{
-    if(populationMenu?.hidden)return;
-    if(event.target.closest(".vb-population-dropdown"))return;
-    closePopulationMenu();
-  });
-  document.addEventListener("click",event=>{
-    if(topicMenu?.hidden)return;
-    if(event.target.closest(".vb-topic-dropdown"))return;
-    closeTopicMenu();
+    if(filterMenu?.hidden)return;
+    if(event.target.closest(".vb-filter-menu-shell"))return;
+    closeFilterMenu();
   });
   document.addEventListener("keydown",event=>{
-    if(event.key==="Escape"){closePopulationMenu();closeTopicMenu();}
+    if(event.key==="Escape")closeFilterMenu();
   });
   populationTabs?.addEventListener("click",()=>setTimeout(()=>{backgroundRotationTick++;syncPopulationContext();setEliteSideBackgrounds();},0));
   if(populationTabs){
