@@ -236,24 +236,8 @@
         closeMenu();
         gameShell.classList.add('open');
         gameShell.setAttribute('aria-hidden','false');
-        gameFrame.src='double-game.html?v=2';
-        gameFrame.onload=()=>{
-          if(!target) return;
-          setTimeout(()=>{
-            try{
-              const d=gameFrame.contentDocument;
-              const selectors={
-                classic:'[data-mode="classic"]',
-                knockout:'[data-mode="knockout"]',
-                survival:'[data-mode="survival"]',
-                levels:'[data-open-levels]',
-                sprint:'[data-open-sprint]',
-                versus:'[data-open-versus]'
-              };
-              d?.querySelector(selectors[target])?.click();
-            }catch(_){}
-          },120);
-        };
+        gameFrame.src='double-game.html?v=3'+(target?'&launch='+encodeURIComponent(target):'');
+        gameFrame.onload=()=>{};
       }
 
       function closeGame(){
@@ -265,7 +249,7 @@
       document.getElementById('menuBtn').onclick=openMenu;
       document.getElementById('closeBtn').onclick=closeMenu;
       overlay.onclick=closeMenu;
-      document.querySelectorAll('[data-open-game]').forEach(b=>b.addEventListener('click',()=>launchGame(null)));
+      document.querySelectorAll('[data-open-game]').forEach(b=>b.addEventListener('click',()=>launchGame('classic')));
       document.querySelector('[data-toggle-modes]').onclick=()=>{modesSection.classList.toggle('open');voicesSection.classList.remove('open')};
       document.querySelector('[data-toggle-voices]').onclick=()=>{voicesSection.classList.toggle('open');modesSection.classList.remove('open')};
       document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>launchGame(b.dataset.launchMode)));
