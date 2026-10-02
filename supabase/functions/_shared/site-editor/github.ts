@@ -155,6 +155,19 @@ export async function githubReadFile(path:string,ref:string):Promise<{path:strin
   return {path:data.path,sha:data.sha,content:decodeBase64Utf8(data.content)};
 }
 
+export async function githubReadFileBase64(path:string,ref:string):Promise<{path:string;sha:string;contentBase64:string}>{
+  const encoded=path.split("/").map(encodeURIComponent).join("/");
+  const data=await githubRequest(repoPath(`/contents/${encoded}?ref=${encodeURIComponent(ref)}`));
+  if(!data||Array.isArray(data)||data.type!=="file"||typeof data.sha!=="string")throw new EditorError("github_unavailable",503);
+  let content=typeof data.content==="string"?data.content.replace(/\s+/g,""):"";
+  if(!content){
+    const blob=await githubRequest(repoPath(`/git/blobs/${encodeURIComponent(data.sha)}`));
+    if(typeof blob?.content!=="string")throw new EditorError("github_unavailable",503);
+    content=blob.content.replace(/\s+/g,"");
+  }
+  return {path:data.path,sha:data.sha,contentBase64:content};
+}
+
 export async function githubTree(ref:string):Promise<Array<{path:string;type:string;sha:string}>>{
   const data=await githubRequest(repoPath(`/git/trees/${encodeURIComponent(ref)}?recursive=1`));
   return (data?.tree||[]).filter((x:any)=>typeof x.path==="string"&&typeof x.sha==="string").map((x:any)=>({path:x.path,type:x.type,sha:x.sha}));
