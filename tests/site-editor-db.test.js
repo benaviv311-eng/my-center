@@ -38,3 +38,15 @@ test('migration requests cannot merge before db deploy succeeds',()=>{
   assert.match(fn,/githubMergePR/);
   assert.match(gh,/githubDispatchWorkflow/);
 });
+
+
+test('rollback creates a new request and never force resets main',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  const ui=read('site-editor-ui.js');
+  assert.match(fn,/create_rollback/);
+  assert.match(fn,/undo_of_request_id/);
+  assert.match(fn,/awaiting_plan_approval/);
+  assert.match(ui,/החזר שינוי/);
+  assert.doesNotMatch(gh,/force\s*:\s*true/);
+});
