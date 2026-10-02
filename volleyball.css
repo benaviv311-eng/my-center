@@ -138,3 +138,52 @@
   .vb-feed-card>.vb-tags{padding:0 13px 11px}
   .vb-card-action{min-height:46px}
 }
+
+/* Personal feed modes */
+.vb-feed-modes{
+  display:flex;
+  gap:7px;
+  margin:0 auto 12px;
+  max-width:760px;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.vb-feed-modes::-webkit-scrollbar{display:none}
+.vb-feed-modes button{
+  flex:0 0 auto;
+  min-height:38px;
+  border:1px solid rgba(33,76,71,.11);
+  border-radius:999px;
+  padding:7px 12px;
+  background:#fff;
+  color:#55706c;
+  font:inherit;
+  font-size:10.5px;
+  font-weight:800;
+  cursor:pointer;
+  transition:background .16s ease,color .16s ease,transform .12s ease;
+}
+.vb-feed-modes button:hover{background:#eef8f6;color:#0b4946}
+.vb-feed-modes button:active{transform:scale(.97)}
+.vb-feed-modes button.active{
+  background:#0b4946;
+  border-color:#0b4946;
+  color:#fff;
+  box-shadow:0 5px 14px rgba(11,73,70,.16)
+}
+.vb-feed-modes button span{
+  display:inline-grid;
+  place-items:center;
+  min-width:19px;
+  height:19px;
+  margin-inline-start:4px;
+  padding:0 4px;
+  border-radius:999px;
+  background:rgba(11,73,70,.08);
+  font-size:9px;
+}
+.vb-feed-modes button.active span{background:rgba(255,255,255,.17)}
+@media(max-width:650px){
+  .vb-feed-modes{margin-bottom:10px;padding-inline:1px}
+  .vb-feed-modes button{min-height:36px;padding:6px 11px}
+}
