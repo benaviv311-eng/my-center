@@ -246,3 +246,66 @@ export async function githubCommitFiles(
   });
   return {commitSha:commit.sha};
 }
+
+
+export async function githubCreateOrUpdatePR(
+  branch:string,
+  title:string,
+  body:string,
+  base="main"
+):Promise<{number:number;url:string|null}>{
+  const headQuery=encodeURIComponent(`${GITHUB_REPO_OWNER}:${branch}`);
+  const existing=await githubRequest(repoPath(`/pulls?state=open&head=${headQuery}&base=${encodeURIComponent(base)}&per_page=10`));
+  const current=Array.isArray(existing)?existing[0]:null;
+  if(current?.number){
+    const updated=await githubRequest(repoPath(`/pulls/${current.number}`),{
+      method:"PATCH",
+      body:JSON.stringify({title,body})
+    });
+    return {number:Number(updated.number),url:typeof updated.html_url==="string"?updated.html_url:null};
+  }
+  const created=await githubRequest(repoPath("/pulls"),{
+    method:"POST",
+    body:JSON.stringify({title,head:branch,base,body,maintainer_can_modify:false})
+  });
+  if(!created?.number)throw new EditorError("github_unavailable",503);
+  return {number:Number(created.number),url:typeof created.html_url==="string"?created.html_url:null};
+}
+
+export async function githubMergePR(
+  prNumber:number,
+  expectedHeadSha:string
+):Promise<{merged:boolean;mergeCommitSha:string}>{
+  const data=await githubRequest(repoPath(`/pulls/${prNumber}/merge`),{
+    method:"PUT",
+    body:JSON.stringify({sha:expectedHeadSha,merge_method:"squash"})
+  });
+  if(data?.merged!==true||typeof data?.sha!=="string")throw new EditorError("stale_plan",409);
+  return {merged:true,mergeCommitSha:data.sha};
+}
+
+export type GithubPagesRun={
+  id:string;
+  status:string;
+  conclusion:string|null;
+  url:string|null;
+  name:string;
+};
+
+export async function githubPagesRunForSha(sha:string):Promise<GithubPagesRun|null>{
+  const data=await githubRequest(repoPath(`/actions/runs?head_sha=${encodeURIComponent(sha)}&per_page=100`));
+  const runs=(data?.workflow_runs||[]).filter((run:any)=>{
+    const name=String(run?.name||"").toLowerCase();
+    return run?.head_sha===sha&&(name==="pages build and deployment"||name.includes("pages"));
+  });
+  runs.sort((a:any,b:any)=>Date.parse(b?.created_at||"")-Date.parse(a?.created_at||""));
+  const run=runs[0];
+  if(!run)return null;
+  return {
+    id:String(run.id),
+    status:String(run.status||"unknown"),
+    conclusion:typeof run.conclusion==="string"?run.conclusion:null,
+    url:typeof run.html_url==="string"?run.html_url:null,
+    name:String(run.name||"pages build and deployment")
+  };
+}
