@@ -124,12 +124,29 @@
   };
   const visualSessionSeed=Math.floor(Date.now()/1000);
   let backgroundRotationTick=0;
+  const dynamicWomenAthletes=()=>{
+    const gallery=Array.isArray(window.PROFESSIONAL_WOMEN_GALLERY)?window.PROFESSIONAL_WOMEN_GALLERY:[];
+    const groups=new Map();
+    gallery.forEach(image=>{
+      if(!image?.imageUrl||!image?.playerName)return;
+      if(!groups.has(image.playerName))groups.set(image.playerName,[]);
+      groups.get(image.playerName).push(image.imageUrl);
+    });
+    return [...groups.entries()]
+      .filter(([,poses])=>poses.length>=2)
+      .map(([player,poses])=>({
+        player,
+        kind:/April Ross|Laura Ludwig|Kira Walkenhorst|Ágatha|Kerri Walsh|Misty May/i.test(player)?'beach':'indoor',
+        poses:[...new Set(poses)]
+      }));
+  };
   const setEliteSideBackgrounds=()=>{
     if(!sideLeft||!sideRight)return;
     const active=populationTabs?.querySelector('.vb-pop-tab.active');
     const key=populationKeyFromLabel(active?.textContent||'');
     const gallery=VB_ELITE_SIDE_GALLERIES[key]||VB_ELITE_SIDE_GALLERIES.all;
-    const athletes=gallery.athletes||[];
+    const dynamicPool=['women','youth-girls','elementary','all'].includes(key)?dynamicWomenAthletes():[];
+    const athletes=dynamicPool.length?dynamicPool:(gallery.athletes||[]);
     if(!athletes.length)return;
     const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7)+visualSessionSeed+backgroundRotationTick;
     const athlete=athletes[seed%athletes.length];
@@ -292,6 +309,10 @@
   window.setInterval(()=>{
     if(!document.hidden)rotateEliteBackgrounds();
   },12000);
+  window.addEventListener('volleyball:gallery-expanded',()=>{
+    backgroundRotationTick++;
+    setEliteSideBackgrounds();
+  });
   document.addEventListener("visibilitychange",()=>{
     if(!document.hidden)rotateEliteBackgrounds();
   });
