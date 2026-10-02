@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · בלי משימות</div></div><a class="back" href="index.html">← חזרה למרכז</a></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית</div></div><a class="back" href="index.html">← חזרה למרכז</a></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -54,7 +54,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים. עוברים רק דרך דלתות ומדרגות בתוך העולם.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.</div></div>
     </aside>
   </div>
 </main>
@@ -82,6 +82,21 @@ const scenes={
  roof:{name:'גג',floor:4,bg:'#d7c98e',spawn:{x:530,y:475},rooms:[{name:'מרפסת גג',x:0,y:0,w:650,h:600},{name:'פינת עציצים',x:650,y:0,w:310,h:600}],exits:[{x:475,y:415,w:110,h:140,to:'floor2',spawn:{x:550,y:470},label:'לרדת לקומה השנייה'}]}
 };
 
+const artSources={
+  ground:'https://drive.google.com/thumbnail?id=1-9qX94rw9_PPm2iTfydwnvUKlEOcWR86&sz=w1600',
+  yard:'https://drive.google.com/thumbnail?id=1NSyXzmWMNfsGV9hmQJqbjGXkzlgL8VII&sz=w1600',
+  basement:'https://drive.google.com/thumbnail?id=1h_VFxQqBbK92ZEZTT9XtFtaV3iP0jrJ4&sz=w1600',
+  floor1:'https://drive.google.com/thumbnail?id=1m1QCGa72NLbbJM2MZjFVc8_jzVmQYdfA&sz=w1600',
+  floor2:'https://drive.google.com/thumbnail?id=1ZyMdXQGiOnu7EvmYaZ4nXwiBek3MCI-e&sz=w1600',
+  roof:'https://drive.google.com/thumbnail?id=1yI7J5qXkz6JSZfelzTmGPdAuiwpRcAvS&sz=w1600'
+};
+const art={};
+Object.entries(artSources).forEach(([k,src])=>{
+  const img=new Image();
+  img.referrerPolicy='no-referrer';
+  img.src=src;
+  art[k]=img;
+});
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
 const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 const items={
@@ -167,7 +182,19 @@ function libi(){
  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,19,17,7,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle='#f49bb0';ctx.fillRect(-11,-2,22,21);ctx.fillStyle='#efc1a1';ctx.beginPath();ctx.arc(0,-16,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4b342f';ctx.beginPath();ctx.arc(0,-21,14,Math.PI,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(10,-27,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-4,-17,3,3);ctx.fillRect(3,-17,3,3);ctx.fillStyle='#473538';ctx.fillRect(-3,-16,2,2);ctx.fillRect(4,-16,2,2);ctx.restore()
 }
-function draw(){drawBase(player.scene);furniture(player.scene);exits();pickups();libi()}
+function draw(){
+ const img=art[player.scene];
+ if(img&&img.complete&&img.naturalWidth){
+   ctx.drawImage(img,0,0,W,H);
+   const g=ctx.createLinearGradient(0,0,0,H);
+   g.addColorStop(0,'rgba(20,16,20,.03)');
+   g.addColorStop(1,'rgba(20,16,20,.12)');
+   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ }else{
+   drawBase(player.scene);furniture(player.scene);
+ }
+ exits();pickups();libi();
+}
 function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
