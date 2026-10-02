@@ -78,3 +78,9 @@ test('site changes view restores request history and active progress',()=>{
   assert.match(css,/@media\(max-width:620px\)/);
   assert.match(css,/min-height:44px/);
 });
+
+
+test('publish-ready change cards expose preview and publish actions',()=>{
+  const js=read('site-editor-ui.js');
+  for(const marker of ['פתח Preview','פרסם באתר','approve_publish','create_preview','refresh_status']) assert.ok(js.includes(marker));
+});
