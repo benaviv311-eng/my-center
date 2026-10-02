@@ -75,3 +75,10 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
 @media(max-width:1100px){.vb-side-bg{width:min(25vw,250px);opacity:.22}}
 @media(max-width:820px){.vb-side-bg{width:22vw;opacity:.15}}
 @media(max-width:680px){.vb-side-bg{width:18vw;opacity:.11}}
+
+/* Facebook-style feed */
+.vb-standalone-app #volleyball-feed-section{max-width:820px;margin-inline:auto}
+.vb-standalone-app .vb-feed{grid-template-columns:minmax(0,1fr)!important;max-width:760px;margin-inline:auto;gap:14px}
+.vb-standalone-app .vb-feed-card{width:100%;box-sizing:border-box}
+.vb-standalone-app .vb-pro-photo-inline{max-width:760px;margin:0 auto}
+.vb-pro-rail{display:none!important}
