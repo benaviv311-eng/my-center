@@ -190,3 +190,82 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
   margin-inline:auto;
   width:100%;
 }
+
+/* Sticky topic dropdown */
+.vb-standalone-app #volleyball-topic-shell.vb-topic-dropdown-shell{
+  position:sticky;
+  top:128px;
+  z-index:76;
+  display:block;
+  padding:6px 7px;
+  background:rgba(238,248,247,.92);
+  border:1px solid rgba(11,73,70,.10);
+  border-radius:14px;
+  box-shadow:0 6px 18px rgba(11,73,70,.08);
+  backdrop-filter:blur(16px);
+}
+.vb-topic-dropdown{position:relative;width:min(100%,360px);margin-inline:auto}
+.vb-topic-menu-toggle{
+  width:100%;
+  min-height:44px;
+  border:1px solid rgba(11,73,70,.12);
+  border-radius:12px;
+  padding:6px 11px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:rgba(255,255,255,.94);
+  color:#173f3c;
+  font:inherit;
+  cursor:pointer;
+}
+.vb-topic-menu-label{display:flex;align-items:center;gap:8px;min-width:0}
+.vb-topic-menu-label small{font-size:8.5px;color:#7a8885;font-weight:700;white-space:nowrap}
+.vb-topic-menu-label strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vb-topic-menu-chevron{font-size:19px;line-height:1;transition:transform .18s ease;color:#55706d}
+.vb-topic-menu-toggle[aria-expanded="true"] .vb-topic-menu-chevron{transform:rotate(180deg)}
+.vb-topic-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;
+  left:0;
+  z-index:92;
+  max-height:min(58vh,430px);
+  overflow-y:auto;
+  padding:6px;
+  border:1px solid rgba(11,73,70,.13);
+  border-radius:14px;
+  background:rgba(255,255,255,.985);
+  box-shadow:0 18px 42px rgba(11,73,70,.17);
+  backdrop-filter:blur(18px);
+}
+.vb-topic-menu[hidden]{display:none}
+.vb-topic-menu button{
+  width:100%;
+  border:0;
+  border-radius:10px;
+  padding:9px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:transparent;
+  color:#294b48;
+  text-align:right;
+  font:inherit;
+  font-size:11.5px;
+  font-weight:750;
+  cursor:pointer;
+}
+.vb-topic-menu button:hover,.vb-topic-menu button:focus-visible{background:#eef8f7;outline:none}
+.vb-topic-menu button.active{background:#0b4946;color:#fff}
+.vb-topic-menu button span{font-size:16px}
+.vb-topic-tabs-controller{display:none!important}
+@media(max-width:900px){
+  .vb-standalone-app #volleyball-topic-shell.vb-topic-dropdown-shell{top:122px}
+}
+@media(max-width:650px){
+  .vb-standalone-app #volleyball-topic-shell.vb-topic-dropdown-shell{top:114px;padding:5px 6px}
+  .vb-topic-dropdown{width:100%}
+  .vb-topic-menu-toggle{min-height:42px}
+}
