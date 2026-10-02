@@ -21,7 +21,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <div id="load">TeamScore<small>טוען את האפליקציה…</small></div>
 <script>
 (async function(){
-  const VERSION="30";
+  const VERSION="31";
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
   const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
   const read=async n=>{const r=await fetch(n+"?v="+VERSION,{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
