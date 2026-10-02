@@ -66,10 +66,15 @@
     .drop-section{display:none;margin-top:4px;padding:10px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12}
     .drop-section.open{display:block}
     .drop-title{font-size:12px;font-weight:1000;opacity:.68;margin:0 2px 8px}
-    .mode-mini-grid,.voice-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-    .mode-mini,.voice-mini{min-height:54px!important;display:grid!important;gap:2px!important;align-content:center!important;padding:9px 10px!important}
-    .mode-mini b,.voice-mini b{font-size:14px}.mode-mini small,.voice-mini small{font-size:10px;opacity:.7}
+    .mode-mini-grid,.voice-mini-grid,.player-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    .mode-mini,.voice-mini,.player-mini{min-height:54px!important;display:grid!important;gap:2px!important;align-content:center!important;padding:9px 10px!important}
+    .mode-mini b,.voice-mini b,.player-mini b{font-size:14px}.mode-mini small,.voice-mini small,.player-mini small{font-size:10px;opacity:.7}
     .voice-mini.active{border-color:#ffd84d;background:#ffd84d1c;box-shadow:inset 0 0 0 1px #ffd84d66}
+    .player-root{justify-content:space-between!important}
+    .player-root .chev{margin-inline-start:auto;font-size:14px;opacity:.7;transition:transform .2s ease}
+    .player-root.open .chev{transform:rotate(180deg)}
+    .player-root.one{background:linear-gradient(135deg,#214a8a88,#2f78d255);border-color:#4e9bff55}
+    .player-root.two{background:linear-gradient(135deg,#8a244a88,#d34e7555);border-color:#ff6e9555}
     .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s ease}
     .game-shell.open{opacity:1;visibility:visible}
     .game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}
@@ -119,19 +124,38 @@
     <aside class="dropdown" id="dropdown" aria-hidden="true">
       <div class="dropdown-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button" aria-label="סגור">✕</button></div>
       <nav class="nav">
-        <button class="primary-menu" type="button" data-open-game><span>▶️</span>שחק עכשיו</button>
-        <button type="button" data-toggle-modes><span>🎮</span>מצבי משחק</button>
-        <div class="drop-section" id="modesSection">
-          <div class="drop-title">בחר מצב</div>
-          <div class="mode-mini-grid">
-            <button class="mode-mini" type="button" data-launch-mode="classic"><b>⚡ קלאסי</b><small>ניקוד ומהירות</small></button>
-            <button class="mode-mini" type="button" data-launch-mode="levels"><b>🗺️ שלבים</b><small>עולם מתקדם</small></button>
-            <button class="mode-mini" type="button" data-launch-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד בזמן</small></button>
-            <button class="mode-mini" type="button" data-launch-mode="survival"><b>🛡️ הישרדות</b><small>מוסיף זמן</small></button>
-            <button class="mode-mini" type="button" data-launch-mode="sprint"><b>⏱️ מרוץ זמן</b><small>שבור שיא</small></button>
-            <button class="mode-mini" type="button" data-launch-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש</small></button>
+        <button class="player-root one" type="button" data-toggle-one>
+          <span>🎮</span><b>שחקן אחד</b><span class="chev">⌄</span>
+        </button>
+        <div class="drop-section" id="onePlayerSection">
+          <div class="drop-title">בחר משחק לשחקן אחד</div>
+          <div class="player-mini-grid">
+            <button class="player-mini" type="button" data-launch-mode="classic"><b>⚡ קלאסי</b><small>צבור כמה שיותר נקודות</small></button>
+            <button class="player-mini" type="button" data-launch-mode="levels"><b>🗺️ עולם השלבים</b><small>המשך מהשלב הנוכחי</small></button>
+            <button class="player-mini" type="button" data-launch-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן</small></button>
+            <button class="player-mini" type="button" data-launch-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
+            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="5"><b>⏱️ מרוץ 5</b><small>5 הצלחות הכי מהר</small></button>
+            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="10"><b>⏱️ מרוץ 10</b><small>10 הצלחות הכי מהר</small></button>
+            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="15"><b>⏱️ מרוץ 15</b><small>15 הצלחות הכי מהר</small></button>
           </div>
         </div>
+
+        <button class="player-root two" type="button" data-toggle-two>
+          <span>👥</span><b>שני שחקנים</b><span class="chev">⌄</span>
+        </button>
+        <div class="drop-section" id="twoPlayerSection">
+          <div class="drop-title">בחר קרב לשני שחקנים</div>
+          <div class="player-mini-grid">
+            <button class="player-mini" type="button" data-launch-versus="duel"><b>⚔️ דו־קרב קלאסי</b><small>הראשון ל־10</small></button>
+            <button class="player-mini" type="button" data-launch-versus="deck"><b>🃏 חפיסה מלאה</b><small>כל החפיסה</small></button>
+            <button class="player-mini" type="button" data-launch-versus="knockout"><b>❤️ נוקאאוט</b><small>3 חיים</small></button>
+            <button class="player-mini" type="button" data-launch-versus="race"><b>🏁 מרוץ ל־15</b><small>הראשון ליעד</small></button>
+            <button class="player-mini" type="button" data-launch-versus="combo"><b>🔥 קומבו</b><small>רצף של 5</small></button>
+            <button class="player-mini" type="button" data-launch-versus="sudden"><b>💥 מוות פתאומי</b><small>טעות אחת וזה נגמר</small></button>
+            <button class="player-mini" type="button" data-launch-versus="gold"><b>⭐ קלף זהב</b><small>כל סיבוב חמישי ×3</small></button>
+          </div>
+        </div>
+
         <button type="button" data-toggle-voices><span>🎙️</span>בחר כרוז</button>
         <div class="drop-section" id="voicesSection">
           <div class="drop-title">הבחירה נשמרת למשחק</div>
@@ -217,8 +241,11 @@
 
       
       const dropdown=document.getElementById('dropdown'),overlay=document.getElementById('overlay');
-      const modesSection=document.getElementById('modesSection');
+      const onePlayerSection=document.getElementById('onePlayerSection');
+      const twoPlayerSection=document.getElementById('twoPlayerSection');
       const voicesSection=document.getElementById('voicesSection');
+      const oneToggle=document.querySelector('[data-toggle-one]');
+      const twoToggle=document.querySelector('[data-toggle-two]');
       const gameShell=document.getElementById('gameShell');
       const gameFrame=document.getElementById('gameFrame');
       const VOICE_KEY='double-announcer-pack-v1';
@@ -232,11 +259,15 @@
         document.querySelectorAll('[data-voice]').forEach(b=>b.classList.toggle('active',b.dataset.voice===selected));
       }
 
-      function launchGame(target){
+      function launchGame(target,opts={}){
         closeMenu();
         gameShell.classList.add('open');
         gameShell.setAttribute('aria-hidden','false');
-        gameFrame.src='double-game.html?v=4'+(target?'&launch='+encodeURIComponent(target):'');
+        const params=new URLSearchParams();
+        if(target) params.set('launch',target);
+        if(opts.variant) params.set('variant',opts.variant);
+        if(opts.target) params.set('target',String(opts.target));
+        gameFrame.src='double-game.html?v=5&'+params.toString();
         gameFrame.onload=()=>{};
       }
 
@@ -249,10 +280,38 @@
       document.getElementById('menuBtn').onclick=openMenu;
       document.getElementById('closeBtn').onclick=closeMenu;
       overlay.onclick=closeMenu;
-      document.querySelectorAll('[data-open-game]').forEach(b=>b.addEventListener('click',()=>launchGame('classic')));
-      document.querySelector('[data-toggle-modes]').onclick=()=>{modesSection.classList.toggle('open');voicesSection.classList.remove('open')};
-      document.querySelector('[data-toggle-voices]').onclick=()=>{voicesSection.classList.toggle('open');modesSection.classList.remove('open')};
-      document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>launchGame(b.dataset.launchMode)));
+      oneToggle.onclick=()=>{
+        const open=!onePlayerSection.classList.contains('open');
+        onePlayerSection.classList.toggle('open',open);
+        twoPlayerSection.classList.remove('open');
+        voicesSection.classList.remove('open');
+        oneToggle.classList.toggle('open',open);
+        twoToggle.classList.remove('open');
+      };
+      twoToggle.onclick=()=>{
+        const open=!twoPlayerSection.classList.contains('open');
+        twoPlayerSection.classList.toggle('open',open);
+        onePlayerSection.classList.remove('open');
+        voicesSection.classList.remove('open');
+        twoToggle.classList.toggle('open',open);
+        oneToggle.classList.remove('open');
+      };
+      document.querySelector('[data-toggle-voices]').onclick=()=>{
+        const open=!voicesSection.classList.contains('open');
+        voicesSection.classList.toggle('open',open);
+        onePlayerSection.classList.remove('open');
+        twoPlayerSection.classList.remove('open');
+        oneToggle.classList.remove('open');
+        twoToggle.classList.remove('open');
+      };
+      document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>{
+        const opts={};
+        if(b.dataset.sprintTarget) opts.target=Number(b.dataset.sprintTarget);
+        launchGame(b.dataset.launchMode,opts);
+      }));
+      document.querySelectorAll('[data-launch-versus]').forEach(b=>b.addEventListener('click',()=>{
+        launchGame('versus',{variant:b.dataset.launchVersus});
+      }));
       document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>{
         try{localStorage.setItem(VOICE_KEY,b.dataset.voice)}catch(_){}
         updateVoiceButtons();
