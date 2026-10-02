@@ -6,6 +6,10 @@
   const populationMenuToggle=document.getElementById("volleyball-population-menu-toggle");
   const populationMenu=document.getElementById("volleyball-population-menu");
   const populationMenuCurrent=document.getElementById("volleyball-population-menu-current");
+  const topicPanel=document.getElementById("volleyball-population-topics");
+  const topicMenuToggle=document.getElementById("volleyball-topic-menu-toggle");
+  const topicMenu=document.getElementById("volleyball-topic-menu");
+  const topicMenuCurrent=document.getElementById("volleyball-topic-menu-current");
   const sideLeft=document.getElementById("vb-side-left");
   const sideRight=document.getElementById("vb-side-right");
 
@@ -136,6 +140,53 @@
   });
   window.addEventListener("appinstalled",()=>{if(installBtn) installBtn.hidden=true;});
 
+  const closeTopicMenu=()=>{
+    if(!topicMenu||!topicMenuToggle)return;
+    topicMenu.hidden=true;
+    topicMenuToggle.setAttribute("aria-expanded","false");
+  };
+  const buildTopicMenu=()=>{
+    if(!topicPanel||!topicMenu)return;
+    const buttons=[...topicPanel.querySelectorAll("[data-topic]")];
+    if(!buttons.length)return;
+    topicMenu.innerHTML=buttons.map(btn=>{
+      const icon=btn.querySelector("span")?.textContent?.trim()||"•";
+      const label=btn.textContent.trim().replace(icon,"").trim();
+      const active=btn.classList.contains("active");
+      return `<button type="button" role="menuitemradio" aria-checked="${active}" class="${active?"active":""}" data-topic-menu="${btn.dataset.topic}"><span>${icon}</span><b>${label}</b></button>`;
+    }).join("");
+  };
+  const syncTopicContext=()=>{
+    const active=topicPanel?.querySelector(".vb-topic-tab.active");
+    if(!active)return;
+    const icon=active.querySelector("span")?.textContent?.trim()||"🏐";
+    const label=active.textContent.trim().replace(icon,"").trim();
+    if(topicMenuCurrent)topicMenuCurrent.textContent=icon+" "+label;
+    topicMenu?.querySelectorAll("[data-topic-menu]").forEach(btn=>{
+      const selected=btn.dataset.topicMenu===active.dataset.topic;
+      btn.classList.toggle("active",selected);
+      btn.setAttribute("aria-checked",String(selected));
+    });
+  };
+  topicMenuToggle?.addEventListener("click",()=>{
+    if(!topicMenu)return;
+    const open=topicMenu.hidden;
+    topicMenu.hidden=!open;
+    topicMenuToggle.setAttribute("aria-expanded",String(open));
+  });
+  topicMenu?.addEventListener("click",event=>{
+    const choice=event.target.closest("[data-topic-menu]");
+    if(!choice)return;
+    const controller=topicPanel?.querySelector(`[data-topic="${choice.dataset.topicMenu}"]`);
+    controller?.click();
+    closeTopicMenu();
+  });
+  if(topicPanel){
+    const topicObserver=new MutationObserver(()=>{buildTopicMenu();syncTopicContext();});
+    topicObserver.observe(topicPanel,{subtree:true,attributes:true,attributeFilter:["class","aria-pressed"],childList:true});
+    setTimeout(()=>{buildTopicMenu();syncTopicContext();},0);
+  }
+
   const closePopulationMenu=()=>{
     if(!populationMenu||!populationMenuToggle)return;
     populationMenu.hidden=true;
@@ -185,7 +236,14 @@
     if(event.target.closest(".vb-population-dropdown"))return;
     closePopulationMenu();
   });
-  document.addEventListener("keydown",event=>{if(event.key==="Escape")closePopulationMenu();});
+  document.addEventListener("click",event=>{
+    if(topicMenu?.hidden)return;
+    if(event.target.closest(".vb-topic-dropdown"))return;
+    closeTopicMenu();
+  });
+  document.addEventListener("keydown",event=>{
+    if(event.key==="Escape"){closePopulationMenu();closeTopicMenu();}
+  });
   populationTabs?.addEventListener("click",()=>setTimeout(()=>{syncPopulationContext();setEliteSideBackgrounds();},0));
   if(populationTabs){
     const popObserver=new MutationObserver(()=>{
