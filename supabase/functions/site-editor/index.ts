@@ -190,7 +190,12 @@ ${fileContext.slice(0,260000)}`;
   });
   const data=await response.json().catch(()=>({}));
   if(!response.ok){
-    console.error("site-editor planner failed",{status:response.status,code:data?.error?.code||null});
+    const providerMessage=String(data?.error?.message||"");
+    const providerCode=String(data?.error?.code||"");
+    console.error("site-editor planner failed",{status:response.status,code:providerCode||null});
+    if(providerCode==="insufficient_quota"||/no credits remaining|add credits|billing/i.test(providerMessage)){
+      throw new EditorError("api_credits_exhausted",402);
+    }
     throw new EditorError("editor_unavailable",503);
   }
   const output=answerText(data);

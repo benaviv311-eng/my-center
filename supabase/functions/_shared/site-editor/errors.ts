@@ -5,6 +5,7 @@ export type EditorErrorCode =
   | "stale_plan"
   | "unsafe_plan"
   | "editor_model_missing"
+  | "api_credits_exhausted"
   | "github_unavailable"
   | "editor_unavailable";
 
@@ -15,6 +16,7 @@ const PUBLIC_MESSAGES: Record<EditorErrorCode,string> = {
   stale_plan: "הקבצים השתנו מאז שההצעה הוכנה. צריך להכין אותה מחדש.",
   unsafe_plan: "השינוי המוצע נחסם מטעמי בטיחות.",
   editor_model_missing: "מודל עורך האתר אינו מוגדר כרגע.",
+  api_credits_exhausted: "נגמרה יתרת ה-OpenAI API. יש להוסיף קרדיטים ל-API כדי שהצ׳אט והעריכה יוכלו לפעול.",
   github_unavailable: "לא ניתן להתחבר כרגע למאגר האתר.",
   editor_unavailable: "עורך האתר אינו זמין כרגע."
 };
