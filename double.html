@@ -364,9 +364,116 @@
     .announcer-pack small{opacity:.72;font-size:11px;line-height:1.25}
     .announcer-pack.active{transform:translateY(-1px);border-color:rgba(255,213,79,.9);box-shadow:0 0 0 2px rgba(255,213,79,.14),0 10px 24px rgba(0,0,0,.18)}
     @media(max-width:700px){.announcer-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.announcer-pack{padding:9px 10px}}
+
+    /* DOUBLE landing page */
+    .double-landing{position:fixed;inset:0;z-index:90;overflow:hidden;background:
+      radial-gradient(circle at 18% 18%,rgba(69,145,255,.24),transparent 30%),
+      radial-gradient(circle at 82% 22%,rgba(255,204,75,.18),transparent 28%),
+      radial-gradient(circle at 50% 86%,rgba(84,226,184,.13),transparent 34%),
+      linear-gradient(145deg,#07101f,#101a38 52%,#171a37);color:#fff;transition:opacity .4s ease,transform .4s ease}
+    .double-landing.hidden{opacity:0;transform:scale(1.02);pointer-events:none}
+    .double-landing-bg{position:absolute;inset:0;overflow:hidden}
+    .double-landing-bg:before{content:"";position:absolute;inset:-15%;opacity:.28;background-image:
+      radial-gradient(circle,#fff 1px,transparent 1.8px),radial-gradient(circle,#fff7 1px,transparent 1.5px);
+      background-size:44px 44px,73px 73px;animation:landingStars 28s linear infinite}
+    .double-landing-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(5,10,20,.08),rgba(5,10,20,.55))}
+    @keyframes landingStars{to{transform:translate3d(44px,73px,0)}}
+    .double-landing-top{position:relative;z-index:6;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;direction:ltr}
+    .double-landing-brand{font-size:26px;font-weight:1000;letter-spacing:.06em;text-shadow:0 6px 20px #0008}
+    .double-landing-menu-btn{width:50px;height:50px;border-radius:16px;border:1px solid #ffffff2c;background:#ffffff12;color:#fff;font-size:26px;cursor:pointer;backdrop-filter:blur(10px)}
+    .double-landing-stage{position:absolute;inset:0;z-index:1}
+    .double-landing-mode{position:absolute;top:86px;left:50%;transform:translateX(-50%);z-index:4;min-width:185px;padding:10px 18px;border-radius:999px;background:#07101faa;border:1px solid #ffffff2a;backdrop-filter:blur(12px);font-weight:1000;text-align:center;box-shadow:0 12px 32px #0006;transition:.25s ease}
+    .double-landing-mode.changing{opacity:.25;transform:translateX(-50%) scale(.92)}
+    .double-landing-score{position:absolute;top:138px;z-index:4;min-width:105px;padding:10px 12px;border-radius:18px;background:#07101f82;border:1px solid #ffffff20;backdrop-filter:blur(9px);text-align:center;font-size:12px;font-weight:900}
+    .double-landing-score strong{display:block;font-size:31px;line-height:1;margin-top:5px}
+    .double-landing-score.p1{right:5vw;box-shadow:0 10px 30px #2a8dff33}
+    .double-landing-score.p2{left:5vw;box-shadow:0 10px 30px #ff4f7b2d}
+    .double-landing-board{position:absolute;left:50%;top:50%;width:min(880px,92vw);height:min(520px,64vh);transform:translate(-50%,-50%)}
+    .double-landing-card{position:absolute;top:50%;width:clamp(230px,31vw,370px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 42% 34%,#fff,#f4f8ff 55%,#dce7f5);border:7px solid #ffffffb8;box-shadow:0 28px 76px #0007,inset 0 0 0 3px #203f6622;transform:translateY(-50%);transition:.45s ease}
+    .double-landing-card.left{left:0;animation:landingFloatL 5.2s ease-in-out infinite}
+    .double-landing-card.right{right:0;animation:landingFloatR 5.2s ease-in-out infinite}
+    .double-landing-card.gold{box-shadow:0 0 0 5px #ffd34d66,0 28px 78px #d8950038,inset 0 0 0 3px #203f6622}
+    @keyframes landingFloatL{0%,100%{transform:translateY(-50%) rotate(-4deg)}50%{transform:translateY(calc(-50% - 15px)) rotate(2deg)}}
+    @keyframes landingFloatR{0%,100%{transform:translateY(-50%) rotate(4deg)}50%{transform:translateY(calc(-50% + 14px)) rotate(-2deg)}}
+    .double-landing-symbol{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));font-size:clamp(26px,4vw,52px);filter:drop-shadow(0 3px 4px #0002)}
+    .double-landing-symbol.match{animation:landingMatch 1.05s ease-in-out infinite;filter:drop-shadow(0 0 12px #ffc629)}
+    @keyframes landingMatch{50%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.24)}}
+    .double-landing-cursor{position:absolute;width:44px;height:44px;border:4px solid currentColor;border-radius:50%;z-index:6;box-shadow:0 0 18px currentColor}
+    .double-landing-cursor:after{content:"";position:absolute;inset:7px;border:2px dashed currentColor;border-radius:50%}
+    .double-landing-cursor.p1{color:#49a6ff}.double-landing-cursor.p2{color:#ff5c82}
+    .double-landing-spark{position:absolute;z-index:8;font-size:22px;animation:landingSpark .9s ease-out forwards;pointer-events:none}
+    @keyframes landingSpark{0%{opacity:1;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.35) rotate(220deg)}}
+    .double-landing-copy{position:absolute;left:50%;bottom:8.5vh;z-index:5;transform:translateX(-50%);width:min(760px,92vw);text-align:center;padding:0 14px}
+    .double-landing-copy h1{margin:0;font-size:clamp(54px,10vw,108px);line-height:.9;letter-spacing:.07em;text-shadow:0 12px 38px #0009}
+    .double-landing-copy p{margin:12px auto 18px;font-size:clamp(16px,2.1vw,22px);font-weight:800;color:#ffffffd8;max-width:640px}
+    .double-landing-play{border:0;border-radius:999px;background:linear-gradient(135deg,#ffd84d,#ffb83e);color:#171717;padding:14px 26px;font-size:18px;font-weight:1000;cursor:pointer;box-shadow:0 12px 34px #0005,0 0 0 5px #ffd84d20}
+    .double-landing-lives{height:24px;margin-top:7px;font-weight:1000;letter-spacing:.1em;color:#ff7192}
+    .double-landing-how{position:absolute;z-index:7;left:50%;bottom:19vh;transform:translate(-50%,16px);width:min(480px,88vw);padding:13px 16px;border-radius:18px;background:#07101fd9;border:1px solid #ffffff28;backdrop-filter:blur(12px);text-align:center;font-weight:900;opacity:0;pointer-events:none;transition:.28s ease}
+    .double-landing-how.show{opacity:1;transform:translate(-50%,0)}
+    .double-landing-overlay{position:absolute;inset:0;z-index:19;background:#0207139c;backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:.25s ease}
+    .double-landing-overlay.open{opacity:1;visibility:visible}
+    .double-landing-drawer{position:absolute;top:0;right:0;bottom:0;z-index:20;width:min(340px,88vw);padding:20px;background:linear-gradient(180deg,#081226f8,#111d38f8);border-left:1px solid #ffffff1f;box-shadow:-25px 0 70px #0008;transform:translateX(105%);transition:.32s cubic-bezier(.2,.8,.2,1)}
+    .double-landing-drawer.open{transform:translateX(0)}
+    .double-landing-drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .double-landing-drawer-head h2{margin:0;font-size:24px}
+    .double-landing-close{width:42px;height:42px;border-radius:13px;border:1px solid #ffffff1e;background:#ffffff10;color:#fff;font-size:20px;cursor:pointer}
+    .double-landing-nav{display:grid;gap:9px}
+    .double-landing-nav button,.double-landing-nav a{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;border-radius:15px;border:1px solid #ffffff16;background:#ffffff0a;color:#fff;text-decoration:none;text-align:right;font-weight:900;cursor:pointer}
+    .double-landing-nav button:first-child{background:linear-gradient(135deg,#2d82e6,#6b64ff);border-color:#78b7ff55}
+    .double-landing-nav span{font-size:22px}
+    @media(max-width:700px){
+      .double-landing-board{width:98vw;height:54vh;top:47%}
+      .double-landing-card{width:52vw;opacity:.76}
+      .double-landing-card.left{left:-13vw}.double-landing-card.right{right:-13vw}
+      .double-landing-score{top:126px;min-width:82px;padding:8px}
+      .double-landing-score.p1{right:10px}.double-landing-score.p2{left:10px}
+      .double-landing-mode{top:78px}
+      .double-landing-copy{bottom:5.5vh}
+      .double-landing-copy h1{font-size:56px}
+      .double-landing-how{bottom:21vh}
+    }
+    @media(prefers-reduced-motion:reduce){.double-landing-bg:before,.double-landing-card,.double-landing-symbol,.double-landing-spark{animation:none!important}}
 </style>
   <link rel="stylesheet" href="site-chat.css?v=2">\n  <link rel="stylesheet" href="site-editor-ui.css?v=1">\n</head>
 <body>
+  <section id="doubleLanding" class="double-landing" aria-label="DOUBLE">
+    <div class="double-landing-bg"></div>
+
+    <div class="double-landing-top">
+      <div class="double-landing-brand">DOUBLE</div>
+      <button type="button" class="double-landing-menu-btn" data-open-drawer aria-label="פתח תפריט">☰</button>
+    </div>
+
+    <div class="double-landing-stage">
+      <div class="double-landing-mode" data-demo-mode>⚡ קלאסי</div>
+      <div class="double-landing-score p2">שחקן 2<strong data-demo-score2>7</strong></div>
+      <div class="double-landing-score p1">שחקן 1<strong data-demo-score1>9</strong></div>
+      <div class="double-landing-board" data-demo-board></div>
+    </div>
+
+    <div class="double-landing-copy">
+      <h1>DOUBLE</h1>
+      <p data-demo-sub>מצא מהר. צבור נקודות.</p>
+      <div class="double-landing-lives" data-demo-lives></div>
+      <button type="button" class="double-landing-play" data-enter-game>▶ שחק עכשיו</button>
+    </div>
+
+    <div class="double-landing-how">מצא את הסמל היחיד שמופיע בשני הקלפים — ולחץ עליו לפני שהזמן או היריב מנצחים אותך.</div>
+
+    <div class="double-landing-overlay"></div>
+    <aside class="double-landing-drawer" aria-hidden="true">
+      <div class="double-landing-drawer-head">
+        <h2>DOUBLE</h2>
+        <button type="button" class="double-landing-close" data-close-drawer aria-label="סגור">✕</button>
+      </div>
+      <nav class="double-landing-nav">
+        <button type="button" data-enter-game><span>▶️</span>שחק עכשיו</button>
+        <button type="button" data-enter-game><span>🎮</span>מצבי משחק</button>
+        <button type="button" data-enter-game><span>🎙️</span>בחר כרוז</button>
+        <button type="button" data-how><span>❓</span>איך משחקים</button>
+      </nav>
+    </aside>
+  </section>
   <div id="start" class="start">
     <div id="menuPanel" class="panel">
       <h1>DOUBLE</h1>
@@ -414,6 +521,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=27"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=27"></script>\n  <script src="double/landing.js?v=1"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
