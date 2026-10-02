@@ -75,6 +75,10 @@
     .player-root.open .chev{transform:rotate(180deg)}
     .player-root.one{background:linear-gradient(135deg,#214a8a88,#2f78d255);border-color:#4e9bff55}
     .player-root.two{background:linear-gradient(135deg,#8a244a88,#d34e7555);border-color:#ff6e9555}
+    .game-flow-choice{min-height:64px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:12px 14px!important}
+    .game-flow-choice b{font-size:15px}.game-flow-choice small{display:block;font-size:10px;opacity:.7;margin-top:2px}
+    .game-flow-choice .choice-copy{display:grid;text-align:right}
+    .game-flow-back{margin-bottom:8px!important;background:#ffffff08!important;justify-content:flex-start!important;font-size:12px!important;min-height:42px!important}
     .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s ease}
     .game-shell.open{opacity:1;visibility:visible}
     .game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}
@@ -124,11 +128,29 @@
     <aside class="dropdown" id="dropdown" aria-hidden="true">
       <div class="dropdown-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button" aria-label="סגור">✕</button></div>
       <nav class="nav">
-        <button class="player-root one" type="button" data-toggle-one>
-          <span>🎮</span><b>שחקן אחד</b><span class="chev">⌄</span>
+        <button class="player-root one" type="button" data-toggle-games>
+          <span>🎮</span><b>מצבי משחק</b><span class="chev">⌄</span>
         </button>
+
+        <div class="drop-section" id="playerCountSection">
+          <div class="drop-title">כמה שחקנים?</div>
+          <div class="player-mini-grid">
+            <button class="game-flow-choice" type="button" data-choose-player-count="1">
+              <span>🎮</span>
+              <span class="choice-copy"><b>שחקן אחד</b><small>משחקי יחיד, שלבים וזמן</small></span>
+              <span>←</span>
+            </button>
+            <button class="game-flow-choice" type="button" data-choose-player-count="2">
+              <span>👥</span>
+              <span class="choice-copy"><b>שני שחקנים</b><small>קרבות ראש בראש</small></span>
+              <span>←</span>
+            </button>
+          </div>
+        </div>
+
         <div class="drop-section" id="onePlayerSection">
-          <div class="drop-title">בחר משחק לשחקן אחד</div>
+          <button class="game-flow-back" type="button" data-back-player-count>← חזרה לבחירת שחקנים</button>
+          <div class="drop-title">שחקן אחד — בחר משחק</div>
           <div class="player-mini-grid">
             <button class="player-mini" type="button" data-launch-mode="classic"><b>⚡ קלאסי</b><small>צבור כמה שיותר נקודות</small></button>
             <button class="player-mini" type="button" data-launch-mode="levels"><b>🗺️ עולם השלבים</b><small>המשך מהשלב הנוכחי</small></button>
@@ -140,11 +162,9 @@
           </div>
         </div>
 
-        <button class="player-root two" type="button" data-toggle-two>
-          <span>👥</span><b>שני שחקנים</b><span class="chev">⌄</span>
-        </button>
         <div class="drop-section" id="twoPlayerSection">
-          <div class="drop-title">בחר קרב לשני שחקנים</div>
+          <button class="game-flow-back" type="button" data-back-player-count>← חזרה לבחירת שחקנים</button>
+          <div class="drop-title">שני שחקנים — בחר קרב</div>
           <div class="player-mini-grid">
             <button class="player-mini" type="button" data-launch-versus="duel"><b>⚔️ דו־קרב קלאסי</b><small>הראשון ל־10</small></button>
             <button class="player-mini" type="button" data-launch-versus="deck"><b>🃏 חפיסה מלאה</b><small>כל החפיסה</small></button>
@@ -168,6 +188,7 @@
             <button class="voice-mini" type="button" data-voice="arcade"><b>🎮 Arcade</b><small>משחקי</small></button>
           </div>
         </div>
+
         <button type="button" id="howBtn"><span>❓</span>איך משחקים</button>
       </nav>
     </aside>
@@ -241,17 +262,26 @@
 
       
       const dropdown=document.getElementById('dropdown'),overlay=document.getElementById('overlay');
+      const playerCountSection=document.getElementById('playerCountSection');
       const onePlayerSection=document.getElementById('onePlayerSection');
       const twoPlayerSection=document.getElementById('twoPlayerSection');
       const voicesSection=document.getElementById('voicesSection');
-      const oneToggle=document.querySelector('[data-toggle-one]');
-      const twoToggle=document.querySelector('[data-toggle-two]');
+      const gamesToggle=document.querySelector('[data-toggle-games]');
       const gameShell=document.getElementById('gameShell');
       const gameFrame=document.getElementById('gameFrame');
       const VOICE_KEY='double-announcer-pack-v1';
 
       const openMenu=()=>{dropdown.classList.add('open');overlay.classList.add('open');dropdown.setAttribute('aria-hidden','false')};
-      const closeMenu=()=>{dropdown.classList.remove('open');overlay.classList.remove('open');dropdown.setAttribute('aria-hidden','true')};
+      const closeMenu=()=>{
+        dropdown.classList.remove('open');
+        overlay.classList.remove('open');
+        dropdown.setAttribute('aria-hidden','true');
+        playerCountSection?.classList.remove('open');
+        onePlayerSection?.classList.remove('open');
+        twoPlayerSection?.classList.remove('open');
+        voicesSection?.classList.remove('open');
+        gamesToggle?.classList.remove('open');
+      };
 
       function updateVoiceButtons(){
         let selected='british';
@@ -280,29 +310,37 @@
       document.getElementById('menuBtn').onclick=openMenu;
       document.getElementById('closeBtn').onclick=closeMenu;
       overlay.onclick=closeMenu;
-      oneToggle.onclick=()=>{
-        const open=!onePlayerSection.classList.contains('open');
-        onePlayerSection.classList.toggle('open',open);
-        twoPlayerSection.classList.remove('open');
-        voicesSection.classList.remove('open');
-        oneToggle.classList.toggle('open',open);
-        twoToggle.classList.remove('open');
-      };
-      twoToggle.onclick=()=>{
-        const open=!twoPlayerSection.classList.contains('open');
-        twoPlayerSection.classList.toggle('open',open);
+      const closeGameSections=()=>{
+        playerCountSection.classList.remove('open');
         onePlayerSection.classList.remove('open');
-        voicesSection.classList.remove('open');
-        twoToggle.classList.toggle('open',open);
-        oneToggle.classList.remove('open');
+        twoPlayerSection.classList.remove('open');
+        gamesToggle.classList.remove('open');
       };
+      gamesToggle.onclick=()=>{
+        const open=!playerCountSection.classList.contains('open')&&!onePlayerSection.classList.contains('open')&&!twoPlayerSection.classList.contains('open');
+        closeGameSections();
+        voicesSection.classList.remove('open');
+        if(open){
+          playerCountSection.classList.add('open');
+          gamesToggle.classList.add('open');
+        }
+      };
+      document.querySelectorAll('[data-choose-player-count]').forEach(b=>b.addEventListener('click',()=>{
+        playerCountSection.classList.remove('open');
+        if(b.dataset.choosePlayerCount==='1') onePlayerSection.classList.add('open');
+        else twoPlayerSection.classList.add('open');
+        gamesToggle.classList.add('open');
+      }));
+      document.querySelectorAll('[data-back-player-count]').forEach(b=>b.addEventListener('click',()=>{
+        onePlayerSection.classList.remove('open');
+        twoPlayerSection.classList.remove('open');
+        playerCountSection.classList.add('open');
+        gamesToggle.classList.add('open');
+      }));
       document.querySelector('[data-toggle-voices]').onclick=()=>{
         const open=!voicesSection.classList.contains('open');
         voicesSection.classList.toggle('open',open);
-        onePlayerSection.classList.remove('open');
-        twoPlayerSection.classList.remove('open');
-        oneToggle.classList.remove('open');
-        twoToggle.classList.remove('open');
+        closeGameSections();
       };
       document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>{
         const opts={};
