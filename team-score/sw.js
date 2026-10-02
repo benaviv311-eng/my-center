@@ -1,11 +1,9 @@
-const CACHE='teamscore-pilot-v34';
+const CACHE='teamscore-pilot-v35';
 const ASSETS=[
   './','./index.html','./manifest.webmanifest','./icon.svg',
   './t1.txt','./t2.txt','./t3.txt','./t4.txt',
   './b1.txt','./b2.txt','./b3.txt','./b4.txt',
   './backgrounds.css','./backgrounds.js',
-  './assets/mobile/p1.webp','./assets/mobile/p2.webp',
-  './assets/mobile/p3.webp','./assets/mobile/p4.webp',
   './assets/hd-sprites/maya.webp','./assets/hd-sprites/sofia.webp',
   './assets/hd-sprites/nia.webp','./assets/hd-sprites/lena.webp'
 ];
