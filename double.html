@@ -151,6 +151,41 @@
     .versus-setup{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
     .key-player{border-radius:20px;padding:14px;background:#ffffff0d;border:1px solid #ffffff1f}
     .key-player h3{margin:0 0 10px}
+    .avatar-setup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:9px;border-radius:16px;background:#ffffff0b;border:1px solid #ffffff18}
+    .avatar-preview{display:flex;align-items:center;gap:9px;min-width:0}
+    .avatar-preview .avatar-glyph{font-size:38px;line-height:1;filter:drop-shadow(0 5px 9px #0005);animation:avatarIdle 2.4s ease-in-out infinite}
+    .avatar-preview>span:last-child{display:grid;text-align:right}
+    .avatar-preview b{font-size:13px}.avatar-preview small{font-size:10px;opacity:.68}
+    .avatar-change{border:1px solid #ffffff24;background:#ffffff12;color:#fff;border-radius:12px;padding:7px 9px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap}
+    .avatar-picker-current{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 14px;padding:12px;border-radius:20px;background:#ffffff0c;border:1px solid #ffffff20}
+    .avatar-picker-current>.avatar-glyph{font-size:54px;animation:avatarIdle 2.4s ease-in-out infinite}
+    .avatar-picker-current>div{display:grid;text-align:right}.avatar-picker-current small{opacity:.66}
+    .avatar-picker-categories{display:flex;gap:7px;overflow:auto;padding:3px 1px 9px;scrollbar-width:none}
+    .avatar-picker-categories::-webkit-scrollbar{display:none}
+    .avatar-category{flex:0 0 auto;border:1px solid #ffffff22;background:#ffffff0d;color:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900;cursor:pointer}
+    .avatar-category.active{background:#ffd84d;color:#171717;border-color:#ffd84d}
+    .avatar-picker-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-height:min(52vh,430px);overflow:auto;padding:3px}
+    .avatar-option{border:1px solid #ffffff1f;background:#ffffff0c;color:#fff;border-radius:16px;min-height:78px;padding:8px 4px;display:grid;place-items:center;gap:3px;cursor:pointer}
+    .avatar-option .avatar-glyph{font-size:34px;line-height:1}
+    .avatar-option small{font-size:10px;font-weight:800;opacity:.75}
+    .avatar-option.selected{background:#ffd84d22;border-color:#ffd84d;box-shadow:0 0 0 2px #ffd84d44}
+    .versus-player-zone{position:relative;display:grid;justify-items:center;align-content:start;gap:8px;flex:0 0 auto}
+    .versus-player-zone.player-1{order:2}.versus-player-zone.player-2{order:1}
+    .live-avatar-hud{width:100%;min-height:58px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:18px;padding:6px 10px;background:#ffffff0e;border:1px solid #ffffff20;box-shadow:0 8px 22px #0003}
+    .live-avatar-hud.p1-avatar{box-shadow:inset 0 0 0 2px #55c8ff55,0 8px 22px #0003}
+    .live-avatar-hud.p2-avatar{box-shadow:inset 0 0 0 2px #ff6b9155,0 8px 22px #0003}
+    .live-avatar-hud .avatar-glyph{font-size:40px;line-height:1;filter:drop-shadow(0 5px 9px #0005);animation:avatarIdle 2.4s ease-in-out infinite}
+    .avatar-live-copy{display:grid;text-align:right;line-height:1.05}.avatar-live-copy b{font-size:12px}.avatar-live-copy small{font-size:10px;opacity:.7}
+    .live-avatar-hud.focus .avatar-glyph{animation:avatarFocus .3s ease-out}
+    .live-avatar-hud.win .avatar-glyph{animation:avatarWin .65s cubic-bezier(.18,.9,.2,1)}
+    .live-avatar-hud.wrong .avatar-glyph{animation:avatarWrong .48s linear}
+    .live-avatar-hud.champion{box-shadow:0 0 0 3px #ffd84d,0 0 26px #ffd84d88}
+    .live-avatar-hud.champion .avatar-glyph{animation:avatarChampion .78s cubic-bezier(.18,.9,.2,1)}
+    @keyframes avatarIdle{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.04)}}
+    @keyframes avatarFocus{0%{transform:scale(1)}50%{transform:scale(1.2) rotate(-5deg)}100%{transform:scale(1)}}
+    @keyframes avatarWin{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-14px) scale(1.32) rotate(-9deg)}65%{transform:translateY(-5px) scale(1.18) rotate(7deg)}100%{transform:translateY(0) scale(1)}}
+    @keyframes avatarWrong{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-7px) rotate(-8deg)}40%{transform:translateX(7px) rotate(8deg)}60%{transform:translateX(-5px) rotate(-5deg)}80%{transform:translateX(4px) rotate(4deg)}}
+    @keyframes avatarChampion{0%{transform:scale(1) rotate(0)}35%{transform:scale(1.5) rotate(-12deg)}65%{transform:scale(1.28) rotate(12deg)}100%{transform:scale(1) rotate(0)}}
     .p1-setup{box-shadow:inset 0 0 0 2px #55c8ff44}
     .p2-setup{box-shadow:inset 0 0 0 2px #ff6b9144}
     .key-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -176,7 +211,7 @@
     .sym.versus-wrong{animation:versusWrong .28s linear}
     @keyframes versusWin{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(1.45)}100%{transform:translate(-50%,-50%) scale(1)}}
     @keyframes versusWrong{0%,100%{translate:0 0}25%{translate:-5px 0}75%{translate:5px 0}}
-    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr 1fr;gap:8px}.p1-setup{grid-column:2;grid-row:1}.p2-setup{grid-column:1;grid-row:1}.key-player{padding:9px}.key-player h3{font-size:16px;line-height:1.2}.key-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.key-bind{padding:7px 4px;min-height:52px}.key-bind span{font-size:10px}.key-bind b{font-size:15px}.versus-board{display:flex!important;flex-wrap:nowrap;gap:8px}.versus-card.player-1{order:2}.versus-card.player-2{order:1}.versus-board .card{width:min(44vw,220px)}}
+    @media(max-width:520px){.versus-world-grid{grid-template-columns:1fr}.mode-card.versus-world.gold{grid-column:auto}.versus-setup{grid-template-columns:1fr 1fr;gap:8px}.p1-setup{grid-column:2;grid-row:1}.p2-setup{grid-column:1;grid-row:1}.key-player{padding:9px}.key-player h3{font-size:16px;line-height:1.2}.key-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.key-bind{padding:7px 4px;min-height:52px}.key-bind span{font-size:10px}.key-bind b{font-size:15px}.avatar-setup-row{display:grid;gap:6px;padding:7px}.avatar-preview{justify-content:center}.avatar-preview .avatar-glyph{font-size:32px}.avatar-change{width:100%}.avatar-picker-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.avatar-option{min-height:68px}.avatar-option .avatar-glyph{font-size:30px}.versus-board{display:flex!important;flex-wrap:nowrap;gap:8px}.versus-card.player-1{order:2}.versus-card.player-2{order:1}.versus-board .card{width:min(44vw,220px)}.versus-player-zone{width:min(44vw,220px)}.live-avatar-hud{min-height:48px;padding:4px 6px}.live-avatar-hud .avatar-glyph{font-size:32px}.avatar-live-copy b{font-size:10px}.avatar-live-copy small{font-size:9px}}
   
     :root{--accent:#8b7cff;--accent2:#43d8ff}
     body{
@@ -334,6 +369,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=19"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=20"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
