@@ -51,17 +51,30 @@
     .hero p{margin:12px auto 18px;font-size:clamp(16px,2.1vw,22px);font-weight:800;color:#ffffffda}
     .play{display:inline-block;border:0;border-radius:999px;background:linear-gradient(135deg,#ffd84d,#ffb83e);color:#171717;padding:15px 28px;font-size:18px;font-weight:1000;cursor:pointer;text-decoration:none;box-shadow:0 13px 35px #0005,0 0 0 5px #ffd84d20}
     .lives{height:23px;margin-top:7px;color:#ff7694;font-weight:1000;letter-spacing:.1em}
-    .overlay{position:absolute;inset:0;z-index:20;background:#0207139d;backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:.25s}
+    
+    .overlay{position:absolute;inset:0;z-index:20;background:transparent;opacity:0;visibility:hidden}
     .overlay.open{opacity:1;visibility:visible}
-    .drawer{position:absolute;top:0;right:0;bottom:0;z-index:21;width:min(340px,88vw);padding:20px;background:linear-gradient(180deg,#081226fa,#111d38fa);border-left:1px solid #ffffff1f;box-shadow:-25px 0 70px #0008;transform:translateX(105%);transition:.32s cubic-bezier(.2,.8,.2,1)}
-    .drawer.open{transform:translateX(0)}
-    .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .drawer-head h2{margin:0;font-size:25px}
-    .close{width:42px;height:42px;border-radius:13px;border:1px solid #ffffff1e;background:#ffffff10;color:#fff;font-size:20px;cursor:pointer}
-    .nav{display:grid;gap:9px}
-    .nav a,.nav button{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;border-radius:15px;border:1px solid #ffffff16;background:#ffffff0a;color:#fff;text-decoration:none;text-align:right;font-weight:900;cursor:pointer}
-    .nav a:first-child{background:linear-gradient(135deg,#2d82e6,#6b64ff);border-color:#78b7ff55}
-    .nav span{font-size:22px}
+    .dropdown{position:absolute;top:78px;right:18px;z-index:21;width:min(390px,calc(100vw - 36px));max-height:calc(100vh - 98px);overflow:auto;padding:14px;border-radius:22px;background:linear-gradient(180deg,#0a1530f5,#111d38f5);border:1px solid #ffffff22;box-shadow:0 24px 70px #0009;transform:translateY(-10px) scale(.98);transform-origin:top right;opacity:0;visibility:hidden;transition:.22s ease;backdrop-filter:blur(16px)}
+    .dropdown.open{transform:translateY(0) scale(1);opacity:1;visibility:visible}
+    .dropdown-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .dropdown-head h2{margin:0;font-size:22px}
+    .close{width:38px;height:38px;border-radius:12px;border:1px solid #ffffff1e;background:#ffffff10;color:#fff;font-size:18px;cursor:pointer}
+    .nav{display:grid;gap:8px}
+    .nav button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;border-radius:14px;border:1px solid #ffffff16;background:#ffffff0a;color:#fff;text-align:right;font-weight:900;cursor:pointer}
+    .nav button.primary-menu{background:linear-gradient(135deg,#2d82e6,#6b64ff);border-color:#78b7ff55}
+    .nav span{font-size:21px}
+    .drop-section{display:none;margin-top:4px;padding:10px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12}
+    .drop-section.open{display:block}
+    .drop-title{font-size:12px;font-weight:1000;opacity:.68;margin:0 2px 8px}
+    .mode-mini-grid,.voice-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    .mode-mini,.voice-mini{min-height:54px!important;display:grid!important;gap:2px!important;align-content:center!important;padding:9px 10px!important}
+    .mode-mini b,.voice-mini b{font-size:14px}.mode-mini small,.voice-mini small{font-size:10px;opacity:.7}
+    .voice-mini.active{border-color:#ffd84d;background:#ffd84d1c;box-shadow:inset 0 0 0 1px #ffd84d66}
+    .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s ease}
+    .game-shell.open{opacity:1;visibility:visible}
+    .game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}
+    .game-shell-close{position:absolute;z-index:3;top:12px;right:12px;border:1px solid #ffffff33;background:#0a1022d9;color:#fff;border-radius:14px;padding:10px 13px;font-weight:1000;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 8px 26px #0007}
+  
     .how{position:absolute;z-index:12;left:50%;bottom:20vh;transform:translate(-50%,16px);width:min(480px,88vw);padding:13px 16px;border-radius:18px;background:#07101fe0;border:1px solid #ffffff28;backdrop-filter:blur(12px);text-align:center;font-weight:900;opacity:0;pointer-events:none;transition:.28s}
     .how.show{opacity:1;transform:translate(-50%,0)}
     @media(max-width:700px){
@@ -96,21 +109,49 @@
       <h1>DOUBLE</h1>
       <p id="sub">מצא מהר. צבור נקודות.</p>
       <div class="lives" id="lives"></div>
-      <a class="play" href="double-game.html?v=1">▶ שחק עכשיו</a>
+      <button class="play" type="button" data-open-game>▶ שחק עכשיו</button>
     </section>
 
     <div class="how" id="how">מצא את הסמל היחיד שמופיע בשני הקלפים — ולחץ עליו לפני שהזמן או היריב מנצחים אותך.</div>
 
+    
     <div class="overlay" id="overlay"></div>
-    <aside class="drawer" id="drawer" aria-hidden="true">
-      <div class="drawer-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button">✕</button></div>
+    <aside class="dropdown" id="dropdown" aria-hidden="true">
+      <div class="dropdown-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button" aria-label="סגור">✕</button></div>
       <nav class="nav">
-        <a href="double-game.html?v=1"><span>▶️</span>שחק עכשיו</a>
-        <a href="double-game.html?v=1"><span>🎮</span>מצבי משחק</a>
-        <a href="double-game.html?v=1"><span>🎙️</span>בחר כרוז</a>
+        <button class="primary-menu" type="button" data-open-game><span>▶️</span>שחק עכשיו</button>
+        <button type="button" data-toggle-modes><span>🎮</span>מצבי משחק</button>
+        <div class="drop-section" id="modesSection">
+          <div class="drop-title">בחר מצב</div>
+          <div class="mode-mini-grid">
+            <button class="mode-mini" type="button" data-launch-mode="classic"><b>⚡ קלאסי</b><small>ניקוד ומהירות</small></button>
+            <button class="mode-mini" type="button" data-launch-mode="levels"><b>🗺️ שלבים</b><small>עולם מתקדם</small></button>
+            <button class="mode-mini" type="button" data-launch-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד בזמן</small></button>
+            <button class="mode-mini" type="button" data-launch-mode="survival"><b>🛡️ הישרדות</b><small>מוסיף זמן</small></button>
+            <button class="mode-mini" type="button" data-launch-mode="sprint"><b>⏱️ מרוץ זמן</b><small>שבור שיא</small></button>
+            <button class="mode-mini" type="button" data-launch-mode="versus"><b>👥 שני שחקנים</b><small>ראש בראש</small></button>
+          </div>
+        </div>
+        <button type="button" data-toggle-voices><span>🎙️</span>בחר כרוז</button>
+        <div class="drop-section" id="voicesSection">
+          <div class="drop-title">הבחירה נשמרת למשחק</div>
+          <div class="voice-mini-grid">
+            <button class="voice-mini" type="button" data-voice="british"><b>🇬🇧 British</b><small>בריטי</small></button>
+            <button class="voice-mini" type="button" data-voice="russian"><b>🇷🇺 Русский</b><small>רוסית</small></button>
+            <button class="voice-mini" type="button" data-voice="italian"><b>🇮🇹 Italiano</b><small>איטלקית</small></button>
+            <button class="voice-mini" type="button" data-voice="american"><b>🇺🇸 American</b><small>הייפ</small></button>
+            <button class="voice-mini" type="button" data-voice="japanese"><b>🇯🇵 日本語</b><small>יפנית</small></button>
+            <button class="voice-mini" type="button" data-voice="arcade"><b>🎮 Arcade</b><small>משחקי</small></button>
+          </div>
+        </div>
         <button type="button" id="howBtn"><span>❓</span>איך משחקים</button>
       </nav>
     </aside>
+
+    <section class="game-shell" id="gameShell" aria-hidden="true">
+      <button class="game-shell-close" id="gameShellClose" type="button">✕ חזרה לדף הנחיתה</button>
+      <iframe id="gameFrame" title="DOUBLE game" loading="eager"></iframe>
+    </section>
   </main>
 
   <script>
@@ -174,11 +215,68 @@
       }
       apply();setInterval(apply,2900);
 
-      const drawer=document.getElementById('drawer'),overlay=document.getElementById('overlay');
-      const open=()=>{drawer.classList.add('open');overlay.classList.add('open');drawer.setAttribute('aria-hidden','false')};
-      const close=()=>{drawer.classList.remove('open');overlay.classList.remove('open');drawer.setAttribute('aria-hidden','true')};
-      document.getElementById('menuBtn').onclick=open;document.getElementById('closeBtn').onclick=close;overlay.onclick=close;
-      document.getElementById('howBtn').onclick=()=>{close();const h=document.getElementById('how');h.classList.add('show');setTimeout(()=>h.classList.remove('show'),3500)};
+      
+      const dropdown=document.getElementById('dropdown'),overlay=document.getElementById('overlay');
+      const modesSection=document.getElementById('modesSection');
+      const voicesSection=document.getElementById('voicesSection');
+      const gameShell=document.getElementById('gameShell');
+      const gameFrame=document.getElementById('gameFrame');
+      const VOICE_KEY='double-announcer-pack-v1';
+
+      const openMenu=()=>{dropdown.classList.add('open');overlay.classList.add('open');dropdown.setAttribute('aria-hidden','false')};
+      const closeMenu=()=>{dropdown.classList.remove('open');overlay.classList.remove('open');dropdown.setAttribute('aria-hidden','true')};
+
+      function updateVoiceButtons(){
+        let selected='british';
+        try{selected=localStorage.getItem(VOICE_KEY)||'british'}catch(_){}
+        document.querySelectorAll('[data-voice]').forEach(b=>b.classList.toggle('active',b.dataset.voice===selected));
+      }
+
+      function launchGame(target){
+        closeMenu();
+        gameShell.classList.add('open');
+        gameShell.setAttribute('aria-hidden','false');
+        gameFrame.src='double-game.html?v=2';
+        gameFrame.onload=()=>{
+          if(!target) return;
+          setTimeout(()=>{
+            try{
+              const d=gameFrame.contentDocument;
+              const selectors={
+                classic:'[data-mode="classic"]',
+                knockout:'[data-mode="knockout"]',
+                survival:'[data-mode="survival"]',
+                levels:'[data-open-levels]',
+                sprint:'[data-open-sprint]',
+                versus:'[data-open-versus]'
+              };
+              d?.querySelector(selectors[target])?.click();
+            }catch(_){}
+          },120);
+        };
+      }
+
+      function closeGame(){
+        gameShell.classList.remove('open');
+        gameShell.setAttribute('aria-hidden','true');
+        gameFrame.src='about:blank';
+      }
+
+      document.getElementById('menuBtn').onclick=openMenu;
+      document.getElementById('closeBtn').onclick=closeMenu;
+      overlay.onclick=closeMenu;
+      document.querySelectorAll('[data-open-game]').forEach(b=>b.addEventListener('click',()=>launchGame(null)));
+      document.querySelector('[data-toggle-modes]').onclick=()=>{modesSection.classList.toggle('open');voicesSection.classList.remove('open')};
+      document.querySelector('[data-toggle-voices]').onclick=()=>{voicesSection.classList.toggle('open');modesSection.classList.remove('open')};
+      document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>launchGame(b.dataset.launchMode)));
+      document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>{
+        try{localStorage.setItem(VOICE_KEY,b.dataset.voice)}catch(_){}
+        updateVoiceButtons();
+      }));
+      updateVoiceButtons();
+      document.getElementById('gameShellClose').onclick=closeGame;
+      document.getElementById('howBtn').onclick=()=>{closeMenu();const h=document.getElementById('how');h.classList.add('show');setTimeout(()=>h.classList.remove('show'),3500)};
+      document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(gameShell.classList.contains('open'))closeGame();else closeMenu()}});
       window.addEventListener('resize',()=>{if(board.querySelector('.cursor')){const m=modes[(index-1+modes.length)%modes.length];round(m)}});
     })();
   </script>
