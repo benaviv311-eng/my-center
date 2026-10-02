@@ -84,3 +84,100 @@ if(typeof window!=='undefined'&&Array.isArray(window.PROFESSIONAL_WOMEN_GALLERY)
 if(typeof module!=='undefined'&&module.exports){
   module.exports={EXTRA_PROFESSIONAL_WOMEN_GALLERY,extendProfessionalWomenGallery};
 }
+
+
+/* Dynamic Wikimedia Commons pool — metadata only, images load lazily when used */
+const VOLLEYBALL_COMMONS_SEARCHES=[
+  {playerName:'Zehra Güneş',query:'Zehra Güneş volleyball'},
+  {playerName:'Hande Baladın',query:'Hande Baladın volleyball'},
+  {playerName:'Ebrar Karakurt',query:'Ebrar Karakurt volleyball'},
+  {playerName:'Paola Egonu',query:'Paola Egonu volleyball'},
+  {playerName:'Tijana Bošković',query:'Tijana Bošković volleyball'},
+  {playerName:'Gabriela Guimarães',query:'Gabriela Guimarães volleyball'},
+  {playerName:'April Ross',query:'April Ross beach volleyball'},
+  {playerName:'Laura Ludwig',query:'Laura Ludwig beach volleyball'},
+  {playerName:'Kira Walkenhorst',query:'Kira Walkenhorst beach volleyball'},
+  {playerName:'Ágatha Bednarczuk',query:'Ágatha Bednarczuk beach volleyball'},
+  {playerName:'Kerri Walsh Jennings',query:'Kerri Walsh Jennings beach volleyball'},
+  {playerName:'Misty May-Treanor',query:'Misty May-Treanor beach volleyball'}
+];
+
+const commonsSearchUrl=(query,limit=14)=>{
+  const params=new URLSearchParams({
+    action:'query',
+    generator:'search',
+    gsrsearch:query,
+    gsrnamespace:'6',
+    gsrlimit:String(limit),
+    prop:'imageinfo',
+    iiprop:'url|extmetadata',
+    iiurlwidth:'1600',
+    format:'json',
+    origin:'*'
+  });
+  return 'https://commons.wikimedia.org/w/api.php?'+params.toString();
+};
+
+const commonsPageToGalleryItem=(page,playerName)=>{
+  const info=page?.imageinfo?.[0];
+  const meta=info?.extmetadata||{};
+  const url=info?.thumburl||info?.url;
+  if(!url)return null;
+  const title=String(page.title||'').replace(/^File:/,'');
+  if(!/\.(jpe?g|png|webp)$/i.test(title))return null;
+  const license=(meta.LicenseShortName?.value||meta.License?.value||'Wikimedia Commons').replace(/<[^>]*>/g,'');
+  const artist=(meta.Artist?.value||'Wikimedia Commons').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+  return {
+    playerName,
+    action:'צילום משחק מקצועני',
+    license,
+    credit:artist||'Wikimedia Commons',
+    professional:true,
+    imageUrl:url,
+    creditUrl:info.descriptionurl||('https://commons.wikimedia.org/wiki/'+encodeURIComponent(page.title||'')),
+    alt:playerName+' — צילום כדורעף מקצועני',
+    dynamicCommons:true
+  };
+};
+
+async function loadExpandedProfessionalGallery(target){
+  if(!Array.isArray(target)||typeof fetch!=='function')return target;
+  if(loadExpandedProfessionalGallery.running)return loadExpandedProfessionalGallery.running;
+  loadExpandedProfessionalGallery.running=(async()=>{
+    const seen=new Set(target.map(item=>item.imageUrl));
+    const results=await Promise.allSettled(VOLLEYBALL_COMMONS_SEARCHES.map(async source=>{
+      const response=await fetch(commonsSearchUrl(source.query),{mode:'cors',credentials:'omit'});
+      if(!response.ok)throw new Error('Commons '+response.status);
+      const data=await response.json();
+      const pages=Object.values(data?.query?.pages||{});
+      return pages.map(page=>commonsPageToGalleryItem(page,source.playerName)).filter(Boolean);
+    }));
+    let added=0;
+    for(const result of results){
+      if(result.status!=='fulfilled')continue;
+      for(const image of result.value){
+        if(seen.has(image.imageUrl))continue;
+        target.push(image);
+        seen.add(image.imageUrl);
+        added++;
+      }
+    }
+    window.VOLLEYBALL_GALLERY_VERSION=(window.VOLLEYBALL_GALLERY_VERSION||0)+1;
+    window.dispatchEvent(new CustomEvent('volleyball:gallery-expanded',{detail:{added,total:target.length}}));
+    return target;
+  })().finally(()=>{loadExpandedProfessionalGallery.running=null;});
+  return loadExpandedProfessionalGallery.running;
+}
+
+if(typeof window!=='undefined'){
+  window.VOLLEYBALL_COMMONS_SEARCHES=VOLLEYBALL_COMMONS_SEARCHES;
+  window.loadExpandedProfessionalGallery=loadExpandedProfessionalGallery;
+  const startExpandedGallery=()=>{
+    if(Array.isArray(window.PROFESSIONAL_WOMEN_GALLERY)){
+      extendProfessionalWomenGallery(window.PROFESSIONAL_WOMEN_GALLERY);
+      loadExpandedProfessionalGallery(window.PROFESSIONAL_WOMEN_GALLERY).catch(()=>{});
+    }
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startExpandedGallery,{once:true});
+  else startExpandedGallery();
+}
