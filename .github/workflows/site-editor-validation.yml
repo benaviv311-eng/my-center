@@ -22,6 +22,8 @@ jobs:
         run: git fetch origin main:refs/remotes/origin/main
       - name: Enforce edit policy
         run: node scripts/site-editor-policy-check.mjs
+      - name: Screen migration safety
+        run: node scripts/site-editor-migration-check.mjs
       - name: Check browser JavaScript
         run: |
           node --check site-chat.js
