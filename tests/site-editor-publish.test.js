@@ -27,3 +27,21 @@ test('publish status is tied to the exact approved head sha',()=>{
   assert.match(fn,/approved_head_sha/);
   assert.match(fn,/stale_plan/);
 });
+
+
+test('preview is tokenized read-only and cannot register a service worker',()=>{
+  const preview=read('supabase/functions/site-preview/index.ts');
+  const migration=read('supabase/migrations/20260919_site_editor_preview.sql');
+  assert.match(migration,/token_hash/);
+  assert.match(migration,/expires_at/);
+  assert.match(preview,/Cache-Control/);
+  assert.match(preview,/no-store/);
+  assert.match(preview,/X-Robots-Tag/);
+  assert.match(preview,/noindex/);
+  assert.match(preview,/serviceWorker/);
+  assert.match(preview,/x-site-editor-internal-secret/);
+  const editor=read('supabase/functions/site-editor/index.ts');
+  assert.match(editor,/create_preview/);
+  assert.match(editor,/preview_read/);
+  assert.match(editor,/SITE_EDITOR_INTERNAL_SECRET/);
+});
