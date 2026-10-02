@@ -133,6 +133,21 @@ async function githubRequest(path:string,init:RequestInit={}){
   return data;
 }
 
+async function githubRequestMaybe(path:string){
+  const token=await installationToken();
+  const response=await fetch(`${GITHUB_API}${path}`,{
+    headers:{
+      Authorization:`Bearer ${token}`,
+      Accept:"application/vnd.github+json",
+      "X-GitHub-Api-Version":GITHUB_API_VERSION
+    }
+  });
+  if(response.status===404)return null;
+  const data=await response.json().catch(()=>null);
+  if(!response.ok)throw new EditorError("github_unavailable",503);
+  return data;
+}
+
 function repoPath(path:string){
   return `/repos/${encodeURIComponent(GITHUB_REPO_OWNER)}/${encodeURIComponent(GITHUB_REPO_NAME)}${path}`;
 }
@@ -152,6 +167,14 @@ export async function githubReadFile(path:string,ref:string):Promise<{path:strin
   const encoded=path.split("/").map(encodeURIComponent).join("/");
   const data=await githubRequest(repoPath(`/contents/${encoded}?ref=${encodeURIComponent(ref)}`));
   if(!data||Array.isArray(data)||data.type!=="file"||typeof data.content!=="string")throw new EditorError("github_unavailable",503);
+  return {path:data.path,sha:data.sha,content:decodeBase64Utf8(data.content)};
+}
+
+export async function githubReadFileMaybe(path:string,ref:string):Promise<{path:string;sha:string;content:string}|null>{
+  const encoded=path.split("/").map(encodeURIComponent).join("/");
+  const data=await githubRequestMaybe(repoPath(`/contents/${encoded}?ref=${encodeURIComponent(ref)}`));
+  if(!data)return null;
+  if(Array.isArray(data)||data.type!=="file"||typeof data.content!=="string")throw new EditorError("github_unavailable",503);
   return {path:data.path,sha:data.sha,content:decodeBase64Utf8(data.content)};
 }
 
@@ -355,4 +378,10 @@ export async function githubDispatchWorkflow(
     if(run)return run.id;
   }
   return 0;
+}
+
+
+export async function githubCommitChangedPaths(sha:string):Promise<string[]>{
+  const data=await githubRequest(repoPath(`/commits/${encodeURIComponent(sha)}`));
+  return [...new Set((data?.files||[]).map((file:any)=>String(file?.filename||"")).filter(Boolean))];
 }
