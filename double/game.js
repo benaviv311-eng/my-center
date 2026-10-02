@@ -12,7 +12,7 @@
   const MAX_STAGE=20;
 
   const AVATAR_CATEGORIES={
-    all:'הכול',emoji:'אימוג׳י',animals:'חיות',people:'אנשים',robots:'רובוטים',
+    all:'הכול',emoji:'אימוג׳י',animals:'חיות',people:'אנשים',realistic:'ריאליסטי',robots:'רובוטים',
     fantasy:'פנטזיה',sports:'ספורט',food:'אוכל',symbols:'סמלים'
   };
   const AVATAR_CATALOG=[
@@ -44,6 +44,16 @@
     {id:'musician',category:'people',label:'מוזיקאי',glyph:'🧑‍🎤'},
     {id:'gamer',category:'people',label:'גיימר',glyph:'🧑‍💻'},
     {id:'ninja-human',category:'people',label:'נינג׳ה',glyph:'🥷'},
+    {id:'real-captain',category:'realistic',label:'קפטן',kind:'portrait',skin:'#d69a72',hair:'#241813',shirt:'#1777d2',eye:'#2a211e',hairStyle:'short'},
+    {id:'real-runner',category:'realistic',label:'רצה',kind:'portrait',skin:'#8f5f45',hair:'#171311',shirt:'#e95d7f',eye:'#171311',hairStyle:'long'},
+    {id:'real-coach',category:'realistic',label:'מאמן',kind:'portrait',skin:'#efc19d',hair:'#5a3825',shirt:'#1c9a73',eye:'#31404b',hairStyle:'crop'},
+    {id:'real-gamer',category:'realistic',label:'גיימר',kind:'portrait',skin:'#c98662',hair:'#1d1a22',shirt:'#7b5cff',eye:'#2c1c17',hairStyle:'wave'},
+    {id:'real-athlete',category:'realistic',label:'ספורטאי',kind:'portrait',skin:'#6f432f',hair:'#120f0e',shirt:'#f3a928',eye:'#120f0e',hairStyle:'buzz'},
+    {id:'real-athlete-w',category:'realistic',label:'ספורטאית',kind:'portrait',skin:'#e6ae88',hair:'#43251e',shirt:'#ee4c8b',eye:'#3a241d',hairStyle:'ponytail'},
+    {id:'real-striker',category:'realistic',label:'לוחם',kind:'portrait',skin:'#b77453',hair:'#2d1d17',shirt:'#3c465c',eye:'#211914',hairStyle:'fade'},
+    {id:'real-tactician',category:'realistic',label:'טקטיקן',kind:'portrait',skin:'#f2c7a2',hair:'#a36b42',shirt:'#2d8dbb',eye:'#4d3a2e',hairStyle:'side'},
+    {id:'real-star',category:'realistic',label:'כוכבת',kind:'portrait',skin:'#9d694f',hair:'#2a1712',shirt:'#934fca',eye:'#211512',hairStyle:'curly'},
+    {id:'real-rookie',category:'realistic',label:'רוקי',kind:'portrait',skin:'#dca37f',hair:'#6b442f',shirt:'#e2543e',eye:'#3b2a23',hairStyle:'messy'},
     {id:'robot',category:'robots',label:'רובוט',glyph:'🤖'},
     {id:'alienbot',category:'robots',label:'בוט חלל',glyph:'👾'},
     {id:'armbot',category:'robots',label:'בוט כוח',glyph:'🦾'},
@@ -94,6 +104,7 @@
   let versusVariant='duel', versusTarget=10, versusLives=[3,3], versusRound=0, versusDeckOrder=[], versusDeckIndex=0, versusStreak=[0,0];
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
+  let lastAnnouncerLine='';
 
   const $=id=>document.getElementById(id);
 
@@ -146,11 +157,19 @@
     }catch(_){return defaultVersusAvatars()}
   }
   function saveVersusAvatars(){safeSet(VERSUS_AVATARS_KEY,JSON.stringify(versusAvatars))}
+  function avatarVisualHtml(a){
+    if(a.kind!=='portrait') return '<span class="avatar-glyph">'+a.glyph+'</span>';
+    return '<span class="avatar-glyph avatar-portrait hair-'+a.hairStyle+'" style="--skin:'+a.skin+';--hair:'+a.hair+';--shirt:'+a.shirt+';--eye:'+a.eye+'">'+
+      '<i class="portrait-neck"></i><i class="portrait-shirt"></i><i class="portrait-head"></i><i class="portrait-ear portrait-ear-l"></i><i class="portrait-ear portrait-ear-r"></i>'+
+      '<i class="portrait-hair"></i><i class="portrait-brow portrait-brow-l"></i><i class="portrait-brow portrait-brow-r"></i>'+
+      '<i class="portrait-eye portrait-eye-l"></i><i class="portrait-eye portrait-eye-r"></i><i class="portrait-nose"></i><i class="portrait-mouth"></i>'+
+    '</span>';
+  }
   function avatarSetupHtml(player){
     const a=avatarById(versusAvatars[player]);
     const num=player==='p1'?1:2;
     return '<div class="avatar-setup-row">'+
-      '<div class="avatar-preview '+player+'-avatar"><span class="avatar-glyph">'+a.glyph+'</span><span><b>'+a.label+'</b><small>'+AVATAR_CATEGORIES[a.category]+'</small></span></div>'+
+      '<div class="avatar-preview '+player+'-avatar">'+avatarVisualHtml(a)+'<span><b>'+a.label+'</b><small>'+AVATAR_CATEGORIES[a.category]+'</small></span></div>'+
       '<button type="button" class="avatar-change" data-change-avatar="'+player+'">החלף אווטר</button>'+
     '</div>';
   }
@@ -158,7 +177,7 @@
     const a=avatarById(versusAvatars[player]);
     const num=player==='p1'?1:2;
     return '<div class="live-avatar-hud '+player+'-avatar" data-avatar-player="'+player+'">'+
-      '<span class="avatar-glyph" aria-hidden="true">'+a.glyph+'</span>'+
+      avatarVisualHtml(a)+
       '<span class="avatar-live-copy"><b>שחקן '+num+'</b><small>'+a.label+'</small></span>'+
     '</div>';
   }
@@ -380,6 +399,85 @@
     return preferred||english[0]||voices[0]||null;
   }
 
+  const ANNOUNCER_LINES={
+    start:['LET’S GO!','READY? GO!','GAME ON!','LET THE GAME BEGIN!'],
+    versusStart:['BATTLE START!','HEAD TO HEAD!','LET’S BATTLE!','READY, PLAYERS!'],
+    versusSuccess:['NICE HIT!','GREAT FIND!','QUICK EYES!','THAT’S IT!','AWESOME!'],
+    combo:['ON FIRE!','KEEP IT GOING!','UNSTOPPABLE!','WHAT A STREAK!'],
+    level:['LEVEL UP!','NEXT LEVEL!','YOU’RE MOVING UP!','KEEP CLIMBING!'],
+    boss:['BOSS ROUND!','BIG CHALLENGE!','HERE COMES THE BOSS!'],
+    bossWin:['BOSS DEFEATED!','YOU BEAT THE BOSS!','WHAT A WIN!'],
+    gold:['GOLDEN HIT!','JACKPOT!','BIG POINTS!'],
+    wrong:['STAY SHARP!','KEEP GOING!','YOU’VE GOT THIS!'],
+    win:['CHAMPION!','WHAT A BATTLE!','VICTORY!','AMAZING WIN!'],
+    finish:['GREAT GAME!','NICE WORK!','WHAT A RUN!']
+  };
+
+  function pickAnnouncerLine(kind,player){
+    const pool=(ANNOUNCER_LINES[kind]||ANNOUNCER_LINES.start).map(line=>{
+      if(player===0) return 'PLAYER ONE! '+line;
+      if(player===1) return 'PLAYER TWO! '+line;
+      return line;
+    });
+    const choices=pool.filter(x=>x!==lastAnnouncerLine);
+    const line=(choices.length?choices:pool)[Math.floor(Math.random()*(choices.length?choices.length:pool.length))];
+    lastAnnouncerLine=line;
+    return line;
+  }
+
+  function playEventSound(kind){
+    try{
+      const AudioCtx=window.AudioContext||window.webkitAudioContext;
+      if(!AudioCtx) return;
+      if(!window.__doubleAudioCtx) window.__doubleAudioCtx=new AudioCtx();
+      const ctx=window.__doubleAudioCtx;
+      if(ctx.state==='suspended') ctx.resume();
+      const now=ctx.currentTime;
+      const maps={
+        start:[392,523,659],versusStart:[330,494,659],versusSuccess:[523,659,784],
+        combo:[659,784,988,1175],level:[523,659,784,1047],boss:[131,165,196],
+        bossWin:[392,523,659,784,1047],gold:[659,988,1319],wrong:[180,140],
+        win:[523,659,784,1047,1319],finish:[440,554,659]
+      };
+      const notes=maps[kind]||maps.start;
+      notes.forEach((hz,i)=>{
+        const osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.type=kind==='boss'||kind==='wrong'?'sawtooth':(i%2?'triangle':'sine');
+        osc.frequency.setValueAtTime(hz,now+i*.055);
+        gain.gain.setValueAtTime(.0001,now+i*.055);
+        gain.gain.exponentialRampToValueAtTime(kind==='wrong'?.055:.075,now+i*.055+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+i*.055+.19);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(now+i*.055);osc.stop(now+i*.055+.21);
+      });
+    }catch(_){}
+  }
+
+  function showAnnouncerText(text,kind='start'){
+    let el=document.getElementById('announcerCallout');
+    if(!el){
+      el=document.createElement('div');el.id='announcerCallout';el.className='announcer-callout';document.body.appendChild(el);
+    }
+    el.dataset.kind=kind;
+    el.textContent=text;
+    el.style.animation='none';void el.offsetWidth;el.style.animation='';
+    clearTimeout(el._t);el._t=setTimeout(()=>{el.textContent=''},950);
+  }
+
+  function announceMoment(kind,player=null){
+    const text=pickAnnouncerLine(kind,player);
+    playEventSound(kind);
+    showAnnouncerText(text,kind);
+    if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined') return;
+    try{
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text.replace(/!/g,''));
+      u.lang='en-US';u.rate=kind==='boss'?.92:1.12;u.pitch=kind==='win'||kind==='gold'?1.2:1.08;u.volume=1;
+      const voice=excitingVoice();if(voice)u.voice=voice;
+      window.speechSynthesis.speak(u);
+    }catch(_){}
+  }
+
   function playSuccessChime(level){
     try{
       const AudioCtx=window.AudioContext||window.webkitAudioContext;
@@ -487,9 +585,46 @@
     setTimeout(()=>amount.remove(),1550);
   }
 
+  function jumpCoinsFrom(sourceEl,count,player=null){
+    const source=sourceEl&&sourceEl.getBoundingClientRect?sourceEl.getBoundingClientRect():null;
+    const x=source?source.left+source.width/2:window.innerWidth/2;
+    const y=source?source.top+source.height/2:window.innerHeight*.52;
+    const visible=Math.max(5,Math.min(16,5+(count*2)));
+    for(let i=0;i<visible;i++){
+      const coin=document.createElement('span');
+      coin.className='jump-coin'+(player===0?' coin-p1':player===1?' coin-p2':'');
+      coin.textContent='🪙';
+      coin.style.left=x+'px';coin.style.top=y+'px';
+      coin.style.setProperty('--jx',((Math.random()-.5)*120)+'px');
+      coin.style.setProperty('--jy',(-70-Math.random()*95)+'px');
+      coin.style.setProperty('--jfall',(18+Math.random()*52)+'px');
+      coin.style.setProperty('--jr',((Math.random()*540)-270)+'deg');
+      coin.style.animationDelay=(i*22)+'ms';
+      document.body.appendChild(coin);
+      setTimeout(()=>coin.remove(),1050);
+    }
+    const hud=player===0?document.querySelector('.live-avatar-hud.p1-avatar'):player===1?document.querySelector('.live-avatar-hud.p2-avatar'):null;
+    if(hud){
+      hud.classList.remove('coin-hit');void hud.offsetWidth;hud.classList.add('coin-hit');
+      setTimeout(()=>hud.classList.remove('coin-hit'),420);
+    }
+  }
+
   function celebrateSuccess(reward,sourceEl){
     burstCoins(sourceEl,reward.coins);
+    jumpCoinsFrom(sourceEl,reward.coins);
     showEncouragement(reward);
+  }
+
+  function rewardVersusSuccess(player,sourceEl,points){
+    const bonus=versusStreak[player]>=5?2:versusStreak[player]>=3?1:0;
+    const coins=1+bonus+(points>1?2:0);
+    profile.coins+=coins;profile.totalSuccess++;saveProfile();
+    jumpCoinsFrom(sourceEl,coins,player);
+    if(points>1) announceMoment('gold',player);
+    else if(versusStreak[player]>=3) announceMoment('combo',player);
+    else announceMoment('versusSuccess',player);
+    return coins;
   }
 
   function rotating(){
@@ -572,6 +707,7 @@
     renderPlayerButtons();
     update();
     newRound();
+    setTimeout(()=>announceMoment(mode==='versus'?'versusStart':'start'),120);
   }
 
   function finishByTime(){
@@ -842,7 +978,8 @@
       scores[player]+=points;
       selected.classList.add('versus-winner');
       avatarReact(player===0?'p1':'p2','win',700);
-      flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!'+(points>1?' +'+points+' נק׳ ⭐':''));
+      const earned=rewardVersusSuccess(player,selected,points);
+      flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!'+(points>1?' +'+points+' נק׳ ⭐':'')+' · 🪙+'+earned);
       update();
       if(checkVersusEnd()) return;
       setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
@@ -860,6 +997,8 @@
         endVersusMatch(1-player);
         return;
       }else{
+        playEventSound('wrong');
+        if(Math.random()<.35) announceMoment('wrong',player);
         flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
       }
       setTimeout(()=>selected.classList.remove('versus-wrong'),280);
@@ -896,8 +1035,9 @@
     if(versusVariant==='deck') detail+=' · החפיסה הסתיימה';
     if(versusVariant==='knockout') detail+=' · חיים '+versusLives[0]+' : '+versusLives[1];
     if(versusVariant==='combo') detail+=' · רצף מנצח '+Math.max(...versusStreak);
-    if(winner!==null) avatarReact(winner===0?'p1':'p2','champion',800);
-    setTimeout(()=>{if(active)endGame(title,detail)},560);
+    if(winner!==null){avatarReact(winner===0?'p1':'p2','champion',800);announceMoment('win',winner)}
+    else announceMoment('finish');
+    setTimeout(()=>{if(active)endGame(title,detail)},760);
   }
 
   function versusActionForCode(code){
@@ -926,7 +1066,7 @@
   function enterBoss(silent=false){
     bossActive=true;bossProgress=0;bossGoal=bossGoalForLevel();bossTimeBefore=time;
     time=Math.min(time,12);
-    if(!silent) flash('👑 בוס! '+bossGoal+' התאמות');
+    if(!silent){flash('👑 בוס! '+bossGoal+' התאמות');announceMoment('boss')}
   }
   function completeBoss(){
     bossActive=false;
@@ -946,6 +1086,7 @@
     levelAssistUses=0;
     levelAssisted=false;
     flash('👑 הבוס הובס! שלב '+level+' נפתח');
+    announceMoment('bossWin');
     return true;
   }
   function completeStage(){
@@ -967,6 +1108,7 @@
     }else{
       time+=8;
       flash('⬆️ שלב '+level+' נפתח · +8 שניות');
+      announceMoment('level');
     }
     return true;
   }
@@ -1403,7 +1545,7 @@
     ).join('');
     const avatars=visible.map(a=>
       '<button type="button" class="avatar-option'+(a.id===current.id?' selected':'')+'" data-avatar-id="'+a.id+'">'+
-        '<span class="avatar-glyph">'+a.glyph+'</span><small>'+a.label+'</small>'+
+        avatarVisualHtml(a)+'<small>'+a.label+'</small>'+
       '</button>'
     ).join('');
 
@@ -1413,7 +1555,7 @@
         <div><h2>בחר אווטר — שחקן ${num}</h2><small>האוואטר נשמר אוטומטית לפעם הבאה</small></div>
       </div>
       <div class="avatar-picker-current ${player}-avatar">
-        <span class="avatar-glyph">${current.glyph}</span>
+        ${avatarVisualHtml(current)}
         <div><b>${current.label}</b><small>${AVATAR_CATEGORIES[current.category]}</small></div>
         <button type="button" class="action secondary" data-random-avatar>🎲 אקראי</button>
       </div>
