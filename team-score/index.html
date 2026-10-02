@@ -21,7 +21,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <div id="load">TeamScore<small>טוען את האפליקציה…</small></div>
 <script>
 (async function(){
-  const VERSION="32";
+  const VERSION="33";
   const tnames=["t1.txt","t2.txt","t3.txt","t4.txt"];
   const bnames=["b1.txt","b2.txt","b3.txt","b4.txt"];
   const read=async n=>{const r=await fetch(n+"?v="+VERSION,{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
@@ -40,10 +40,11 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   // portrait WebPs as the visible full-screen background.
   bgs.forEach((b,i)=>{html=html.replaceAll("__BG"+(i+1)+"__","data:image/webp;base64,"+b.trim())});
 
-  // Use an independent fixed background layer so app-internal styles cannot hide it.
+  // Apply the approved portrait image directly to the live app shell.
+  // This cannot be hidden by an opaque full-screen wrapper above the page background.
   html=html
-    .replace(/<link[^>]+href=["'][^"']*backgrounds\.css[^"']*["'][^>]*>/gi,"")
-    .replace(/<script[^>]+src=["'][^"']*backgrounds\.js[^"']*["'][^>]*>\s*<\/script>/gi,"");
+    .replace(/<link[^>]+href=["'][^"']*backgrounds\\.css[^"']*["'][^>]*>/gi,"")
+    .replace(/<script[^>]+src=["'][^"']*backgrounds\\.js[^"']*["'][^>]*>\\s*<\\/script>/gi,"");
 
   const bgImgs=[
     'assets/mobile/p1.webp?v='+VERSION,
@@ -51,27 +52,35 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
     'assets/mobile/p3.webp?v='+VERSION,
     'assets/mobile/p4.webp?v='+VERSION
   ];
-  const fixedCss='<style id="teamScoreFixedBgCss">'+
-    'html,body{background:#11151d!important}'+
-    '#teamScoreFixedBg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#11151d;pointer-events:none}'+
-    '#teamScoreFixedBg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;opacity:0;transition:opacity 1s ease;filter:none!important;transform:none!important}'+
-    '#teamScoreFixedBg img.active{opacity:1}'+
-    '.rotating-bg{display:none!important}'+
-    '.wrap{position:relative!important;z-index:2!important}'+
-    '</style>';
-  const fixedHtml='<div id="teamScoreFixedBg" aria-hidden="true">'+
-    '<img id="teamScoreBgA" class="active" src="'+bgImgs[0]+'" alt="">'+
-    '<img id="teamScoreBgB" src="'+bgImgs[1]+'" alt="">'+
-    '</div>';
-  const fixedJs='<script>(function(){'+
-    'var imgs='+JSON.stringify(bgImgs)+',a=document.getElementById("teamScoreBgA"),b=document.getElementById("teamScoreBgB"),i=0,onA=true;'+
-    'if(!a||!b)return;imgs.forEach(function(s){var x=new Image();x.src=s});'+
-    'setInterval(function(){i=(i+1)%imgs.length;var n=onA?b:a,c=onA?a:b;n.src=imgs[i];n.classList.add("active");c.classList.remove("active");onA=!onA},15000);'+
-    '})();<\/script>';
-  html=html.replace("</head>",fixedCss+"</head>")
-           .replace("<body>","<body>"+fixedHtml)
-           .replace("</body>",fixedJs+"</body>");
 
+  const shellCss='<style id="teamScoreShellBgCss">'+
+    'html,body{min-height:100%!important;background:#11151d!important}'+
+    '.rotating-bg{display:none!important}'+
+    '</style>';
+
+  const shellJs='<script>(function(){'+
+    'var imgs='+JSON.stringify(bgImgs)+',i=0,target=null;'+
+    'function area(el){var r=el.getBoundingClientRect();return Math.max(0,r.width)*Math.max(0,r.height)}'+
+    'function pick(){'+
+      'target=document.querySelector(".wrap")||document.querySelector(".app-shell")||document.querySelector(".app")||document.querySelector("#app");'+
+      'if(!target){var all=[].slice.call(document.body.querySelectorAll("div,main,section"));var best=null,bestA=0;all.forEach(function(el){var r=el.getBoundingClientRect();if(r.width>=innerWidth*.85&&r.height>=innerHeight*.75){var a=area(el);if(a>bestA){best=el;bestA=a}}});target=best||document.body;}'+
+      'return target;'+
+    '}'+
+    'function apply(){var el=target||pick();if(!el)return;'+
+      'el.style.setProperty("background-image","url(\\\""+imgs[i]+"\\\")","important");'+
+      'el.style.setProperty("background-size","cover","important");'+
+      'el.style.setProperty("background-position","center center","important");'+
+      'el.style.setProperty("background-repeat","no-repeat","important");'+
+      'document.body.style.setProperty("background-color","#11151d","important");'+
+    '}'+
+    'imgs.forEach(function(s){var x=new Image();x.src=s});'+
+    'function boot(){pick();apply();setTimeout(apply,250);setTimeout(apply,1000);}'+
+    'if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});else boot();'+
+    'setInterval(function(){i=(i+1)%imgs.length;apply()},15000);'+
+    'addEventListener("resize",function(){target=null;setTimeout(apply,80)},{passive:true});'+
+  '})();<\\/script>';
+
+  html=html.replace("</head>",shellCss+"</head>").replace("</body>",shellJs+"</body>");
   html=html.replaceAll("icon-192.png","icon.svg").replaceAll("icon-512.png","icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
