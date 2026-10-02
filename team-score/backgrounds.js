@@ -1,40 +1,33 @@
 (()=>{
-  const DESKTOP_PLAYERS=[
-    {name:'maya',  file:'assets/hd-sprites/maya.webp?v=31'},
-    {name:'sofia', file:'assets/hd-sprites/sofia.webp?v=31'},
-    {name:'nia',   file:'assets/hd-sprites/nia.webp?v=31'},
-    {name:'lena',  file:'assets/hd-sprites/lena.webp?v=31'}
+  const PLAYERS=[
+    {name:'maya',  file:'assets/hd-sprites/maya.webp?v=35'},
+    {name:'sofia', file:'assets/hd-sprites/sofia.webp?v=35'},
+    {name:'nia',   file:'assets/hd-sprites/nia.webp?v=35'},
+    {name:'lena',  file:'assets/hd-sprites/lena.webp?v=35'}
   ];
-  const MOBILE_IMAGES=[
-    'assets/mobile/p1.webp?v=31',
-    'assets/mobile/p2.webp?v=31',
-    'assets/mobile/p3.webp?v=31',
-    'assets/mobile/p4.webp?v=31'
-  ];
-  const COLS=3, TILE_W=800, TILE_H=600, SPRITE_W=2400, SPRITE_H=1200;
-  const INTERVAL=15000;
-  const cache=new Map();
-  let layers=[],active=0,current=0,timer=null,resizeTimer=null,lastPortrait=null;
-
-  function portraitMode(){
-    return window.innerHeight > window.innerWidth * 1.25;
-  }
+  const COLS=3, ROWS=2;
+  const TILE_W=800, TILE_H=600;
+  const SPRITE_W=2400, SPRITE_H=1200;
+  const TOTAL=24, INTERVAL=15000;
+  const spriteCache=new Map();
+  let layers=[],active=0,current=0,timer=null,resizeTimer=null;
 
   function snap(v){
     const dpr=Math.max(1,Math.min(4,window.devicePixelRatio||1));
     return Math.round(v*dpr)/dpr;
   }
 
-  async function preload(src){
-    if(cache.has(src)) return src;
+  async function getSprite(playerIdx){
+    if(spriteCache.has(playerIdx)) return spriteCache.get(playerIdx);
+    const src=PLAYERS[playerIdx].file;
     await new Promise((resolve,reject)=>{
       const im=new Image();
       im.decoding='sync';
-      im.onload=resolve;
+      im.onload=()=>resolve();
       im.onerror=()=>reject(new Error('failed '+src));
       im.src=src;
     });
-    cache.set(src,true);
+    spriteCache.set(playerIdx,src);
     return src;
   }
 
@@ -52,37 +45,9 @@
     return layer;
   }
 
-  function clearSizing(img){
-    img.style.width='';
-    img.style.height='';
-    img.style.left='';
-    img.style.top='';
-    img.style.right='';
-    img.style.bottom='';
-    img.style.objectFit='';
-    img.style.objectPosition='';
-    img.style.transform='none';
-  }
-
   function place(layer,index){
     const rect=layer.getBoundingClientRect();
     if(!rect.width||!rect.height) return;
-    const img=layer.firstElementChild;
-    clearSizing(img);
-
-    if(portraitMode()){
-      // Mobile: use a real portrait file close to the phone's aspect ratio.
-      // It is normally downscaled, not enlarged, so details stay much sharper.
-      img.style.inset='0';
-      img.style.width='100%';
-      img.style.height='100%';
-      img.style.objectFit='cover';
-      img.style.objectPosition='center center';
-      layer.dataset.index=String(index);
-      return;
-    }
-
-    img.style.inset='auto';
     const local=index%6;
     const col=local%COLS;
     const row=Math.floor(local/COLS);
@@ -90,41 +55,34 @@
     const tileW=TILE_W*scale, tileH=TILE_H*scale;
     const x=-(col*tileW+(tileW-rect.width)/2);
     const y=-(row*tileH+(tileH-rect.height)/2);
+    const img=layer.firstElementChild;
+
+    // Avoid fractional GPU transforms: they visibly soften the image on
+    // high-DPI phones. Position the sprite on device-pixel boundaries.
     img.style.width=snap(SPRITE_W*scale)+'px';
     img.style.height=snap(SPRITE_H*scale)+'px';
     img.style.left=snap(x)+'px';
     img.style.top=snap(y)+'px';
+    img.style.transform='none';
     layer.dataset.index=String(index);
   }
 
-  async function sourceFor(index){
-    if(portraitMode()){
-      const src=MOBILE_IMAGES[index%MOBILE_IMAGES.length];
-      await preload(src);
-      return {src,key:'m'+(index%MOBILE_IMAGES.length)};
-    }
-    const playerIdx=Math.floor((index%24)/6);
-    const src=DESKTOP_PLAYERS[playerIdx].file;
-    await preload(src);
-    return {src,key:'d'+playerIdx};
-  }
-
   async function prepare(layer,index){
-    const source=await sourceFor(index);
-    if(layer.dataset.sourceKey!==source.key){
+    const playerIdx=Math.floor(index/6);
+    const src=await getSprite(playerIdx);
+    if(layer.dataset.player!==String(playerIdx)){
       const img=layer.firstElementChild;
-      img.src=source.src;
-      layer.dataset.sourceKey=source.key;
-      if(img.decode){try{await img.decode();}catch(e){}}
+      img.src=src;
+      layer.dataset.player=String(playerIdx);
+      if(img.decode){
+        try{await img.decode();}catch(e){}
+      }
     }
     place(layer,index);
   }
 
-  function total(){ return portraitMode()?MOBILE_IMAGES.length:24; }
-
   async function show(index,immediate=false){
     if(layers.length<2) return;
-    index=((index%total())+total())%total();
     const nextSlot=immediate?active:1-active;
     const next=layers[nextSlot],prev=layers[active];
     await prepare(next,index);
@@ -135,17 +93,7 @@
     });
     if(!immediate) active=nextSlot;
     current=index;
-    sourceFor((index+1)%total()).catch(()=>{});
-  }
-
-  async function resetForOrientation(){
-    const now=portraitMode();
-    if(now===lastPortrait) return;
-    lastPortrait=now;
-    layers.forEach(l=>{l.dataset.sourceKey='';});
-    current=0;
-    await show(0,true);
-    await prepare(layers[1],1%total());
+    getSprite(Math.floor(((index+1)%TOTAL)/6)).catch(()=>{});
   }
 
   async function init(){
@@ -158,17 +106,15 @@
 
     host.querySelectorAll('.bg-layer,.approved-bg-layer').forEach(el=>el.remove());
     layers=[makeLayer(host,'A'),makeLayer(host,'B')];
-    lastPortrait=portraitMode();
     await show(0,true);
     host.style.backgroundImage='none';
-    await prepare(layers[1],1%total());
+    await prepare(layers[1],1);
 
-    timer=setInterval(()=>show((current+1)%total(),false).catch(()=>{}),INTERVAL);
+    timer=setInterval(()=>show((current+1)%TOTAL,false).catch(()=>{}),INTERVAL);
     window.addEventListener('resize',()=>{
       clearTimeout(resizeTimer);
-      resizeTimer=setTimeout(async()=>{
-        if(portraitMode()!==lastPortrait) await resetForOrientation();
-        else layers.forEach(l=>place(l,Number(l.dataset.index||current)));
+      resizeTimer=setTimeout(()=>{
+        layers.forEach(l=>place(l,Number(l.dataset.index||current)));
       },80);
     },{passive:true});
   }
