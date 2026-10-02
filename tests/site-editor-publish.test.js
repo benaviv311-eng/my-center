@@ -45,3 +45,18 @@ test('preview is tokenized read-only and cannot register a service worker',()=>{
   assert.match(editor,/preview_read/);
   assert.match(editor,/SITE_EDITOR_INTERNAL_SECRET/);
 });
+
+
+test('medium and high risk require second approval while low risk can auto publish',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  const gh=read('supabase/functions/_shared/site-editor/github.ts');
+  assert.match(fn,/approve_publish/);
+  assert.match(fn,/awaiting_publish_approval/);
+  assert.match(fn,/risk_level\s*===\s*["']low["']/);
+  assert.match(fn,/githubPagesRunForSha/);
+  assert.match(fn,/deploying/);
+  assert.match(fn,/deployed/);
+  assert.match(gh,/githubCreateOrUpdatePR/);
+  assert.match(gh,/githubMergePR/);
+  assert.match(gh,/githubPagesRunForSha/);
+});
