@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית</div></div><div style="display:flex;gap:8px;align-items:center"><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.4</div></div><div style="display:flex;gap:8px;align-items:center"><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -209,21 +209,30 @@ function useSelectedItem(){
 const dadTrack=new Audio('assets/audio/abba-shuv-mamtzi-kan.mp3');
 dadTrack.preload='auto';
 dadTrack.volume=.92;
-let dadAudioPrimed=false,dadWasSinging=false,dadClipStopTimer=0;
+let dadAudioPrimed=false,dadPrimePromise=null,dadWasSinging=false,dadClipStopTimer=0;
 const dadClipStarts=[6,18,30,43,56,69,83,97,111,125,139,151];
 
 async function primeDadAudio(){
  if(dadAudioPrimed)return true;
- try{
-   const oldVol=dadTrack.volume;
-   dadTrack.volume=.001;
-   await dadTrack.play();
-   dadTrack.pause();
-   dadTrack.currentTime=0;
-   dadTrack.volume=oldVol;
-   dadAudioPrimed=true;
-   return true;
- }catch(e){dadTrack.volume=.92;return false}
+ if(dadPrimePromise)return dadPrimePromise;
+ dadPrimePromise=(async()=>{
+   try{
+     const oldVol=dadTrack.volume;
+     dadTrack.volume=.001;
+     await dadTrack.play();
+     dadTrack.pause();
+     dadTrack.currentTime=0;
+     dadTrack.volume=oldVol;
+     dadAudioPrimed=true;
+     return true;
+   }catch(e){
+     dadTrack.volume=.92;
+     return false;
+   }finally{
+     dadPrimePromise=null;
+   }
+ })();
+ return dadPrimePromise;
 }
 function startDadSongClip(){
  clearTimeout(dadClipStopTimer);
@@ -243,7 +252,12 @@ function chooseDadTarget(now){
  dad.targetX=p[0];dad.targetY=p[1];
 }
 function updateDad(dt){
- if(player.scene!==dad.scene){dad.singing=false;dizzyCharge=Math.max(0,dizzyCharge-35*dt);return}
+ if(player.scene!==dad.scene){
+   dad.singing=false;
+   dizzyCharge=Math.max(0,dizzyCharge-35*dt);
+   if(dadWasSinging){stopDadSong();dadWasSinging=false}
+   return
+ }
  const now=performance.now();
  chooseDadTarget(now);
  const distToPlayer=Math.hypot(player.x-dad.x,player.y-dad.y);
@@ -279,7 +293,6 @@ function updateDad(dt){
    if(now>=dadNextLineAt){
      const song=dadSongs[dadSongIndex];
      dad.phrase=song[dadLineIndex];
-     if(now-lastDadAudioAt>700){singDadLine(dad.phrase);lastDadAudioAt=now}
      dadLineIndex++;
      if(dadLineIndex>=song.length){
        dadLineIndex=0;dadNextLineAt=now+2200;nextDadSong();
@@ -369,9 +382,9 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{primeDadAudio();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
-addEventListener('pointerdown',()=>{primeDadAudio()});
+addEventListener('pointerdown',()=>{primeDadAudio()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
@@ -381,6 +394,7 @@ document.getElementById('audioTest').onclick=async()=>{
  clearTimeout(dadClipStopTimer);
  try{dadTrack.currentTime=6}catch(e){}
  dadTrack.volume=.95;
+ if(!dadTrack.paused)dadTrack.pause();
  const played=await dadTrack.play().then(()=>true).catch(()=>false);
  if(!played){msg('הדפדפן חסם את הקול — בדוק שהלשונית אינה מושתקת');return}
  dadClipStopTimer=setTimeout(()=>{if(!dad.singing)dadTrack.pause()},7000);
