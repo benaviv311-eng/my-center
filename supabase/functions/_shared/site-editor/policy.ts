@@ -25,6 +25,7 @@ const MEDIUM_EXTENSIONS=new Set([".js",".mjs",".cjs",".ts",".tsx",".jsx"]);
 
 function rank(risk:RiskLevel){return risk==="high"?3:risk==="medium"?2:1}
 export function maxRisk(a:RiskLevel,b:RiskLevel):RiskLevel{return rank(a)>=rank(b)?a:b}
+export function riskAtMost(candidate:RiskLevel,ceiling:RiskLevel){return rank(candidate)<=rank(ceiling)}
 
 function ext(path:string){
   const i=path.lastIndexOf(".");
