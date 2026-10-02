@@ -124,7 +124,7 @@
     .side-coin{position:fixed;z-index:28;pointer-events:none;font-size:30px;transform:translate(-50%,-50%);filter:drop-shadow(0 0 6px #ffd84d);animation:sideCoinBurst 1.12s cubic-bezier(.12,.8,.2,1) forwards}
     @keyframes sideCoinBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0)}12%{opacity:1}65%{opacity:1;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y))) scale(1.25) rotate(var(--coin-r))}100%{opacity:0;transform:translate(calc(-50% + var(--coin-x)),calc(-50% + var(--coin-y) - 30px)) scale(.7) rotate(var(--coin-r))}}
     .side-total{font-size:30px!important;font-weight:1000;text-shadow:0 0 12px #ffd84d,0 4px 12px #000b;animation:coinAmount 1.05s ease-out forwards!important}
-    @media (prefers-reduced-motion:reduce){.encouragement,.encouragement span,.success-spark,.side-coin,.side-total{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+    @media (prefers-reduced-motion:reduce){.encouragement,.encouragement span,.success-spark,.side-coin,.side-total,.jump-coin,.announcer-callout,.avatar-glyph{animation-duration:.01ms!important;animation-iteration-count:1!important}}
   
     .mode-card.sprint{background:#ffcf6b}
     .sprint-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
@@ -154,6 +154,24 @@
     .avatar-setup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:9px;border-radius:16px;background:#ffffff0b;border:1px solid #ffffff18}
     .avatar-preview{display:flex;align-items:center;gap:9px;min-width:0}
     .avatar-preview .avatar-glyph{font-size:38px;line-height:1;filter:drop-shadow(0 5px 9px #0005);animation:avatarIdle 2.4s ease-in-out infinite}
+    .avatar-portrait{position:relative;display:inline-block;width:1em;height:1em;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 34%,#ffffff30,transparent 48%),linear-gradient(145deg,#4d5b86,#171c38);box-shadow:inset 0 0 0 .05em #ffffff55,0 .08em .18em #0005;vertical-align:middle}
+    .avatar-portrait i{position:absolute;display:block;box-sizing:border-box}
+    .portrait-shirt{left:14%;right:14%;bottom:-4%;height:35%;border-radius:48% 48% 12% 12%;background:linear-gradient(135deg,color-mix(in srgb,var(--shirt) 76%,white),var(--shirt) 55%,color-mix(in srgb,var(--shirt) 72%,black));box-shadow:inset 0 .04em .08em #ffffff22}
+    .portrait-neck{left:41%;top:61%;width:18%;height:20%;border-radius:35%;background:linear-gradient(90deg,color-mix(in srgb,var(--skin) 78%,black),var(--skin) 40%,color-mix(in srgb,var(--skin) 88%,white));z-index:2}
+    .portrait-head{left:26%;top:15%;width:48%;height:56%;border-radius:46% 46% 44% 44% / 40% 40% 55% 55%;background:linear-gradient(100deg,color-mix(in srgb,var(--skin) 82%,black),var(--skin) 42%,color-mix(in srgb,var(--skin) 88%,white));box-shadow:inset -.04em -.03em .08em #0002,inset .05em .03em .08em #fff2;z-index:4}
+    .portrait-ear{top:39%;width:9%;height:17%;border-radius:50%;background:var(--skin);z-index:3}.portrait-ear-l{left:21%}.portrait-ear-r{right:21%}
+    .portrait-hair{left:25%;top:11%;width:50%;height:25%;border-radius:55% 55% 28% 28%;background:linear-gradient(135deg,color-mix(in srgb,var(--hair) 70%,white),var(--hair) 38%,color-mix(in srgb,var(--hair) 80%,black));z-index:7;box-shadow:inset 0 -.035em .07em #0004}
+    .hair-buzz .portrait-hair,.hair-fade .portrait-hair{height:18%;top:13%;border-radius:58% 58% 35% 35%}
+    .hair-crop .portrait-hair{height:21%;transform:rotate(-2deg)}
+    .hair-side .portrait-hair{height:24%;clip-path:polygon(0 18%,100% 0,88% 90%,15% 75%)}
+    .hair-wave .portrait-hair,.hair-messy .portrait-hair{height:27%;clip-path:polygon(0 25%,13% 8%,26% 23%,40% 0,54% 20%,70% 4%,100% 22%,92% 94%,8% 88%)}
+    .hair-long .portrait-hair,.hair-ponytail .portrait-hair,.hair-curly .portrait-hair{left:20%;width:60%;height:62%;top:10%;border-radius:45%;z-index:3}
+    .hair-long .portrait-head,.hair-ponytail .portrait-head,.hair-curly .portrait-head{z-index:5}
+    .hair-curly .portrait-hair{background:radial-gradient(circle at 20% 20%,color-mix(in srgb,var(--hair) 70%,white) 0 12%,transparent 13%),radial-gradient(circle at 55% 20%,var(--hair) 0 15%,transparent 16%),radial-gradient(circle at 82% 28%,var(--hair) 0 16%,transparent 17%),radial-gradient(circle at 35% 45%,var(--hair) 0 18%,transparent 19%),radial-gradient(circle at 68% 52%,color-mix(in srgb,var(--hair) 80%,black) 0 18%,transparent 19%),var(--hair)}
+    .portrait-eye{top:40%;width:5%;height:5%;border-radius:50%;background:var(--eye);z-index:8;box-shadow:0 0 0 .018em #fff8}.portrait-eye-l{left:38%}.portrait-eye-r{right:38%}
+    .portrait-brow{top:34%;width:11%;height:2.8%;border-radius:999px;background:color-mix(in srgb,var(--hair) 85%,black);z-index:8}.portrait-brow-l{left:34%;transform:rotate(-5deg)}.portrait-brow-r{right:34%;transform:rotate(5deg)}
+    .portrait-nose{left:48%;top:44%;width:5%;height:12%;border-radius:50%;border-right:.025em solid #0004;z-index:8}
+    .portrait-mouth{left:43%;top:58%;width:14%;height:5%;border-bottom:.025em solid #6e2f2f;border-radius:50%;z-index:8}
     .avatar-preview>span:last-child{display:grid;text-align:right}
     .avatar-preview b{font-size:13px}.avatar-preview small{font-size:10px;opacity:.68}
     .avatar-change{border:1px solid #ffffff24;background:#ffffff12;color:#fff;border-radius:12px;padding:7px 9px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap}
@@ -167,6 +185,7 @@
     .avatar-picker-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-height:min(52vh,430px);overflow:auto;padding:3px}
     .avatar-option{border:1px solid #ffffff1f;background:#ffffff0c;color:#fff;border-radius:16px;min-height:78px;padding:8px 4px;display:grid;place-items:center;gap:3px;cursor:pointer}
     .avatar-option .avatar-glyph{font-size:34px;line-height:1}
+    .avatar-option .avatar-portrait{font-size:40px}
     .avatar-option small{font-size:10px;font-weight:800;opacity:.75}
     .avatar-option.selected{background:#ffd84d22;border-color:#ffd84d;box-shadow:0 0 0 2px #ffd84d44}
     .versus-player-zone{position:relative;display:grid;justify-items:center;align-content:start;gap:8px;flex:0 0 auto}
@@ -175,6 +194,7 @@
     .live-avatar-hud.p1-avatar{box-shadow:inset 0 0 0 2px #55c8ff55,0 8px 22px #0003}
     .live-avatar-hud.p2-avatar{box-shadow:inset 0 0 0 2px #ff6b9155,0 8px 22px #0003}
     .live-avatar-hud .avatar-glyph{font-size:40px;line-height:1;filter:drop-shadow(0 5px 9px #0005);animation:avatarIdle 2.4s ease-in-out infinite}
+    .live-avatar-hud .avatar-portrait{font-size:45px}
     .avatar-live-copy{display:grid;text-align:right;line-height:1.05}.avatar-live-copy b{font-size:12px}.avatar-live-copy small{font-size:10px;opacity:.7}
     .live-avatar-hud.focus .avatar-glyph{animation:avatarFocus .3s ease-out}
     .live-avatar-hud.win .avatar-glyph{animation:avatarWin .65s cubic-bezier(.18,.9,.2,1)}
@@ -186,6 +206,22 @@
     @keyframes avatarWin{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-14px) scale(1.32) rotate(-9deg)}65%{transform:translateY(-5px) scale(1.18) rotate(7deg)}100%{transform:translateY(0) scale(1)}}
     @keyframes avatarWrong{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-7px) rotate(-8deg)}40%{transform:translateX(7px) rotate(8deg)}60%{transform:translateX(-5px) rotate(-5deg)}80%{transform:translateX(4px) rotate(4deg)}}
     @keyframes avatarChampion{0%{transform:scale(1) rotate(0)}35%{transform:scale(1.5) rotate(-12deg)}65%{transform:scale(1.28) rotate(12deg)}100%{transform:scale(1) rotate(0)}}
+    .jump-coin{position:fixed;z-index:45;pointer-events:none;font-size:24px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 0 8px #ffd84d) drop-shadow(0 4px 5px #0008);animation:jumpCoin .96s cubic-bezier(.2,.75,.22,1) forwards}
+    .jump-coin.coin-p1{filter:drop-shadow(0 0 9px #55c8ff) drop-shadow(0 4px 5px #0008)}
+    .jump-coin.coin-p2{filter:drop-shadow(0 0 9px #ff6b91) drop-shadow(0 4px 5px #0008)}
+    @keyframes jumpCoin{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.45) rotate(0)}
+      12%{opacity:1}
+      48%{opacity:1;transform:translate(calc(-50% + var(--jx)),calc(-50% + var(--jy))) scale(1.2) rotate(calc(var(--jr) * .55))}
+      78%{opacity:1;transform:translate(calc(-50% + var(--jx)),calc(-50% + var(--jy) + var(--jfall))) scale(1) rotate(var(--jr))}
+      100%{opacity:0;transform:translate(calc(-50% + var(--jx)),calc(-50% + var(--jy) + var(--jfall) + 52px)) scale(.72) rotate(calc(var(--jr) + 180deg))}
+    }
+    .live-avatar-hud.coin-hit{animation:coinHudPop .42s ease-out}
+    @keyframes coinHudPop{0%{transform:scale(1)}42%{transform:scale(1.08);box-shadow:0 0 0 3px #ffd84d,0 0 26px #ffd84d88}100%{transform:scale(1)}}
+    .announcer-callout{position:fixed;z-index:60;top:16%;left:50%;transform:translate(-50%,-50%);pointer-events:none;text-align:center;white-space:nowrap;font-size:clamp(28px,7vw,58px);font-weight:1000;font-style:italic;letter-spacing:.04em;color:#fff;text-shadow:0 0 8px #fff8,0 0 24px var(--accent),0 6px 20px #000;animation:announcerPop .92s cubic-bezier(.18,.9,.2,1)}
+    .announcer-callout[data-kind="gold"],.announcer-callout[data-kind="win"],.announcer-callout[data-kind="level"]{color:#ffe56c;text-shadow:0 0 9px #fff,0 0 28px #ffd84d,0 6px 20px #000}
+    .announcer-callout[data-kind="boss"]{color:#ff8b9e;text-shadow:0 0 10px #fff,0 0 30px #e33b64,0 6px 20px #000}
+    @keyframes announcerPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-4deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.17) rotate(1deg)}72%{opacity:1;transform:translate(-50%,-55%) scale(1)}100%{opacity:0;transform:translate(-50%,-72%) scale(.88)}}
     .p1-setup{box-shadow:inset 0 0 0 2px #55c8ff44}
     .p2-setup{box-shadow:inset 0 0 0 2px #ff6b9144}
     .key-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -369,6 +405,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=20"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=21"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
