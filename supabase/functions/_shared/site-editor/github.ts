@@ -133,6 +133,21 @@ async function githubRequest(path:string,init:RequestInit={}){
   return data;
 }
 
+async function githubRequestMaybe(path:string){
+  const token=await installationToken();
+  const response=await fetch(`${GITHUB_API}${path}`,{
+    headers:{
+      Authorization:`Bearer ${token}`,
+      Accept:"application/vnd.github+json",
+      "X-GitHub-Api-Version":GITHUB_API_VERSION
+    }
+  });
+  if(response.status===404)return null;
+  const data=await response.json().catch(()=>null);
+  if(!response.ok)throw new EditorError("github_unavailable",503);
+  return data;
+}
+
 function repoPath(path:string){
   return `/repos/${encodeURIComponent(GITHUB_REPO_OWNER)}/${encodeURIComponent(GITHUB_REPO_NAME)}${path}`;
 }
@@ -155,6 +170,27 @@ export async function githubReadFile(path:string,ref:string):Promise<{path:strin
   return {path:data.path,sha:data.sha,content:decodeBase64Utf8(data.content)};
 }
 
+export async function githubReadFileMaybe(path:string,ref:string):Promise<{path:string;sha:string;content:string}|null>{
+  const encoded=path.split("/").map(encodeURIComponent).join("/");
+  const data=await githubRequestMaybe(repoPath(`/contents/${encoded}?ref=${encodeURIComponent(ref)}`));
+  if(!data)return null;
+  if(Array.isArray(data)||data.type!=="file"||typeof data.content!=="string")throw new EditorError("github_unavailable",503);
+  return {path:data.path,sha:data.sha,content:decodeBase64Utf8(data.content)};
+}
+
+export async function githubReadFileBase64(path:string,ref:string):Promise<{path:string;sha:string;contentBase64:string}>{
+  const encoded=path.split("/").map(encodeURIComponent).join("/");
+  const data=await githubRequest(repoPath(`/contents/${encoded}?ref=${encodeURIComponent(ref)}`));
+  if(!data||Array.isArray(data)||data.type!=="file"||typeof data.sha!=="string")throw new EditorError("github_unavailable",503);
+  let content=typeof data.content==="string"?data.content.replace(/\s+/g,""):"";
+  if(!content){
+    const blob=await githubRequest(repoPath(`/git/blobs/${encodeURIComponent(data.sha)}`));
+    if(typeof blob?.content!=="string")throw new EditorError("github_unavailable",503);
+    content=blob.content.replace(/\s+/g,"");
+  }
+  return {path:data.path,sha:data.sha,contentBase64:content};
+}
+
 export async function githubTree(ref:string):Promise<Array<{path:string;type:string;sha:string}>>{
   const data=await githubRequest(repoPath(`/git/trees/${encodeURIComponent(ref)}?recursive=1`));
   return (data?.tree||[]).filter((x:any)=>typeof x.path==="string"&&typeof x.sha==="string").map((x:any)=>({path:x.path,type:x.type,sha:x.sha}));
@@ -167,27 +203,17 @@ export async function githubBranchHead(branch:string):Promise<string>{
   return sha;
 }
 
-export type GithubCheckRun={
-  id:string;
-  name:string;
-  status:string;
-  conclusion:string|null;
-  url:string|null;
-  started_at:string|null;
-  completed_at:string|null;
-};
+export type GithubCheck={name:string;status:string;conclusion:string|null;url:string|null;providerRunId:string|null};
 
-export async function githubChecksForRef(sha:string):Promise<GithubCheckRun[]>{
+export async function githubChecksForRef(sha:string):Promise<GithubCheck[]>{
   const data=await githubRequest(repoPath(`/commits/${encodeURIComponent(sha)}/check-runs?per_page=100`));
   return (data?.check_runs||[]).map((run:any)=>({
-    id:String(run?.id||""),
     name:typeof run?.name==="string"?run.name:"check",
-    status:typeof run?.status==="string"?run.status:"queued",
+    status:typeof run?.status==="string"?run.status:"unknown",
     conclusion:typeof run?.conclusion==="string"?run.conclusion:null,
-    url:typeof run?.details_url==="string"?run.details_url:null,
-    started_at:typeof run?.started_at==="string"?run.started_at:null,
-    completed_at:typeof run?.completed_at==="string"?run.completed_at:null
-  })).filter((run:GithubCheckRun)=>Boolean(run.id));
+    url:typeof run?.html_url==="string"?run.html_url:null,
+    providerRunId:run?.id==null?null:String(run.id)
+  }));
 }
 
 export async function githubCreateEditBranch(name:string,baseSha:string):Promise<void>{
@@ -244,67 +270,119 @@ export async function githubCommitFiles(
   return {commitSha:commit.sha};
 }
 
-export type GithubWorkflowRun={
+
+export async function githubCreateOrUpdatePR(
+  branch:string,
+  title:string,
+  body:string,
+  base="main"
+):Promise<{number:number;url:string|null}>{
+  const headQuery=encodeURIComponent(`${GITHUB_REPO_OWNER}:${branch}`);
+  const existing=await githubRequest(repoPath(`/pulls?state=open&head=${headQuery}&base=${encodeURIComponent(base)}&per_page=10`));
+  const current=Array.isArray(existing)?existing[0]:null;
+  if(current?.number){
+    const updated=await githubRequest(repoPath(`/pulls/${current.number}`),{
+      method:"PATCH",
+      body:JSON.stringify({title,body})
+    });
+    return {number:Number(updated.number),url:typeof updated.html_url==="string"?updated.html_url:null};
+  }
+  const created=await githubRequest(repoPath("/pulls"),{
+    method:"POST",
+    body:JSON.stringify({title,head:branch,base,body,maintainer_can_modify:false})
+  });
+  if(!created?.number)throw new EditorError("github_unavailable",503);
+  return {number:Number(created.number),url:typeof created.html_url==="string"?created.html_url:null};
+}
+
+export async function githubMergePR(
+  prNumber:number,
+  expectedHeadSha:string
+):Promise<{merged:boolean;mergeCommitSha:string}>{
+  const data=await githubRequest(repoPath(`/pulls/${prNumber}/merge`),{
+    method:"PUT",
+    body:JSON.stringify({sha:expectedHeadSha,merge_method:"squash"})
+  });
+  if(data?.merged!==true||typeof data?.sha!=="string")throw new EditorError("stale_plan",409);
+  return {merged:true,mergeCommitSha:data.sha};
+}
+
+export type GithubPagesRun={
   id:string;
-  name:string;
-  path:string;
   status:string;
   conclusion:string|null;
   url:string|null;
-  head_sha:string;
-  created_at:string|null;
-  updated_at:string|null;
+  name:string;
 };
 
-export async function githubActionsRunsForHeadSha(sha:string):Promise<GithubWorkflowRun[]>{
+export async function githubPagesRunForSha(sha:string):Promise<GithubPagesRun|null>{
   const data=await githubRequest(repoPath(`/actions/runs?head_sha=${encodeURIComponent(sha)}&per_page=100`));
-  return (data?.workflow_runs||[]).map((run:any)=>({
-    id:String(run?.id||""),
-    name:typeof run?.name==="string"?run.name:"",
-    path:typeof run?.path==="string"?run.path:"",
-    status:typeof run?.status==="string"?run.status:"queued",
-    conclusion:typeof run?.conclusion==="string"?run.conclusion:null,
-    url:typeof run?.html_url==="string"?run.html_url:null,
-    head_sha:typeof run?.head_sha==="string"?run.head_sha:"",
-    created_at:typeof run?.created_at==="string"?run.created_at:null,
-    updated_at:typeof run?.updated_at==="string"?run.updated_at:null
-  })).filter((run:GithubWorkflowRun)=>Boolean(run.id)&&run.head_sha===sha);
+  const runs=(data?.workflow_runs||[]).filter((run:any)=>{
+    const name=String(run?.name||"").toLowerCase();
+    return run?.head_sha===sha&&(name==="pages build and deployment"||name.includes("pages"));
+  });
+  runs.sort((a:any,b:any)=>Date.parse(b?.created_at||"")-Date.parse(a?.created_at||""));
+  const run=runs[0];
+  if(!run)return null;
+  return {
+    id:String(run.id),
+    status:String(run.status||"unknown"),
+    conclusion:typeof run.conclusion==="string"?run.conclusion:null,
+    url:typeof run.html_url==="string"?run.html_url:null,
+    name:String(run.name||"pages build and deployment")
+  };
 }
 
-export async function githubMergeBranchIntoMain(
+
+export type GithubWorkflowRun={
+  id:number;
+  status:string;
+  conclusion:string|null;
+  url:string|null;
+  headSha:string;
+};
+
+export async function githubWorkflowRunForSha(
+  workflowFile:string,
   branch:string,
-  expectedHeadSha:string,
-  expectedMainSha:string
-):Promise<{sha:string}>{
-  const branchHead=await githubBranchHead(branch);
-  const mainHead=await githubBranchHead("main");
-  if(branchHead!==expectedHeadSha||mainHead!==expectedMainSha)throw new EditorError("stale_plan",409);
-
-  const headCommit=await githubRequest(repoPath(`/git/commits/${encodeURIComponent(expectedHeadSha)}`));
-  const treeSha=headCommit?.tree?.sha;
-  if(typeof treeSha!=="string")throw new EditorError("github_unavailable",503);
-
-  const mergeCommit=await githubRequest(repoPath("/git/commits"),{
-    method:"POST",
-    body:JSON.stringify({
-      message:`Merge approved site edit from ${branch}`,
-      tree:treeSha,
-      parents:[expectedMainSha,expectedHeadSha]
-    })
-  });
-  if(typeof mergeCommit?.sha!=="string")throw new EditorError("github_unavailable",503);
-
-  const branchBeforeUpdate=await githubBranchHead(branch);
-  const mainBeforeUpdate=await githubBranchHead("main");
-  if(branchBeforeUpdate!==expectedHeadSha||mainBeforeUpdate!==expectedMainSha)throw new EditorError("stale_plan",409);
-
-  await githubRequest(repoPath("/git/refs/heads/main"),{
-    method:"PATCH",
-    body:JSON.stringify({sha:mergeCommit.sha,force:false})
-  });
-
-  const mainAfter=await githubBranchHead("main");
-  if(mainAfter!==mergeCommit.sha)throw new EditorError("stale_plan",409);
-  return {sha:mergeCommit.sha};
+  headSha:string
+):Promise<GithubWorkflowRun|null>{
+  const data=await githubRequest(repoPath(`/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=workflow_dispatch&branch=${encodeURIComponent(branch)}&per_page=30`));
+  const runs=(data?.workflow_runs||[]).filter((run:any)=>run?.head_sha===headSha);
+  runs.sort((a:any,b:any)=>Date.parse(b?.created_at||"")-Date.parse(a?.created_at||""));
+  const run=runs[0];
+  if(!run)return null;
+  return {
+    id:Number(run.id),
+    status:String(run.status||"unknown"),
+    conclusion:typeof run.conclusion==="string"?run.conclusion:null,
+    url:typeof run.html_url==="string"?run.html_url:null,
+    headSha:String(run.head_sha||"")
+  };
 }
 
+export async function githubDispatchWorkflow(
+  workflowFile:string,
+  branch:string,
+  inputs:Record<string,string>
+):Promise<number>{
+  const expectedSha=String(inputs.head_sha||inputs.merge_sha||"");
+  const existing=await githubWorkflowRunForSha(workflowFile,branch,expectedSha);
+  if(existing)return existing.id;
+  await githubRequest(repoPath(`/actions/workflows/${encodeURIComponent(workflowFile)}/dispatches`),{
+    method:"POST",
+    body:JSON.stringify({ref:branch,inputs})
+  });
+  for(let attempt=0;attempt<4;attempt++){
+    await new Promise(resolve=>setTimeout(resolve,600));
+    const run=await githubWorkflowRunForSha(workflowFile,branch,expectedSha);
+    if(run)return run.id;
+  }
+  return 0;
+}
+
+
+export async function githubCommitChangedPaths(sha:string):Promise<string[]>{
+  const data=await githubRequest(repoPath(`/commits/${encodeURIComponent(sha)}`));
+  return [...new Set((data?.files||[]).map((file:any)=>String(file?.filename||"")).filter(Boolean))];
+}
