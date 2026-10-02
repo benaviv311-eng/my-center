@@ -56,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.<br><strong>קול:</strong> האודיו נפתח אחרי הלחיצה הראשונה במשחק, בהתאם להגבלות הדפדפן.</div></div>
     </aside>
   </div>
 </main>
@@ -102,7 +102,35 @@ Object.entries(artSources).forEach(([k,src])=>{
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
 const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
-const dadPhrases=['לה לה לה!','ליבי ליבי ליבי!','מי רוצה שיר חדש?','טם־טם־טם!'];
+const dadSongs=[
+ ['אבטיח הלך לשיח','פגש שם תפוח שהתחיל לצרוח'],
+ ['מלון הלך לישון','וחלם על בלון בחלון'],
+ ['בננה נסעה לרעננה','וחזרה עם מתנה קטנה'],
+ ['תפוח ברח עם רוח','ונפל ישר על כרוב נפוח'],
+ ['אגס טיפס על פנס','וצעק לכולם: אני נכנס!'],
+ ['לימון קפץ לחלון','ומשם ישר לארון'],
+ ['תות נכנס לשירות','ויצא עם כובע ועם מטריות'],
+ ['גזר שר לחזר','והפלפל התחיל לחזור'],
+ ['מלפפון טס בבלון','ונחת בתוך הסלון'],
+ ['תפוז התחפש לעז','והאננס צעק: איזה פז!'],
+ ['אננס נכנס לכנס','וביקש מהקוקוס להיכנס'],
+ ['אפרסק חיפש לו עסק','ומצא מסרק בתוך הדסק'],
+ ['חסה נסעה לטיסה','ושכחה את הכרטיס בכביסה'],
+ ['בצל נרדם על הספסל','וחלם שהוא בכלל קרנבל'],
+ ['כרוב עשה סיבוב','ונתקל פתאום בזבוב'],
+ ['קוקוס ברח מהמטוס','ונחת ליד תרנגול מנומס'],
+ ['אבוקדו רקד עם דודו','ושניהם צעקו: עוד עוד עוד!']
+];
+let dadSongBag=[],dadSongIndex=-1,dadLineIndex=0,dadNextLineAt=0,lastSongIndex=-1;
+function refillDadSongs(){
+ dadSongBag=[...dadSongs.keys()].filter(i=>i!==lastSongIndex);
+ for(let i=dadSongBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dadSongBag[i],dadSongBag[j]]=[dadSongBag[j],dadSongBag[i]]}
+}
+function nextDadSong(){
+ if(!dadSongBag.length)refillDadSongs();
+ dadSongIndex=dadSongBag.pop();lastSongIndex=dadSongIndex;dadLineIndex=0;
+ dad.phrase=dadSongs[dadSongIndex][0];
+}
 const items={
  ground:[{x:210,y:205,id:'headphones',name:'אוזניות',icon:'🎧'},{x:720,y:185,id:'mirror',name:'מראה',icon:'🪞'},{x:355,y:445,id:'pan',name:'מחבת',icon:'🍳'}],
  basement:[{x:260,y:180,id:'radio',name:'רדיו',icon:'📻'}],
@@ -178,6 +206,44 @@ function useSelectedItem(){
    msg(it.icon+' '+it.name+' שמור לשימוש מול הדמות המתאימה');
  }
 }
+let audioCtx=null,audioUnlocked=false,lastDadAudioAt=0,voiceCache=[];
+function unlockAudio(){
+ if(audioUnlocked)return;
+ try{
+   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+   if(audioCtx.state==='suspended')audioCtx.resume();
+   audioUnlocked=true;
+ }catch(e){}
+}
+function loadVoices(){if('speechSynthesis' in window)voiceCache=speechSynthesis.getVoices()}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function hebrewVoice(){
+ return voiceCache.find(v=>/^he(-|_)/i.test(v.lang))||voiceCache.find(v=>/Hebrew|עבר/i.test(v.name))||voiceCache[0];
+}
+function playTune(){
+ if(!audioUnlocked||!audioCtx)return;
+ const t=audioCtx.currentTime;
+ const notes=[392,440,494,440,392,330];
+ notes.forEach((f,i)=>{
+   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+   o.type='triangle';o.frequency.value=f;
+   const st=t+i*.12;
+   g.gain.setValueAtTime(.0001,st);g.gain.exponentialRampToValueAtTime(.055,st+.015);g.gain.exponentialRampToValueAtTime(.0001,st+.105);
+   o.connect(g);g.connect(audioCtx.destination);o.start(st);o.stop(st+.12);
+ });
+}
+function singDadLine(line){
+ if(!audioUnlocked)return;
+ playTune();
+ if('speechSynthesis' in window){
+   try{
+     const u=new SpeechSynthesisUtterance(line);
+     const v=hebrewVoice();if(v)u.voice=v;
+     u.lang=v?.lang||'he-IL';u.rate=.9+Math.random()*.12;u.pitch=1.15+Math.random()*.25;u.volume=.9;
+     speechSynthesis.speak(u);
+   }catch(e){}
+ }
+}
 function chooseDadTarget(now){
  if(now<dad.targetAt)return;
  dad.targetAt=now+1800+Math.random()*2500;
@@ -214,9 +280,21 @@ function updateDad(dt){
  if(len>5){dad.x+=vx/len*dad.speed*dt;dad.y+=vy/len*dad.speed*dt}
  dad.phase+=dt*(dad.singing?8:3);
  noteClock+=dt;
- if(dad.singing && noteClock>.75){
-   noteClock=0;
-   dad.phrase=dadPhrases[Math.floor(Math.random()*dadPhrases.length)];
+ if(dad.singing){
+   if(dadSongIndex<0)nextDadSong();
+   if(!dadNextLineAt)dadNextLineAt=now+250;
+   if(now>=dadNextLineAt){
+     const song=dadSongs[dadSongIndex];
+     dad.phrase=song[dadLineIndex];
+     if(now-lastDadAudioAt>700){singDadLine(dad.phrase);lastDadAudioAt=now}
+     dadLineIndex++;
+     if(dadLineIndex>=song.length){
+       dadLineIndex=0;dadNextLineAt=now+2200;nextDadSong();
+     }else dadNextLineAt=now+1550;
+   }
+ }else{
+   dadNextLineAt=0;dadSongIndex=-1;dadLineIndex=0;
+   if('speechSynthesis' in window && speechSynthesis.speaking)speechSynthesis.cancel();
  }
 }
 function drawDad(){
@@ -298,8 +376,9 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{unlockAudio();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
+addEventListener('pointerdown',unlockAudio,{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
