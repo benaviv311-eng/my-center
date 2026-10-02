@@ -683,9 +683,28 @@
     }catch(_){}
   }
 
+  function localizedEncouragement(item){
+    const source=ANNOUNCER_LOCAL[announcerPack];
+    if(!source) return item.text;
+
+    let pool;
+    if(item.level>=5) pool=source.rare||source.combo||source.versusSuccess;
+    else if(item.level===4) pool=source.combo||source.rare||source.versusSuccess;
+    else if(item.level===3) pool=source.streakSmall||source.combo||source.versusSuccess;
+    else if(item.level===2) pool=source.fast||source.versusSuccess;
+    else pool=source.versusSuccess||source.start;
+
+    if(!pool||!pool.length) return item.text;
+    const choices=pool.filter(x=>x!==lastAnnouncerLine);
+    const list=choices.length?choices:pool;
+    const line=list[Math.floor(Math.random()*list.length)];
+    lastAnnouncerLine=line;
+    return line;
+  }
+
   function speakEncouragement(item){
     playSuccessChime(item.level);
-    speakNatural(item.text,'success',false);
+    speakNatural(localizedEncouragement(item),'success',false);
   }
 
   function sparkleBurst(level){
@@ -714,15 +733,17 @@
       el.setAttribute('aria-live','polite');
       document.body.appendChild(el);
     }
+    const displayText=localizedEncouragement(item);
     el.className='encouragement level-'+item.level;
-    el.innerHTML='<span>'+item.text+'</span>';
+    el.innerHTML='<span>'+displayText+'</span>';
     el.style.animation='none';
     void el.offsetWidth;
     el.style.animation='';
     clearTimeout(el._t);
     el._t=setTimeout(()=>{el.textContent=''},850);
     sparkleBurst(item.level);
-    speakEncouragement(item);
+    playSuccessChime(item.level);
+    speakNatural(displayText,'success',false);
   }
 
   function burstCoins(sourceEl,count){
