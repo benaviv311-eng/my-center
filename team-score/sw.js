@@ -1,4 +1,4 @@
-const CACHE='teamscore-pilot-v33';
+const CACHE='teamscore-pilot-v34';
 const ASSETS=[
   './','./index.html','./manifest.webmanifest','./icon.svg',
   './t1.txt','./t2.txt','./t3.txt','./t4.txt',
