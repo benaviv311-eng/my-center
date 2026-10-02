@@ -36,6 +36,12 @@ async function authUser(req:Request){
   return error?null:user;
 }
 
+class SiteChatError extends Error{
+  code:string;
+  status:number;
+  constructor(code:string,message:string,status=500){super(message);this.name="SiteChatError";this.code=code;this.status=status}
+}
+
 function answerText(r:any){
   if(typeof r?.output_text==="string")return r.output_text.trim();
   const parts:string[]=[];
@@ -50,7 +56,14 @@ async function callOpenAI(model:string,inputText:string,images:any[]=[]){
   const input=[{role:"user",content}];
   const response=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{Authorization:`Bearer ${OPENAI_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model,input,reasoning:{effort:model==="gpt-5.6-sol"?"medium":"low"}})});
   const raw=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(raw?.error?.message||`OpenAI ${response.status}`);
+  if(!response.ok){
+    const providerMessage=String(raw?.error?.message||`OpenAI ${response.status}`);
+    const providerCode=String(raw?.error?.code||"");
+    if(providerCode==="insufficient_quota"||/no credits remaining|add credits|billing/i.test(providerMessage)){
+      throw new SiteChatError("api_credits_exhausted","נגמרה יתרת ה-OpenAI API. יש להוסיף קרדיטים ל-API כדי שהצ׳אט והעריכה יוכלו לפעול.",402);
+    }
+    throw new Error(providerMessage);
+  }
   const answer=answerText(raw);
   if(!answer)throw new Error("Empty AI response");
   return answer;
@@ -388,7 +401,7 @@ ${(recent.data||[]).reverse().map((m:any)=>`${m.role}: ${m.content}`).join("\n\n
 הודעת המשתמש:
 ${questionForModel}`;
     let model=chooseModel(questionForModel,pageContext),raw:string;
-    try{raw=await callOpenAI(model,prompt,images)}catch(e){if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
+    try{raw=await callOpenAI(model,prompt,images)}catch(e){if(e instanceof SiteChatError&&e.code==="api_credits_exhausted")throw e;if(model==="gpt-5.6-luna"){model="gpt-5.6-sol";raw=await callOpenAI(model,prompt,images)}else throw e}
     const parsed=parseBlocks(raw);
     const shouldCreateSiteEdit=shouldOpenSiteEdit({
       editorMode,
@@ -419,6 +432,7 @@ ${questionForModel}`;
     return out(req,{ok:true,thread_id:thread.id,message:assistant.data,user_attachments:userAttachments,pending_action:queued,site_edit_request:siteEditRequest,memory_updates:saved,model});
   }catch(e){
     console.error(e);
+    if(e instanceof SiteChatError)return out(req,{error:e.message,code:e.code},e.status);
     return out(req,{error:e instanceof Error?e.message:"Server error",code:"site_chat_error"},500);
   }
 });
