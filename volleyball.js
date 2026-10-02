@@ -293,12 +293,16 @@ function initVolleyballHub(){
   const sentinel=document.getElementById('volleyball-feed-sentinel');
   const discovery=document.getElementById('volleyball-discovery-result');
   const discoveryShell=document.getElementById('volleyball-discovery');
+  const feedModeButtons=[...document.querySelectorAll('[data-vb-feed-mode]')];
+  const savedCount=document.getElementById('vb-saved-count');
+  const practiceCount=document.getElementById('vb-practice-count');
 
   let population='all';
   let topic='all';
   let page=0;
   let rendered=0;
   let loading=false;
+  let feedMode='all';
   const feedSeed=new Date().toISOString().slice(0,10);
   const VB_SAVED_KEY='volleyball-saved-cards-v1';
   const VB_PRACTICE_KEY='volleyball-practice-cards-v1';
@@ -331,6 +335,15 @@ function initVolleyballHub(){
       cardEl.classList.toggle('is-practice',practice);
     });
   };
+  const refreshFeedModeCounts=()=>{
+    if(savedCount)savedCount.textContent=String(savedCards.size);
+    if(practiceCount)practiceCount.textContent=String(practiceCards.size);
+    feedModeButtons.forEach(btn=>{
+      const active=btn.dataset.vbFeedMode===feedMode;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-pressed',String(active));
+    });
+  };
   const showCardFeedback=(cardEl,message)=>{
     const box=cardEl?.querySelector('.vb-card-feedback');
     if(!box)return;
@@ -361,7 +374,9 @@ function initVolleyballHub(){
       if(active)savedCards.add(id);else savedCards.delete(id);
       persistCardSet(VB_SAVED_KEY,savedCards);
       syncInteractiveCardStates(cardEl);
+      refreshFeedModeCounts();
       showCardFeedback(cardEl,active?'נשמר בפיד שלך':'הוסר מהשמורים');
+      if(feedMode==='saved'&&!active)setTimeout(resetFeed,180);
       return true;
     }
 
@@ -369,7 +384,9 @@ function initVolleyballHub(){
     if(active)practiceCards.add(id);else practiceCards.delete(id);
     persistCardSet(VB_PRACTICE_KEY,practiceCards);
     syncInteractiveCardStates(cardEl);
+    refreshFeedModeCounts();
     showCardFeedback(cardEl,active?'נוסף לרשימת היישום':'הוסר מרשימת היישום');
+    if(feedMode==='practice'&&!active)setTimeout(resetFeed,180);
     return true;
   };
 
@@ -404,19 +421,31 @@ function initVolleyballHub(){
   }
 
   function currentPool(){
-    return filterVolleyballFeed(window.VOLLEYBALL_FEED_CARDS,{population,topic,query:search.value});
+    const source=feedMode==='saved'
+      ?window.VOLLEYBALL_FEED_CARDS.filter(card=>savedCards.has(card.id))
+      :feedMode==='practice'
+        ?window.VOLLEYBALL_FEED_CARDS.filter(card=>practiceCards.has(card.id))
+        :window.VOLLEYBALL_FEED_CARDS;
+    return filterVolleyballFeed(source,{population,topic,query:search.value});
   }
 
   function updateFeedHeading(){
     const populationLabel=population==='all'?'כל הכדורעף':labelFor(window.VOLLEYBALL_POPULATIONS,population);
     const topicLabel=topic==='all'?'כל המאפיינים':labelFor(window.VOLLEYBALL_TOPICS,topic);
-    feedTitle.textContent=population==='all'&&topic==='all'?'פיד כדורעף':`פיד ${populationLabel} · ${topicLabel}`;
+    const modeLabel=feedMode==='saved'?'שמורים':feedMode==='practice'?'ליישום':'';
+    const base=population==='all'&&topic==='all'?'פיד כדורעף':`פיד ${populationLabel} · ${topicLabel}`;
+    feedTitle.textContent=modeLabel?`${base} · ${modeLabel}`:base;
   }
 
   function appendBatch(){
     if(loading)return;
     loading=true;
-    const batch=buildInfiniteBatch(window.VOLLEYBALL_FEED_CARDS,{population,topic,query:search.value},feedSeed,page,8);
+    const sourceCards=feedMode==='saved'
+      ?window.VOLLEYBALL_FEED_CARDS.filter(card=>savedCards.has(card.id))
+      :feedMode==='practice'
+        ?window.VOLLEYBALL_FEED_CARDS.filter(card=>practiceCards.has(card.id))
+        :window.VOLLEYBALL_FEED_CARDS;
+    const batch=buildInfiniteBatch(sourceCards,{population,topic,query:search.value},feedSeed+'|'+feedMode,page,8);
     if(batch.length){
       feed.insertAdjacentHTML('beforeend',batch.map(renderCard).join(''));
       syncInteractiveCardStates(feed);
@@ -426,7 +455,7 @@ function initVolleyballHub(){
       const topicLabel=topic==='all'?'כל המאפיינים':labelFor(window.VOLLEYBALL_TOPICS,topic);
       count.textContent=`${rendered} פריטים · ${populationLabel} · ${topicLabel}`;
     }else{
-      if(!rendered) feed.innerHTML='<div class="vb-empty">לא נמצאו פריטים למסלול הזה.</div>';
+      if(!rendered) feed.innerHTML=`<div class="vb-empty">${feedMode==='saved'?'עוד לא שמרת פריטים במסלול הזה.':feedMode==='practice'?'עוד לא הוספת פריטים ליישום במסלול הזה.':'לא נמצאו פריטים למסלול הזה.'}</div>`;
       count.textContent='אין תוצאות נוספות';
     }
     loading=false;
@@ -509,6 +538,13 @@ function initVolleyballHub(){
     selectTopic(btn.dataset.topic);
     document.getElementById('volleyball-feed-section').scrollIntoView({behavior:'smooth',block:'start'});
   });
+
+  feedModeButtons.forEach(btn=>btn.addEventListener('click',()=>{
+    feedMode=btn.dataset.vbFeedMode||'all';
+    refreshFeedModeCounts();
+    resetFeed();
+  }));
+  refreshFeedModeCounts();
 
   search.addEventListener('input',resetFeed);
   feed.addEventListener('click',event=>{if(handleCardAction(event))return;handleTermInteraction(event);});
