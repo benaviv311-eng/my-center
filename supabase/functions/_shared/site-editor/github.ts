@@ -309,3 +309,50 @@ export async function githubPagesRunForSha(sha:string):Promise<GithubPagesRun|nu
     name:String(run.name||"pages build and deployment")
   };
 }
+
+
+export type GithubWorkflowRun={
+  id:number;
+  status:string;
+  conclusion:string|null;
+  url:string|null;
+  headSha:string;
+};
+
+export async function githubWorkflowRunForSha(
+  workflowFile:string,
+  branch:string,
+  headSha:string
+):Promise<GithubWorkflowRun|null>{
+  const data=await githubRequest(repoPath(`/actions/workflows/${encodeURIComponent(workflowFile)}/runs?event=workflow_dispatch&branch=${encodeURIComponent(branch)}&per_page=30`));
+  const runs=(data?.workflow_runs||[]).filter((run:any)=>run?.head_sha===headSha);
+  runs.sort((a:any,b:any)=>Date.parse(b?.created_at||"")-Date.parse(a?.created_at||""));
+  const run=runs[0];
+  if(!run)return null;
+  return {
+    id:Number(run.id),
+    status:String(run.status||"unknown"),
+    conclusion:typeof run.conclusion==="string"?run.conclusion:null,
+    url:typeof run.html_url==="string"?run.html_url:null,
+    headSha:String(run.head_sha||"")
+  };
+}
+
+export async function githubDispatchWorkflow(
+  workflowFile:string,
+  branch:string,
+  inputs:Record<string,string>
+):Promise<number>{
+  const existing=await githubWorkflowRunForSha(workflowFile,branch,String(inputs.head_sha||""));
+  if(existing)return existing.id;
+  await githubRequest(repoPath(`/actions/workflows/${encodeURIComponent(workflowFile)}/dispatches`),{
+    method:"POST",
+    body:JSON.stringify({ref:branch,inputs})
+  });
+  for(let attempt=0;attempt<4;attempt++){
+    await new Promise(resolve=>setTimeout(resolve,600));
+    const run=await githubWorkflowRunForSha(workflowFile,branch,String(inputs.head_sha||""));
+    if(run)return run.id;
+  }
+  return 0;
+}
