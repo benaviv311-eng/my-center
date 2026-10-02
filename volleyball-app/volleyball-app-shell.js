@@ -224,6 +224,15 @@
     toggleFilterMenu();
   });
   filterMenuClose?.addEventListener("click",closeFilterMenu);
+  document.querySelectorAll("[data-vb-open-filters]").forEach(btn=>{
+    btn.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(!filterMenu||!filterMenuToggle)return;
+      filterMenu.hidden=false;
+      filterMenuToggle.setAttribute("aria-expanded","true");
+    });
+  });
   const buildPopulationMenu=()=>{
     if(!populationTabs||!populationMenu)return;
     const buttons=[...populationTabs.querySelectorAll("[data-population]")];
