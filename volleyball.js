@@ -409,7 +409,7 @@ function initVolleyballHub(){
     const btn=event.target.closest('[data-population]');
     if(!btn)return;
     selectPopulation(btn.dataset.population);
-    topicShell.scrollIntoView({behavior:'smooth',block:'start'});
+    (topicShell||document.getElementById('volleyball-feed-section'))?.scrollIntoView({behavior:'smooth',block:'start'});
   });
 
   topicPanel.addEventListener('click',event=>{
