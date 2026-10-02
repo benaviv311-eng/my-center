@@ -366,7 +366,8 @@ export async function githubDispatchWorkflow(
   branch:string,
   inputs:Record<string,string>
 ):Promise<number>{
-  const existing=await githubWorkflowRunForSha(workflowFile,branch,String(inputs.head_sha||""));
+  const expectedSha=String(inputs.head_sha||inputs.merge_sha||"");
+  const existing=await githubWorkflowRunForSha(workflowFile,branch,expectedSha);
   if(existing)return existing.id;
   await githubRequest(repoPath(`/actions/workflows/${encodeURIComponent(workflowFile)}/dispatches`),{
     method:"POST",
@@ -374,7 +375,7 @@ export async function githubDispatchWorkflow(
   });
   for(let attempt=0;attempt<4;attempt++){
     await new Promise(resolve=>setTimeout(resolve,600));
-    const run=await githubWorkflowRunForSha(workflowFile,branch,String(inputs.head_sha||""));
+    const run=await githubWorkflowRunForSha(workflowFile,branch,expectedSha);
     if(run)return run.id;
   }
   return 0;
