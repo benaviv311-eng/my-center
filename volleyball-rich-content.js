@@ -228,7 +228,10 @@ const PROFESSIONAL_WOMEN_GALLERY=[
 ];
 
 function richEsc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-function galleryHtml(image,cls=''){return `<figure class="vb-pro-photo ${cls}"><a href="${richEsc(image.creditUrl)}" target="_blank" rel="noopener"><img src="${richEsc(image.imageUrl)}" alt="${richEsc(image.alt)}" loading="lazy"><figcaption><strong>${richEsc(image.playerName)}</strong><span>${richEsc(image.action)}</span><small>${richEsc(image.license)} · ${richEsc(image.credit)}</small></figcaption></a></figure>`;}
+function galleryHtml(image,cls=''){
+  const version=typeof window!=='undefined'?(window.VOLLEYBALL_GALLERY_VERSION||0):0;
+  return `<figure class="vb-pro-photo ${cls}" data-gallery-version="${version}"><a href="${richEsc(image.creditUrl)}" target="_blank" rel="noopener"><img src="${richEsc(image.imageUrl)}" alt="${richEsc(image.alt)}" loading="lazy"><figcaption><strong>${richEsc(image.playerName)}</strong><span>${richEsc(image.action)}</span><small>${richEsc(image.license)} · ${richEsc(image.credit)}</small></figcaption></a></figure>`;
+}
 
 function addDrillSources(root=document){
   if(typeof window==='undefined'||!root?.querySelectorAll)return;
@@ -243,14 +246,23 @@ function addDrillSources(root=document){
   });
 }
 
+const VB_INLINE_GALLERY_SEED=Math.floor(Date.now()/1000);
 function addInlinePhotos(){
-  if(typeof document==='undefined')return;
+  if(typeof document==='undefined'||!PROFESSIONAL_WOMEN_GALLERY.length)return;
   const feed=document.getElementById('volleyball-feed');if(!feed)return;
+  const version=typeof window!=='undefined'?(window.VOLLEYBALL_GALLERY_VERSION||0):0;
   const cards=[...feed.querySelectorAll('.vb-feed-card')];
   cards.forEach((card,index)=>{
-    if((index+1)%3!==0||card.nextElementSibling?.classList.contains('vb-pro-photo-inline'))return;
-    const image=PROFESSIONAL_WOMEN_GALLERY[Math.floor(index/3)%PROFESSIONAL_WOMEN_GALLERY.length];
-    card.insertAdjacentHTML('afterend',galleryHtml(image,'vb-pro-photo-inline'));
+    if((index+1)%3!==0)return;
+    const imageIndex=Math.abs(VB_INLINE_GALLERY_SEED+(index*17)+(version*29))%PROFESSIONAL_WOMEN_GALLERY.length;
+    const image=PROFESSIONAL_WOMEN_GALLERY[imageIndex];
+    const existing=card.nextElementSibling?.classList.contains('vb-pro-photo-inline')?card.nextElementSibling:null;
+    const markup=galleryHtml(image,'vb-pro-photo-inline');
+    if(existing){
+      if(existing.dataset.galleryVersion!==String(version))existing.outerHTML=markup;
+      return;
+    }
+    card.insertAdjacentHTML('afterend',markup);
   });
 }
 
@@ -272,6 +284,7 @@ function installRichContentUI(){
   const feed=document.getElementById('volleyball-feed');if(!feed)return;
   let queued=false;
   new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;addDrillSources(feed);addInlinePhotos();});}).observe(feed,{childList:true,subtree:true});
+  window.addEventListener('volleyball:gallery-expanded',()=>requestAnimationFrame(addInlinePhotos));
 }
 
 if(typeof window!=='undefined'){
