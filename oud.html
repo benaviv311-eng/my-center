@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>לימוד עוד | מוזיקה</title>
+  <meta name="theme-color" content="#f7f3ea">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="oud.css?v=1">
+</head>
+<body>
+<div class="app oud-app">
+  <div class="back"><a class="btn small" href="music.html">← חזרה למוזיקה</a></div>
+
+  <div class="page-title">
+    <h1>🪕 מסלול לימוד עוד</h1>
+    <div class="subtitle">רישה · אינטונציה · מקאמים · קצב · תקסים · נגינה מהאוזן</div>
+  </div>
+
+  <section class="oud-hero">
+    <div>
+      <p class="eyebrow">מסלול מעשי</p>
+      <h2>מהבסיס עד אלתור חופשי</h2>
+      <p>עשרה שיעורים קצרים, תרגול יומי, מאגר מקאמים ותרגילים שנועדו לגרום ליד ימין, ליד שמאל ולאוזן להתפתח יחד.</p>
+    </div>
+    <div class="oud-progress-card">
+      <span id="oud-progress-number">0/10</span>
+      <div class="oud-progress-track"><div id="oud-progress-bar"></div></div>
+      <small>שיעורים שהושלמו</small>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2>🎯 אימון היום — 20 דקות</h2>
+        <small>לחץ כדי לקבל סדר תרגול חדש</small>
+      </div>
+      <button id="oud-generate-practice" class="btn small" type="button">🎲 בנה אימון</button>
+    </div>
+    <div id="oud-practice" class="oud-practice-grid"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>🎼 כיוון ומיתרים</h2>
+      <small>לפני כל אימון</small>
+    </div>
+    <div class="grid grid-2">
+      <article class="card">
+        <div class="label music">כיוון נפוץ</div>
+        <h3>C – F – A – d – g – c</h3>
+        <p class="meta">מהנמוך לגבוה. קיימים כיוונים נוספים, לכן תמיד עובדים לפי הכיוון של הכלי והמורה/המסורת שבה אתה מנגן.</p>
+        <div class="oud-course-row">
+          <span>C</span><span>F</span><span>A</span><span>d</span><span>g</span><span>c</span>
+        </div>
+      </article>
+      <article class="card">
+        <div class="label music">כלל יסוד</div>
+        <h3>האוזן קודמת למהירות</h3>
+        <p class="meta">בעוד אין סריגים. אם הצליל אינו מדויק, האטה ותיקון המיקום חשובים יותר מעוד חזרות מהירות.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>📚 10 שיעורי יסוד</h2><small>אפשר לפתוח לפי הסדר או לקפוץ לנושא</small></div>
+    <div id="oud-lessons" class="oud-lessons"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>🧭 ספריית מקאמים — התחלה נכונה</h2><small>קודם לומדים ג׳ינס קצר, אחר כך מרחיבים</small></div>
+    <div class="oud-maqam-tabs" id="oud-maqam-tabs"></div>
+    <div id="oud-maqam-view"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>🥁 מקצבים בסיסיים</h2><small>D = Dum · T = Tak · – = שקט/החזקה</small></div>
+    <div class="grid grid-3">
+      <article class="card"><h3>מקסום · 4/4</h3><div class="oud-rhythm">D T – T · D – T –</div><p class="meta">נגן תחילה על גוף העוד, ואז העבר את התחושה לפריטה.</p></article>
+      <article class="card"><h3>מלפוף · 2/4</h3><div class="oud-rhythm">D – T –</div><p class="meta">טוב לתרגול משפטים קצרים וחזרה מהירה לטוניקה.</p></article>
+      <article class="card"><h3>סמאעי ת׳קיל · 10/8</h3><div class="oud-rhythm">D – – T · D D · T –</div><p class="meta">בשלב הראשון רק ספור והרגש את החלוקה; אין צורך למהר לנגן מעליו.</p></article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>🎤 אימון אוזן</h2><small>החלק שהופך תווים למוזיקה</small></div>
+    <div class="grid grid-2">
+      <article class="card"><h3>שיר → חיקוי</h3><p class="meta">שיר משפט של 3–4 צלילים, מצא אותו על העוד, ואז נגן אותו בשלושה מקומות קצביים שונים.</p></article>
+      <article class="card"><h3>טוניקה → יציאה → חזרה</h3><p class="meta">נגן צליל בית, התרחק ממנו בשניים-שלושה צלילים וחזור. למד להרגיש מתי המשפט באמת נחת.</p></article>
+      <article class="card"><h3>שאלה ותשובה</h3><p class="meta">משפט ראשון מסתיים פתוח; המשפט הבא עונה ונוחת. זה בסיס מצוין לתקסים.</p></article>
+      <article class="card"><h3>חיקוי הקלטה</h3><p class="meta">בחר 5–10 שניות מנגן עוד שאתה אוהב. אל תנסה את כל הקטע — רק משפט אחד עד שהוא יושב באוזן וביד.</p></article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>✨ תקסים — תבנית פשוטה</h2><small>לא “לרוץ על סולם”</small></div>
+    <article class="card oud-taqsim">
+      <div><b>1. בית</b><span>הצג את הטוניקה והג׳ינס הראשי.</span></div>
+      <div><b>2. שאלה</b><span>בנה משפט קצר שעולה ומשאיר מתח.</span></div>
+      <div><b>3. פיתוח</b><span>שנה קצב, חזור על מוטיב, הרחב בהדרגה.</span></div>
+      <div><b>4. צבע</b><span>הוסף קישוט או נגיעה בצליל סמוך — בלי לאבד את המרכז.</span></div>
+      <div><b>5. חזרה</b><span>חזור לטוניקה כך שהמאזין מרגיש שהגעת הביתה.</span></div>
+    </article>
+  </section>
+
+  <nav class="bottom-nav"><div class="inner">
+    <a class="nav-item" href="index.html"><span>🏠</span>בית</a>
+    <a class="nav-item" href="raika.html"><span>⚡</span>ראיקה</a>
+    <a class="nav-item" href="coach.html"><span>🏐</span>מאמן</a>
+    <a class="nav-item" href="languages.html"><span>🌍</span>שפות</a>
+    <a class="nav-item active" href="music.html"><span>🎵</span>מוזיקה</a>
+    <a class="nav-item" href="library.html"><span>📚</span>ספרייה</a>
+  </div></nav>
+</div>
+<div class="toast" id="toast"></div>
+<script src="app.js?v=11"></script>
+<script src="oud.js?v=1"></script>
+<script src="mobile-app-shell.js?v=1"></script>
+</body>
+</html>
