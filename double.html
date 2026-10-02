@@ -355,7 +355,16 @@
     }
       @media(min-width:760px){.board{grid-template-columns:1fr 1fr}.card{width:340px}}
     @media(max-width:520px){.mode-grid{grid-template-columns:1fr}.mode-card.versus{grid-column:auto}.panel h1{font-size:44px}.stats{justify-content:center}.top{justify-content:center;text-align:center}}
-  </style>
+  
+    .announcer-wrap{margin:14px 0 18px;padding:14px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+    .announcer-wrap>span{display:block;font-weight:900;margin-bottom:10px}
+    .announcer-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+    .announcer-pack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(8,16,30,.58);color:inherit;cursor:pointer;text-align:right}
+    .announcer-pack b{font-size:14px}
+    .announcer-pack small{opacity:.72;font-size:11px;line-height:1.25}
+    .announcer-pack.active{transform:translateY(-1px);border-color:rgba(255,213,79,.9);box-shadow:0 0 0 2px rgba(255,213,79,.14),0 10px 24px rgba(0,0,0,.18)}
+    @media(max-width:700px){.announcer-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.announcer-pack{padding:9px 10px}}
+</style>
   <link rel="stylesheet" href="site-chat.css?v=2">\n  <link rel="stylesheet" href="site-editor-ui.css?v=1">\n</head>
 <body>
   <div id="start" class="start">
@@ -405,6 +414,6 @@
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
-  <script src="double/game.js?v=25"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
+  <script src="double/game.js?v=26"></script>\n  <script src="site-editor-ui.js?v=1"></script>\n  <script src="site-chat.js?v=2"></script>
 </body>
 </html>
