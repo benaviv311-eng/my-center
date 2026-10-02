@@ -167,6 +167,19 @@ export async function githubBranchHead(branch:string):Promise<string>{
   return sha;
 }
 
+export type GithubCheck={name:string;status:string;conclusion:string|null;url:string|null;providerRunId:string|null};
+
+export async function githubChecksForRef(sha:string):Promise<GithubCheck[]>{
+  const data=await githubRequest(repoPath(`/commits/${encodeURIComponent(sha)}/check-runs?per_page=100`));
+  return (data?.check_runs||[]).map((run:any)=>({
+    name:typeof run?.name==="string"?run.name:"check",
+    status:typeof run?.status==="string"?run.status:"unknown",
+    conclusion:typeof run?.conclusion==="string"?run.conclusion:null,
+    url:typeof run?.html_url==="string"?run.html_url:null,
+    providerRunId:run?.id==null?null:String(run.id)
+  }));
+}
+
 export async function githubCreateEditBranch(name:string,baseSha:string):Promise<void>{
   await githubRequest(repoPath("/git/refs"),{
     method:"POST",
