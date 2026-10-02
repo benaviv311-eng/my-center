@@ -64,3 +64,23 @@ test('normal site edit validation also screens migrations',()=>{
   const yml=read('.github/workflows/site-editor-validation.yml');
   assert.match(yml,/site-editor-migration-check\.mjs/);
 });
+
+
+test('approved Edge Function changes deploy only from the merged sha',()=>{
+  const yml=read('.github/workflows/site-editor-edge-functions-deploy.yml');
+  assert.match(yml,/workflow_dispatch/);
+  assert.match(yml,/merge_sha/);
+  assert.match(yml,/function_names/);
+  assert.match(yml,/supabase@2\.117\.0/);
+  assert.match(yml,/functions deploy/);
+  assert.doesNotMatch(yml,/push:/);
+  assert.doesNotMatch(yml,/pull_request:/);
+});
+
+test('site editor waits for required Edge Function deployments',()=>{
+  const fn=read('supabase/functions/site-editor/index.ts');
+  assert.match(fn,/site-editor-edge-functions-deploy\.yml/);
+  assert.match(fn,/functions_deploy/);
+  assert.match(fn,/merge_commit_sha/);
+  assert.match(fn,/function_names/);
+});
