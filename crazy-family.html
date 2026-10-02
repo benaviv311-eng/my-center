@@ -56,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.<br><strong>קול:</strong> לחץ פעם אחת על 🔊 בדיקת קול למעלה. אחרי ששומעים את הצליל, השירים של אבא פועלים אוטומטית כשהוא מתקרב.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. אוזניות ורדיו נותנים מגן.<br><strong>קול:</strong> המשחק משתמש עכשיו בהקלטה האמיתית “אבא שוב ממציא כאן”. אבא מתחיל בכל מפגש ממקטע אחר מהשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -206,50 +206,35 @@ function useSelectedItem(){
    msg(it.icon+' '+it.name+' שמור לשימוש מול הדמות המתאימה');
  }
 }
-let audioCtx=null,audioUnlocked=false,lastDadAudioAt=0,voiceCache=[];
-async function unlockAudio(){
+const dadTrack=new Audio('assets/audio/abba-shuv-mamtzi-kan.mp3');
+dadTrack.preload='auto';
+dadTrack.volume=.92;
+let dadAudioPrimed=false,dadWasSinging=false,dadClipStopTimer=0;
+const dadClipStarts=[6,18,30,43,56,69,83,97,111,125,139,151];
+
+async function primeDadAudio(){
+ if(dadAudioPrimed)return true;
  try{
-   if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-   if(audioCtx.state==='suspended')await audioCtx.resume();
-   audioUnlocked=audioCtx.state==='running';
-   return audioUnlocked;
- }catch(e){audioUnlocked=false;return false}
+   const oldVol=dadTrack.volume;
+   dadTrack.volume=.001;
+   await dadTrack.play();
+   dadTrack.pause();
+   dadTrack.currentTime=0;
+   dadTrack.volume=oldVol;
+   dadAudioPrimed=true;
+   return true;
+ }catch(e){dadTrack.volume=.92;return false}
 }
-function loadVoices(){if('speechSynthesis' in window)voiceCache=speechSynthesis.getVoices()}
-if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
-function hebrewVoice(){
- return voiceCache.find(v=>/^he(-|_)/i.test(v.lang))||voiceCache.find(v=>/Hebrew|עבר/i.test(v.name))||voiceCache[0];
+function startDadSongClip(){
+ clearTimeout(dadClipStopTimer);
+ const duration=Number.isFinite(dadTrack.duration)?dadTrack.duration:167;
+ const start=dadClipStarts[Math.floor(Math.random()*dadClipStarts.length)];
+ try{dadTrack.currentTime=Math.min(start,Math.max(0,duration-10))}catch(e){}
+ dadTrack.volume=.92;
+ dadTrack.play().catch(()=>{});
 }
-function playTune(strong=false){
- if(!audioCtx||audioCtx.state!=='running')return;
- const t=audioCtx.currentTime+.01;
- const notes=strong?[523,659,784,659,523]:[392,440,494,440,392,330];
- notes.forEach((f,i)=>{
-   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-   o.type='triangle';o.frequency.value=f;
-   const st=t+i*.13;
-   g.gain.setValueAtTime(.0001,st);
-   g.gain.exponentialRampToValueAtTime(strong?.16:.09,st+.02);
-   g.gain.exponentialRampToValueAtTime(.0001,st+.115);
-   o.connect(g);g.connect(audioCtx.destination);o.start(st);o.stop(st+.13);
- });
-}
-async function singDadLine(line){
- await unlockAudio();
- playTune(false);
- if('speechSynthesis' in window){
-   try{
-     if(!voiceCache.length)loadVoices();
-     const u=new SpeechSynthesisUtterance(line);
-     const v=hebrewVoice();
-     if(v)u.voice=v;
-     u.lang=(v&&v.lang)||'he-IL';
-     u.rate=.9;u.pitch=1.18;u.volume=1;
-     speechSynthesis.cancel();
-     speechSynthesis.speak(u);
-   }catch(e){}
- }
-}
+function stopDadSong(){clearTimeout(dadClipStopTimer);dadTrack.pause()}
+function singDadLine(line){if(dadTrack.paused)startDadSongClip()}
 function chooseDadTarget(now){
  if(now<dad.targetAt)return;
  dad.targetAt=now+1800+Math.random()*2500;
@@ -285,6 +270,8 @@ function updateDad(dt){
  const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy);
  if(len>5){dad.x+=vx/len*dad.speed*dt;dad.y+=vy/len*dad.speed*dt}
  dad.phase+=dt*(dad.singing?8:3);
+ if(dad.singing&&!dadWasSinging){startDadSongClip();dadWasSinging=true}
+ if(!dad.singing&&dadWasSinging){stopDadSong();dadWasSinging=false}
  noteClock+=dt;
  if(dad.singing){
    if(dadSongIndex<0)nextDadSong();
@@ -300,7 +287,7 @@ function updateDad(dt){
    }
  }else{
    dadNextLineAt=0;dadSongIndex=-1;dadLineIndex=0;
-   if('speechSynthesis' in window && speechSynthesis.speaking)speechSynthesis.cancel();
+   stopDadSong();
  }
 }
 function drawDad(){
@@ -382,28 +369,22 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{unlockAudio();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{primeDadAudio();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
-addEventListener('pointerdown',()=>{unlockAudio()});
+addEventListener('pointerdown',()=>{primeDadAudio()});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
 document.getElementById('audioTest').onclick=async()=>{
- const ok=await unlockAudio();
- if(!ok){msg('הדפדפן חסם אודיו — בדוק שהלשונית אינה מושתקת');return}
- playTune(true);
- const sample='אבטיח הלך לשיח';
- if('speechSynthesis' in window){
-   try{
-     if(!voiceCache.length)loadVoices();
-     const u=new SpeechSynthesisUtterance(sample);
-     const v=hebrewVoice();if(v)u.voice=v;
-     u.lang=(v&&v.lang)||'he-IL';u.rate=.88;u.pitch=1.15;u.volume=1;
-     speechSynthesis.cancel();speechSynthesis.speak(u);
-   }catch(e){}
- }
- msg('🔊 הקול הופעל');
+ const ok=await primeDadAudio();
+ clearTimeout(dadClipStopTimer);
+ try{dadTrack.currentTime=6}catch(e){}
+ dadTrack.volume=.95;
+ const played=await dadTrack.play().then(()=>true).catch(()=>false);
+ if(!played){msg('הדפדפן חסם את הקול — בדוק שהלשונית אינה מושתקת');return}
+ dadClipStopTimer=setTimeout(()=>{if(!dad.singing)dadTrack.pause()},7000);
+ msg('🔊 השיר האמיתי של אבא');
 };
 renderInv();renderFloors();requestAnimationFrame(loop);
 })();
