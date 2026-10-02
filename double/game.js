@@ -1862,8 +1862,37 @@
     window.speechSynthesis.addEventListener?.('voiceschanged',prepareNaturalVoice);
     setTimeout(prepareNaturalVoice,250);
   }
+  function launchDirectFromUrl(){
+    let params;
+    try{params=new URLSearchParams(location.search)}catch(_){return}
+    const target=params.get('launch');
+    if(!target) return;
+
+    setTimeout(()=>{
+      if(target==='classic'||target==='knockout'||target==='survival'){
+        startGame(target);
+        return;
+      }
+      if(target==='levels'){
+        startGame('levels',profile.unlockedLevel);
+        return;
+      }
+      if(target==='sprint'){
+        sprintTarget=Math.max(1,Number(params.get('target'))||5);
+        startGame('sprint');
+        return;
+      }
+      if(target==='versus'){
+        const v=params.get('variant');
+        versusVariant=['duel','deck','knockout','race','combo','sudden','gold'].includes(v)?v:'duel';
+        startGame('versus');
+      }
+    },0);
+  }
+
   deck=buildDeck();
   bindStaticControls();
   restoreMenuMarkup();
+  launchDirectFromUrl();
   document.documentElement.dataset.doubleReady='1';
 })();
