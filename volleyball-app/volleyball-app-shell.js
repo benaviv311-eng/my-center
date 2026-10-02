@@ -53,11 +53,20 @@
           wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0332 LR by Stepro.jpg'),
           wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0381 LR by Stepro.jpg'),
           wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0385 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0493 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0513 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0514 LR by Stepro.jpg'),
+          wcFile('2019-07-06 BeachVolleyball Weltmeisterschaft Hamburg 2019 StP 0520 LR by Stepro.jpg'),
           wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-19) (35430860896).jpg'),
           wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-21) (35358759342).jpg'),
           wcFile('AVP Professional Beach Volleyball in Austin, Texas (2017-05-19) (35340419471).jpg'),
           wcFile('April Ross at the AVP Austin Open 2017.jpg'),
           wcFile('April Ross at the AVP Austin Open 2017 (2).jpg')
+        ]},
+        {player:'Ágatha Bednarczuk',kind:'beach',poses:[
+          wcFile('Paf Open 2012 Ágatha Bednarczuk.jpg'),
+          wcFile('Paf Open 2012 Ágatha Bednarczuk (cropped).jpg'),
+          wcFile('Agatha Bednarczuk.jpg')
         ]}
       ]
     },
@@ -86,6 +95,7 @@
     if(t.includes('גברים'))return 'men';
     return 'all';
   };
+  const visualSessionSeed=Math.floor(Date.now()/1000);
   const setEliteSideBackgrounds=()=>{
     if(!sideLeft||!sideRight)return;
     const active=populationTabs?.querySelector('.vb-pop-tab.active');
@@ -93,7 +103,7 @@
     const gallery=VB_ELITE_SIDE_GALLERIES[key]||VB_ELITE_SIDE_GALLERIES.all;
     const athletes=gallery.athletes||[];
     if(!athletes.length)return;
-    const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7);
+    const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7)+visualSessionSeed;
     const athlete=athletes[seed%athletes.length];
     const poses=athlete.poses||[];
     if(poses.length<2)return;
