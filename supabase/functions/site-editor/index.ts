@@ -508,7 +508,7 @@ async function refreshStatus(user:{id:string},requestId:string){
 
   await ensurePullRequest(request,user.id);
   if(request.risk_level==="low"){
-    const ready=await admin.from("site_edit_requests").update({status:"preview_ready",pr_number:request.pr_number||null,updated_at:new Date().toISOString()}).eq("id",request.id);
+    const ready=await admin.from("site_edit_requests").update({status:"preview_ready",updated_at:new Date().toISOString()}).eq("id",request.id);
     if(ready.error)throw new EditorError("editor_unavailable",500);
     return publishRequest(user,request.id,true);
   }
