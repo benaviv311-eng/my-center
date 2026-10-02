@@ -7,11 +7,13 @@ import {
   githubCommitFiles,
   githubCreateEditBranch,
   githubCreateOrUpdatePR,
+  githubDispatchWorkflow,
   githubMergePR,
   githubPagesRunForSha,
   githubReadFile,
   githubReadFileBase64,
-  githubTree
+  githubTree,
+  githubWorkflowRunForSha
 } from "../_shared/site-editor/github.ts";
 import { applyOperations, writesToArray } from "../_shared/site-editor/operations.ts";
 import { assertSafePath, riskAtMost, validateEditPlan } from "../_shared/site-editor/policy.ts";
@@ -22,6 +24,7 @@ const OPENAI_API_KEY=Deno.env.get("OPENAI_API_KEY")||"";
 const SITE_EDITOR_MODEL_STRONG=Deno.env.get("SITE_EDITOR_MODEL_STRONG")||"";
 const SITE_EDITOR_MODEL_FAST=Deno.env.get("SITE_EDITOR_MODEL_FAST")||"";
 const SITE_EDITOR_INTERNAL_SECRET=Deno.env.get("SITE_EDITOR_INTERNAL_SECRET")||"";
+const SUPABASE_DEPLOY_WORKFLOW="site-editor-supabase-deploy.yml";
 const admin=serviceClient();
 
 function cors(req:Request){
@@ -468,6 +471,88 @@ async function approvePublish(user:{id:string},requestId:string){
   return requestView(user.id,request.id);
 }
 
+async function requestTouchesMigrations(requestId:string){
+  const operations=await requestOperations(requestId);
+  return operations.some((op:any)=>String(op.path||"").startsWith("supabase/migrations/"));
+}
+
+async function dispatchDbDeployment(user:{id:string},request:any,currentHead:string){
+  if(request.risk_level!=="high")throw new EditorError("unsafe_plan",409,"migration_requires_high_risk");
+  const runId=await githubDispatchWorkflow(SUPABASE_DEPLOY_WORKFLOW,request.branch_name,{
+    request_id:request.id,
+    branch:request.branch_name,
+    head_sha:currentHead
+  });
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","db_deploy");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const saved=await admin.from("site_edit_runs").insert({
+    request_id:request.id,
+    kind:"db_deploy",
+    provider_run_id:runId?String(runId):null,
+    status:"queued",
+    details:{workflow:SUPABASE_DEPLOY_WORKFLOW,branch:request.branch_name,head_sha:currentHead}
+  });
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+  const update=await admin.from("site_edit_requests").update({
+    status:"deploying",
+    deploy_status:"db_pending",
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id);
+  if(update.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"db_deploy_dispatched",{workflow:SUPABASE_DEPLOY_WORKFLOW,head_sha:currentHead,run_id:runId||null});
+  return requestView(user.id,request.id);
+}
+
+async function refreshDbDeployment(user:{id:string},request:any){
+  if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_has_no_branch");
+  const currentHead=await githubBranchHead(request.branch_name);
+  if(currentHead!==request.head_sha)throw new EditorError("stale_plan",409);
+  const run=await githubWorkflowRunForSha(SUPABASE_DEPLOY_WORKFLOW,request.branch_name,currentHead);
+  if(!run)return requestView(user.id,request.id);
+
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","db_deploy");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const saved=await admin.from("site_edit_runs").insert({
+    request_id:request.id,
+    kind:"db_deploy",
+    provider_run_id:String(run.id),
+    status:run.status,
+    url:run.url,
+    details:{workflow:SUPABASE_DEPLOY_WORKFLOW,head_sha:currentHead,conclusion:run.conclusion},
+    finished_at:run.status==="completed"?new Date().toISOString():null
+  });
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+
+  if(run.status!=="completed")return requestView(user.id,request.id);
+  if(run.conclusion!=="success"){
+    const failed=await admin.from("site_edit_requests").update({
+      status:"failed",
+      deploy_status:"db_failed",
+      updated_at:new Date().toISOString()
+    }).eq("id",request.id);
+    if(failed.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"db_deploy_failed",{run_id:run.id,conclusion:run.conclusion});
+    return requestView(user.id,request.id);
+  }
+
+  const health=await admin.from("site_edit_requests").select("id").limit(1);
+  if(health.error){
+    const failed=await admin.from("site_edit_requests").update({status:"failed",deploy_status:"db_health_failed",updated_at:new Date().toISOString()}).eq("id",request.id);
+    if(failed.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"db_health_failed",{run_id:run.id});
+    return requestView(user.id,request.id);
+  }
+
+  const ready=await admin.from("site_edit_requests").update({
+    status:"awaiting_publish_approval",
+    deploy_status:"db_success",
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id);
+  if(ready.error)throw new EditorError("editor_unavailable",500);
+  await insertEvent(request.id,user.id,"db_deploy_succeeded",{run_id:run.id,head_sha:currentHead});
+  return publishRequest(user,request.id,false);
+}
+
 async function publishRequest(user:{id:string},requestId:string,auto=false){
   const request=await ownedRequest(user.id,requestId);
   if(!["preview_ready","awaiting_publish_approval"].includes(request.status)){
@@ -484,6 +569,11 @@ async function publishRequest(user:{id:string},requestId:string,auto=false){
   }else if(!auto){
     const planApproval=await latestApproval(request.id,"plan");
     if(planApproval?.approved_head_sha!==currentHead)throw new EditorError("stale_plan",409);
+  }
+
+  const migrations=await requestTouchesMigrations(request.id);
+  if(migrations&&request.deploy_status!=="db_success"){
+    return dispatchDbDeployment(user,request,currentHead);
   }
 
   const pr=await ensurePullRequest(request,user.id);
@@ -665,7 +755,10 @@ async function attemptRepair(
 
 async function refreshStatus(user:{id:string},requestId:string){
   const request=await ownedRequest(user.id,requestId);
-  if(request.status==="deploying")return refreshDeployment(user,request);
+  if(request.status==="deploying"){
+    if(!request.merge_commit_sha&&String(request.deploy_status||"").startsWith("db_"))return refreshDbDeployment(user,request);
+    return refreshDeployment(user,request);
+  }
   if(["deployed","cancelled","rolled_back"].includes(request.status))return requestView(user.id,request.id);
   if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_has_no_branch");
 
