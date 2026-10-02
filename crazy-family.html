@@ -3,93 +3,100 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#f7d66b">
+<meta name="theme-color" content="#f4c85b">
 <title>המשפחה המשגעת</title>
 <style>
 :root{
-  --ink:#211c24;--muted:#6f6672;--paper:#fffaf0;--card:#fff;--line:#dfd4c1;
-  --yellow:#f7d66b;--pink:#ff9db2;--blue:#85c7ff;--green:#8ed6a2;--purple:#bca2ff;
+  --ink:#2d2530;--muted:#756a74;--cream:#fff8e9;--paper:#fffdf8;--line:#e2d2b9;
+  --gold:#f4c85b;--rose:#f59caf;--sky:#81c4e8;--mint:#8fcfa7;--lilac:#b8a0de;--wood:#b8784f;
 }
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,"Noto Sans Hebrew",sans-serif;background:#f4efe6;color:var(--ink);overflow-x:hidden}
+body{margin:0;font-family:Arial,"Noto Sans Hebrew",sans-serif;background:
+  radial-gradient(circle at 15% 0%,#fff9dd 0,transparent 30%),
+  linear-gradient(#f4eadc,#eee2d2);color:var(--ink);overflow-x:hidden}
 button{font:inherit}
 .game-shell{max-width:1180px;margin:auto;padding:14px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.title-wrap h1{font-size:clamp(24px,4vw,42px);margin:0;line-height:1}
-.title-wrap p{margin:6px 0 0;color:var(--muted)}
-.back{color:var(--ink);text-decoration:none;font-weight:700;background:#fff;border:2px solid var(--line);padding:9px 13px;border-radius:14px}
-.hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
-.hud-card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:9px 11px;min-width:0}
-.hud-label{font-size:12px;color:var(--muted);font-weight:700}
-.big{font-size:20px;font-weight:900;white-space:nowrap}
-.meter{height:10px;border-radius:99px;background:#eee5d8;overflow:hidden;margin-top:5px}
-.meter>i{display:block;height:100%;width:100%;background:var(--green);border-radius:99px;transition:width .12s linear}
-.meter.shield>i{background:var(--blue)}
-.stage-wrap{position:relative;background:#dfe9cf;border:3px solid #302a31;border-radius:24px;overflow:hidden;box-shadow:0 14px 35px rgba(40,30,20,.12)}
-canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;background:#efe6d5;touch-action:none}
-.message{position:absolute;top:12px;left:50%;transform:translateX(-50%);max-width:80%;background:rgba(33,28,36,.9);color:#fff;padding:9px 14px;border-radius:999px;font-weight:800;font-size:14px;pointer-events:none;opacity:0;transition:.2s;text-align:center}
+.title-wrap h1{font-size:clamp(28px,4.5vw,46px);margin:0;line-height:1;letter-spacing:-1.5px}
+.title-wrap p{margin:6px 0 0;color:var(--muted);font-weight:700}
+.back{color:var(--ink);text-decoration:none;font-weight:900;background:#fffaf1;border:2px solid var(--line);padding:9px 14px;border-radius:16px;box-shadow:0 3px 0 #d4c3a8}
+.hud{display:grid;grid-template-columns:1.1fr 1.35fr 1.35fr 1fr;gap:8px;margin-bottom:10px}
+.hud-card{background:linear-gradient(180deg,#fffdf9,#fff7e9);border:2px solid var(--line);border-radius:18px;padding:9px 11px;min-width:0;box-shadow:0 5px 12px rgba(75,51,33,.07)}
+.hud-label{font-size:11px;color:var(--muted);font-weight:900;letter-spacing:.2px}
+.big{font-size:20px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{height:13px;border-radius:99px;background:#eadfd2;overflow:hidden;margin-top:6px;border:1px solid #d8c6b5;padding:2px}
+.meter>i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#6db987,#a7df9d);border-radius:99px;transition:width .1s linear}
+.meter.shield>i{background:linear-gradient(90deg,#60aee4,#a8dfff)}
+.stage-wrap{position:relative;background:#c9b896;border:4px solid #42363d;border-radius:28px;overflow:hidden;box-shadow:0 18px 38px rgba(67,43,29,.18),inset 0 0 0 2px rgba(255,255,255,.35)}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;background:#eadfcf;touch-action:none}
+.message{position:absolute;top:12px;left:50%;transform:translateX(-50%);max-width:82%;background:rgba(45,37,48,.92);color:#fff;padding:10px 15px;border-radius:999px;font-weight:900;font-size:14px;pointer-events:none;opacity:0;transition:.18s;text-align:center;box-shadow:0 7px 20px rgba(0,0,0,.16)}
 .message.show{opacity:1}
-.inventory{display:flex;gap:8px;align-items:stretch;margin-top:10px}
-.slot{flex:1;min-height:66px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:7px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:800;position:relative}
-.slot .emoji{font-size:26px}
-.slot.empty{color:#aaa}
-.slot.selected{outline:3px solid var(--yellow)}
+.inventory-wrap{margin-top:10px;background:rgba(255,253,248,.75);border:2px solid var(--line);border-radius:20px;padding:8px}
+.inventory-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:900;color:var(--muted);padding:0 4px 6px}
+.inventory{display:flex;gap:8px;align-items:stretch}
+.slot{flex:1;min-height:74px;background:linear-gradient(#fff,#fff7ec);border:2px solid #dbc8ae;border-radius:16px;padding:7px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:900;position:relative;box-shadow:inset 0 -3px 0 rgba(132,94,55,.07)}
+.slot .item-icon{width:34px;height:34px;display:grid;place-items:center}
+.slot.empty{color:#b4a798;background:#f7f0e5}
+.slot.selected{outline:4px solid var(--gold);transform:translateY(-2px)}
 .slot button{position:absolute;inset:0;border:0;background:transparent;border-radius:14px;cursor:pointer}
-.objective{margin-top:10px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 13px;display:flex;justify-content:space-between;gap:10px;align-items:center}
-.objective strong{font-size:15px}
-.objective span{font-size:13px;color:var(--muted)}
+.objective{margin-top:10px;background:linear-gradient(90deg,#fff9da,#fffdf9);border:2px solid #dfc76b;border-radius:18px;padding:10px 13px;display:flex;justify-content:space-between;gap:10px;align-items:center;box-shadow:0 4px 12px rgba(114,89,32,.08)}
+.objective strong{font-size:15px}.objective span{font-size:13px;color:var(--muted);font-weight:900}
 .controls{margin-top:12px;display:flex;justify-content:space-between;gap:18px;align-items:end}
 .dpad{display:grid;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(3,58px);gap:5px;direction:ltr}
-.control-btn{border:2px solid #443a45;background:#fff;border-radius:16px;font-size:24px;font-weight:900;box-shadow:0 4px 0 #cdbfae;touch-action:none;user-select:none}
-.control-btn:active,.control-btn.pressed{transform:translateY(3px);box-shadow:0 1px 0 #cdbfae}
+.control-btn{border:2px solid #443a45;background:linear-gradient(#fff,#f3ece1);border-radius:17px;font-size:24px;font-weight:900;box-shadow:0 5px 0 #c7b59f;touch-action:none;user-select:none}
+.control-btn:active,.control-btn.pressed{transform:translateY(4px);box-shadow:0 1px 0 #c7b59f}
 .up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
 .actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap;justify-content:flex-end}
-.action-btn{width:84px;height:84px;border-radius:50%;border:3px solid #443a45;background:var(--yellow);font-weight:900;box-shadow:0 5px 0 #bca14e;touch-action:none}
-.action-btn.secondary{background:var(--blue);box-shadow:0 5px 0 #6396bd}
-.action-btn:active,.action-btn.pressed{transform:translateY(4px);box-shadow:none}
-.help{margin-top:10px;text-align:center;font-size:12px;color:var(--muted)}
-.win{position:absolute;inset:0;display:none;place-items:center;background:rgba(33,28,36,.78);padding:20px}
+.action-btn{width:86px;height:86px;border-radius:50%;border:3px solid #443a45;background:linear-gradient(#ffe486,#f4c85b);font-weight:900;box-shadow:0 6px 0 #b28e39;touch-action:none}
+.action-btn.secondary{background:linear-gradient(#b7e6ff,#81c4e8);box-shadow:0 6px 0 #5e91ad}
+.action-btn:active,.action-btn.pressed{transform:translateY(5px);box-shadow:none}
+.help{margin-top:10px;text-align:center;font-size:12px;color:var(--muted);font-weight:700}
+.win{position:absolute;inset:0;display:none;place-items:center;background:rgba(45,37,48,.8);padding:20px;backdrop-filter:blur(3px)}
 .win.show{display:grid}
-.win-card{background:#fff;border-radius:24px;padding:24px;max-width:420px;text-align:center;border:3px solid #302a31}
-.win-card h2{font-size:32px;margin:0 0 6px}.win-card p{color:var(--muted)}
-.primary{border:0;background:var(--yellow);padding:12px 20px;border-radius:14px;font-weight:900;cursor:pointer}
+.win-card{background:#fffdf8;border-radius:26px;padding:26px;max-width:430px;text-align:center;border:3px solid #42363d;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.win-card h2{font-size:34px;margin:0 0 6px}.win-card p{color:var(--muted);font-weight:700}
+.primary{border:2px solid #493f35;background:var(--gold);padding:12px 22px;border-radius:15px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #b18d3e}
 @media(max-width:700px){
   .game-shell{padding:8px}.hud{grid-template-columns:1fr 1fr}.controls{gap:8px}
   .dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px)}
   .action-btn{width:72px;height:72px;font-size:13px}.objective{align-items:flex-start;flex-direction:column}
+  .slot{min-height:66px;font-size:12px}
 }
 </style>
 </head>
 <body>
 <main class="game-shell">
   <div class="topbar">
-    <div class="title-wrap"><h1>המשפחה המשגעת</h1><p>אבטיפוס ראשון — ליבי לבד בבית</p></div>
+    <div class="title-wrap"><h1>המשפחה המשגעת</h1><p>גרסת Art Pass 1 · קומת הקרקע</p></div>
     <a class="back" href="index.html">← חזרה למרכז</a>
   </div>
 
   <section class="hud" aria-label="מצב המשחק">
-    <div class="hud-card"><div class="hud-label">חיים</div><div class="big" id="hearts">❤️❤️❤️</div></div>
+    <div class="hud-card"><div class="hud-label">החיים של ליבי</div><div class="big" id="hearts">♥ ♥ ♥</div></div>
     <div class="hud-card"><div class="hud-label">כוח לריצה</div><div class="meter"><i id="staminaFill"></i></div></div>
     <div class="hud-card"><div class="hud-label">מגן</div><div class="meter shield"><i id="shieldFill" style="width:0%"></i></div></div>
-    <div class="hud-card"><div class="hud-label">יכולת פעילה</div><div class="big" id="abilityText">—</div></div>
+    <div class="hud-card"><div class="hud-label">יכולת</div><div class="big" id="abilityText">—</div></div>
   </section>
 
   <section class="stage-wrap">
-    <canvas id="game" width="960" height="600" aria-label="בית המשחק"></canvas>
+    <canvas id="game" width="960" height="600" aria-label="קומת הקרקע בבית"></canvas>
     <div class="message" id="message" aria-live="polite"></div>
     <div class="win" id="win">
       <div class="win-card">
-        <h2>ליבי הצליחה! 🎉</h2>
-        <p>אספת שלושה חפצים וחזרת לכניסה. עכשיו אפשר להתחיל להכניס את המשפחה.</p>
+        <h2>ליבי הצליחה! ✨</h2>
+        <p>אספת שלושה חפצים וחזרת לכניסה. בסיס התנועה והאיסוף מוכן לדמויות המשפחה.</p>
         <button class="primary" id="restart">שחקי שוב</button>
       </div>
     </div>
   </section>
 
-  <section class="inventory" id="inventory" aria-label="המלאי של ליבי"></section>
+  <section class="inventory-wrap">
+    <div class="inventory-head"><span>התיק של ליבי</span><span>לחצי על משבצת כדי לבחור</span></div>
+    <div class="inventory" id="inventory" aria-label="המלאי של ליבי"></div>
+  </section>
 
   <section class="objective">
-    <div><strong>משימת האבטיפוס:</strong> אספי 3 חפצים וחזרי לדלת הכניסה.</div>
+    <div><strong>משימה:</strong> אספי אוזניות, מראה ומחבת — ואז חזרי לדלת הכניסה.</div>
     <span id="objectiveStatus">0/3 חפצים</span>
   </section>
 
@@ -101,246 +108,264 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;background:#efe6d
       <button class="control-btn right" data-key="ArrowRight">→</button>
     </div>
     <div class="actions">
-      <button class="action-btn secondary" id="useItem">השתמשי<br>בחפץ</button>
+      <button class="action-btn secondary" id="useItem">חפץ<br>✦</button>
       <button class="action-btn" id="runBtn">ריצה<br>⚡</button>
     </div>
   </section>
-  <div class="help">מחשב: חצים / WASD · החזקת Shift = ריצה · 1–4 בחירת חפץ · E שימוש בחפץ</div>
+  <div class="help">מחשב: חצים / WASD · Shift לריצה · 1–4 בחירת חפץ · E שימוש</div>
 </main>
 
 <script>
 (() => {
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const staminaFill = document.getElementById('staminaFill');
-  const shieldFill = document.getElementById('shieldFill');
-  const abilityText = document.getElementById('abilityText');
-  const inventoryEl = document.getElementById('inventory');
-  const objectiveStatus = document.getElementById('objectiveStatus');
-  const message = document.getElementById('message');
-  const win = document.getElementById('win');
-
-  const W=960,H=600;
-  const keys={};
-  let runningTouch=false;
-  let last=performance.now();
-  let msgTimer=0;
+  const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+  const staminaFill=document.getElementById('staminaFill'),shieldFill=document.getElementById('shieldFill');
+  const abilityText=document.getElementById('abilityText'),inventoryEl=document.getElementById('inventory');
+  const objectiveStatus=document.getElementById('objectiveStatus'),message=document.getElementById('message');
+  const win=document.getElementById('win');
+  const W=960,H=600,keys={};
+  let runningTouch=false,last=performance.now(),msgTimer=0,walkClock=0,particles=[];
 
   const walls=[
-    {x:0,y:0,w:960,h:18},{x:0,y:582,w:960,h:18},{x:0,y:0,w:18,h:600},{x:942,y:0,w:18,h:600},
-    {x:462,y:18,w:18,h:192},{x:462,y:300,w:18,h:282},
-    {x:18,y:292,w:340,h:18},{x:448,y:292,w:494,h:18}
+    {x:0,y:0,w:960,h:22},{x:0,y:578,w:960,h:22},{x:0,y:0,w:22,h:600},{x:938,y:0,w:22,h:600},
+    {x:462,y:22,w:20,h:185},{x:462,y:302,w:20,h:276},
+    {x:22,y:292,w:337,h:20},{x:448,y:292,w:490,h:20}
   ];
   const rooms=[
-    {x:18,y:18,w:444,h:274,name:'סלון',fill:'#f7e5c8'},
-    {x:480,y:18,w:462,h:274,name:'מטבח',fill:'#dcefd7'},
-    {x:18,y:310,w:444,h:272,name:'פינת אוכל',fill:'#eadcf2'},
-    {x:480,y:310,w:462,h:272,name:'מסדרון וכניסה',fill:'#dce9f5'}
+    {x:22,y:22,w:440,h:270,name:'סלון',type:'wood',base:'#e7bd85'},
+    {x:482,y:22,w:456,h:270,name:'מטבח',type:'tile',base:'#cfe2d5'},
+    {x:22,y:312,w:440,h:266,name:'פינת אוכל',type:'wood2',base:'#d8b67d'},
+    {x:482,y:312,w:456,h:266,name:'כניסה',type:'hall',base:'#d7dde3'}
   ];
-  const door={x:820,y:522,w:88,h:48};
+  const obstacles=[
+    {x:82,y:95,w:188,h:68,type:'sofa'},
+    {x:326,y:73,w:82,h:46,type:'tv'},
+    {x:562,y:88,w:175,h:62,type:'island'},
+    {x:808,y:64,w:92,h:86,type:'fridge'},
+    {x:118,y:402,w:210,h:92,type:'table'},
+    {x:590,y:405,w:115,h:58,type:'bench'},
+    {x:784,y:360,w:95,h:52,type:'shoes'}
+  ];
+  const door={x:818,y:516,w:94,h:50};
 
-  const player={x:850,y:470,r:15,speed:175,stamina:100,hearts:3,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false};
+  const player={x:858,y:462,r:15,speed:177,stamina:100,hearts:3,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 
   const pickups=[
-    {x:170,y:125,type:'item',id:'headphones',emoji:'🎧',name:'אוזניות',desc:'מגן משירים'},
-    {x:720,y:130,type:'item',id:'mirror',emoji:'🪞',name:'מראה',desc:'נגד דוד מנחם'},
-    {x:220,y:455,type:'item',id:'pan',emoji:'🍳',name:'מחבת',desc:'נשק מצויר'},
-    {x:780,y:410,type:'ability',id:'speed',emoji:'⚡',name:'מהירות'},
-    {x:560,y:110,type:'ability',id:'invisible',emoji:'👻',name:'בלתי נראות'},
-    {x:385,y:390,type:'ability',id:'pocket',emoji:'🎒',name:'כיס רביעי'}
+    {x:178,y:214,type:'item',id:'headphones',name:'אוזניות'},
+    {x:760,y:198,type:'item',id:'mirror',name:'מראה'},
+    {x:370,y:484,type:'item',id:'pan',name:'מחבת'},
+    {x:746,y:390,type:'ability',id:'speed',name:'מהירות'},
+    {x:535,y:205,type:'ability',id:'invisible',name:'בלתי נראות'},
+    {x:390,y:350,type:'ability',id:'pocket',name:'כיס רביעי'}
   ].map(p=>({...p,taken:false}));
 
-  const decor=[
-    {x:90,y:80,w:160,h:55,emoji:'🛋️'},{x:310,y:95,w:70,h:70,emoji:'📺'},
-    {x:570,y:70,w:105,h:75,emoji:'🍳'},{x:775,y:80,w:90,h:80,emoji:'🧊'},
-    {x:100,y:395,w:160,h:90,emoji:'🍽️'},{x:625,y:395,w:120,h:70,emoji:'🧺'}
-  ];
-
   function reset(){
-    player.x=850;player.y=470;player.stamina=100;player.hearts=3;player.shield=0;
-    player.inventory=[];player.capacity=3;player.selected=0;player.ability=null;player.abilityUntil=0;player.invisible=false;
-    pickups.forEach(p=>p.taken=false);
-    win.classList.remove('show');renderInventory();updateHud();showMessage('אספי אוזניות, מראה ומחבת — ואז חזרי לדלת');
+    Object.assign(player,{x:858,y:462,stamina:100,hearts:3,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false});
+    pickups.forEach(p=>p.taken=false);particles=[];win.classList.remove('show');renderInventory();updateHud();
+    showMessage('הבית מוכן — אספי את שלושת החפצים וחזרי לכניסה');
   }
-
   function showMessage(text){
     message.textContent=text;message.classList.add('show');clearTimeout(msgTimer);
-    msgTimer=setTimeout(()=>message.classList.remove('show'),2200);
+    msgTimer=setTimeout(()=>message.classList.remove('show'),2100);
   }
-
   function circleRectCollision(nx,ny,r,rect){
-    const cx=Math.max(rect.x,Math.min(nx,rect.x+rect.w));
-    const cy=Math.max(rect.y,Math.min(ny,rect.y+rect.h));
-    const dx=nx-cx,dy=ny-cy;
-    return dx*dx+dy*dy<r*r;
+    const cx=Math.max(rect.x,Math.min(nx,rect.x+rect.w)),cy=Math.max(rect.y,Math.min(ny,rect.y+rect.h));
+    const dx=nx-cx,dy=ny-cy;return dx*dx+dy*dy<r*r;
   }
-
   function canMove(nx,ny){
-    for(const w of walls) if(circleRectCollision(nx,ny,player.r,w)) return false;
+    for(const w of walls)if(circleRectCollision(nx,ny,player.r,w))return false;
+    for(const o of obstacles)if(circleRectCollision(nx,ny,player.r+2,o))return false;
     return true;
   }
-
   function movePlayer(dx,dy,dt,sprinting){
-    let len=Math.hypot(dx,dy); if(!len)return;
+    const len=Math.hypot(dx,dy);player.moving=!!len;if(!len)return;
     dx/=len;dy/=len;
+    if(Math.abs(dx)>Math.abs(dy))player.dir=dx>0?'right':'left';else player.dir=dy>0?'down':'up';
     let mult=1;
-    if(player.ability==='speed'&&performance.now()<player.abilityUntil) mult*=1.65;
-    if(sprinting&&player.stamina>0){mult*=1.7;player.stamina=Math.max(0,player.stamina-34*dt);}
-    const dist=player.speed*mult*dt;
-    const nx=player.x+dx*dist, ny=player.y+dy*dist;
-    if(canMove(nx,player.y))player.x=nx;
-    if(canMove(player.x,ny))player.y=ny;
+    if(player.ability==='speed'&&performance.now()<player.abilityUntil)mult*=1.62;
+    if(sprinting&&player.stamina>0){mult*=1.7;player.stamina=Math.max(0,player.stamina-34*dt)}
+    const dist=player.speed*mult*dt,nx=player.x+dx*dist,ny=player.y+dy*dist;
+    if(canMove(nx,player.y))player.x=nx;if(canMove(player.x,ny))player.y=ny;
+    walkClock+=dt*mult*9;
   }
-
   function update(dt){
-    let dx=0,dy=0;
-    if(keys.ArrowLeft||keys.a)dx--;
-    if(keys.ArrowRight||keys.d)dx++;
-    if(keys.ArrowUp||keys.w)dy--;
-    if(keys.ArrowDown||keys.s)dy++;
-    const sprinting=keys.Shift||runningTouch;
-    movePlayer(dx,dy,dt,sprinting);
+    let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
+    const sprinting=keys.Shift||runningTouch;movePlayer(dx,dy,dt,sprinting);
     if(!sprinting||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
-
-    if(player.ability&&performance.now()>=player.abilityUntil){
-      if(player.ability==='invisible')player.invisible=false;
-      player.ability=null;
-    }
-
-    for(const p of pickups){
-      if(p.taken)continue;
-      if(Math.hypot(player.x-p.x,player.y-p.y)<31) collect(p);
-    }
-
-    if(player.inventory.length>=3 &&
-       player.x>door.x&&player.x<door.x+door.w&&player.y>door.y&&player.y<door.y+door.h){
-      win.classList.add('show');
-    }
+    if(player.ability&&performance.now()>=player.abilityUntil){if(player.ability==='invisible')player.invisible=false;player.ability=null}
+    for(const p of pickups)if(!p.taken&&Math.hypot(player.x-p.x,player.y-p.y)<31)collect(p);
+    if(player.inventory.length>=3&&player.x>door.x&&player.x<door.x+door.w&&player.y>door.y&&player.y<door.y+door.h)win.classList.add('show');
+    particles=particles.filter(q=>(q.life-=dt)>0);particles.forEach(q=>{q.x+=q.vx*dt;q.y+=q.vy*dt;q.vy+=18*dt});
     updateHud();
   }
-
+  function burst(x,y,color){
+    for(let i=0;i<14;i++)particles.push({x,y,vx:(Math.random()-.5)*95,vy:(Math.random()-.8)*95,life:.7+Math.random()*.5,color,size:2+Math.random()*4});
+  }
   function collect(p){
     if(p.type==='item'){
-      if(player.inventory.length>=player.capacity){showMessage('המלאי מלא — בחרי מה לקחת אחר כך');return;}
-      player.inventory.push({id:p.id,emoji:p.emoji,name:p.name,desc:p.desc});
-      p.taken=true;player.selected=Math.max(0,player.inventory.length-1);renderInventory();
-      showMessage(p.emoji+' '+p.name+' נכנס למלאי');
+      if(player.inventory.length>=player.capacity){showMessage('התיק מלא — צריך לפנות מקום');return}
+      player.inventory.push({id:p.id,name:p.name});p.taken=true;player.selected=player.inventory.length-1;renderInventory();burst(p.x,p.y,'#f4c85b');showMessage(p.name+' נכנס לתיק');
     }else{
-      p.taken=true;
-      if(p.id==='pocket'){player.capacity=4;renderInventory();showMessage('🎒 פתחת מקום רביעי במלאי!');}
-      if(p.id==='speed'){player.ability='speed';player.abilityUntil=performance.now()+12000;showMessage('⚡ מהירות מוגברת ל-12 שניות');}
-      if(p.id==='invisible'){player.ability='invisible';player.invisible=true;player.abilityUntil=performance.now()+9000;showMessage('👻 ליבי בלתי נראית ל-9 שניות');}
+      p.taken=true;burst(p.x,p.y,'#9e83d8');
+      if(p.id==='pocket'){player.capacity=4;renderInventory();showMessage('פתחת כיס רביעי!')}
+      if(p.id==='speed'){player.ability='speed';player.abilityUntil=performance.now()+12000;showMessage('מהירות מוגברת ל־12 שניות')}
+      if(p.id==='invisible'){player.ability='invisible';player.invisible=true;player.abilityUntil=performance.now()+9000;showMessage('ליבי בלתי נראית ל־9 שניות')}
     }
   }
-
   function useSelected(){
-    const item=player.inventory[player.selected];
-    if(!item){showMessage('אין חפץ במשבצת הזאת');return;}
+    const item=player.inventory[player.selected];if(!item){showMessage('המשבצת ריקה');return}
     if(item.id==='headphones'){
-      player.shield=Math.min(100,player.shield+55);
-      showMessage('🎧 מגן השירים נטען');
-      player.inventory.splice(player.selected,1);
-    }else if(item.id==='mirror'){
-      showMessage('🪞 המראה מוכנה — כשתגיע דמות מתאימה היא תופעל בלחיצה בזמן');
-      return;
-    }else if(item.id==='pan'){
-      showMessage('🍳 המחבת מוכנה — בהמשך נשתמש בה נגד דוד מנחם');
-      return;
-    }
-    player.selected=Math.min(player.selected,Math.max(0,player.inventory.length-1));renderInventory();
+      player.shield=Math.min(100,player.shield+55);burst(player.x,player.y,'#81c4e8');showMessage('האוזניות טעינו מגן נגד שירים');
+      player.inventory.splice(player.selected,1);player.selected=Math.min(player.selected,Math.max(0,player.inventory.length-1));renderInventory();
+    }else if(item.id==='mirror')showMessage('המראה שמורה לרגע שבו צריך להפוך כוח נגד דוד מנחם');
+    else if(item.id==='pan')showMessage('המחבת מוכנה למכה מצוירת כשדוד מנחם יגיע');
   }
-
+  function itemMarkup(id){
+    if(id==='headphones')return '<svg viewBox="0 0 48 48"><path d="M10 26v-5a14 14 0 0 1 28 0v5" fill="none" stroke="#58435d" stroke-width="5" stroke-linecap="round"/><rect x="5" y="24" width="9" height="15" rx="4" fill="#81c4e8"/><rect x="34" y="24" width="9" height="15" rx="4" fill="#81c4e8"/></svg>';
+    if(id==='mirror')return '<svg viewBox="0 0 48 48"><ellipse cx="23" cy="19" rx="13" ry="16" fill="#bde8fa" stroke="#80674f" stroke-width="4"/><path d="M24 34l4 11" stroke="#80674f" stroke-width="5" stroke-linecap="round"/><path d="M16 13c5-5 10-5 14-2" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
+    return '<svg viewBox="0 0 48 48"><ellipse cx="20" cy="22" rx="15" ry="11" fill="#59636a" stroke="#2f3539" stroke-width="4"/><path d="M33 27l11 9" stroke="#2f3539" stroke-width="6" stroke-linecap="round"/><ellipse cx="18" cy="19" rx="9" ry="5" fill="#88959c"/></svg>';
+  }
   function renderInventory(){
     inventoryEl.innerHTML='';
     for(let i=0;i<player.capacity;i++){
-      const item=player.inventory[i];
-      const el=document.createElement('div');
+      const item=player.inventory[i],el=document.createElement('div');
       el.className='slot '+(!item?'empty ':'')+(i===player.selected?'selected':'');
-      el.innerHTML=item?'<span class="emoji">'+item.emoji+'</span><span>'+item.name+'</span><button aria-label="בחרי '+item.name+'"></button>':'<span class="emoji">＋</span><span>מקום '+(i+1)+'</span><button aria-label="בחרי משבצת '+(i+1)+'"></button>';
-      el.querySelector('button').addEventListener('click',()=>{player.selected=i;renderInventory()});
-      inventoryEl.appendChild(el);
+      el.innerHTML=item?'<span class="item-icon">'+itemMarkup(item.id)+'</span><span>'+item.name+'</span><button aria-label="בחרי '+item.name+'"></button>':'<span class="item-icon">＋</span><span>מקום '+(i+1)+'</span><button aria-label="בחרי משבצת '+(i+1)+'"></button>';
+      el.querySelector('button').addEventListener('click',()=>{player.selected=i;renderInventory()});inventoryEl.appendChild(el);
     }
   }
-
   function updateHud(){
-    staminaFill.style.width=player.stamina+'%';
-    shieldFill.style.width=player.shield+'%';
-    document.getElementById('hearts').textContent='❤️'.repeat(player.hearts)+'🖤'.repeat(3-player.hearts);
-    let txt='—';
-    if(player.ability==='speed')txt='⚡ מהירות';
-    if(player.ability==='invisible')txt='👻 בלתי נראות';
-    abilityText.textContent=txt;
+    staminaFill.style.width=player.stamina+'%';shieldFill.style.width=player.shield+'%';
+    document.getElementById('hearts').textContent='♥ '.repeat(player.hearts)+'♡ '.repeat(3-player.hearts);
+    let txt='—';if(player.ability==='speed')txt='⚡ מהירות';if(player.ability==='invisible')txt='◌ נסתרת';abilityText.textContent=txt;
     objectiveStatus.textContent=Math.min(3,player.inventory.length)+'/3 חפצים';
   }
 
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    for(const r of rooms){
-      ctx.fillStyle=r.fill;ctx.fillRect(r.x,r.y,r.w,r.h);
-      ctx.fillStyle='rgba(40,30,40,.55)';ctx.font='700 22px Arial';ctx.textAlign='center';
-      ctx.fillText(r.name,r.x+r.w/2,r.y+34);
+  function rr(x,y,w,h,r,fill,stroke){
+    ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}
+  }
+  function drawRoom(r){
+    ctx.fillStyle=r.base;ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.save();ctx.beginPath();ctx.rect(r.x,r.y,r.w,r.h);ctx.clip();
+    if(r.type.startsWith('wood')){
+      ctx.strokeStyle=r.type==='wood'?'rgba(112,67,37,.16)':'rgba(94,66,31,.13)';ctx.lineWidth=2;
+      for(let y=r.y+5;y<r.y+r.h;y+=22){ctx.beginPath();ctx.moveTo(r.x,y);ctx.lineTo(r.x+r.w,y);ctx.stroke()}
+      for(let y=r.y+5,i=0;y<r.y+r.h;y+=22,i++)for(let x=r.x+(i%2?42:0);x<r.x+r.w;x+=85){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+22);ctx.stroke()}
+    }else if(r.type==='tile'){
+      ctx.strokeStyle='rgba(72,102,84,.12)';ctx.lineWidth=1;
+      for(let x=r.x;x<r.x+r.w;x+=44){ctx.beginPath();ctx.moveTo(x,r.y);ctx.lineTo(x,r.y+r.h);ctx.stroke()}
+      for(let y=r.y;y<r.y+r.h;y+=44){ctx.beginPath();ctx.moveTo(r.x,y);ctx.lineTo(r.x+r.w,y);ctx.stroke()}
+    }else{
+      ctx.fillStyle='rgba(255,255,255,.18)';for(let x=r.x-100;x<r.x+r.w;x+=80){ctx.beginPath();ctx.moveTo(x,r.y);ctx.lineTo(x+160,r.y+r.h);ctx.lineTo(x+190,r.y+r.h);ctx.lineTo(x+30,r.y);ctx.closePath();ctx.fill()}
     }
-
-    for(const d of decor){
-      ctx.fillStyle='rgba(255,255,255,.45)';ctx.fillRect(d.x,d.y,d.w,d.h);
-      ctx.font='42px Arial';ctx.textAlign='center';ctx.fillText(d.emoji,d.x+d.w/2,d.y+d.h/2+15);
-    }
-
-    ctx.fillStyle='#4a4147';
-    walls.forEach(w=>ctx.fillRect(w.x,w.y,w.w,w.h));
-
-    ctx.fillStyle='#ffe66d';ctx.fillRect(door.x,door.y,door.w,door.h);
-    ctx.strokeStyle='#4a4147';ctx.lineWidth=3;ctx.strokeRect(door.x,door.y,door.w,door.h);
-    ctx.fillStyle='#2b252b';ctx.font='700 15px Arial';ctx.fillText('כניסה / יעד',door.x+door.w/2,door.y+29);
-
-    for(const p of pickups){
-      if(p.taken)continue;
-      const pulse=1+Math.sin(performance.now()/230+p.x)*.06;
-      ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);
-      ctx.beginPath();ctx.arc(0,0,25,0,Math.PI*2);
-      ctx.fillStyle=p.type==='ability'?'#fff2a8':'#ffffff';ctx.fill();
-      ctx.strokeStyle=p.type==='ability'?'#b58d00':'#6e6470';ctx.lineWidth=3;ctx.stroke();
-      ctx.font='30px Arial';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText(p.emoji,0,10);
-      ctx.restore();
-    }
-
-    ctx.save();
-    ctx.globalAlpha=player.invisible?.35:1;
-    ctx.beginPath();ctx.arc(player.x,player.y,player.r+4,0,Math.PI*2);ctx.fillStyle='#ffb3c3';ctx.fill();
-    ctx.strokeStyle='#5f3c4a';ctx.lineWidth=3;ctx.stroke();
-    ctx.font='26px Arial';ctx.textAlign='center';ctx.fillStyle='#000';ctx.fillText('👧',player.x,player.y+9);
     ctx.restore();
-
-    if(player.ability==='speed'){
-      ctx.strokeStyle='#f3b900';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y,player.r+10,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='rgba(60,43,46,.35)';ctx.font='900 19px Arial';ctx.textAlign='center';ctx.fillText(r.name,r.x+r.w/2,r.y+29);
+  }
+  function shadow(x,y,w,h,r=16,a=.18){ctx.save();ctx.shadowColor='rgba(58,37,28,'+a+')';ctx.shadowBlur=16;ctx.shadowOffsetY=8;rr(x,y,w,h,r,'rgba(0,0,0,.001)');ctx.restore()}
+  function drawFurniture(o){
+    shadow(o.x,o.y,o.w,o.h,14,.16);
+    if(o.type==='sofa'){
+      rr(o.x,o.y,o.w,o.h,20,'#d97876','#824c4a');rr(o.x+13,o.y+12,o.w-26,25,13,'#ef9a92','#a7605b');
+      rr(o.x+11,o.y+41,22,20,9,'#b85e5c');rr(o.x+o.w-33,o.y+41,22,20,9,'#b85e5c');
+      ctx.fillStyle='#fff2c4';ctx.beginPath();ctx.arc(o.x+60,o.y+42,13,0,Math.PI*2);ctx.fill();
+    }else if(o.type==='tv'){
+      rr(o.x,o.y,o.w,o.h,7,'#3d4550','#25282e');rr(o.x+7,o.y+7,o.w-14,o.h-14,4,'#8fd3e6');
+      ctx.strokeStyle='#697179';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(o.x+o.w/2,o.y+o.h);ctx.lineTo(o.x+o.w/2,o.y+o.h+13);ctx.stroke();
+    }else if(o.type==='island'){
+      rr(o.x,o.y,o.w,o.h,12,'#f2e7ce','#97775d');rr(o.x+8,o.y+7,o.w-16,14,6,'#fffaf0');
+      ctx.fillStyle='#77a97b';ctx.beginPath();ctx.arc(o.x+38,o.y+29,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d6aa54';ctx.beginPath();ctx.arc(o.x+56,o.y+30,7,0,Math.PI*2);ctx.fill();
+    }else if(o.type==='fridge'){
+      rr(o.x,o.y,o.w,o.h,10,'#d9eef0','#6d8587');ctx.strokeStyle='#8ca5a6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(o.x,o.y+37);ctx.lineTo(o.x+o.w,o.y+37);ctx.stroke();
+      ctx.strokeStyle='#71888a';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(o.x+17,o.y+15);ctx.lineTo(o.x+17,o.y+31);ctx.stroke();
+    }else if(o.type==='table'){
+      rr(o.x,o.y,o.w,o.h,35,'#a96f43','#674329');rr(o.x+10,o.y+10,o.w-20,o.h-20,28,'#c88954');
+      const chairs=[[o.x+35,o.y-22],[o.x+o.w-70,o.y-22],[o.x+35,o.y+o.h-2],[o.x+o.w-70,o.y+o.h-2]];
+      chairs.forEach(c=>rr(c[0],c[1],36,24,7,'#7c5135','#563421'));
+      ctx.fillStyle='#fff0bb';ctx.beginPath();ctx.arc(o.x+o.w/2,o.y+o.h/2,17,0,Math.PI*2);ctx.fill();
+    }else if(o.type==='bench'){
+      rr(o.x,o.y,o.w,o.h,14,'#a98565','#654f40');rr(o.x+8,o.y+7,o.w-16,14,7,'#d1af8d');
+    }else if(o.type==='shoes'){
+      rr(o.x,o.y,o.w,o.h,12,'#ead7b5','#92785f');ctx.fillStyle='#80624b';ctx.beginPath();ctx.ellipse(o.x+28,o.y+29,18,8,-.25,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5d7288';ctx.beginPath();ctx.ellipse(o.x+65,o.y+29,18,8,.25,0,Math.PI*2);ctx.fill();
     }
   }
-
-  function loop(now){
-    const dt=Math.min(.033,(now-last)/1000);last=now;
-    update(dt);draw();requestAnimationFrame(loop);
+  function drawWalls(){
+    ctx.save();ctx.shadowColor='rgba(40,26,24,.28)';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
+    for(const w of walls){ctx.fillStyle='#71594f';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle='#9b7a68';if(w.w>w.h)ctx.fillRect(w.x,w.y,w.w,6);else ctx.fillRect(w.x,w.y,6,w.h)}
+    ctx.restore();
   }
+  function drawDoor(){
+    shadow(door.x,door.y,door.w,door.h,12,.2);rr(door.x,door.y,door.w,door.h,12,'#f1c65a','#6f5635');
+    ctx.fillStyle='#8a642c';ctx.beginPath();ctx.arc(door.x+17,door.y+25,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#5c472f';ctx.font='900 13px Arial';ctx.textAlign='center';ctx.fillText('הכניסה',door.x+door.w/2,door.y+31);
+  }
+  function drawHeadphones(x,y,s){
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.strokeStyle='#58435d';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,1,13,Math.PI,0);ctx.stroke();
+    rr(-18,0,9,18,4,'#70b8df','#3d6d87');rr(9,0,9,18,4,'#70b8df','#3d6d87');ctx.restore();
+  }
+  function drawMirror(x,y,s){
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#bde9f7';ctx.strokeStyle='#83664d';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(0,-3,12,15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-5,-10);ctx.lineTo(4,-14);ctx.stroke();ctx.strokeStyle='#83664d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(2,12);ctx.lineTo(7,25);ctx.stroke();ctx.restore();
+  }
+  function drawPan(x,y,s){
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle='#67727a';ctx.strokeStyle='#33393d';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(-4,0,15,11,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#9aa5aa';ctx.beginPath();ctx.ellipse(-6,-3,8,5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#33393d';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(9,6);ctx.lineTo(24,17);ctx.stroke();ctx.restore();
+  }
+  function drawAbility(p,t){
+    const pulse=1+Math.sin(t/180+p.x)*.08;ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);
+    ctx.shadowColor='rgba(255,213,70,.65)';ctx.shadowBlur=18;ctx.fillStyle='#fff4a8';ctx.strokeStyle='#af8734';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#654d25';ctx.font='900 25px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.id==='speed'?'⚡':p.id==='invisible'?'◌':'＋',0,1);ctx.restore();
+  }
+  function drawPickup(p,t){
+    if(p.taken)return;if(p.type==='ability'){drawAbility(p,t);return}
+    const pulse=1+Math.sin(t/220+p.x)*.05;ctx.save();ctx.translate(p.x,p.y);ctx.scale(pulse,pulse);
+    ctx.shadowColor='rgba(246,198,76,.55)';ctx.shadowBlur=16;ctx.fillStyle='rgba(255,253,246,.94)';ctx.strokeStyle='#8a705d';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,25,0,Math.PI*2);ctx.fill();ctx.stroke();
+    if(p.id==='headphones')drawHeadphones(0,-5,.85);if(p.id==='mirror')drawMirror(0,-1,.78);if(p.id==='pan')drawPan(-1,-1,.82);ctx.restore();
+  }
+  function drawLibi(t){
+    const bob=player.moving?Math.sin(walkClock)*2:Math.sin(t/500)*.5;
+    const swing=player.moving?Math.sin(walkClock)*4:0;
+    ctx.save();ctx.translate(player.x,player.y+bob);ctx.globalAlpha=player.invisible?.34:1;
+    ctx.fillStyle='rgba(66,44,49,.2)';ctx.beginPath();ctx.ellipse(0,17,18,8,0,0,Math.PI*2);ctx.fill();
+    if(player.ability==='speed'){ctx.strokeStyle='#f4c343';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,27+Math.sin(t/100)*2,0,Math.PI*2);ctx.stroke()}
+    ctx.strokeStyle='#6a4a3c';ctx.lineWidth=5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(-5,12);ctx.lineTo(-7+swing*.2,25);ctx.moveTo(5,12);ctx.lineTo(7-swing*.2,25);ctx.stroke();
+    ctx.fillStyle='#f49bb0';ctx.strokeStyle='#774c59';ctx.lineWidth=2;rr(-12,-2,24,20,8,'#f49bb0','#774c59');
+    ctx.strokeStyle='#6a4a3c';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-9,3);ctx.lineTo(-15-swing*.25,11);ctx.moveTo(9,3);ctx.lineTo(15+swing*.25,11);ctx.stroke();
+    ctx.fillStyle='#f0c4a2';ctx.strokeStyle='#704c43';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-15,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#4b342f';ctx.beginPath();ctx.arc(-1,-20,14,Math.PI,Math.PI*2);ctx.lineTo(13,-15);ctx.quadraticCurveTo(3,-7,-13,-13);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.arc(11,-25,7,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#3c302f';ctx.beginPath();ctx.arc(-5,-15,1.7,0,Math.PI*2);ctx.arc(5,-15,1.7,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#a25f64';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,-10,4,0,Math.PI);ctx.stroke();
+    if(player.shield>0){ctx.strokeStyle='rgba(95,180,232,.72)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,31,0,Math.PI*2);ctx.stroke()}
+    ctx.restore();
+  }
+  function drawParticles(){for(const q of particles){ctx.globalAlpha=Math.max(0,q.life);ctx.fillStyle=q.color;ctx.beginPath();ctx.arc(q.x,q.y,q.size,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
+  function draw(){
+    const t=performance.now();ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#e9dece';ctx.fillRect(0,0,W,H);
+    rooms.forEach(drawRoom);
+    // Rugs and small decorative details
+    rr(118,181,210,67,30,'#f1cf8d','#c78d52');ctx.strokeStyle='rgba(126,78,44,.28)';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(145,215);ctx.lineTo(300,215);ctx.stroke();
+    ctx.fillStyle='#6ca16f';ctx.beginPath();ctx.arc(425,245,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8a6749';ctx.fillRect(418,248,14,22);
+    obstacles.forEach(drawFurniture);drawWalls();drawDoor();
+    pickups.forEach(p=>drawPickup(p,t));drawParticles();drawLibi(t);
+  }
+  function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}
 
   addEventListener('keydown',e=>{
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
     keys[e.key]=true;keys[e.key.toLowerCase()]=true;
-    if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(Number(e.key)-1,player.capacity-1);renderInventory();}
+    if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(Number(e.key)-1,player.capacity-1);renderInventory()}
     if(e.key.toLowerCase()==='e')useSelected();
   },{passive:false});
   addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
-
   document.querySelectorAll('[data-key]').forEach(btn=>{
-    const k=btn.dataset.key;
-    const on=e=>{e.preventDefault();keys[k]=true;btn.classList.add('pressed')};
-    const off=e=>{e.preventDefault();keys[k]=false;btn.classList.remove('pressed')};
+    const k=btn.dataset.key,on=e=>{e.preventDefault();keys[k]=true;btn.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;btn.classList.remove('pressed')};
     btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off);
   });
   const runBtn=document.getElementById('runBtn');
   runBtn.addEventListener('pointerdown',e=>{e.preventDefault();runningTouch=true;runBtn.classList.add('pressed')});
   ['pointerup','pointercancel','pointerleave'].forEach(ev=>runBtn.addEventListener(ev,e=>{e.preventDefault();runningTouch=false;runBtn.classList.remove('pressed')}));
-  document.getElementById('useItem').addEventListener('click',useSelected);
-  document.getElementById('restart').addEventListener('click',reset);
-
+  document.getElementById('useItem').addEventListener('click',useSelected);document.getElementById('restart').addEventListener('click',reset);
   reset();requestAnimationFrame(loop);
 })();
 </script>
