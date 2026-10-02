@@ -239,28 +239,44 @@ function riskText(level){
 function requestCardMarkup(request){
   const operations=Array.isArray(request?.operations)?request.operations:[];
   const files=[...new Set(operations.map(op=>op?.path).filter(Boolean))];
-  const awaiting=request?.status==='awaiting_plan_approval';
-  const cancellable=request?.status&&!TERMINAL_STATUSES.has(request.status);
+  const status=request?.status||'';
+  const planReady=status==='awaiting_plan_approval';
+  const publishReady=status==='preview_ready'||status==='awaiting_publish_approval';
+  const canRevise=['awaiting_plan_approval','needs_replan','preview_ready','awaiting_publish_approval'].includes(status);
+  const cancellable=!['merging','deploying','deployed','failed','cancelled','rolled_back'].includes(status);
   const warning=request?.public_asset_warning?'<div class="site-edit-warning">⚠️ קובץ פרטי יהפוך לנכס ציבורי באתר רק לאחר אישור מפורש.</div>':'';
-  const preview=request?.requires_preview?'<div class="site-edit-requirement">🔎 נדרש Preview לפני פרסום.</div>':'<div class="site-edit-requirement">✓ אפשר להמשיך ללא Preview חובה בשלב התכנון.</div>';
+  const preview=request?.requires_preview?'<div class="site-edit-requirement">🔎 נדרש Preview לפני פרסום.</div>':'<div class="site-edit-requirement">✓ שינוי קטן: אישור התוכנית + בדיקות מספיקים לפרסום.</div>';
   const fileHtml=files.length?'<ul class="site-edit-files">'+files.map(path=>'<li>'+escapeHtml(path)+'</li>').join('')+'</ul>':'<div class="site-edit-files-empty">לא צוינו קבצים.</div>';
+  let actions='';
+  if(planReady){
+    actions='<button type="button" data-site-edit-action="approve_plan">מאשר</button>'+
+      '<button type="button" data-site-edit-action="request_revision">שנה את ההצעה</button>'+
+      '<button type="button" data-site-edit-action="cancel">בטל</button>';
+  }else if(publishReady){
+    actions='<button type="button" data-site-edit-action="create_preview">פתח Preview</button>'+
+      '<button type="button" data-site-edit-action="publish">פרסם באתר</button>'+
+      '<button type="button" data-site-edit-action="request_revision">בקש תיקון</button>'+
+      '<button type="button" data-site-edit-action="cancel">בטל</button>';
+  }else if(status==='testing'||status==='deploying'){
+    actions='<button type="button" data-site-edit-action="refresh_status">רענן סטטוס</button>'+
+      (cancellable?'<button type="button" data-site-edit-action="cancel">בטל</button>':'');
+  }else if(canRevise){
+    actions='<button type="button" data-site-edit-action="request_revision">בקש תיקון</button>'+
+      (cancellable?'<button type="button" data-site-edit-action="cancel">בטל</button>':'');
+  }
   return `<article class="site-edit-card" data-site-edit-request="${escapeHtml(request?.id||'')}">
     <div class="site-edit-card-head">
       <strong>שינוי מוצע באתר</strong>
       <span class="site-edit-risk site-edit-risk-${escapeHtml(request?.risk_level||'low')}">${riskText(request?.risk_level)}</span>
     </div>
     <p class="site-edit-summary">${escapeHtml(request?.summary||'שינוי באתר')}</p>
-    <div class="site-edit-meta">סטטוס: ${escapeHtml(request?.status||'לא ידוע')} · ${escapeHtml(STATUS_STAGE[request?.status]||'מנתח')}</div>
+    <div class="site-edit-meta">סטטוס: ${escapeHtml(status||'לא ידוע')} · ${escapeHtml(STATUS_STAGE[status]||'מנתח')}</div>
     <div class="site-edit-files-title">קבצים מושפעים</div>
     ${fileHtml}
     ${preview}
     ${warning}
     <div class="site-edit-card-error" data-site-edit-error hidden></div>
-    <div class="site-edit-actions">
-      <button type="button" data-site-edit-action="approve_plan" ${awaiting?'':'disabled'}>מאשר</button>
-      <button type="button" data-site-edit-action="request_revision" ${awaiting?'':'disabled'}>שנה את ההצעה</button>
-      <button type="button" data-site-edit-action="cancel" ${cancellable?'':'disabled'}>בטל</button>
-    </div>
+    <div class="site-edit-actions">${actions}</div>
   </article>`;
 }
 
@@ -274,18 +290,38 @@ async function handleRequestAction(card,request,action){
   card.querySelectorAll('button').forEach(btn=>btn.disabled=true);
   const errorHost=card.querySelector('[data-site-edit-error]');
   if(errorHost){errorHost.hidden=true;errorHost.textContent=''}
+  let previewWindow=null;
   try{
-    const payload={action,request_id:request.id};
+    if(action==='create_preview')previewWindow=window.open('about:blank','_blank');
     if(action==='request_revision'){
       const instructions=window.prompt('מה לשנות בהצעה?','');
       if(!instructions){card.dataset.busy='0';showRequest(request,{replace:true});return}
-      payload.instructions=instructions;
+      const result=await ctx.api({action:'request_revision',request_id:request.id,instructions});
+      const next=result?.request||request;
+      if(next?.id)setActiveRequestId(next.id);
+      showRequest(next,{replace:true});
+      return;
     }
-    const result=await ctx.api(payload);
+    if(action==='publish'){
+      await ctx.api({action:'approve_publish',request_id:request.id});
+      const result=await ctx.api({action:'publish',request_id:request.id});
+      const next=result?.request||request;
+      if(next?.id)setActiveRequestId(next.id);
+      showRequest(next,{replace:true});
+      return;
+    }
+    const result=await ctx.api({action,request_id:request.id});
+    if(action==='create_preview'){
+      if(result?.preview_url){
+        if(previewWindow)previewWindow.location.href=result.preview_url;
+        else window.open(result.preview_url,'_blank','noopener');
+      }else previewWindow?.close();
+    }
     const next=result?.request||request;
     if(next?.id)setActiveRequestId(next.id);
     showRequest(next,{replace:true});
   }catch(error){
+    previewWindow?.close();
     card.dataset.busy='0';
     card.querySelectorAll('button').forEach(btn=>btn.disabled=false);
     if(errorHost){errorHost.textContent=editorErrorMessage(error);errorHost.hidden=false}
@@ -301,7 +337,8 @@ function scheduleRequestPoll(request){
   if(!request?.id||!request?.status||STOP_POLL_STATUSES.has(request.status)||!ctx.api)return;
   pollTimer=setTimeout(async()=>{
     try{
-      const result=await ctx.api({action:'get_request',request_id:request.id});
+      const statusAction=(request.status==='testing'||request.status==='deploying')?'refresh_status':'get_request';
+      const result=await ctx.api({action:statusAction,request_id:request.id});
       const fresh=result?.request;
       if(!fresh)return;
       activeRequestData=fresh;
