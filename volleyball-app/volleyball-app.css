@@ -177,3 +177,16 @@ body{padding-top:env(safe-area-inset-top);background:#eef8f7}
   margin-inline:auto;
   width:100%;
 }
+
+/* Remove large volleyball population collage */
+.vb-standalone-app .vb-population-world{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.vb-standalone-app .vb-population-world .vb-player-visual{
+  display:none!important;
+}
+.vb-standalone-app .vb-population-world .vb-world-content{
+  max-width:760px;
+  margin-inline:auto;
+  width:100%;
+}
