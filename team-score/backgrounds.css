@@ -1,41 +1,43 @@
-/* TeamScore — 24 approved volleyball backgrounds */
+/* TeamScore — crisp HD volleyball backgrounds v30 */
 .rotating-bg .bg-layer{display:none!important}
 .approved-bg-layer{
   display:block!important;
   position:absolute;
-  inset:-2%;
+  inset:0;
   overflow:hidden;
   opacity:0;
-  transition:opacity 1.35s ease;
+  transition:opacity .9s ease;
   z-index:1;
   pointer-events:none;
-  filter:saturate(1.04) contrast(1.03) brightness(1.03);
-  will-change:opacity;
+  filter:none!important;
+  transform:none!important;
+  contain:layout paint;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
 .approved-bg-layer.active{display:block!important;opacity:1}
 .approved-bg-layer img{
   position:absolute;
-  top:0;
-  left:0;
   max-width:none!important;
   max-height:none!important;
-  transform-origin:0 0;
-  will-change:transform,width,height;
+  margin:0!important;
+  padding:0!important;
   user-select:none;
   -webkit-user-drag:none;
   image-rendering:auto;
+  transform:none!important;
+  filter:none!important;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
 }
 .rotating-bg::after{z-index:2!important}
-body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.04) brightness(.97)}
-@media(max-width:640px){
-  .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.99)}
-  body.projection-mode .approved-bg-layer{filter:saturate(1.04) contrast(1.03) brightness(.94)}
-}
+body.projection-mode .approved-bg-layer{filter:none!important}
 
-
-/* HD fallback: show a real volleyball image even if rotation JS is delayed */
+/* Fallback while the first HD sprite decodes. */
 .rotating-bg{
-  background-image:url("assets/hd-sprites/maya.webp?v=25")!important;
+  background-color:#11151d!important;
+  background-image:url("assets/hd-sprites/maya.webp?v=30")!important;
+  background-repeat:no-repeat!important;
   background-size:300% auto!important;
   background-position:left top!important;
 }
