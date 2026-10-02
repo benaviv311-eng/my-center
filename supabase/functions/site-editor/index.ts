@@ -27,6 +27,7 @@ const SITE_EDITOR_MODEL_STRONG=Deno.env.get("SITE_EDITOR_MODEL_STRONG")||"";
 const SITE_EDITOR_MODEL_FAST=Deno.env.get("SITE_EDITOR_MODEL_FAST")||"";
 const SITE_EDITOR_INTERNAL_SECRET=Deno.env.get("SITE_EDITOR_INTERNAL_SECRET")||"";
 const SUPABASE_DEPLOY_WORKFLOW="site-editor-supabase-deploy.yml";
+const EDGE_FUNCTIONS_DEPLOY_WORKFLOW="site-editor-edge-functions-deploy.yml";
 const admin=serviceClient();
 
 function cors(req:Request){
@@ -592,6 +593,71 @@ async function refreshDbDeployment(user:{id:string},request:any){
   return publishRequest(user,request.id,false);
 }
 
+async function requestEdgeFunctionNames(requestId:string){
+  const operations=await requestOperations(requestId);
+  const names=new Set<string>();
+  for(const op of operations){
+    const match=String(op.path||"").match(/^supabase\/functions\/([^/]+)\//);
+    if(match&&match[1]&&match[1]!=="_shared")names.add(match[1]);
+  }
+  return [...names].sort();
+}
+
+async function storeFunctionsDeployRun(requestId:string,run:any,functionNames:string[]){
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",requestId).eq("kind","functions_deploy");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  if(!run)return;
+  const saved=await admin.from("site_edit_runs").insert({
+    request_id:requestId,
+    kind:"functions_deploy",
+    provider_run_id:String(run.id),
+    status:run.status,
+    url:run.url||null,
+    details:{
+      workflow:EDGE_FUNCTIONS_DEPLOY_WORKFLOW,
+      merge_sha:run.head_sha||null,
+      function_names:functionNames,
+      conclusion:run.conclusion||null
+    },
+    finished_at:run.status==="completed"?new Date().toISOString():null
+  });
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+}
+
+async function dispatchEdgeFunctionDeployment(user:{id:string},request:any,functionNames:string[]){
+  if(!request.merge_commit_sha||!functionNames.length)return 0;
+  const runId=await githubDispatchWorkflow(EDGE_FUNCTIONS_DEPLOY_WORKFLOW,"main",{
+    request_id:request.id,
+    merge_sha:request.merge_commit_sha,
+    function_names:functionNames.join(",")
+  });
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","functions_deploy");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  const saved=await admin.from("site_edit_runs").insert({
+    request_id:request.id,
+    kind:"functions_deploy",
+    provider_run_id:runId?String(runId):null,
+    status:"queued",
+    details:{
+      workflow:EDGE_FUNCTIONS_DEPLOY_WORKFLOW,
+      merge_sha:request.merge_commit_sha,
+      function_names:functionNames
+    }
+  });
+  if(saved.error)throw new EditorError("editor_unavailable",500);
+  await admin.from("site_edit_requests").update({
+    deploy_status:"functions_pending",
+    updated_at:new Date().toISOString()
+  }).eq("id",request.id);
+  await insertEvent(request.id,user.id,"functions_deploy_dispatched",{
+    workflow:EDGE_FUNCTIONS_DEPLOY_WORKFLOW,
+    merge_sha:request.merge_commit_sha,
+    function_names:functionNames,
+    run_id:runId||null
+  });
+  return runId;
+}
+
 async function publishRequest(user:{id:string},requestId:string,auto=false){
   const request=await ownedRequest(user.id,requestId);
   if(!["preview_ready","awaiting_publish_approval"].includes(request.status)){
@@ -619,20 +685,64 @@ async function publishRequest(user:{id:string},requestId:string,auto=false){
   const merging=await admin.from("site_edit_requests").update({status:"merging",updated_at:new Date().toISOString()}).eq("id",request.id);
   if(merging.error)throw new EditorError("editor_unavailable",500);
   const merged=await githubMergePR(pr.number,currentHead);
+  const functionNames=await requestEdgeFunctionNames(request.id);
   const deployed=await admin.from("site_edit_requests").update({
     status:"deploying",
     merge_commit_sha:merged.mergeCommitSha,
-    deploy_status:"pending",
+    deploy_status:functionNames.length?"functions_pending":"pending",
     updated_at:new Date().toISOString()
   }).eq("id",request.id);
   if(deployed.error)throw new EditorError("editor_unavailable",500);
   await admin.from("site_edit_previews").update({revoked_at:new Date().toISOString()}).eq("request_id",request.id).is("revoked_at",null);
-  await insertEvent(request.id,user.id,"merged",{pr_number:pr.number,merge_commit_sha:merged.mergeCommitSha,auto});
+  await insertEvent(request.id,user.id,"merged",{pr_number:pr.number,merge_commit_sha:merged.mergeCommitSha,auto,function_names:functionNames});
+  if(functionNames.length){
+    await dispatchEdgeFunctionDeployment(user,{...request,merge_commit_sha:merged.mergeCommitSha},functionNames);
+  }
   return requestView(user.id,request.id);
 }
 
 async function refreshDeployment(user:{id:string},request:any){
   if(!request.merge_commit_sha)throw new EditorError("bad_request",409,"missing_merge_sha");
+
+  const functionNames=await requestEdgeFunctionNames(request.id);
+  if(functionNames.length){
+    let functionsRun=await githubWorkflowRunForSha(EDGE_FUNCTIONS_DEPLOY_WORKFLOW,"main",request.merge_commit_sha);
+    if(!functionsRun){
+      await dispatchEdgeFunctionDeployment(user,request,functionNames);
+      return requestView(user.id,request.id);
+    }
+    await storeFunctionsDeployRun(request.id,functionsRun,functionNames);
+    if(functionsRun.status!=="completed"){
+      if(request.deploy_status!=="functions_pending"){
+        await admin.from("site_edit_requests").update({status:"deploying",deploy_status:"functions_pending",updated_at:new Date().toISOString()}).eq("id",request.id);
+      }
+      return requestView(user.id,request.id);
+    }
+    if(functionsRun.conclusion!=="success"){
+      const failed=await admin.from("site_edit_requests").update({
+        status:"failed",
+        deploy_status:"functions_failed",
+        updated_at:new Date().toISOString()
+      }).eq("id",request.id);
+      if(failed.error)throw new EditorError("editor_unavailable",500);
+      await insertEvent(request.id,user.id,"functions_deploy_failed",{
+        merge_commit_sha:request.merge_commit_sha,
+        function_names:functionNames,
+        run_id:functionsRun.id,
+        conclusion:functionsRun.conclusion
+      });
+      return requestView(user.id,request.id);
+    }
+    if(request.deploy_status==="functions_pending"){
+      await admin.from("site_edit_requests").update({deploy_status:"pending",updated_at:new Date().toISOString()}).eq("id",request.id);
+      await insertEvent(request.id,user.id,"functions_deploy_succeeded",{
+        merge_commit_sha:request.merge_commit_sha,
+        function_names:functionNames,
+        run_id:functionsRun.id
+      });
+    }
+  }
+
   const run=await githubPagesRunForSha(request.merge_commit_sha);
   const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","pages");
   if(cleared.error)throw new EditorError("editor_unavailable",500);
