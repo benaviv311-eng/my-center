@@ -1,4 +1,4 @@
-/* TeamScore — responsive sharp backgrounds v31 */
+/* TeamScore — crisp HD volleyball backgrounds v30 */
 .rotating-bg .bg-layer{display:none!important}
 .approved-bg-layer{
   display:block!important;
@@ -25,6 +25,7 @@
   user-select:none;
   -webkit-user-drag:none;
   image-rendering:auto;
+  transform:none!important;
   filter:none!important;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
@@ -32,18 +33,17 @@
 .rotating-bg::after{z-index:2!important}
 body.projection-mode .approved-bg-layer{filter:none!important}
 
-/* Portrait fallback — native portrait source, never an enlarged 800x600 tile. */
+/* Fallback while the first HD sprite decodes. */
 .rotating-bg{
   background-color:#11151d!important;
-  background-image:url("assets/mobile/p1.webp?v=31")!important;
+  background-image:url("assets/hd-sprites/maya.webp?v=35")!important;
   background-repeat:no-repeat!important;
-  background-size:cover!important;
-  background-position:center center!important;
+  background-size:300% auto!important;
+  background-position:left top!important;
 }
-@media (min-aspect-ratio:4/5){
+@media(max-aspect-ratio:4/3){
   .rotating-bg{
-    background-image:url("assets/hd-sprites/maya.webp?v=31")!important;
-    background-size:300% auto!important;
+    background-size:auto 200%!important;
     background-position:left top!important;
   }
 }
