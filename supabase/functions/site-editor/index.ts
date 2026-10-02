@@ -3,6 +3,7 @@ import { requireOwner, serviceClient } from "../_shared/site-editor/auth.ts";
 import { EditorError, safeEditorError } from "../_shared/site-editor/errors.ts";
 import {
   githubBranchHead,
+  githubChecksForRef,
   githubCommitFiles,
   githubCreateEditBranch,
   githubReadFile,
@@ -292,13 +293,15 @@ async function approvePlan(user:{id:string},requestId:string){
   const writes=applyOperations(fileMap,normalized,request.id);
   const branchName=`site-edit/${request.id.slice(0,8)}/${safeSlug(request.summary||request.prompt)}`;
   const approval=await admin.from("site_edit_approvals").insert({
-    request_id:request.id,user_id:user.id,stage:"plan",decision:"approved",approved_head_sha:currentMain
-  });
+    request_id:request.id,user_id:user.id,stage:"plan",decision:"approved",approved_head_sha:null
+  }).select("id").single();
   if(approval.error)throw new EditorError("editor_unavailable",500);
   await admin.from("site_edit_requests").update({status:"applying",base_sha:currentMain,branch_name:branchName,updated_at:new Date().toISOString()}).eq("id",request.id);
   try{
     await githubCreateEditBranch(branchName,currentMain);
     const commit=await githubCommitFiles(branchName,currentMain,`site-edit: ${request.summary||"approved change"} [req ${request.id.slice(0,8)}]`,writesToArray(writes));
+    const exactApproval=await admin.from("site_edit_approvals").update({approved_head_sha:commit.commitSha}).eq("id",approval.data.id);
+    if(exactApproval.error)throw new EditorError("editor_unavailable",500);
     const update=await admin.from("site_edit_requests").update({
       status:"testing",head_sha:commit.commitSha,branch_name:branchName,base_sha:currentMain,updated_at:new Date().toISOString()
     }).eq("id",request.id).select("*").single();
@@ -314,6 +317,64 @@ async function approvePlan(user:{id:string},requestId:string){
     }
     throw error;
   }
+}
+
+async function refreshStatus(user:{id:string},requestId:string){
+  const request=await ownedRequest(user.id,requestId);
+  if(!request.branch_name||!request.head_sha)throw new EditorError("bad_request",409,"request_has_no_branch");
+
+  const currentHead=await githubBranchHead(request.branch_name);
+  const approval=await admin.from("site_edit_approvals")
+    .select("approved_head_sha")
+    .eq("request_id",request.id)
+    .eq("stage","plan")
+    .eq("decision","approved")
+    .order("created_at",{ascending:false})
+    .limit(1)
+    .maybeSingle();
+  if(approval.error)throw new EditorError("editor_unavailable",500);
+
+  if(currentHead!==request.head_sha||approval.data?.approved_head_sha!==currentHead){
+    await admin.from("site_edit_requests").update({status:"needs_replan",updated_at:new Date().toISOString()}).eq("id",request.id);
+    await insertEvent(request.id,user.id,"validation_head_stale",{expected_head_sha:request.head_sha,current_head_sha:currentHead,approved_head_sha:approval.data?.approved_head_sha||null});
+    throw new EditorError("stale_plan",409);
+  }
+
+  const checks=await githubChecksForRef(currentHead);
+  const cleared=await admin.from("site_edit_runs").delete().eq("request_id",request.id).eq("kind","validation");
+  if(cleared.error)throw new EditorError("editor_unavailable",500);
+  if(checks.length){
+    const rows=checks.map(check=>({
+      request_id:request.id,
+      kind:"validation",
+      provider_run_id:check.providerRunId,
+      status:check.status,
+      url:check.url,
+      details:{name:check.name,conclusion:check.conclusion,head_sha:currentHead},
+      finished_at:check.status==="completed"?new Date().toISOString():null
+    }));
+    const saved=await admin.from("site_edit_runs").insert(rows);
+    if(saved.error)throw new EditorError("editor_unavailable",500);
+  }
+
+  const required=checks.filter(check=>check.name==="validate"||/site editor validation/i.test(check.name));
+  let nextStatus=request.status;
+  if(required.length){
+    const pending=required.some(check=>check.status!=="completed");
+    const failed=required.some(check=>check.status==="completed"&&check.conclusion!=="success");
+    if(failed)nextStatus="failed";
+    else if(!pending)nextStatus="preview_ready";
+    else nextStatus="testing";
+  }else{
+    nextStatus="testing";
+  }
+
+  if(nextStatus!==request.status){
+    const update=await admin.from("site_edit_requests").update({status:nextStatus,updated_at:new Date().toISOString()}).eq("id",request.id);
+    if(update.error)throw new EditorError("editor_unavailable",500);
+    await insertEvent(request.id,user.id,"validation_status",{status:nextStatus,head_sha:currentHead,checks:required.map(check=>({name:check.name,status:check.status,conclusion:check.conclusion}))});
+  }
+  return requestView(user.id,request.id);
 }
 
 async function listRequests(userId:string){
@@ -409,6 +470,10 @@ Deno.serve(async(req:Request)=>{
     if(action==='approve_plan'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
       return out(req,{ok:true,request:await approvePlan(user,id)});
+    }
+    if(action==='refresh_status'){
+      const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
+      return out(req,{ok:true,request:await refreshStatus(user,id)});
     }
     if(action==='request_revision'){
       const id=text(b.request_id,80);if(!id)throw new EditorError("bad_request",400);
