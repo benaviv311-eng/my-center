@@ -71,6 +71,28 @@
           wcFile('Paf Open 2012 Ágatha Bednarczuk.jpg'),
           wcFile('Paf Open 2012 Ágatha Bednarczuk (cropped).jpg'),
           wcFile('Agatha Bednarczuk.jpg')
+        ]},
+        {player:'Kira Walkenhorst',kind:'beach',poses:[
+          wcFile('20220816 European Championships Munich 2022 Kira Walkenhorst DSC 6702.jpg'),
+          wcFile('20220817 European Championships Munich 2022 Kira Walkenhorst 850 7321.jpg'),
+          wcFile('20220817 European Championships Munich 2022 Kira Walkenhorst 850 7358.jpg'),
+          wcFile('Kira Walkenhorst (GER) 2017.jpg'),
+          wcFile('Kira Walkenhorst Rio 2016 (cropped).jpg'),
+          wcFile('Kira Walkenhorst Smart Beach Tour 2017.jpg'),
+          wcFile('Kira-Walkenhorst-Münster2012.jpg'),
+          wcFile('GermanysKiraWalkenhorstblockswhileEgyptsNadaMeawadbumps.jpg')
+        ]},
+        {player:'Laura Ludwig',kind:'beach',poses:[
+          wcFile('Grand Slam Moscow 2011, Set 1 - 075.jpg'),
+          wcFile('Grand Slam Moscow 2011, Set 1 - 080.jpg'),
+          wcFile('Grand Slam Moscow 2011, Set 1 - 085.jpg'),
+          wcFile('Grand Slam Moscow 2012, Set 1 - 009.jpg'),
+          wcFile('Grand Slam Moscow 2012, Set 1 - 015.jpg'),
+          wcFile('Grand Slam Moscow 2012, Set 1 - 029.jpg'),
+          wcFile('Laura Ludwig (GER) Rio 2016.jpg'),
+          wcFile('Laura Ludwig GERxBRA Rio2016 A.jpg'),
+          wcFile('Laura Ludwig GERxBRA Rio2016 B.jpg'),
+          wcFile('LauraLudwig Muenster2013.jpg')
         ]}
       ]
     },
@@ -100,6 +122,7 @@
     return 'all';
   };
   const visualSessionSeed=Math.floor(Date.now()/1000);
+  let backgroundRotationTick=0;
   const setEliteSideBackgrounds=()=>{
     if(!sideLeft||!sideRight)return;
     const active=populationTabs?.querySelector('.vb-pop-tab.active');
@@ -107,14 +130,22 @@
     const gallery=VB_ELITE_SIDE_GALLERIES[key]||VB_ELITE_SIDE_GALLERIES.all;
     const athletes=gallery.athletes||[];
     if(!athletes.length)return;
-    const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7)+visualSessionSeed;
+    const seed=new Date().getDate()+new Date().getMonth()*31+(key.length*7)+visualSessionSeed+backgroundRotationTick;
     const athlete=athletes[seed%athletes.length];
     const poses=athlete.poses||[];
     if(poses.length<2)return;
     const base=(seed*3)%poses.length;
     const right=(base+Math.max(1,Math.floor(poses.length/2)))%poses.length;
-    sideLeft.style.backgroundImage=`url("${poses[base]}")`;
-    sideRight.style.backgroundImage=`url("${poses[right]}")`;
+    sideLeft.classList.add('vb-side-bg-changing');
+    sideRight.classList.add('vb-side-bg-changing');
+    setTimeout(()=>{
+      sideLeft.style.backgroundImage=`url("${poses[base]}")`;
+      sideRight.style.backgroundImage=`url("${poses[right]}")`;
+      requestAnimationFrame(()=>{
+        sideLeft.classList.remove('vb-side-bg-changing');
+        sideRight.classList.remove('vb-side-bg-changing');
+      });
+    },160);
     sideLeft.dataset.player=athlete.player;
     sideRight.dataset.player=athlete.player;
     sideLeft.dataset.kind=athlete.kind||'indoor';
@@ -244,7 +275,7 @@
   document.addEventListener("keydown",event=>{
     if(event.key==="Escape"){closePopulationMenu();closeTopicMenu();}
   });
-  populationTabs?.addEventListener("click",()=>setTimeout(()=>{syncPopulationContext();setEliteSideBackgrounds();},0));
+  populationTabs?.addEventListener("click",()=>setTimeout(()=>{backgroundRotationTick++;syncPopulationContext();setEliteSideBackgrounds();},0));
   if(populationTabs){
     const popObserver=new MutationObserver(()=>{
       buildPopulationMenu();
@@ -254,6 +285,17 @@
     popObserver.observe(populationTabs,{subtree:true,attributes:true,attributeFilter:["class","aria-pressed"],childList:true});
     setTimeout(()=>{buildPopulationMenu();syncPopulationContext();setEliteSideBackgrounds();},0);
   }
+
+  const rotateEliteBackgrounds=()=>{
+    backgroundRotationTick++;
+    setEliteSideBackgrounds();
+  };
+  window.setInterval(()=>{
+    if(!document.hidden)rotateEliteBackgrounds();
+  },12000);
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden)rotateEliteBackgrounds();
+  });
 
   const buttons=[...document.querySelectorAll("[data-vb-jump]")];
   buttons.forEach(btn=>btn.addEventListener("click",()=>{
