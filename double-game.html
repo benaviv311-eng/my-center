@@ -9,10 +9,33 @@
     *{box-sizing:border-box}
     html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1025}
     #core{width:100%;height:100%;border:0;display:block;background:#0b1025}
+    .end-overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 32%,#4d4f9955,transparent 32%),linear-gradient(#090f22e8,#070b18f5);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:.22s ease}
+    .end-overlay.open{opacity:1;visibility:visible}
+    .end-card{width:min(460px,92vw);padding:26px 22px;border-radius:28px;border:1px solid #ffffff24;background:linear-gradient(180deg,#ffffff16,#ffffff09);box-shadow:0 28px 80px #000a;text-align:center;color:#fff}
+    .end-card .trophy{font-size:52px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px #ffd84d88)}
+    .end-card h1{margin:0 0 8px;font-size:clamp(30px,8vw,48px)}
+    .end-card p{margin:0 0 20px;opacity:.78;font-weight:700;line-height:1.45}
+    .end-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .end-actions button{border:0;border-radius:18px;padding:14px 16px;font-weight:1000;font-size:17px;cursor:pointer}
+    .end-actions [data-end-action="replay"]{background:#ffd84d;color:#171717}
+    .end-actions [data-end-action="return"]{background:#ffffff18;color:#fff;border:1px solid #ffffff25}
   </style>
 </head>
 <body>
   <iframe id="core" title="DOUBLE" allow="autoplay"></iframe>
+
+  <section id="endOverlay" class="end-overlay" aria-hidden="true">
+    <div class="end-card">
+      <div class="trophy">🏆</div>
+      <h1 id="endOverlayTitle">המשחק הסתיים</h1>
+      <p id="endOverlayText">רוצה לנסות שוב?</p>
+      <div class="end-actions">
+        <button type="button" data-end-action="return">↩ חזור</button>
+        <button type="button" data-end-action="replay">🔄 שחק שוב</button>
+      </div>
+    </div>
+  </section>
+
   <script src="double/success-ting.js?v=1"></script>
   <script>
     (()=>{
@@ -21,7 +44,45 @@
       const params=new URLSearchParams(location.search);
       params.delete('v');
       const qs=params.toString();
-      frame.src='double-game-core.html?v=1'+(qs?'&'+qs:'');
+      const coreBase='double-game-core.html?v=1'+(qs?'&'+qs:'');
+      frame.src=coreBase;
+
+      const endOverlay=document.getElementById('endOverlay');
+      const endTitle=document.getElementById('endOverlayTitle');
+      const endText=document.getElementById('endOverlayText');
+
+      function outerCloseButton(){
+        try{return window.parent?.document?.getElementById('gameClose')||null}catch(_){return null}
+      }
+      function setOuterCloseVisible(visible){
+        const btn=outerCloseButton();
+        if(btn)btn.style.display=visible?'':'none';
+      }
+      function showEndOverlay(title,description){
+        endTitle.textContent=(title||'המשחק הסתיים').trim()||'המשחק הסתיים';
+        endText.textContent=(description||'רוצה לנסות שוב?').trim()||'רוצה לנסות שוב?';
+        endOverlay.classList.add('open');
+        endOverlay.setAttribute('aria-hidden','false');
+        setOuterCloseVisible(false);
+      }
+      function hideEndOverlay(){
+        endOverlay.classList.remove('open');
+        endOverlay.setAttribute('aria-hidden','true');
+        setOuterCloseVisible(true);
+      }
+      function reloadSameGame(){
+        hideEndOverlay();
+        frame.src='about:blank';
+        setTimeout(()=>{frame.src=coreBase+(coreBase.includes('?')?'&':'?')+'restart='+Date.now()},0);
+      }
+      function returnToLanding(){
+        hideEndOverlay();
+        const close=outerCloseButton();
+        if(close){close.click();return}
+        try{window.parent.postMessage({type:'double-return'},location.origin)}catch(_){}
+      }
+      document.querySelector('[data-end-action="replay"]').addEventListener('click',reloadSameGame);
+      document.querySelector('[data-end-action="return"]').addEventListener('click',returnToLanding);
 
       let ctx=null,lastKey='',lastAt=0;
       function audioContext(){
@@ -44,7 +105,26 @@
         if(!doc?.body)return;
         doc.addEventListener('pointerdown',audioContext,true);
         doc.addEventListener('keydown',audioContext,true);
+        const start=doc.getElementById('start');
+        let hasPlayed=false,endShown=false;
+        const checkEnd=()=>{
+          if(!start)return;
+          const display=doc.defaultView?.getComputedStyle(start)?.display||start.style.display;
+          if(display==='none'){
+            hasPlayed=true;
+            return;
+          }
+          if(hasPlayed&&!endShown){
+            endShown=true;
+            const panel=doc.getElementById('menuPanel');
+            const title=(panel?.querySelector('h1')?.textContent||'המשחק הסתיים').trim();
+            const desc=(panel?.querySelector('p')?.textContent||'רוצה לנסות שוב?').trim();
+            start.style.display='none';
+            showEndOverlay(title,desc);
+          }
+        };
         const check=()=>{
+          checkEnd();
           const encouragement=doc.getElementById('encouragement');
           const et=(encouragement?.textContent||'').trim();
           if(et){
@@ -61,8 +141,10 @@
           }
         };
         const observer=new MutationObserver(check);
-        observer.observe(doc.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','data-kind']});
+        observer.observe(doc.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','data-kind','style']});
         check();
+        setTimeout(checkEnd,0);
+        setTimeout(checkEnd,180);
       }
       frame.addEventListener('load',()=>{
         try{watch(frame.contentDocument)}catch(_){ }
