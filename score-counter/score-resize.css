@@ -1,11 +1,11 @@
 .card[data-score-resize-ready="1"]{
   position:relative;
   transform-origin:center center;
-  --score-text-boost:1.14;
+  --score-text-boost:1.18;
 }
 .score-card-text{
   display:inline-block;
-  transform:scale(var(--score-text-scale,var(--score-text-boost,1.14)));
+  transform:scale(var(--score-text-scale,var(--score-text-boost,1.18)));
   transform-origin:center center;
   transition:transform .08s linear;
   pointer-events:none;
@@ -60,7 +60,7 @@
 }
 .score-resize-handle:hover::after,
 .score-resize-handle:focus-visible::after,
-.card.score-card-resizing .score-resize-handle::after{
+.score-resize-handle.score-resize-active::after{
   opacity:1;
   transform:translate(0,0);
 }
@@ -83,14 +83,13 @@
 .score-resize-handle[data-corner="top-right"] .score-resize-value{right:2px;top:34px}
 .score-resize-handle[data-corner="bottom-left"] .score-resize-value{left:2px;bottom:34px}
 .score-resize-handle[data-corner="bottom-right"] .score-resize-value{right:2px;bottom:34px}
+.score-resize-handle.score-resize-active .score-resize-value{display:block}
 .card.score-card-resizing{
   z-index:85!important;
   outline:3px solid rgba(96,165,250,.78);
   outline-offset:3px;
   box-shadow:0 26px 68px rgba(0,0,0,.48)!important;
 }
-.card.score-card-resizing .score-resize-handle:focus .score-resize-value,
-.card.score-card-resizing .score-resize-handle:hover .score-resize-value{display:block}
 body.score-card-resizing{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
 #scoreResizeReset{white-space:nowrap}
 @media (max-width:700px){
