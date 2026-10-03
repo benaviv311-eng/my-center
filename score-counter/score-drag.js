@@ -17,11 +17,12 @@
 
   const mode=()=>document.body.classList.contains('projection-mode')?'projection':'normal';
   const persist=()=>{try{localStorage.setItem(DRAG_STORAGE_KEY,JSON.stringify(positions));}catch{}};
-  const isResizeHandle=target=>!!(target && target.closest && target.closest('.score-resize-handle'));
+  const isResizeHandle=target=>!!(target && target.closest && target.closest('.score-resize-handle,.score-size-menu'));
   const transform=(card,x,y)=>{
+    const scale=Math.min(1.6,Math.max(0.55,Number(card.dataset.scoreScale)||1));
     card.dataset.dragX=String(Math.round(x));
     card.dataset.dragY=String(Math.round(y));
-    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0)';
+    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
   };
   const readPos=(card,id)=>{
     const saved=positions[mode()][id]||{};
