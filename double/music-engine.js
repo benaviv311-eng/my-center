@@ -47,7 +47,7 @@
   const bassPlay=[110,146.83,164.81,130.81];
   const leadPlay=[440,493.88,659.25,587.33,493.88,440,392,493.88];
   function playStep(){
-    if(!enabled||!unlocked)return;
+    if(!enabled||!unlocked||scene==='victory')return;
     const layers=State.layersFor(scene,streak);
     const s=step%16;
     if(layers.beat){
@@ -66,7 +66,7 @@
   }
   function restart(){
     clearInterval(timer);timer=null;
-    if(!enabled||!unlocked)return;
+    if(!enabled||!unlocked||scene==='victory')return;
     const bpm=State.tempoFor(scene),stepMs=(60000/bpm)/4;
     playStep();
     timer=setInterval(playStep,stepMs);
