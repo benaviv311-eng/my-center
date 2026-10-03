@@ -3,7 +3,9 @@
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
   const MIN_SCALE=0.55;
   const MAX_SCALE=1.6;
-  const TEXT_FLOOR_SCALE=0.78;
+  const TEXT_FLOOR_SCALE=0.68;
+  const TEXT_BOOST=1.14;
+  const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
   const teams=document.getElementById('teams');
   if(!teams) return;
 
@@ -22,20 +24,30 @@
   const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
   const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE,MAX_SCALE);
 
-  function markReadableText(card){
-    card.querySelectorAll('*').forEach(el=>{
-      if(el.classList.contains('score-resize-handle') || el.closest('.score-resize-handle')) return;
-      if(el.closest('button,input,select,textarea')) return;
-      const hasOwnText=Array.from(el.childNodes).some(node=>node.nodeType===3 && node.textContent.trim());
-      if(hasOwnText && el.children.length===0) el.classList.add('score-card-content');
+  function wrapReadableText(card){
+    const walker=document.createTreeWalker(card,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    let node;
+    while((node=walker.nextNode())) nodes.push(node);
+    nodes.forEach(textNode=>{
+      if(!textNode.textContent || !textNode.textContent.trim()) return;
+      const parent=textNode.parentElement;
+      if(!parent) return;
+      if(parent.closest('.score-resize-handle,.score-card-text,script,style,textarea,select,option,[contenteditable="true"]')) return;
+      const span=document.createElement('span');
+      span.className='score-card-text';
+      span.textContent=textNode.textContent;
+      parent.replaceChild(span,textNode);
     });
   }
 
   function applyContentCompensation(card,scale){
     const compensation=scale>=TEXT_FLOOR_SCALE ? 1/scale : 1/TEXT_FLOOR_SCALE;
     card.style.setProperty('--score-content-compensation',compensation.toFixed(4));
+    card.style.setProperty('--score-text-boost',TEXT_BOOST.toFixed(4));
+    card.style.setProperty('--score-text-scale',(compensation*TEXT_BOOST).toFixed(4));
     card.style.setProperty('--score-card-scale',scale.toFixed(4));
-    markReadableText(card);
+    wrapReadableText(card);
   }
 
   function applyTransform(card){
@@ -47,29 +59,22 @@
     card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
   }
 
+  function updateResizeValues(card){
+    const label=Math.round(scaleOf(card)*100)+'%';
+    card.querySelectorAll('.score-resize-value').forEach(value=>{value.textContent=label;});
+  }
+
   function applySavedSize(card,id){
     const saved=sizes[mode()][id];
     const scale=saved && Number.isFinite(Number(saved.scale)) ? clamp(Number(saved.scale),MIN_SCALE,MAX_SCALE) : 1;
     card.dataset.scoreScale=String(scale);
     applyTransform(card);
+    updateResizeValues(card);
   }
 
-  function bindResize(card,id){
-    if(!id || card.getAttribute('data-score-resize-ready')==='1') return;
-    card.setAttribute('data-score-resize-ready','1');
-    markReadableText(card);
-    applySavedSize(card,id);
-
-    const handle=document.createElement('button');
-    handle.type='button';
-    handle.className='score-resize-handle';
-    handle.setAttribute('aria-label','שינוי גודל כרטיס הקבוצה');
-    handle.setAttribute('title','גרור מהפינה באלכסון כדי להקטין או להגדיל');
-    handle.innerHTML='<b class="score-resize-value">100%</b>';
-    card.appendChild(handle);
-    const value=handle.querySelector('.score-resize-value');
-    value.textContent=Math.round(scaleOf(card)*100)+'%';
-
+  function bindHandle(card,id,handle){
+    if(handle.dataset.scoreResizeBound==='1') return;
+    handle.dataset.scoreResizeBound='1';
     let active=false;
     let pointerId=null;
     let centerX=0,centerY=0,startDistance=1,startScale=1;
@@ -98,6 +103,7 @@
       pointerId=e.pointerId;
       card.classList.add('score-card-resizing');
       document.body.classList.add('score-card-resizing');
+      updateResizeValues(card);
       if(handle.setPointerCapture){try{handle.setPointerCapture(pointerId);}catch{}}
       if(navigator.vibrate){try{navigator.vibrate(12);}catch{}}
     });
@@ -109,17 +115,46 @@
       const distance=Math.max(8,Math.hypot(e.clientX-centerX,e.clientY-centerY));
       const next=clamp(startScale*(distance/startDistance),MIN_SCALE,MAX_SCALE);
       card.dataset.scoreScale=String(next);
-      value.textContent=Math.round(next*100)+'%';
       applyTransform(card);
+      updateResizeValues(card);
     });
     handle.addEventListener('pointerup',e=>{if(e.pointerId===pointerId) finish();});
     handle.addEventListener('pointercancel',e=>{if(e.pointerId===pointerId) finish();});
     handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
   }
 
+  function ensureResizeHandles(card,id){
+    RESIZE_CORNERS.forEach(corner=>{
+      let handle=card.querySelector('.score-resize-handle[data-corner="'+corner+'"]');
+      if(!handle){
+        handle=document.createElement('button');
+        handle.type='button';
+        handle.className='score-resize-handle';
+        handle.dataset.corner=corner;
+        handle.setAttribute('aria-label','שינוי גודל כרטיס הקבוצה מהפינה');
+        handle.setAttribute('title','גרור את הפינה באלכסון כדי להקטין או להגדיל');
+        handle.innerHTML='<b class="score-resize-value">100%</b>';
+        card.appendChild(handle);
+      }
+      bindHandle(card,id,handle);
+    });
+    updateResizeValues(card);
+  }
+
+  function bindResize(card,id){
+    if(!id) return;
+    wrapReadableText(card);
+    if(card.getAttribute('data-score-resize-ready')!=='1'){
+      card.setAttribute('data-score-resize-ready','1');
+      applySavedSize(card,id);
+    }else{
+      applyContentCompensation(card,scaleOf(card));
+    }
+    ensureResizeHandles(card,id);
+  }
+
   function attachCards(){
     teams.querySelectorAll(':scope > .card').forEach(card=>{
-      markReadableText(card);
       const id=cardId(card);
       if(id) bindResize(card,id);
     });
@@ -130,9 +165,8 @@
     persist();
     teams.querySelectorAll(':scope > .card').forEach(card=>{
       card.dataset.scoreScale='1';
-      const value=card.querySelector('.score-resize-value');
-      if(value) value.textContent='100%';
       applyTransform(card);
+      updateResizeValues(card);
     });
     window.dispatchEvent(new CustomEvent('scorecards:autoarrange'));
   }
@@ -164,10 +198,8 @@
     setTimeout(()=>{
       const after=layoutSignature();
       if(candidate || after!==before){
-        if(after!==before || candidate){
-          resetDragStorageCurrentMode();
-          normalizeCards();
-        }
+        resetDragStorageCurrentMode();
+        normalizeCards();
       }
     },80);
   },true);
@@ -179,7 +211,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור מהפינה האלכסונית של הכרטיס. הטקסט נשאר קריא ורק מצטמצם כשהכרטיס כבר קטן מדי.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור מכל אחת מארבע הפינות באלכסון. המסגרת קטנה קודם, והטקסט נשאר גדול עד שהכרטיס כבר מתקרב אליו.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',()=>{
       normalizeCards();
