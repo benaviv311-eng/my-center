@@ -54,26 +54,52 @@
       function outerCloseButton(){
         try{return window.parent?.document?.getElementById('gameClose')||null}catch(_){return null}
       }
-      function setOuterCloseVisible(visible){
+      function styleOuterBackButton(visible){
         const btn=outerCloseButton();
-        if(btn){
-          btn.textContent='✕ יציאה';
-          btn.setAttribute('aria-label','יציאה');
-          btn.style.display=visible?'':'none';
-        }
+        if(!btn)return;
+        btn.textContent='←';
+        btn.setAttribute('aria-label','חזרה לדף הנחיתה');
+        btn.setAttribute('title','חזרה לדף הנחיתה');
+        btn.style.display=visible?'grid':'none';
+        btn.style.placeItems='center';
+        btn.style.width='50px';
+        btn.style.height='50px';
+        btn.style.padding='0';
+        btn.style.fontSize='30px';
+        btn.style.lineHeight='1';
+        btn.style.color='#ff4d5f';
+        btn.style.background='rgba(8,15,32,.82)';
+        btn.style.border='1px solid rgba(255,77,95,.65)';
+        btn.style.boxShadow='0 0 0 3px rgba(255,77,95,.10),0 8px 26px rgba(0,0,0,.45)';
       }
-      setOuterCloseVisible(true);
+      styleOuterBackButton(true);
+
+      function cleanCoreChrome(doc){
+        if(!doc?.body)return;
+        const inGameBack=doc.getElementById('menuBtn');
+        if(inGameBack)inGameBack.style.display='none';
+
+        doc.querySelectorAll('#site-chat-fab,#site-chat-backdrop,#site-chat-drawer,[id^="site-editor-"],[class*="site-editor-"]').forEach(el=>el.remove());
+        doc.querySelectorAll('script[src*="site-chat"],script[src*="site-editor"],link[href*="site-chat"],link[href*="site-editor"]').forEach(el=>el.remove());
+
+        [...doc.body.childNodes].forEach(node=>{
+          if(node.nodeType!==3)return;
+          const text=String(node.textContent||'');
+          if(text.includes('\\n')||text.includes('\\r'))node.remove();
+        });
+      }
+
       function showEndOverlay(title,description){
         endTitle.textContent=(title||'המשחק הסתיים').trim()||'המשחק הסתיים';
         endText.textContent=(description||'רוצה לנסות שוב?').trim()||'רוצה לנסות שוב?';
         endOverlay.classList.add('open');
         endOverlay.setAttribute('aria-hidden','false');
-        setOuterCloseVisible(false);
+        styleOuterBackButton(false);
       }
       function hideEndOverlay(){
         endOverlay.classList.remove('open');
         endOverlay.setAttribute('aria-hidden','true');
-        setOuterCloseVisible(true);
+        styleOuterBackButton(true);
       }
       function reloadSameGame(){
         hideEndOverlay();
@@ -108,6 +134,7 @@
       }
       function watch(doc){
         if(!doc?.body)return;
+        cleanCoreChrome(doc);
         doc.addEventListener('pointerdown',audioContext,true);
         doc.addEventListener('keydown',audioContext,true);
         const start=doc.getElementById('start');
@@ -129,6 +156,7 @@
           }
         };
         const check=()=>{
+          cleanCoreChrome(doc);
           checkEnd();
           const encouragement=doc.getElementById('encouragement');
           const et=(encouragement?.textContent||'').trim();
@@ -152,7 +180,7 @@
         setTimeout(checkEnd,180);
       }
       frame.addEventListener('load',()=>{
-        setOuterCloseVisible(true);
+        styleOuterBackButton(true);
         try{watch(frame.contentDocument)}catch(_){ }
       });
     })();
