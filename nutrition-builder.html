@@ -131,6 +131,8 @@ button,input,select{font:inherit}
       <button class="choice" data-value="performance"><strong>ביצועים</strong><small>דגש גדול יותר על זמינות אנרגיה ופחמימות.</small></button>
     </div>
 
+    <div class="note info" style="margin-top:14px"><label style="display:flex;gap:9px;align-items:center;cursor:pointer"><input id="sportMode" type="checkbox"> <span><b>מצב ספורט</b> — פיזור מקצועי יותר של חלבון ופחמימות ליום פעיל. תזמון לפני/אחרי אימון יופעל רק בעתיד אם תוגדר שעת אימון.</span></label></div>
+
     <div class="actions">
       <button class="btn primary" id="calcBtn">חשב את היעדים שלי</button>
     </div>
@@ -194,6 +196,9 @@ button,input,select{font:inherit}
 
     <div id="imbalance"></div>
     <div class="meals" id="meals"></div>
+
+    <h3>איכות וגיוון</h3>
+    <div id="quality"></div>
 
     <h3>מצב היעדים</h3>
     <div class="balance" id="balance"></div>
@@ -303,10 +308,11 @@ function jsonp(action,params={}){
   });
 }
 function govFoodFromRow(r){
-  const p=num(r.protein),f=num(r.total_fat),c=num(r.carbohydrates),fi=num(r.total_dietary_fiber),k=num(r.food_energy);
+  const nullableNumber=v=>window.NutritionMeals?.nullableNumber?window.NutritionMeals.nullableNumber(v):(v===null||v===undefined||v===''?null:(Number.isFinite(Number(v))?Number(v):null));
+  const p=nullableNumber(r.protein),f=nullableNumber(r.total_fat),c=nullableNumber(r.carbohydrates),fi=nullableNumber(r.total_dietary_fiber),k=nullableNumber(r.food_energy);
   const code=r.Code??r.code??r.CODE??r._id,name=r.shmmitzrach||r.english_name||'מזון';
-  let cat='carb';if(fi>=5)cat='fiber';else if(f>=15)cat='fat';else if(p>=Math.max(c/2,f/2))cat='protein';
-  return {id:'gov-'+code,code,name,aliases:[name],p,c,f,fi,k,cat,max:800,all:r,source:'משרד הבריאות'};
+  let cat='carb';if((fi??0)>=5)cat='fiber';else if((f??0)>=15)cat='fat';else if((p??0)>=Math.max((c??0)/2,(f??0)/2))cat='protein';
+  return {id:'gov-'+code,code,name,aliases:[name],p,c,f,fi,k,cat,max:800,all:r,source:'משרד הבריאות',sourceCode:String(code)};
 }
 function govName(r){return r.shmmitzrach||r.english_name||''}
 function govScore(r,q){const n=normalize(govName(r)),x=normalize(q);if(n===x)return 1000;if(n.startsWith(x))return 700-x.length*.01;if(n.includes(x))return 500-x.length*.01;return 100-Math.min(99,levenshtein(n,x))}
@@ -442,222 +448,129 @@ function enteredFoods(){
   return ids.map(id=>DB.find(f=>f.id===id));
 }
 
-function defaultsForMissing(list){
-  const out=[...list];
-  const haveCat=new Set(out.map(f=>f.cat));
-  const defaults={protein:['chicken','egg','skyr'],carb:['rice','potato','oats'],fat:['tahini','oliveoil','almonds'],fiber:['lentils','broccoli','apple']};
-  Object.entries(defaults).forEach(([cat,ids])=>{
-    if(!haveCat.has(cat)) ids.forEach(id=>{const f=DB.find(x=>x.id===id);if(f&&!out.some(x=>x.id===id))out.push(f)});
-  });
+function currentNutritionProfile(){
+  return window.NutritionProfile?.migrate(localStorage)||{savedFoods:[]};
+}
+function savedFoodIds(){return (currentNutritionProfile().savedFoods||[]).map(f=>window.NutritionMeals?.foodIdentity(f)||f.id)}
+function isFoodSaved(food){return window.NutritionProfile?.isSaved(currentNutritionProfile(),food)||false}
+function toggleFoodSaved(food){
+  if(!window.NutritionProfile)return;
+  const next=window.NutritionProfile.toggleSavedFood(currentNutritionProfile(),food);
+  window.NutritionProfile.save(localStorage,next);
+  renderMenu();
+}
+function plannerGaps(targetDiagnostics,qualityDiagnostics){
+  const names={cal:'קלוריות',protein:'חלבון',carbs:'פחמימות',fat:'שומן',fiber:'סיבים'};const out=[];
+  (targetDiagnostics||[]).forEach(d=>{if(d.status==='low')out.push(`חסר ${names[d.key]}: ${Math.round(d.value)} מתוך ${Math.round(d.target)}`);else if(d.status==='unknown')out.push(`אין מספיק נתונים כדי לחשב ${names[d.key]}`)});
+  if((qualityDiagnostics||[]).some(x=>x.code==='insufficient-variety'))out.push('חסר גיוון כדי לבנות את כל הארוחות בלי לחזור על אותו מאכל.');
   return out;
 }
-
-function totalsFromAmounts(foods,amounts){
-  const t={cal:0,protein:0,carbs:0,fat:0,fiber:0};
-  foods.forEach((f,i)=>{
-    const q=(amounts[i]||0)/100;
-    t.cal+=f.k*q;t.protein+=f.p*q;t.carbs+=f.c*q;t.fat+=f.f*q;t.fiber+=f.fi*q;
-  });
-  return t;
+function refreshPlannerResult(items){
+  const planner=state.result.planner;
+  planner.items=window.NutritionMeals.mergeDuplicateFoods(items);
+  planner.meals=window.NutritionMeals.assignUniqueFoodsToMeals(planner.items,window.getNutritionMealCount?window.getNutritionMealCount():3);
+  planner.totals=window.NutritionPlanner.totals(planner.items);
+  planner.targetDiagnostics=window.NutritionPlanner.targetDiagnostics(planner.totals,state.targets);
+  planner.qualityDiagnostics=window.NutritionPlanner.qualityDiagnostics(planner.items,planner.meals,planner.totals,state.targets,!!qs('sportMode')?.checked,enteredFoods());
+  planner.gaps=plannerGaps(planner.targetDiagnostics,planner.qualityDiagnostics);
+  state.result={planner,foods:planner.items.map(x=>x.f),amounts:planner.items.map(x=>x.q),totals:planner.totals,qualityDiagnostics:planner.qualityDiagnostics,targetDiagnostics:planner.targetDiagnostics};
 }
-function loss(t,target){
-  const terms=[
-    ['cal',1.7],['protein',1.7],['carbs',1],['fat',1],['fiber',1.5]
-  ];
-  return terms.reduce((sum,[k,w])=>{
-    const goal=k==='protein'?target.protein:k==='carbs'?target.carbs:k==='fat'?target.fat:k==='fiber'?target.fiber:target.cal;
-    const d=(t[k]-goal)/Math.max(goal,1);
-    const over=(k==='cal'&&d>0)?1.7:1;
-    return sum+w*over*d*d;
-  },0);
+function currentNutritionProfile(){
+  return window.NutritionProfile?.migrate(localStorage)||{savedFoods:[]};
 }
-
-function optimize(foods,target){
-  let amounts=foods.map(()=>0);
-  let current=totalsFromAmounts(foods,amounts);
-  let currentLoss=loss(current,target);
-  for(let iter=0;iter<1800;iter++){
-    let best=null;
-    for(let i=0;i<foods.length;i++){
-      for(const step of [10,-10]){
-        const next=Math.max(0,Math.min(foods[i].max||500,amounts[i]+step));
-        if(next===amounts[i])continue;
-        const trial=[...amounts];trial[i]=next;
-        const tt=totalsFromAmounts(foods,trial);
-        const L=loss(tt,target);
-        if(!best||L<best.L)best={i,next,L,tt};
-      }
-    }
-    if(!best||best.L>=currentLoss-1e-8)break;
-    amounts[best.i]=best.next;current=best.tt;currentLoss=best.L;
-  }
-  amounts=amounts.map(a=>a<10?0:a);
-  current=totalsFromAmounts(foods,amounts);
-  return {foods,amounts,totals:current,score:loss(current,target)};
+function savedFoodIds(){return (currentNutritionProfile().savedFoods||[]).map(f=>window.NutritionMeals?.foodIdentity(f)||f.id)}
+function isFoodSaved(food){return window.NutritionProfile?.isSaved(currentNutritionProfile(),food)||false}
+function toggleFoodSaved(food){
+  if(!window.NutritionProfile)return;
+  const next=window.NutritionProfile.toggleSavedFood(currentNutritionProfile(),food);
+  window.NutritionProfile.save(localStorage,next);
+  renderMenu();
 }
-
-function issueList(res){
-  const t=state.targets, a=res.totals;
-  const issues=[];
-  if(a.cal>t.cal*1.10)issues.push(`הקלוריות גבוהות בכ-${Math.round(a.cal-t.cal)} קק"ל`);
-  if(a.cal<t.cal*.85)issues.push(`חסרות כ-${Math.round(t.cal-a.cal)} קלוריות`);
-  if(a.protein<t.protein*.85)issues.push(`חסרים כ-${Math.round(t.protein-a.protein)} גרם חלבון`);
-  if(a.fiber<t.fiber*.80)issues.push(`חסרים כ-${Math.round(t.fiber-a.fiber)} גרם סיבים`);
-  if(a.fat>t.fat*1.25)issues.push(`השומן גבוה משמעותית מהיעד`);
-  return issues;
+function plannerGaps(targetDiagnostics,qualityDiagnostics){
+  const names={cal:'קלוריות',protein:'חלבון',carbs:'פחמימות',fat:'שומן',fiber:'סיבים'};const out=[];
+  (targetDiagnostics||[]).forEach(d=>{if(d.status==='low')out.push(`חסר ${names[d.key]}: ${Math.round(d.value)} מתוך ${Math.round(d.target)}`);else if(d.status==='unknown')out.push(`אין מספיק נתונים כדי לחשב ${names[d.key]}`)});
+  if((qualityDiagnostics||[]).some(x=>x.code==='insufficient-variety'))out.push('חסר גיוון כדי לבנות את כל הארוחות בלי לחזור על אותו מאכל.');
+  return out;
 }
-
-function bestFiberSuggestions(excludedIds){
-  return DB.filter(f=>f.fi>2&&!excludedIds.includes(f.id))
-    .map(f=>({f,ratio:f.fi/Math.max(f.k,1)}))
-    .sort((a,b)=>b.ratio-a.ratio).slice(0,3).map(x=>x.f);
+function refreshPlannerResult(items){
+  const planner=state.result.planner;
+  planner.items=window.NutritionMeals.mergeDuplicateFoods(items);
+  planner.meals=window.NutritionMeals.assignUniqueFoodsToMeals(planner.items,window.getNutritionMealCount?window.getNutritionMealCount():3);
+  planner.totals=window.NutritionPlanner.totals(planner.items);
+  planner.targetDiagnostics=window.NutritionPlanner.targetDiagnostics(planner.totals,state.targets);
+  planner.qualityDiagnostics=window.NutritionPlanner.qualityDiagnostics(planner.items,planner.meals,planner.totals,state.targets,!!qs('sportMode')?.checked,enteredFoods());
+  planner.gaps=plannerGaps(planner.targetDiagnostics,planner.qualityDiagnostics);
+  state.result={planner,foods:planner.items.map(x=>x.f),amounts:planner.items.map(x=>x.q),totals:planner.totals,qualityDiagnostics:planner.qualityDiagnostics,targetDiagnostics:planner.targetDiagnostics};
 }
-
 function buildMenu(){
   if(!state.targets){calculateTargets(); if(!state.targets)return;}
   const entered=enteredFoods();
   const unknown=Object.values(state.foods).flat().filter(x=>!x.id);
-  if(state.mode==='strict' && entered.length===0){
-    alert('במצב "רק ממה שיש לי" צריך לכתוב לפחות מאכל אחד.');
-    return;
-  }
-  let allowed=entered;
-  if(state.mode==='auto') allowed=defaultsForMissing(entered);
-  let res=optimize(allowed,state.targets);
-
-  // במצב אוטומטי: אם נותר חוסר ברור, מרחיבים את מאגר האפשרויות מאחורי הקלעים.
-  if(state.mode==='auto' && issueList(res).length){
-    const expanded=[...allowed];
-    DB.forEach(f=>{
-      if(!expanded.some(x=>x.id===f.id)){
-        const useful=(f.fi>4||f.p>15||f.cat==='carb'||f.cat==='fat');
-        if(useful)expanded.push(f);
-      }
-    });
-    res=optimize(expanded,state.targets);
-  }
-  state.result=res;
-  renderMenu(unknown);
-  goStep(3);
+  if(state.mode==='strict' && entered.length===0){alert('במצב "רק ממה שיש לי" צריך לכתוב לפחות מאכל אחד.');return;}
+  const profile=currentNutritionProfile();
+  const saved=profile.savedFoods||[];
+  const savedLocal=saved.map(ref=>DB.find(f=>(window.NutritionMeals?.foodIdentity(f)||f.id)===(window.NutritionMeals?.foodIdentity(ref)||ref.id))).filter(Boolean);
+  const current=[...entered];
+  if(state.mode==='auto')savedLocal.forEach(f=>{if(!current.some(x=>x.id===f.id))current.push(f)});
+  const currentIds=new Set(current.map(f=>window.NutritionMeals?.foodIdentity(f)||f.id));
+  const fallback=DB.filter(f=>!currentIds.has(window.NutritionMeals?.foodIdentity(f)||f.id));
+  const planner=window.NutritionPlanner.planDay({foods:current,fallbackFoods:fallback,targets:state.targets,mealCount:window.getNutritionMealCount?window.getNutritionMealCount():3,mode:state.mode,savedFoodIds:saved.map(f=>window.NutritionMeals?.foodIdentity(f)||f.id),sportMode:!!qs('sportMode')?.checked});
+  state.result={planner,foods:planner.items.map(x=>x.f),amounts:planner.items.map(x=>x.q),totals:planner.totals,qualityDiagnostics:planner.qualityDiagnostics,targetDiagnostics:planner.targetDiagnostics};
+  renderMenu(unknown);goStep(3);
 }
 
 function renderMenu(unknown=[]){
-  const res=state.result, t=state.targets;
-  qs('menuIntro').textContent=state.mode==='strict'
-    ? 'נבנה רק מהמאכלים שכתבת. שום מאכל חדש לא נכנס ללא אישור.'
-    : 'המאכלים שכתבת קיבלו עדיפות, והמערכת השלימה לפי הצורך.';
-
-  const chosen=res.foods.map((f,i)=>({f,q:res.amounts[i]})).filter(x=>x.q>0);
-  const mealCount=window.getNutritionMealCount?window.getNutritionMealCount():3;
-  const meals=window.NutritionMeals?window.NutritionMeals.distributeItems(chosen,mealCount):[{name:'ארוחה 1',items:chosen}];
-
+  const res=state.result;if(!res?.planner)return;
+  qs('menuIntro').textContent=state.mode==='strict'?'נבנה רק מהמאכלים שכתבת, בלי כפילויות ובלי תוספות שקטות.':'המערכת מעדיפה מאכלים ששמרת, גיוון ומנות סבירות לפני הגדלה קיצונית של מאכל אחד.';
+  const meals=res.planner.meals;
   const wrap=qs('meals');wrap.innerHTML='';
-  meals.forEach((m,mi)=>{
-    if(!m.items.length)return;
-    const card=document.createElement('div');card.className='meal';
-    card.innerHTML=`<div class="mealhead"><h3>${m.name}</h3><button class="mini" onclick="shuffleMeal(${mi})">הצע ארוחה אחרת</button></div>`;
+  meals.forEach(m=>{
+    const card=document.createElement('div');card.className='meal';card.innerHTML=`<div class="mealhead"><h3>${m.name}</h3><span class="muted">${Math.round(window.NutritionMeals.mealCalories(m))} קק״ל</span></div>`;
+    if(!m.items.length){card.innerHTML+='<div class="note warn">אין כרגע מאכל ייחודי נוסף לארוחה הזאת. עדיף להוסיף אפשרות מזון מאשר לשכפל את אותו מאכל.</div>'}
     m.items.forEach(({f,q})=>{
       const row=document.createElement('div');row.className='foodrow';
-      row.innerHTML=`<div><strong>${f.name}</strong><div class="muted">${humanQuantity(f,q)}</div>${f.source?`<span class="source-tag">${f.source}</span>`:''}</div><button class="mini">ערכים</button><button class="mini">החלף</button><button class="mini">כמות</button>`;
-      const btns=row.querySelectorAll('button');
-      btns[0].onclick=()=>showFoodValues(f,q);
-      btns[1].onclick=()=>replaceFood(f.id);
-      btns[2].onclick=()=>changeQty(f.id);
-      card.appendChild(row);
-    });
-    wrap.appendChild(card);
+      const star=isFoodSaved(f)?'★ שמור בפרופיל':'☆ שמור בפרופיל';
+      row.innerHTML=`<div><strong>${f.name}</strong><div class="muted">${humanQuantity(f,q)} · ${Math.round(window.NutritionMeals.caloriesForQuantity(f,q))} קק״ל</div>${f.source?`<span class="source-tag">${f.source}</span>`:''}</div><button class="mini">ערכים</button><button class="mini">${star}</button><button class="mini">כמות</button>`;
+      const btns=row.querySelectorAll('button');btns[0].onclick=()=>showFoodValues(f,q);btns[1].onclick=()=>toggleFoodSaved(f);btns[2].onclick=()=>changeQty(f.id);card.appendChild(row);
+    });wrap.appendChild(card);
   });
-
-  const issues=issueList(res);
   const imb=qs('imbalance');imb.innerHTML='';
-  if(issues.length){
-    const box=document.createElement('div');box.className='note warn';
-    box.innerHTML=`<strong>זיהיתי חוסר איזון:</strong><br>${issues.join(' · ')}`;
-    imb.appendChild(box);
-    if(state.mode==='strict'){
-      const ids=enteredFoods().map(f=>f.id);
-      const sug=bestFiberSuggestions(ids);
-      const add=document.createElement('div');add.className='note info';
-      add.innerHTML=`<strong>אפשר לתקן בלי לכפות מאכל חדש.</strong><br>לדוגמה, אם הבעיה היא סיבים מול קלוריות, אפשר לשקול: ${sug.map(f=>f.name).join(' / ')}.<br><button class="mini" style="margin-top:8px">הצע לי תיקון ממוקד</button>`;
-      add.querySelector('button').onclick=()=>showFocusedFix(sug);
-      imb.appendChild(add);
-    }
-  }else{
-    imb.innerHTML='<div class="note success"><strong>איזון טוב:</strong> התפריט קרוב ליעדים שהוגדרו.</div>';
-  }
-  if(unknown.length){
-    imb.innerHTML+=`<div class="note warn">לא הצלחתי לזהות: ${unknown.map(x=>x.raw).join(', ')}. הם לא נכנסו לחישוב.</div>`;
-  }
-
+  if(res.planner.gaps.length)imb.innerHTML=`<div class="note warn"><strong>מה עדיין חסר:</strong><br>${res.planner.gaps.join(' · ')}</div>`;else imb.innerHTML='<div class="note success"><strong>התאמה טובה:</strong> התפריט עומד בצורה סבירה ביעדים ובמגבלות המנות.</div>';
+  if(unknown.length)imb.innerHTML+=`<div class="note warn">לא הצלחתי לזהות: ${unknown.map(x=>x.raw).join(', ')}. הם לא נכנסו לחישוב.</div>`;
+  const quality=qs('quality');if(quality)quality.innerHTML=(res.planner.qualityDiagnostics||[]).map(x=>`<div class="note ${x.status==='good'?'success':'warn'}">${x.status==='good'?'✓':'•'} ${x.message}</div>`).join('');
   renderBalance();
 }
 
 function renderBalance(){
   const a=state.result.totals,t=state.targets;
-  const rows=[
-    ['קלוריות','cal',t.cal,''],
-    ['חלבון','protein',t.protein,' ג׳'],
-    ['פחמימות','carbs',t.carbs,' ג׳'],
-    ['שומן','fat',t.fat,' ג׳'],
-    ['סיבים','fiber',t.fiber,' ג׳']
-  ];
-  qs('balance').innerHTML=rows.map(([label,k,goal,u])=>{
-    const val=Math.round(a[k]);const pct=Math.min(130,Math.round(val/goal*100));
-    return `<div class="barbox"><strong>${label}</strong><div>${val}${u} / ${Math.round(goal)}${u}</div><div class="barline"><div class="barfill" style="width:${Math.min(100,pct)}%"></div></div><small>${pct}%</small></div>`;
-  }).join('');
+  const rows=[['קלוריות','cal',t.cal,''],['חלבון','protein',t.protein,' ג׳'],['פחמימות','carbs',t.carbs,' ג׳'],['שומן','fat',t.fat,' ג׳'],['סיבים','fiber',t.fiber,' ג׳']];
+  qs('balance').innerHTML=rows.map(([label,k,goal,u])=>{const raw=a[k];if(raw===null||raw===undefined)return `<div class="barbox"><strong>${label}</strong><div>אין נתון / ${Math.round(goal)}${u}</div><small>לא חושב כאפס</small></div>`;const val=Math.round(raw),pct=Math.min(130,Math.round(val/goal*100));return `<div class="barbox"><strong>${label}</strong><div>${val}${u} / ${Math.round(goal)}${u}</div><div class="barline"><div class="barfill" style="width:${Math.min(100,pct)}%"></div></div><small>${pct}%</small></div>`}).join('');
 }
 
 function replaceFood(id){
-  const res=state.result;
-  const idx=res.foods.findIndex(f=>f.id===id); if(idx<0)return;
-  const old=res.foods[idx];
-  const allowed=state.mode==='strict'?enteredFoods():DB;
-  const candidates=allowed.filter(f=>f.id!==id&&(f.cat===old.cat||Math.abs(f.p-old.p)<8));
-  if(!candidates.length){alert('אין כרגע חלופה מותרת למאכל הזה.');return;}
-  const next=candidates[Math.floor(Math.random()*candidates.length)];
-  const newFoods=[...res.foods];newFoods[idx]=next;
-  state.result=optimize(newFoods,state.targets);
-  renderMenu();
+  const planner=state.result?.planner;if(!planner)return;
+  const idx=planner.items.findIndex(x=>x.f.id===id);if(idx<0)return;
+  const old=planner.items[idx].f,allowed=state.mode==='strict'?enteredFoods():DB;
+  const used=new Set(planner.items.map(x=>window.NutritionMeals.foodIdentity(x.f)));
+  const candidates=allowed.filter(f=>f.id!==id&&!used.has(window.NutritionMeals.foodIdentity(f))&&(f.cat===old.cat||Math.abs((f.p||0)-(old.p||0))<8));
+  if(!candidates.length){alert('אין כרגע חלופה ייחודית מותרת למאכל הזה.');return;}
+  const next=candidates[0],items=planner.items.map((x,i)=>i===idx?{f:next,q:Math.min(x.q,window.NutritionMeals.reasonableDailyMax(next))}:x);refreshPlannerResult(items);renderMenu();
 }
 function changeQty(id){
-  const res=state.result,idx=res.foods.findIndex(f=>f.id===id);if(idx<0)return;
-  const current=Math.round(res.amounts[idx]);
-  const val=prompt(`כמות חדשה בגרמים עבור ${res.foods[idx].name}`,current);
-  if(val===null)return;
-  const n=Math.max(0,Math.min(res.foods[idx].max||1000,+val||0));
-  res.amounts[idx]=n;res.totals=totalsFromAmounts(res.foods,res.amounts);state.result=res;renderMenu();
+  const planner=state.result?.planner;if(!planner)return;const idx=planner.items.findIndex(x=>x.f.id===id);if(idx<0)return;
+  const item=planner.items[idx],val=prompt(`כמות חדשה בגרמים עבור ${item.f.name}`,Math.round(item.q));if(val===null)return;
+  const cap=window.NutritionMeals.reasonableDailyMax(item.f),n=Math.max(0,Math.min(cap,+val||0));const items=planner.items.map((x,i)=>i===idx?{...x,q:n}:x).filter(x=>x.q>0);refreshPlannerResult(items);renderMenu();
 }
 function shuffleMeal(){
   // בנייה מחדש מאותה רשימת מזונות: שומרת על כללי המצב אך מחפשת חלוקה אחרת.
   rebuild();
 }
 function rebuild(){buildMenu()}
-function showFocusedFix(suggestions){
-  const t=state.targets,a=state.result.totals;
-  const fiberGap=Math.max(0,t.fiber-a.fiber);
-  let text='הבעיה העיקרית כרגע היא שלא ניתן לסגור את כל היעדים באמצעות הרשימה הקיימת בלי לפגוע ביעד אחר.';
-  if(fiberGap>1)text=`חסרים בערך ${Math.round(fiberGap)} גרם סיבים. במקום להוסיף עוד מהמאכלים הקיימים ולעלות יותר מדי בקלוריות, עדיף להחליף או להוסיף מקור עם יחס סיבים/קלוריות טוב יותר.`;
-  alert(text+'\n\nאפשרויות לדוגמה: '+suggestions.map(f=>f.name).join(', '));
-}
 
-(function loadProfile(){
-  try{
-    const p=JSON.parse(localStorage.getItem('nutritionProfile')||'null');
-    if(!p)return;
-    if(p.age)qs('age').value=p.age;if(p.w)qs('weight').value=p.w;if(p.h)qs('height').value=p.h;if(p.sex)qs('sex').value=p.sex;
-    if(p.activity){
-      state.activity=p.activity;
-      document.querySelectorAll('#activityChoices .choice').forEach(b=>b.classList.toggle('selected',+b.dataset.value===p.activity));
-    }
-    if(p.goal){
-      state.goal=p.goal;
-      document.querySelectorAll('#goalChoices .choice').forEach(b=>b.classList.toggle('selected',b.dataset.value===p.goal));
-    }
-  }catch(e){}
-})();
 </script>
-<script src="nutrition-meals.js?v=3"></script>
-<script src="nutrition-profile.js?v=1"></script>
+<script src="nutrition-meals.js?v=4"></script>
+<script src="nutrition-planner.js?v=1"></script>
+<script src="nutrition-profile.js?v=2"></script>
 <script src="nutrition-profile-meals.js?v=2"></script>
 <script src="nutrition-safety.js?v=1"></script>
 </body>
