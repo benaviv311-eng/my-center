@@ -1,0 +1,53 @@
+name: Fix nutrition quantity values
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-nutrition-values.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch builder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('nutrition-builder.html')
+          s=p.read_text(encoding='utf-8')
+          old="""function showFoodValues(food){
+  const data=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
+  const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
+  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class=\"nutrient-item\"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
+  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class=\"modal-card\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:center\"><div><h2 style=\"margin:0\">${food.name}</h2><div class=\"muted\">ערכים ל־100 גרם · ${food.source||'מאגר פנימי'}</div></div><button class=\"mini\">✕</button></div><div class=\"nutrient-grid\" style=\"margin-top:14px\">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
+}"""
+          new="""function showFoodValues(food,grams=100){
+  const amount=Number(grams)>0?Number(grams):100;
+  const base=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
+  const data=window.NutritionMeals?.nutrientsForQuantity?window.NutritionMeals.nutrientsForQuantity(base,amount):base;
+  const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
+  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class=\"nutrient-item\"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
+  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class=\"modal-card\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:center\"><div><h2 style=\"margin:0\">${food.name}</h2><div class=\"muted\">ערכים ל־${Math.round(amount)} גרם · ${food.source||'מאגר פנימי'}</div></div><button class=\"mini\">✕</button></div><div class=\"nutrient-grid\" style=\"margin-top:14px\">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
+}"""
+          if old not in s:
+              raise SystemExit('showFoodValues block not found')
+          s=s.replace(old,new,1)
+          if "btns[0].onclick=()=>showFoodValues(f);" not in s:
+              raise SystemExit('values button handler not found')
+          s=s.replace("btns[0].onclick=()=>showFoodValues(f);","btns[0].onclick=()=>showFoodValues(f,q);",1)
+          s=s.replace('<button class="btn primary" id="buildBtn">בנה תפריט</button>','<button class="btn primary" id="buildBtn">בנה לי תפריט</button>',1)
+          s=s.replace('nutrition-meals.js?v=2','nutrition-meals.js?v=3')
+          s=s.replace('nutrition-profile-meals.js?v=1','nutrition-profile-meals.js?v=2')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit builder patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nutrition-builder.html
+          git diff --cached --quiet || git commit -m "Use actual grams in nutrition values and refresh scripts"
+          git push
