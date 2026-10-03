@@ -6,6 +6,7 @@ on:
       - 'tests/nutrition-meals.test.mjs'
       - 'tests/nutrition-profile.test.mjs'
       - 'tests/nutrition-planner.test.mjs'
+      - 'tests/nutrition-quality.test.mjs'
       - 'nutrition-meals.js'
       - 'nutrition-safety.js'
       - 'nutrition-profile.js'
@@ -32,3 +33,4 @@ jobs:
       - run: node --test tests/nutrition-meals.test.mjs
       - run: if [ -f tests/nutrition-profile.test.mjs ]; then node --test tests/nutrition-profile.test.mjs; fi
       - run: if [ -f tests/nutrition-planner.test.mjs ]; then node --test tests/nutrition-planner.test.mjs; fi
+      - run: if [ -f tests/nutrition-quality.test.mjs ]; then node --test tests/nutrition-quality.test.mjs; fi
