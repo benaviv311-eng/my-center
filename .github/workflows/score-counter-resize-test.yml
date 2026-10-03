@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify resizable score cards and auto arrange reset
+      - name: Verify resizable score cards and adaptive text scaling
         shell: bash
         run: |
           node <<'NODE'
@@ -30,6 +30,9 @@ jobs:
             'team-score-card-sizes-v1',
             'MIN_SCALE',
             'MAX_SCALE',
+            'TEXT_FLOOR_SCALE',
+            'score-card-content',
+            '--score-content-compensation',
             'score-resize-handle',
             'layoutSignature',
             'normalizeCards',
@@ -40,12 +43,14 @@ jobs:
           const missing=required.filter(x=>!js.includes(x));
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
           if(!drag.includes('data-score-scale')) missing.push('drag/resize transform composition');
-          if(!css.includes('.score-resize-handle')) missing.push('resize handle css');
+          if(!css.includes('.score-card-content')) missing.push('adaptive content css');
+          if(!css.includes('.score-resize-handle::after')) missing.push('diagonal corner affordance');
+          if(js.includes('⤢')) missing.push('persistent resize icon still present');
           if(missing.length){
             console.error('Missing resize behavior markers:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Resize and auto-arrange markers present.');
+          console.log('Adaptive resize markers present.');
           NODE
           node --check score-counter/score-resize.js
           node --check score-counter/score-drag.js
