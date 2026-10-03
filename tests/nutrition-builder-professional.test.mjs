@@ -26,6 +26,8 @@ test('legacy macro optimizer implementation is removed from the builder',()=>{
   assert.doesNotMatch(s,/function defaultsForMissing\(/);
   assert.doesNotMatch(s,/function issueList\(/);
   assert.doesNotMatch(s,/function loss\(/);
+  assert.doesNotMatch(s,/function totalsFromAmounts\(/);
+  assert.doesNotMatch(s,/function showFocusedFix\(/);
 });
 
 test('menu exposes save-to-profile action and quality diagnostics',()=>{
