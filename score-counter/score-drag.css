@@ -1,0 +1,20 @@
+.card[data-score-drag-ready="1"]{
+  will-change:transform;
+  cursor:grab;
+  -webkit-touch-callout:none;
+  transition:box-shadow .15s ease,outline-color .15s ease;
+}
+.card[data-score-drag-ready="1"].score-card-dragging{
+  cursor:grabbing!important;
+  z-index:80!important;
+  outline:3px solid rgba(255,255,255,.58);
+  outline-offset:3px;
+  box-shadow:0 24px 64px rgba(0,0,0,.42)!important;
+  user-select:none;
+  -webkit-user-select:none;
+}
+body.score-card-dragging{overscroll-behavior:none}
+#scoreDragReset{white-space:nowrap}
+@media (hover:hover){
+  .card[data-score-drag-ready="1"]:hover{outline:1px solid rgba(255,255,255,.12);outline-offset:2px}
+}
