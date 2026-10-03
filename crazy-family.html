@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.18</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.19</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -54,6 +54,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
           <button class="abtn skill" id="jump">קפיצה<br>Space</button>
           <button class="abtn skill guard" id="crouch">התכופפות<br>C</button>
           <button class="abtn skill" id="roll">גלגול<br>X</button>
+          <button class="abtn skill guard" id="hang">היתלות<br>D</button>
         </div>
       </div>
     </div>
@@ -104,7 +105,7 @@ Object.entries(artSources).forEach(([k,src])=>{
   art[k]=img;
 });
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
-const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,crouching:false,crouchingTouch:false,rollStartedAt:0,rollUntil:0,rollCooldownUntil:0,rollDX:0,rollDY:1,inventory:[],capacity:3,selected:0,dir:'down',moving:false};
+const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,crouching:false,crouchingTouch:false,rollStartedAt:0,rollUntil:0,rollCooldownUntil:0,rollDX:0,rollDY:1,hanging:false,hangAnchor:null,inventory:[],capacity:3,selected:0,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
 
 // Ability bank only. Stage 1 has not been configured yet.
@@ -122,20 +123,20 @@ const dadAbilityCatalog={
  chaseSong:{id:'chaseSong',name:'רדיפה תוך כדי שירה',cooldown:0,kind:'movement'},
  contact:{id:'contact',name:'מגע באבא',cooldown:0,kind:'contact'}
 };
-const libiDefenseCatalog={jump:{id:'jump',name:'קפיצה'},crouch:{id:'crouch',name:'התכופפות'},roll:{id:'roll',name:'גלגול'}};
+const libiDefenseCatalog={jump:{id:'jump',name:'קפיצה'},crouch:{id:'crouch',name:'התכופפות'},roll:{id:'roll',name:'גלגול'},hang:{id:'hang',name:'היתלות'}};
 let activeDadAbilities=new Set();
 let dadAttacks=[],dadAbilityReady={};
 function configureDadAbilities(ids=[]){activeDadAbilities=new Set(ids.filter(id=>dadAbilityCatalog[id]));dadAbilityReady={};dadAttacks=[]}
 function renderLives(){if(livesEl)livesEl.textContent='❤️'.repeat(player.lives)+'🖤'.repeat(Math.max(0,player.maxLives-player.lives))}
 function damageLibi(amount=1,source='פגיעה'){
  const now=performance.now();if(player.lives<=0||now<player.invulnerableUntil)return false;
- player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1700;
+ player.hanging=false;player.hangAnchor=null;player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1700;
  const dx=player.x-dad.x,dy=player.y-dad.y,d=Math.hypot(dx,dy)||1;player.x=clamp(player.x+dx/d*42,28,932);player.y=clamp(player.y+dy/d*42,28,572);
  renderLives();msg(player.lives?('💔 '+source+' — נשארו '+player.lives+' לבבות'):'💔 לליבי נגמרו הלבבות — עדיין לא הגדרנו מה קורה מכאן');return true
 }
 function healLibi(amount=1){const before=player.lives;player.lives=Math.min(player.maxLives,player.lives+amount);renderLives();return player.lives>before}
-function triggerJump(){const now=performance.now();if(player.lives<=0||now<player.jumpCooldownUntil||now<player.rollUntil)return false;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;return true}
-function triggerRoll(){const now=performance.now();if(player.lives<=0||now<player.rollCooldownUntil||player.crouching||now<player.jumpUntil)return false;const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},v=dirs[player.dir]||[0,1];player.rollDX=v[0];player.rollDY=v[1];player.rollStartedAt=now;player.rollUntil=now+360;player.rollCooldownUntil=now+900;return true}
+function triggerJump(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.jumpCooldownUntil||now<player.rollUntil)return false;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;return true}
+function triggerRoll(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.rollCooldownUntil||player.crouching||now<player.jumpUntil)return false;const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},v=dirs[player.dir]||[0,1];player.rollDX=v[0];player.rollDY=v[1];player.rollStartedAt=now;player.rollUntil=now+360;player.rollCooldownUntil=now+900;return true}
 function aimedAngle(){return Math.atan2(player.y-dad.y,player.x-dad.x)}
 function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'mid',born:performance.now(),life:5200,hit:false})}
 function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scene!==dad.scene)return false;const now=performance.now(),a=aimedAngle();
@@ -197,6 +198,22 @@ const items={
  floor1:[],floor2:[],roof:[]
 };
 worldOrder.forEach(s=>{items[s].forEach(i=>i.taken=false)});
+const hangAnchors={
+ ground:[{x:180,y:84},{x:645,y:79},{x:205,y:404},{x:850,y:69}],
+ floor1:[{x:165,y:94},{x:705,y:89},{x:155,y:389}],
+ floor2:[{x:185,y:84},{x:715,y:84},{x:185,y:389}],
+ basement:[{x:210,y:99},{x:665,y:104},{x:690,y:369}],
+ yard:[{x:185,y:364},{x:765,y:114}],
+ roof:[{x:175,y:364}]
+};
+function nearestHangAnchor(maxDist=54){let best=null,bestD=maxDist;for(const a of hangAnchors[player.scene]||[]){const d=Math.hypot(player.x-a.x,player.y-a.y);if(d<bestD){best=a;bestD=d}}return best}
+function toggleHang(){
+ if(player.lives<=0)return false;
+ if(player.hanging){player.hanging=false;player.hangAnchor=null;msg('ליבי שחררה את הקצה');return true}
+ const a=nearestHangAnchor();if(!a){msg('אין כאן קצה להיתלות בו');return false}
+ const now=performance.now();if(now<player.rollUntil||now<player.jumpUntil||player.crouching)return false;
+ player.hanging=true;player.hangAnchor=a;player.x=a.x;player.y=a.y+34;player.moving=false;player.crouching=false;msg('ליבי נתפסה בקצה');return true
+}
 
 function msg(t){toast.textContent=t;toast.classList.add('show');clearTimeout(msgTimer);msgTimer=setTimeout(()=>toast.classList.remove('show'),1700)}
 function roomAt(s,x,y){return scenes[s].rooms.find(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h)||scenes[s].rooms[0]}
@@ -218,13 +235,13 @@ function collect(){
 function findExit(){
  nearExit=scenes[player.scene].exits.find(e=>player.x>e.x&&player.x<e.x+e.w&&player.y>e.y&&player.y<e.y+e.h)||null;
 }
-function transition(){if(!nearExit){msg('אין כאן מעבר');return}const e=nearExit;player.scene=e.to;player.x=e.spawn.x;player.y=e.spawn.y;nearExit=null;msg(scenes[player.scene].name);renderFloors()}
+function transition(){if(!nearExit){msg('אין כאן מעבר');return}const e=nearExit;player.hanging=false;player.hangAnchor=null;player.scene=e.to;player.x=e.spawn.x;player.y=e.spawn.y;nearExit=null;msg(scenes[player.scene].name);renderFloors()}
 function update(dt){
- let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
+ let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
  if(performance.now()<dizzyUntil){dx*=-1;dy*=-1;}
  const now=performance.now(),rolling=now<player.rollUntil;
- player.crouching=!rolling&&!!(keys.c||player.crouchingTouch);
- let sprint=false;if(rolling){player.moving=true;player.x=clamp(player.x+player.rollDX*440*dt,28,932);player.y=clamp(player.y+player.rollDY*440*dt,28,572);walk+=dt*14}else{sprint=(keys.Shift||runTouch)&&!player.crouching;move(dx,dy,dt,sprint)}if(!sprint||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
+ player.crouching=!player.hanging&&!rolling&&!!(keys.c||player.crouchingTouch);
+ let sprint=false;if(player.hanging){player.moving=false;if(player.hangAnchor){player.x=player.hangAnchor.x;player.y=player.hangAnchor.y+34}}else if(rolling){player.moving=true;player.x=clamp(player.x+player.rollDX*440*dt,28,932);player.y=clamp(player.y+player.rollDY*440*dt,28,572);walk+=dt*14}else{sprint=(keys.Shift||runTouch)&&!player.crouching;move(dx,dy,dt,sprint)}if(!sprint||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
  updateDad(dt);
  updateDadAttackSystem(dt);
  collect();findExit();
@@ -498,10 +515,12 @@ function exits(){
 function pickups(){
  for(const p of items[player.scene])if(!p.taken){ctx.save();ctx.shadowColor='#ffe36b';ctx.shadowBlur=18;ctx.fillStyle='rgba(255,255,255,.92)';ctx.beginPath();ctx.arc(p.x,p.y,24,0,Math.PI*2);ctx.fill();ctx.font='30px Arial';ctx.textAlign='center';ctx.fillText(p.icon,p.x,p.y+10);ctx.restore()}
 }
+function drawHangHint(){const a=player.hanging?player.hangAnchor:nearestHangAnchor(82);if(!a)return;ctx.save();ctx.strokeStyle=player.hanging?'#ffe169':'rgba(255,225,105,.62)';ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(a.x-22,a.y);ctx.lineTo(a.x+22,a.y);ctx.stroke();ctx.restore()}
 function libi(){
  const now=performance.now(),jumping=now<player.jumpUntil,rolling=now<player.rollUntil,jumpP=jumping?Math.max(0,Math.min(1,(now-player.jumpStartedAt)/Math.max(1,player.jumpUntil-player.jumpStartedAt))):0,lift=jumping?Math.sin(jumpP*Math.PI)*18:0;
  const bob=player.moving?Math.sin(walk)*2:0;ctx.save();ctx.translate(player.x,player.y+bob-lift);if(rolling){const rp=Math.max(0,Math.min(1,(now-player.rollStartedAt)/360));ctx.rotate(rp*Math.PI*2*(player.rollDX<0?-1:1))}if(player.crouching)ctx.scale(1,.78);ctx.globalAlpha=1;if(player.invulnerableUntil>now&&Math.floor(now/90)%2===0)ctx.globalAlpha*=.35;
- ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,19,17,7,0,0,Math.PI*2);ctx.fill();
+ if(!player.hanging){ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,19,17,7,0,0,Math.PI*2);ctx.fill()}
+ if(player.hanging){ctx.strokeStyle='#efc1a1';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-8,-25);ctx.lineTo(-14,-39);ctx.moveTo(8,-25);ctx.lineTo(14,-39);ctx.stroke();ctx.fillStyle='#efc1a1';ctx.beginPath();ctx.arc(-14,-40,4,0,Math.PI*2);ctx.arc(14,-40,4,0,Math.PI*2);ctx.fill()}
  ctx.fillStyle='#f49bb0';ctx.fillRect(-11,-2,22,21);ctx.fillStyle='#efc1a1';ctx.beginPath();ctx.arc(0,-16,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4b342f';ctx.beginPath();ctx.arc(0,-21,14,Math.PI,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(10,-27,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-4,-17,3,3);ctx.fillRect(3,-17,3,3);ctx.fillStyle='#473538';ctx.fillRect(-3,-16,2,2);ctx.fillRect(4,-16,2,2);ctx.restore()
 }
 function draw(){
@@ -515,19 +534,20 @@ function draw(){
  }else{
    drawBase(player.scene);furniture(player.scene);
  }
- exits();pickups();drawDad();drawDadAttacks();libi();drawDizzyFX();
+ exits();pickups();drawDad();drawDadAttacks();drawHangHint();libi();drawDizzyFX();
 }
 function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><small style="font-size:10px;color:#756a74">'+((it.id==='headphones'||it.id==='radio')?'בחר ולחץ חפץ':'')+'</small><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='x'&&!e.repeat)triggerRoll();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='x'&&!e.repeat)triggerRoll();if(e.key.toLowerCase()==='d'&&!e.repeat)toggleHang();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
 document.getElementById('jump').onclick=triggerJump;
 document.getElementById('roll').onclick=triggerRoll;
+document.getElementById('hang').onclick=toggleHang;
 const crouchBtn=document.getElementById('crouch');crouchBtn.onpointerdown=e=>{e.preventDefault();player.crouchingTouch=true;crouchBtn.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>crouchBtn.addEventListener(ev,e=>{e.preventDefault();player.crouchingTouch=false;crouchBtn.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
