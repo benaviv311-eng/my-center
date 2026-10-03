@@ -1,0 +1,50 @@
+name: Apply nutrition meal count
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-nutrition-meal-count.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Patch nutrition builder
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('nutrition-builder.html')
+          s=p.read_text(encoding='utf-8')
+
+          profile='<script src="nutrition-profile.js?v=1"></script>'
+          scripts='<script src="nutrition-meals.js?v=1"></script>\n<script src="nutrition-profile.js?v=1"></script>\n<script src="nutrition-profile-meals.js?v=1"></script>'
+          if 'nutrition-profile-meals.js' not in s:
+              assert profile in s, 'profile script tag not found'
+              s=s.replace(profile,scripts,1)
+
+          pattern=re.compile(r"  const chosen=res\.foods\.map\(\(f,i\)=>\(\{f,q:res\.amounts\[i\]\}\)\)\.filter\(x=>x\.q>0\);\n  const meals=\[.*?\n\n  const wrap=qs\('meals'\);wrap\.innerHTML='';\n  meals\.forEach",re.S)
+          repl="""  const chosen=res.foods.map((f,i)=>({f,q:res.amounts[i]})).filter(x=>x.q>0);\n  const mealCount=window.getNutritionMealCount?window.getNutritionMealCount():3;\n  const meals=window.NutritionMeals?window.NutritionMeals.distributeItems(chosen,mealCount):[{name:'ארוחה 1',items:chosen}];\n\n  const wrap=qs('meals');wrap.innerHTML='';\n  meals.forEach"""
+          s2,n=pattern.subn(repl,s,count=1)
+          if n==0 and 'NutritionMeals.distributeItems(chosen,mealCount)' not in s:
+              raise SystemExit('meal rendering block not found')
+          s=s2 if n else s
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -q 'nutrition-meals.js?v=1' nutrition-builder.html
+          grep -q 'nutrition-profile-meals.js?v=1' nutrition-builder.html
+          grep -q 'NutritionMeals.distributeItems(chosen,mealCount)' nutrition-builder.html
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add nutrition-builder.html
+          git commit -m "Enable configurable nutrition meal count"
+          git push
