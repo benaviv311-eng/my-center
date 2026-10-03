@@ -13,65 +13,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify content-fit resize without runaway width or height
+      - name: Verify professional one-handle resize with presets
         shell: bash
         run: |
           node <<'NODE'
           const fs=require('fs');
           const index=fs.readFileSync('score-counter/index.html','utf8');
-          const js=fs.readFileSync('score-counter/score-resize.js','utf8');
+          const resize=fs.readFileSync('score-counter/score-resize.js','utf8');
+          const drag=fs.readFileSync('score-counter/score-drag.js','utf8');
           const css=fs.readFileSync('score-counter/score-resize.css','utf8');
           const missing=[];
 
-          const requiredJs=[
-            'measureContentFloor',
-            'contentFloor.width',
-            'Math.max(contentFloor.width',
-            'horizontalChrome',
-            'intrinsicControlsWidth',
-            'controls.getBoundingClientRect()',
-            "card.style.setProperty('--score-content-min-width'",
-            "card.style.removeProperty('height')",
-            "card.querySelector('.score-controls')",
-            "controls.querySelector('.score-btn.plus')",
-            "controls.querySelector('.score-btn.minus')",
-            "controls.querySelector('.score-btn.mega')",
-            'RESIZE_CORNERS',
+          const requiredResize=[
+            "const RESIZE_CORNER='bottom-left'",
+            'const PRESET_SCALES=[0.7,0.85,1,1.2,1.4]',
+            'function applyScale(card,id,scale)',
+            'function createPresetMenu(card,id,handle)',
+            'data-score-preset',
+            "translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('",
             'pointerdown','pointermove','pointerup'
           ];
-          for(const marker of requiredJs){if(!js.includes(marker)) missing.push('js:'+marker);}
+          for(const marker of requiredResize){if(!resize.includes(marker)) missing.push('resize:'+marker);}
 
           const requiredCss=[
-            '.score-controls-composed',
-            'grid-template-areas:',
-            '"minus plus"',
-            '"mega mega"',
-            'grid-area:plus',
-            'grid-area:minus',
-            'grid-area:mega',
-            'min-width:var(--score-content-min-width',
-            '.card[data-score-resize-ready="1"] .small-actions',
-            'flex-wrap:wrap!important',
-            '.score-resize-handle[data-corner="top-left"]',
-            '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
-            '.score-resize-handle[data-corner="bottom-right"]'
+            '.score-size-menu',
+            '.score-size-option',
+            '.score-size-menu.open'
           ];
           for(const marker of requiredCss){if(!css.includes(marker)) missing.push('css:'+marker);}
 
-          if(js.includes("card.style.width='max-content'")) missing.push('js:whole-card max-content measurement remains');
-          if(css.includes('.card.score-measuring-content-floor{\n  width:max-content')) missing.push('css:whole-card max-content measurement remains');
-          if(js.includes('const MIN_CARD_WIDTH=150')) missing.push('js:fixed 150px minimum remains');
-          if(js.includes('Math.round(base.height*next)')) missing.push('js:scaled base height remains');
-          if(js.includes('targetHeight=')) missing.push('js:fixed target height remains');
-          if(js.includes('--score-ui-scale')) missing.push('js:old ui scaling remains');
-          if(css.includes('transform:scale(var(--score-ui-scale,1))')) missing.push('css:old content scaling remains');
+          if(!drag.includes("scale('+scale.toFixed(3)+')")) missing.push('drag:translate and scale must be composed');
+          if(resize.includes('composeScoreControls')) missing.push('resize:must not rearrange original card controls');
+          if(resize.includes('score-controls-composed')) missing.push('resize:must not depend on composed controls');
+          if(resize.includes("card.style.width=")) missing.push('resize:must not rewrite card width');
+          if(resize.includes("card.style.height=")) missing.push('resize:must not rewrite card height');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
 
           if(missing.length){
-            console.error('Missing safe content-fit resize behavior:',missing.join(', '));
+            console.error('Missing professional resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Safe content-fit resize markers present.');
+          console.log('Professional resize model markers present.');
           NODE
           node --check score-counter/score-resize.js
+          node --check score-counter/score-drag.js
