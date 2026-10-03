@@ -1,9 +1,10 @@
 (function(){
   const SIZE_STORAGE_KEY='team-score-card-sizes-v1';
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
-  const MIN_SCALE_LIMIT=0.08;
+  const MIN_SCALE=0.55;
   const MAX_SCALE=1.6;
-  const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
+  const RESIZE_CORNER='bottom-left';
+  const PRESET_SCALES=[0.7,0.85,1,1.2,1.4];
   const teams=document.getElementById('teams');
   if(!teams) return;
 
@@ -20,180 +21,165 @@
   const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
   const persist=()=>{try{localStorage.setItem(SIZE_STORAGE_KEY,JSON.stringify(sizes));}catch{}};
   const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
-  const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE_LIMIT,MAX_SCALE);
+  const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE,MAX_SCALE);
 
-  function composeScoreControls(card){
-    const controls=card.querySelector('.score-controls');
-    if(!controls || controls.classList.contains('score-controls-composed')) return;
-    const plus=controls.querySelector('.score-btn.plus');
-    const minus=controls.querySelector('.score-btn.minus');
-    const mega=controls.querySelector('.score-btn.mega');
-    const reset=controls.querySelector('.score-btn.reset-score');
-    if(plus) plus.classList.add('score-plus-btn');
-    if(minus) minus.classList.add('score-minus-btn');
-    if(mega) mega.classList.add('score-mega-btn');
-    if(reset) reset.classList.add('score-reset-btn');
-    const plusStack=controls.querySelector('.plus-stack');
-    if(plus) controls.appendChild(plus);
-    if(minus) controls.appendChild(minus);
-    if(mega) controls.appendChild(mega);
-    if(reset) controls.appendChild(reset);
-    if(plusStack && !plusStack.children.length) plusStack.remove();
-    controls.classList.add('score-controls-composed');
+  function applyTransform(card){
+    const x=Number(card.dataset.dragX)||0;
+    const y=Number(card.dataset.dragY)||0;
+    const scale=scaleOf(card);
+    card.dataset.scoreScale=String(scale);
+    card.style.setProperty('--score-resize-inverse',(1/scale).toFixed(4));
+    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
   }
 
-  function baseDimensions(card){
-    let width=Number(card.dataset.scoreBaseWidth);
-    if(width>0) return {width};
-
-    const previousWidth=card.style.width;
-    const previousHeight=card.style.height;
-    card.style.removeProperty('width');
-    card.style.removeProperty('height');
-    card.classList.add('score-measuring-natural');
-    const rect=card.getBoundingClientRect();
-    width=Math.max(1,rect.width);
-    card.dataset.scoreBaseWidth=String(width);
-    card.style.width=previousWidth;
-    card.style.height=previousHeight;
-    card.classList.remove('score-measuring-natural');
-    return {width};
-  }
-
-  function measureContentFloor(card){
-    const controls=card.querySelector('.score-controls-composed') || card.querySelector('.score-controls');
-    if(!controls){
-      card.style.setProperty('--score-content-min-width','1px');
-      return {width:1};
-    }
-
-    card.style.removeProperty('--score-content-min-width');
-    const cardRect=card.getBoundingClientRect();
-    const controlsWidthBefore=Math.max(1,controls.getBoundingClientRect().width);
-    const horizontalChrome=Math.max(0,cardRect.width-controlsWidthBefore);
-
-    card.classList.add('score-measuring-content-floor');
-    void controls.offsetWidth;
-    const intrinsicControlsWidth=Math.max(
-      1,
-      Math.ceil(controls.getBoundingClientRect().width),
-      Math.ceil(controls.scrollWidth)
-    );
-    card.classList.remove('score-measuring-content-floor');
-
-    const width=Math.max(1,Math.ceil(horizontalChrome+intrinsicControlsWidth));
-    card.style.setProperty('--score-content-min-width',width+'px');
-    return {width};
-  }
-
-  function applyCardBox(card,scale){
-    const base=baseDimensions(card);
-    const contentFloor=measureContentFloor(card);
-    const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
-    const targetWidth=Math.max(contentFloor.width,Math.round(base.width*next));
-
-    card.dataset.scoreScale=String(next);
-    card.style.width=targetWidth+'px';
-    // Height must always be dictated by the current content. Keeping a scaled
-    // base height is what produced the tall empty card seen on narrow resizes.
-    card.style.removeProperty('height');
-  }
-
-  function updateResizeValues(card){
-    const label=Math.round(scaleOf(card)*100)+'%';
-    card.querySelectorAll('.score-resize-value').forEach(value=>{
-      if(value.textContent!==label) value.textContent=label;
+  function updateResizeValue(card){
+    const value=card.querySelector('.score-resize-value');
+    if(value) value.textContent=Math.round(scaleOf(card)*100)+'%';
+    card.querySelectorAll('.score-size-option').forEach(button=>{
+      const preset=Number(button.dataset.scorePreset);
+      button.classList.toggle('active',Math.abs(preset-scaleOf(card))<0.005);
     });
   }
 
-  function applySavedSize(card,id){
-    composeScoreControls(card);
-    baseDimensions(card);
-    const saved=sizes[mode()][id];
-    const wanted=saved && Number.isFinite(Number(saved.scale)) ? Number(saved.scale) : 1;
-    applyCardBox(card,wanted);
-    updateResizeValues(card);
+  function applyScale(card,id,scale){
+    const next=clamp(Number(scale)||1,MIN_SCALE,MAX_SCALE);
+    card.dataset.scoreScale=String(next);
+    applyTransform(card);
+    updateResizeValue(card);
+    sizes[mode()][id]={scale:next};
+    persist();
+  }
+
+  function closeAllMenus(except){
+    document.querySelectorAll('.score-size-menu.open').forEach(menu=>{
+      if(menu!==except) menu.classList.remove('open');
+    });
+  }
+
+  function createPresetMenu(card,id,handle){
+    let menu=card.querySelector('.score-size-menu');
+    if(menu) return menu;
+    menu=document.createElement('div');
+    menu.className='score-size-menu';
+    menu.setAttribute('role','menu');
+    menu.setAttribute('aria-label','גדלים מהירים לכרטיס');
+    PRESET_SCALES.forEach(scale=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='score-size-option';
+      button.setAttribute('data-score-preset',String(scale));
+      button.dataset.scorePreset=String(scale);
+      button.textContent=Math.round(scale*100)+'%';
+      button.addEventListener('pointerdown',e=>{e.stopPropagation();});
+      button.addEventListener('click',e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        applyScale(card,id,scale);
+        menu.classList.remove('open');
+      });
+      menu.appendChild(button);
+    });
+    card.appendChild(menu);
+    handle.setAttribute('aria-haspopup','menu');
+    handle.setAttribute('aria-expanded','false');
+    return menu;
   }
 
   function bindHandle(card,id,handle){
     if(handle.dataset.scoreResizeBound==='1') return;
     handle.dataset.scoreResizeBound='1';
-    let active=false;
+    const menu=createPresetMenu(card,id,handle);
     let pointerId=null;
+    let resizing=false;
+    let moved=false;
+    let startClientX=0,startClientY=0;
     let centerX=0,centerY=0,startDistance=1,startScale=1;
 
-    function finish(){
-      if(!active) return;
-      active=false;
+    function finish(e){
+      if(pointerId===null || (e && e.pointerId!==pointerId)) return;
+      if(resizing && moved){
+        sizes[mode()][id]={scale:scaleOf(card)};
+        persist();
+      }else if(!moved){
+        const open=!menu.classList.contains('open');
+        closeAllMenus(menu);
+        menu.classList.toggle('open',open);
+        handle.setAttribute('aria-expanded',open?'true':'false');
+      }
       handle.classList.remove('score-resize-active');
       card.classList.remove('score-card-resizing');
       document.body.classList.remove('score-card-resizing');
-      sizes[mode()][id]={scale:scaleOf(card)};
-      persist();
-      if(pointerId!==null && handle.releasePointerCapture){try{handle.releasePointerCapture(pointerId);}catch{}}
+      if(handle.releasePointerCapture){try{handle.releasePointerCapture(pointerId);}catch{}}
       pointerId=null;
+      resizing=false;
+      moved=false;
     }
 
     handle.addEventListener('pointerdown',e=>{
       if(e.button!==undefined && e.button!==0) return;
       e.preventDefault();
       e.stopPropagation();
-      composeScoreControls(card);
-      const r=card.getBoundingClientRect();
-      centerX=r.left+r.width/2;
-      centerY=r.top+r.height/2;
-      startDistance=Math.max(20,Math.hypot(e.clientX-centerX,e.clientY-centerY));
+      closeAllMenus();
+      const rect=card.getBoundingClientRect();
+      centerX=rect.left+rect.width/2;
+      centerY=rect.top+rect.height/2;
+      startClientX=e.clientX;
+      startClientY=e.clientY;
+      startDistance=Math.max(24,Math.hypot(e.clientX-centerX,e.clientY-centerY));
       startScale=scaleOf(card);
-      active=true;
       pointerId=e.pointerId;
+      resizing=true;
+      moved=false;
       handle.classList.add('score-resize-active');
       card.classList.add('score-card-resizing');
       document.body.classList.add('score-card-resizing');
-      updateResizeValues(card);
       if(handle.setPointerCapture){try{handle.setPointerCapture(pointerId);}catch{}}
-      if(navigator.vibrate){try{navigator.vibrate(12);}catch{}}
     });
 
     handle.addEventListener('pointermove',e=>{
-      if(!active || e.pointerId!==pointerId) return;
+      if(!resizing || e.pointerId!==pointerId) return;
       e.preventDefault();
       e.stopPropagation();
+      if(Math.hypot(e.clientX-startClientX,e.clientY-startClientY)<4) return;
+      moved=true;
       const distance=Math.max(8,Math.hypot(e.clientX-centerX,e.clientY-centerY));
-      const next=startScale*(distance/startDistance);
-      applyCardBox(card,next);
-      updateResizeValues(card);
+      const next=clamp(startScale*(distance/startDistance),MIN_SCALE,MAX_SCALE);
+      card.dataset.scoreScale=String(next);
+      applyTransform(card);
+      updateResizeValue(card);
     });
-    handle.addEventListener('pointerup',e=>{if(e.pointerId===pointerId) finish();});
-    handle.addEventListener('pointercancel',e=>{if(e.pointerId===pointerId) finish();});
-    handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
-  }
 
-  function ensureResizeHandles(card,id){
-    RESIZE_CORNERS.forEach(corner=>{
-      let handle=card.querySelector('.score-resize-handle[data-corner="'+corner+'"]');
-      if(!handle){
-        handle=document.createElement('button');
-        handle.type='button';
-        handle.className='score-resize-handle';
-        handle.dataset.corner=corner;
-        handle.setAttribute('aria-label','שינוי גודל כרטיס הקבוצה מהפינה');
-        handle.setAttribute('title','גרור את הפינה באלכסון כדי להקטין או להגדיל');
-        handle.innerHTML='<b class="score-resize-value">100%</b>';
-        card.appendChild(handle);
-      }
-      bindHandle(card,id,handle);
-    });
-    updateResizeValues(card);
+    handle.addEventListener('pointerup',finish);
+    handle.addEventListener('pointercancel',finish);
+    handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();});
   }
 
   function bindResize(card,id){
     if(!id) return;
-    composeScoreControls(card);
+    card.querySelectorAll('.score-resize-handle').forEach(old=>{
+      if(old.dataset.corner!==RESIZE_CORNER) old.remove();
+    });
     if(card.getAttribute('data-score-resize-ready')!=='1'){
       card.setAttribute('data-score-resize-ready','1');
-      applySavedSize(card,id);
+      const saved=sizes[mode()][id];
+      const scale=saved && Number.isFinite(Number(saved.scale)) ? Number(saved.scale) : 1;
+      card.dataset.scoreScale=String(clamp(scale,MIN_SCALE,MAX_SCALE));
+      applyTransform(card);
     }
-    ensureResizeHandles(card,id);
+    let handle=card.querySelector('.score-resize-handle[data-corner="'+RESIZE_CORNER+'"]');
+    if(!handle){
+      handle=document.createElement('button');
+      handle.type='button';
+      handle.className='score-resize-handle';
+      handle.dataset.corner=RESIZE_CORNER;
+      handle.setAttribute('aria-label','שינוי גודל כרטיס');
+      handle.setAttribute('title','גרור לשינוי גודל או לחץ לבחירת גודל');
+      handle.innerHTML='<span class="score-resize-grip" aria-hidden="true"></span><b class="score-resize-value">100%</b>';
+      card.appendChild(handle);
+    }
+    bindHandle(card,id,handle);
+    createPresetMenu(card,id,handle);
+    updateResizeValue(card);
   }
 
   function attachCards(){
@@ -208,14 +194,10 @@
     persist();
     teams.querySelectorAll(':scope > .card').forEach(card=>{
       card.dataset.scoreScale='1';
-      card.style.removeProperty('width');
-      card.style.removeProperty('height');
-      card.style.removeProperty('--score-content-min-width');
-      card.style.removeProperty('--score-content-min-height');
-      delete card.dataset.scoreBaseWidth;
-      delete card.dataset.scoreBaseHeight;
-      updateResizeValues(card);
+      applyTransform(card);
+      updateResizeValue(card);
     });
+    closeAllMenus();
     window.dispatchEvent(new CustomEvent('scorecards:autoarrange'));
   }
 
@@ -238,6 +220,11 @@
     return /(רשימה|טור|עמוד|פריסה|תצוגה|list|column|grid|layout|view|one-column|single)/i.test(text);
   }
 
+  document.addEventListener('pointerdown',e=>{
+    if(e.target.closest && e.target.closest('.score-size-menu,.score-resize-handle')) return;
+    closeAllMenus();
+  },true);
+
   document.addEventListener('click',e=>{
     const button=e.target.closest && e.target.closest('button');
     if(!button || button.closest('.card')) return;
@@ -259,7 +246,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. הכרטיס מצטמצם סביב התוכן בלי לחתוך אותו; Mega תמיד נשאר מתחת ל־+ ול־−.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור את הידית בפינה לשינוי חופשי, או לחץ עליה ובחר 70%, 85%, 100%, 120% או 140%.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
