@@ -1,0 +1,127 @@
+/* Shared structure for every book: summary → essentials → learning points → reading. */
+.book-key-points-section,
+.book-learning-points-section{
+  max-width:980px;
+  margin:0 auto 46px;
+  padding:30px 0 34px;
+  border-top:3px solid var(--text);
+  border-bottom:1px solid var(--line);
+  scroll-margin-top:24px;
+}
+
+.book-key-points-section.hidden{
+  display:block !important;
+}
+
+.book-key-points-close,
+#book-key-points-more{
+  display:none !important;
+}
+
+.book-learning-points-section{
+  border-top-width:1px;
+  margin-top:-20px;
+}
+
+.book-learning-points-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:18px;
+}
+
+.book-learning-points-head h2{
+  margin:7px 0 5px;
+  font-family:"Noto Serif Hebrew","Frank Ruhl Libre",Georgia,"Times New Roman",serif;
+  font-size:clamp(27px,3.7vw,39px);
+  line-height:1.16;
+}
+
+.book-learning-points-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:38px;
+}
+
+.book-learning-points-list li{
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+  padding:18px 0;
+  border-top:1px solid var(--line);
+}
+
+.book-learning-point-number{
+  padding-top:4px;
+  color:var(--muted);
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:12px;
+  font-variant-numeric:tabular-nums;
+}
+
+.book-learning-points-list strong{
+  display:block;
+  margin-bottom:5px;
+  font-size:16px;
+  line-height:1.45;
+}
+
+.book-learning-points-list p{
+  margin:0;
+  color:var(--text);
+  font-size:15px;
+  line-height:1.78;
+}
+
+.book-learning-points-note{
+  grid-column:1 / -1;
+  display:block !important;
+  color:var(--muted);
+  line-height:1.75;
+}
+
+.book-learning-points-toggle{
+  flex:0 0 auto;
+  border:0;
+  border-bottom:1px solid currentColor;
+  padding:7px 0;
+  background:transparent;
+  color:var(--text);
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.book-learning-points-toggle.hidden{
+  display:none;
+}
+
+#book-key-points-toggle.active{
+  background:transparent;
+  color:inherit;
+}
+
+@media(max-width:700px){
+  .book-key-points-section,
+  .book-learning-points-section{
+    padding-top:24px;
+    margin-bottom:34px;
+  }
+  .book-learning-points-head{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:8px;
+  }
+  .book-learning-points-list{
+    grid-template-columns:1fr;
+  }
+  .book-learning-points-list li{
+    grid-template-columns:32px minmax(0,1fr);
+    padding:15px 0;
+  }
+}

@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="library-discovery.css">
 <link rel="stylesheet" href="book-page.css">
+<link rel="stylesheet" href="book-structure.css">
 <link rel="stylesheet" href="book-feed.css">
 <link rel="stylesheet" href="site-chat.css?v=2">
 <link rel="stylesheet" href="site-editor-ui.css?v=1"></head>
@@ -26,21 +27,33 @@
       <button id="book-refresh-all" class="btn primary" aria-label="רענן הכול" title="רענן הכול">🔄</button>
       <button id="book-random" class="btn">🎲 רנדומלי</button>
       <button id="book-surprise" class="btn">✨ משהו שלא חשבתי עליו</button>
-      <button id="book-key-points-toggle" class="btn">⭐ הנקודות החשובות</button>
+      <button id="book-key-points-toggle" class="btn">⭐ לנקודות החשובות</button>
     </div>
   </header>
 
-  <section id="book-key-points-section" class="book-key-points-section hidden" aria-live="polite">
+  <section id="book-key-points-section" class="book-key-points-section" aria-live="polite">
     <div class="book-key-points-head">
       <div>
         <span class="reading-eyebrow">קריאה מהירה</span>
-        <h2>הנקודות החשובות ביותר בספר</h2>
+        <h2>⭐ הנקודות החשובות ביותר בספר</h2>
         <p id="book-key-points-count" class="meta"></p>
       </div>
       <button id="book-key-points-close" class="book-key-points-close" type="button" aria-label="סגור">×</button>
     </div>
     <ol id="book-key-points-list" class="book-key-points-list"></ol>
     <button id="book-key-points-more" class="book-key-points-more hidden" type="button">הצג את כל הנקודות</button>
+  </section>
+
+  <section id="book-learning-points-section" class="book-learning-points-section" aria-live="polite">
+    <div class="book-learning-points-head">
+      <div>
+        <span class="reading-eyebrow">שכבת עומק</span>
+        <h2>📚 כל הנקודות ללמידה</h2>
+        <p id="book-learning-points-count" class="meta"></p>
+      </div>
+      <button id="book-learning-points-toggle" class="book-learning-points-toggle hidden" type="button">הצג את כל הנקודות</button>
+    </div>
+    <ol id="book-learning-points-list" class="book-learning-points-list"></ol>
   </section>
 
   <section id="book-original-section" class="book-page-section book-original-section hidden">
@@ -151,6 +164,8 @@
 </div></nav>
 <script src="library-local-books.js"></script>
 <script src="library-discovery.js"></script>
+<script src="book-structure.js"></script>
+<script src="book-structure-ui.js"></script>
 <script src="book-infinite-feed.js"></script>
 <script src="book-reading.js"></script>
 <script src="book-page.js"></script>
