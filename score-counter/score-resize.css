@@ -4,39 +4,74 @@
   transform-origin:center center;
   justify-self:center;
   align-self:start;
-  min-width:150px!important;
-  min-height:0!important;
+  min-width:var(--score-content-min-width,0px)!important;
+  min-height:var(--score-content-min-height,0px)!important;
 }
 .score-controls-composed{
   display:grid!important;
-  grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:8px!important;
+  grid-template-columns:minmax(max-content,1fr) minmax(max-content,1fr)!important;
+  grid-template-areas:
+    "minus plus"
+    "mega mega"!important;
+  gap:6px!important;
   align-items:stretch!important;
   width:100%!important;
+}
+.score-controls-composed > .score-plus-btn{
+  grid-area:plus!important;
+}
+.score-controls-composed > .score-minus-btn{
+  grid-area:minus!important;
 }
 .score-controls-composed > .score-plus-btn,
 .score-controls-composed > .score-minus-btn{
   width:100%!important;
-  min-width:0!important;
-  min-height:44px!important;
+  min-width:max-content!important;
+  min-height:0!important;
+  height:auto!important;
   margin:0!important;
+  padding:.55em .8em!important;
   white-space:nowrap!important;
 }
 .score-controls-composed > .score-mega-btn{
+  grid-area:mega!important;
   grid-column:1 / -1!important;
   width:100%!important;
-  min-width:0!important;
-  min-height:42px!important;
+  min-width:max-content!important;
+  min-height:0!important;
+  height:auto!important;
   margin:0!important;
+  padding:.5em .8em!important;
   white-space:nowrap!important;
 }
 .score-controls-composed > .score-reset-btn{
   grid-column:1 / -1!important;
   width:100%!important;
-  min-width:0!important;
+  min-width:max-content!important;
+  min-height:0!important;
+  height:auto!important;
   margin:0!important;
+  padding:.45em .7em!important;
 }
-.card.score-measuring-natural .score-resize-handle{display:none!important}
+.card.score-measuring-natural .score-resize-handle,
+.card.score-measuring-content-floor .score-resize-handle{display:none!important}
+.card.score-measuring-content-floor{
+  width:max-content!important;
+  height:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:none!important;
+}
+.card.score-measuring-content-floor .score-controls-composed{
+  width:max-content!important;
+  grid-template-columns:max-content max-content!important;
+}
+.card.score-measuring-content-floor .score-controls-composed > .score-plus-btn,
+.card.score-measuring-content-floor .score-controls-composed > .score-minus-btn,
+.card.score-measuring-content-floor .score-controls-composed > .score-mega-btn,
+.card.score-measuring-content-floor .score-controls-composed > .score-reset-btn{
+  width:max-content!important;
+}
 .score-resize-handle{
   position:absolute;
   z-index:70;
