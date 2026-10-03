@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify centered half-width full-height background
+      - name: Verify half-width filled stage with uncropped athlete
         shell: bash
         run: |
           node <<'NODE'
@@ -18,15 +18,19 @@ jobs:
           const s=fs.readFileSync('score-counter/index.html','utf8');
           const required=[
             'background:#000',
+            '#sharpBg::before',
             'left:25vw',
             'width:50vw',
             'height:100vh',
-            'object-fit:contain'
+            'background-image:var(--sharp-bg)',
+            'background-size:cover',
+            'object-fit:contain',
+            'style.setProperty("--sharp-bg"'
           ];
           const missing=required.filter(x=>!s.includes(x));
           if(missing.length){
-            console.error('Missing background layout markers:', missing.join(', '));
+            console.error('Missing filled-stage layout markers:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Centered half-width full-height background markers present.');
+          console.log('Half-width filled stage and uncropped athlete markers present.');
           NODE
