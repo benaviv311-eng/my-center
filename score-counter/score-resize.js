@@ -1,8 +1,7 @@
 (function(){
   const SIZE_STORAGE_KEY='team-score-card-sizes-v1';
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
-  const MIN_SCALE_LIMIT=0.25;
-  const MIN_CARD_WIDTH=150;
+  const MIN_SCALE_LIMIT=0.08;
   const MAX_SCALE=1.6;
   const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
   const teams=document.getElementById('teams');
@@ -64,6 +63,34 @@
     return {width,height};
   }
 
+  function measureContentFloor(card){
+    const previousWidth=card.style.width;
+    const previousHeight=card.style.height;
+    const previousMinWidth=card.style.getPropertyValue('--score-content-min-width');
+    const previousMinHeight=card.style.getPropertyValue('--score-content-min-height');
+
+    card.style.removeProperty('--score-content-min-width');
+    card.style.removeProperty('--score-content-min-height');
+    card.style.width='max-content';
+    card.style.height='auto';
+    card.classList.add('score-measuring-content-floor');
+    void card.offsetWidth;
+
+    const rect=card.getBoundingClientRect();
+    const width=Math.max(1,Math.ceil(rect.width),Math.ceil(card.scrollWidth));
+    const height=Math.max(1,Math.ceil(rect.height),Math.ceil(card.scrollHeight));
+
+    card.classList.remove('score-measuring-content-floor');
+    card.style.width=previousWidth;
+    card.style.height=previousHeight;
+    if(previousMinWidth) card.style.setProperty('--score-content-min-width',previousMinWidth);
+    if(previousMinHeight) card.style.setProperty('--score-content-min-height',previousMinHeight);
+
+    card.style.setProperty('--score-content-min-width',Math.ceil(width)+'px');
+    card.style.setProperty('--score-content-min-height',Math.ceil(height)+'px');
+    return {width,height};
+  }
+
   function measureNaturalHeight(card,width){
     const previousWidth=card.style.width;
     const previousHeight=card.style.height;
@@ -81,16 +108,15 @@
 
   function applyCardBox(card,scale){
     const base=baseDimensions(card);
-    const minScale=Math.max(MIN_SCALE_LIMIT,MIN_CARD_WIDTH/base.width);
-    const next=clamp(scale,minScale,MAX_SCALE);
-    const targetWidth=Math.max(MIN_CARD_WIDTH,Math.round(base.width*next));
+    const contentFloor=measureContentFloor(card);
+    const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
+    const targetWidth=Math.max(contentFloor.width,Math.round(base.width*next));
     const naturalHeight=measureNaturalHeight(card,targetWidth);
-    const targetHeight=Math.round(base.height*next);
+    const targetHeight=Math.max(contentFloor.height,Math.round(base.height*next),naturalHeight);
 
     card.dataset.scoreScale=String(next);
     card.style.width=targetWidth+'px';
-    card.style.height='auto';
-    card.style.height=Math.max(targetHeight,naturalHeight)+'px';
+    card.style.height=targetHeight+'px';
   }
 
   function updateResizeValues(card){
@@ -204,6 +230,8 @@
       card.dataset.scoreScale='1';
       card.style.removeProperty('width');
       card.style.removeProperty('height');
+      card.style.removeProperty('--score-content-min-width');
+      card.style.removeProperty('--score-content-min-height');
       delete card.dataset.scoreBaseWidth;
       delete card.dataset.scoreBaseHeight;
       updateResizeValues(card);
@@ -251,7 +279,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. המסגרת מצטמצמת עד גבול התוכן; הטקסט והכפתורים נשארים בגודל קריא ואינם נמחצים.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. הכרטיס מצטמצם עד גודל הטקסט והכפתורים בלבד; Mega תמיד נשאר מתחת ל־+ ול־−.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
