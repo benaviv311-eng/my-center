@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.6</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.7</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -56,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. אבא משמיע קליפים אמיתיים קצרים בלי כלי נגינה, וכל מפגש בוחר זוג חרוזים אחר.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות; בכל מפגש נבחר שיר אחר.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -103,14 +103,16 @@ const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
 const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
 const dadSongs=[
- ['אבטיח הלך לשיח','מלון הלך לישון'],
- ['בננה נסעה לרעננה','מלפפון טס בבלון'],
- ['לימון קפץ לחלון','בצל נרדם על הספסל'],
- ['אגס טיפס על פנס','כרוב עשה סיבוב'],
- ['תפוח ברח עם רוח','אננס נכנס לכנס'],
- ['תות לבש מגפיים','חסה טסה בשמיים'],
- ['קוקוס ברח מהמטוס','גזר קפץ למקרר'],
- ['אבוקדו רקד עם דודו','תפוז התחפש לעז']
+ ['אֲבַטִּיחַ הָלַךְ לַשִּׂיחַ','מֶלּוֹן הָלַךְ לִישׁוֹן'],
+ ['בָּנָנָה נָסְעָה לְרַעֲנַנָּה','וְחָזְרָה עִם מַתָּנָה'],
+ ['מְלָפְפוֹן טָס בְּבַלּוֹן','וְנָחַת יָשָׁר בַּסָּלוֹן'],
+ ['לִימוֹן קָפַץ לַחַלּוֹן','וְהִתְחַבֵּא בְּתוֹךְ אָרוֹן'],
+ ['אַגָּס טִפֵּס עַל פָּנָס','וְצָעַק: אֲנִי נִכְנָס!'],
+ ['תַּפּוּחַ עָף עִם הָרוּחַ','וְנָחַת עַל כְּרוּב נָפוּחַ'],
+ ['אֲנָנָס נִכְנַס לַכֶּנֶס','וְצָעַק: מִי עוֹד נִכְנָס?'],
+ ['בָּצָל נִרְדַּם עַל הַסַּפְסָל','וְחָלַם עַל קַרְנָבָל'],
+ ['קוֹקוֹס בָּרַח מֵהַמָּטוֹס','וּפָגַשׁ תַּרְנְגוֹל מְאֹד מְנוּמָס'],
+ ['תּוּת לָבַשׁ מַגָּפַיִם','וְיָצָא לָעוּף בַּשָּׁמַיִם']
 ];
 let dadSongBag=[],dadSongIndex=-1,dadLineIndex=0,dadNextLineAt=0,lastSongIndex=-1;
 function refillDadSongs(){
@@ -250,14 +252,16 @@ function toggleBgMusic(){
 }
 let dadWasSinging=false,dadClipIndex=-1;
 const dadVoiceClips=[
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-01.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-02.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-03.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-04.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-05.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-06.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-07.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-08.mp3')
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-01.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-02.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-03.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-04.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-05.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-06.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-07.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-08.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-09.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-10.mp3')
 ];
 dadVoiceClips.forEach(a=>{a.preload='auto';a.volume=.96});
 function primeDadVoice(){
@@ -277,7 +281,7 @@ function playDadClip(index){
  setBgDuck(true);
  const a=dadVoiceClips[index];
  a.currentTime=0;
- a.playbackRate=.94+Math.random()*.08;
+ a.playbackRate=1;
  a.preservesPitch=false;
  a.play().catch(()=>{});
 }
