@@ -21,7 +21,9 @@
   const transform=(card,x,y)=>{
     card.dataset.dragX=String(Math.round(x));
     card.dataset.dragY=String(Math.round(y));
-    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0)';
+    const scale=Math.max(.55,Math.min(1.6,Number(card.dataset.scoreScale)||1));
+    card.setAttribute('data-score-scale',String(scale));
+    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
   };
   const readPos=(card,id)=>{
     const saved=positions[mode()][id]||{};
@@ -162,6 +164,12 @@
       });
     });
   }
+
+  window.addEventListener('scorecards:autoarrange',()=>{
+    positions[mode()]={};
+    persist();
+    teams.querySelectorAll(':scope > .card').forEach(card=>transform(card,0,0));
+  });
 
   const observer=new MutationObserver(()=>requestAnimationFrame(attachCards));
   observer.observe(teams,{childList:true});
