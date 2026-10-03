@@ -67,3 +67,18 @@ test('builder no longer reads or writes the legacy nutritionProfile key directly
   assert.doesNotMatch(html,/localStorage\.getItem\(['"]nutritionProfile['"]/);
   assert.match(html,/nutrition-profile\.js/);
 });
+
+test('profile and builder expose saved-food controls',()=>{
+  const profileSource=readFileSync(new URL('../nutrition-profile.js',import.meta.url),'utf8');
+  const html=readFileSync(new URL('../nutrition-builder.html',import.meta.url),'utf8');
+  assert.match(profileSource,/מאכלים שמורים/);
+  assert.match(profileSource,/profileSavedFoods/);
+  assert.match(html,/שמור בפרופיל/);
+  assert.match(html,/toggleSavedFoodFor/);
+});
+
+test('meal-count changes re-plan the current menu instead of reusing stale meal assignment',()=>{
+  const source=readFileSync(new URL('../nutrition-profile-meals.js',import.meta.url),'utf8');
+  assert.match(source,/state\.result\)buildMenu\(\)/);
+  assert.doesNotMatch(source,/state\.result\)renderMenu\(\)/);
+});
