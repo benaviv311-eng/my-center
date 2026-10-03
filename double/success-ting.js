@@ -55,17 +55,21 @@
   function load(src,attr,ready,next){
     if(ready&&ready()){next?.();return;}
     const existing=document.querySelector(`script[${attr}]`);
-    if(existing){existing.addEventListener('load',()=>next?.(),{once:true});return;}
+    if(existing){
+      if(existing.dataset.loaded==='1'){next?.();return;}
+      existing.addEventListener('load',()=>next?.(),{once:true});
+      return;
+    }
     const s=document.createElement('script');
     s.src=src;
     s.setAttribute(attr,'1');
-    s.onload=()=>next?.();
+    s.onload=()=>{s.dataset.loaded='1';next?.()};
     document.body.appendChild(s);
   }
 
-  const loadBridge=()=>load('double/music-game-bridge.js?v=5','data-double-music-bridge',()=>false);
+  const loadBridge=()=>load('double/music-game-bridge.js?v=6','data-double-music-bridge',()=>false);
   if(window.DoubleMusic){loadBridge();return;}
 
-  load('double/music-engine-state.js?v=5','data-double-music-state',()=>!!window.DoubleMusicState,()=>
-    load('double/music-engine.js?v=5','data-double-music-engine',()=>!!window.DoubleMusic,loadBridge));
+  load('double/music-engine-state.js?v=6','data-double-music-state',()=>!!window.DoubleMusicState,()=>
+    load('double/music-engine.js?v=6','data-double-music-engine',()=>!!window.DoubleMusic,loadBridge));
 })();
