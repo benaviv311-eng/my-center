@@ -13,59 +13,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify resizable score cards, four corners and adaptive text
+      - name: Verify content-aware resize, control composition and continuous long-press drag
         shell: bash
         run: |
           node <<'NODE'
           const fs=require('fs');
           const index=fs.readFileSync('score-counter/index.html','utf8');
           const drag=fs.readFileSync('score-counter/score-drag.js','utf8');
-          if(!fs.existsSync('score-counter/score-resize.js') || !fs.existsSync('score-counter/score-resize.css')){
-            console.error('Missing resize assets');
-            process.exit(1);
-          }
           const js=fs.readFileSync('score-counter/score-resize.js','utf8');
           const css=fs.readFileSync('score-counter/score-resize.css','utf8');
+          const missing=[];
+
           const requiredJs=[
             'team-score-card-sizes-v1',
-            'MIN_SCALE',
+            'MIN_SCALE_LIMIT',
             'MAX_SCALE',
-            'TEXT_FLOOR_SCALE',
-            'TEXT_BOOST',
             'RESIZE_CORNERS',
-            'top-left',
-            'top-right',
-            'bottom-left',
-            'bottom-right',
-            'score-card-text',
-            'score-resize-active',
-            '--score-content-compensation',
-            '--score-text-boost',
+            'measureContentFloor',
+            'applyCardBox',
+            'composeScoreControls',
+            'score-controls-composed',
+            'score-plus-btn',
+            'score-minus-btn',
+            'score-mega-btn',
             'layoutSignature',
             'normalizeCards',
             'pointerdown',
             'pointermove',
             'pointerup'
           ];
-          const missing=requiredJs.filter(x=>!js.includes(x));
-          if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
-          if(!drag.includes('data-score-scale')) missing.push('drag/resize transform composition');
+          for(const marker of requiredJs){ if(!js.includes(marker)) missing.push('js:'+marker); }
+
           const requiredCss=[
             '.score-card-text',
+            '.score-controls-composed',
+            '.score-plus-btn',
+            '.score-minus-btn',
+            '.score-mega-btn',
+            'grid-template-columns:repeat(2,minmax(0,1fr))',
+            'grid-column:1 / -1',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
-            '.score-resize-handle[data-corner="bottom-right"]',
-            '.score-resize-handle.score-resize-active::after',
-            '--score-text-boost'
+            '.score-resize-handle[data-corner="bottom-right"]'
           ];
-          for(const marker of requiredCss){ if(!css.includes(marker)) missing.push(marker); }
+          for(const marker of requiredCss){ if(!css.includes(marker)) missing.push('css:'+marker); }
+
+          const requiredDrag=[
+            'latestClientX',
+            'latestClientY',
+            'startClientX=latestClientX',
+            'startClientY=latestClientY'
+          ];
+          for(const marker of requiredDrag){ if(!drag.includes(marker)) missing.push('drag:'+marker); }
+
+          if(/card\.style\.transform=.*scale\(/.test(drag)) missing.push('drag still scales whole card');
+          if(js.includes('--score-content-compensation')) missing.push('old inverse text scaling remains');
+          if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
           if(js.includes('⤢')) missing.push('persistent resize icon still present');
+
           if(missing.length){
-            console.error('Missing resize behavior markers:', missing.join(', '));
+            console.error('Missing content-aware resize behavior:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Four-corner adaptive resize markers present.');
+          console.log('Content-aware resize and control composition markers present.');
           NODE
           node --check score-counter/score-resize.js
           node --check score-counter/score-drag.js
