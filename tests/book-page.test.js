@@ -11,6 +11,7 @@ const mustExist = [
   'book-reading.js',
   'book-structure.js',
   'book-structure-ui.js',
+  'book-structure.css',
   'library-book-links.js'
 ];
 
@@ -54,7 +55,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   assert.ok(html.includes(`id="${id}"`), `book.html should contain ${id}`);
 });
 
-['library-discovery.js', 'book-structure.js', 'book-structure-ui.js', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
+['library-discovery.js', 'book-structure.js', 'book-structure-ui.js', 'book-structure.css', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
   assert.ok(html.includes(file), `book.html should load ${file}`);
 });
 
@@ -95,8 +96,12 @@ assert.ok(structureUi.includes('renderUniversalBookStructure'), 'universal UI sh
 assert.ok(structureUi.includes('book-learning-points-list'), 'universal UI should render expanded learning points');
 
 const pageCss = fs.readFileSync(path.join(root, 'book-page.css'), 'utf8');
-['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section','book-key-points-section','book-learning-points-section'].forEach(token => {
+['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section','book-key-points-section'].forEach(token => {
   assert.ok(pageCss.includes(token), `book-page.css should style ${token}`);
+});
+const structureCss = fs.readFileSync(path.join(root, 'book-structure.css'), 'utf8');
+['book-key-points-section','book-learning-points-section','book-learning-points-list'].forEach(token => {
+  assert.ok(structureCss.includes(token), `book-structure.css should style ${token}`);
 });
 assert.ok(pageCss.includes('grid-template-areas:"reader toc"'), 'desktop reading layout should keep the table of contents on the physical left');
 assert.ok(pageCss.includes('.book-reading-main{grid-area:reader'), 'reading column should occupy the reader grid area');
