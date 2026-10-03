@@ -44,8 +44,7 @@
 
   function baseDimensions(card){
     let width=Number(card.dataset.scoreBaseWidth);
-    let height=Number(card.dataset.scoreBaseHeight);
-    if(width>0 && height>0) return {width,height};
+    if(width>0) return {width};
 
     const previousWidth=card.style.width;
     const previousHeight=card.style.height;
@@ -54,13 +53,11 @@
     card.classList.add('score-measuring-natural');
     const rect=card.getBoundingClientRect();
     width=Math.max(1,rect.width);
-    height=Math.max(1,rect.height,card.scrollHeight);
     card.dataset.scoreBaseWidth=String(width);
-    card.dataset.scoreBaseHeight=String(height);
     card.style.width=previousWidth;
     card.style.height=previousHeight;
     card.classList.remove('score-measuring-natural');
-    return {width,height};
+    return {width};
   }
 
   function measureContentFloor(card){
@@ -89,32 +86,17 @@
     return {width};
   }
 
-  function measureNaturalHeight(card,width){
-    const previousWidth=card.style.width;
-    const previousHeight=card.style.height;
-    card.classList.add('score-measuring-natural');
-    card.style.width=Math.round(width)+'px';
-    card.style.height='auto';
-    void card.offsetHeight;
-    const rect=card.getBoundingClientRect();
-    const naturalHeight=Math.max(1,Math.ceil(rect.height),Math.ceil(card.scrollHeight));
-    card.style.width=previousWidth;
-    card.style.height=previousHeight;
-    card.classList.remove('score-measuring-natural');
-    return naturalHeight;
-  }
-
   function applyCardBox(card,scale){
     const base=baseDimensions(card);
     const contentFloor=measureContentFloor(card);
     const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
     const targetWidth=Math.max(contentFloor.width,Math.round(base.width*next));
-    const naturalHeight=measureNaturalHeight(card,targetWidth);
-    const targetHeight=Math.max(Math.round(base.height*next),naturalHeight);
 
     card.dataset.scoreScale=String(next);
     card.style.width=targetWidth+'px';
-    card.style.height=targetHeight+'px';
+    // Height must always be dictated by the current content. Keeping a scaled
+    // base height is what produced the tall empty card seen on narrow resizes.
+    card.style.removeProperty('height');
   }
 
   function updateResizeValues(card){
@@ -277,7 +259,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. הכרטיס מצטמצם עד גודל הטקסט והכפתורים בלבד; Mega תמיד נשאר מתחת ל־+ ול־−.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. הכרטיס מצטמצם סביב התוכן בלי לחתוך אותו; Mega תמיד נשאר מתחת ל־+ ול־−.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
