@@ -15,17 +15,18 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 .stage{position:relative;overflow:hidden;border:4px solid #453940;border-radius:28px;background:#bba889;box-shadow:0 18px 38px rgba(67,43,29,.18)}canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;touch-action:none}.toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(44,36,47,.92);color:#fff;padding:9px 14px;border-radius:999px;font-weight:900;opacity:0;transition:.18s;pointer-events:none;max-width:82%;text-align:center}.toast.show{opacity:1}
 .inventory{display:flex;gap:8px;margin-top:10px}.slot{flex:1;min-height:70px;background:linear-gradient(#fff,#fff6e8);border:2px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:900;position:relative}.slot.selected{outline:4px solid var(--gold);transform:translateY(-2px)}.slot.empty{color:#a99d90;background:#f6eee2}.slot button{position:absolute;inset:0;background:transparent;border:0}.ico{font-size:26px}
 .side{display:flex;flex-direction:column;gap:9px}.side-card{background:#fff;border:2px solid var(--line);border-radius:18px;padding:10px}.side-card h3{font-size:14px;margin:0 0 8px}.floors{display:grid;gap:6px}.floorbtn{border:2px solid var(--line);background:#fffaf1;border-radius:12px;padding:8px;font-weight:800;text-align:right}.floorbtn.active{background:#fff0b9;border-color:#d0a63e}.floorbtn.locked{opacity:.55}.hint{font-size:12px;color:var(--muted);line-height:1.45}
-.controls{display:flex;justify-content:space-between;gap:14px;align-items:end;margin-top:11px}.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:5px;direction:ltr}.cbtn{border:2px solid #453940;background:linear-gradient(#fff,#f2e9dc);border-radius:17px;font-size:24px;font-weight:900;box-shadow:0 5px 0 #c6b49d;touch-action:none}.cbtn.pressed{transform:translateY(4px);box-shadow:0 1px 0 #c6b49d}.up{grid-column:2}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}.actions{display:flex;gap:9px}.abtn{width:82px;height:82px;border-radius:50%;border:3px solid #453940;font-weight:900;background:linear-gradient(#ffe487,#efc45a);box-shadow:0 6px 0 #b38f3e;touch-action:none}.abtn.blue{background:linear-gradient(#b5e7ff,#7fc3e7);box-shadow:0 6px 0 #5e90ab}.abtn.pressed{transform:translateY(5px);box-shadow:none}
+.controls{display:flex;justify-content:space-between;gap:14px;align-items:end;margin-top:11px}.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:5px;direction:ltr}.cbtn{border:2px solid #453940;background:linear-gradient(#fff,#f2e9dc);border-radius:17px;font-size:24px;font-weight:900;box-shadow:0 5px 0 #c6b49d;touch-action:none}.cbtn.pressed{transform:translateY(4px);box-shadow:0 1px 0 #c6b49d}.up{grid-column:2}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}.actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:390px}.abtn{width:82px;height:82px;border-radius:50%;border:3px solid #453940;font-weight:900;background:linear-gradient(#ffe487,#efc45a);box-shadow:0 6px 0 #b38f3e;touch-action:none}.abtn.blue{background:linear-gradient(#b5e7ff,#7fc3e7);box-shadow:0 6px 0 #5e90ab}.abtn.pressed{transform:translateY(5px);box-shadow:none}.abtn.skill{width:62px;height:62px;font-size:11px;background:linear-gradient(#d9f3ff,#9dd9f4);box-shadow:0 5px 0 #6b9db5}.abtn.skill.guard{background:linear-gradient(#e6dcff,#bca5ef);box-shadow:0 5px 0 #8168b6}
 @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.worldbar{flex-wrap:wrap}.meters{width:100%}.meterbox{flex:1}.dpad{grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px)}.abtn{width:70px;height:70px;font-size:12px}}
 </style>
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.12</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.13</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
     <div class="meters">
+      <div class="pill meterbox"><div class="label">חיים</div><div id="lives" style="font-size:20px;letter-spacing:2px;margin-top:2px">❤️❤️❤️</div></div>
       <div class="pill meterbox"><div class="label">כוח לריצה</div><div class="meter"><i id="stamina"></i></div></div>
       <div class="pill meterbox"><div class="label">מגן</div><div class="meter blue"><i id="shield"></i></div></div>
       <div class="pill meterbox"><div class="label">סחרחורת מאבא</div><div class="meter"><i id="dizzyMeter" style="width:0%;background:linear-gradient(90deg,#b28cff,#ff8ec3)"></i></div></div>
@@ -50,13 +51,18 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
           <button class="abtn blue" id="itemUse">חפץ<br>✦</button>
           <button class="abtn blue" id="action">פעולה<br>✋</button>
           <button class="abtn" id="run">ריצה<br>⚡</button>
+          <button class="abtn skill" id="dash">דאש<br>Space</button>
+          <button class="abtn skill" id="jump">קפיצה<br>J</button>
+          <button class="abtn skill guard" id="crouch">התכופפות<br>C</button>
+          <button class="abtn skill guard" id="hide">התחבאות<br>H</button>
+          <button class="abtn skill guard" id="pushDad">דחיפה<br>X</button>
         </div>
       </div>
     </div>
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות. לפני השיר הוא גם מדבר בשלושה שלבים: מרחוק, כשהוא מתקרב, ורגע לפני שהוא מתחיל לשיר. כשהיא רחוקה ממנו הוא ממשיך לדבר לעיתים קרובות כדי לשמור על תחושת לחץ, ועובר בסבב אקראי על כל 9 המשפטים בלי לחזור מיד על אותו משפט. ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות. לפני השיר הוא גם מדבר בשלושה שלבים: מרחוק, כשהוא מתקרב, ורגע לפני שהוא מתחיל לשיר. כשהיא רחוקה ממנו הוא ממשיך לדבר לעיתים קרובות כדי לשמור על תחושת לחץ, ועובר בסבב אקראי על כל 9 המשפטים בלי לחזור מיד על אותו משפט. ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.<br><strong>מערכת יכולות:</strong> מאגר ההתקפות של אבא וההגנות של ליבי בנוי במנוע, אבל עדיין לא שייכנו סט התקפות לשלב הראשון.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -64,7 +70,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 <script>
 (()=>{
 const c=document.getElementById('game'),ctx=c.getContext('2d'),W=960,H=600,keys={};
-const toast=document.getElementById('toast'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield'),dizzyMeterEl=document.getElementById('dizzyMeter');
+const toast=document.getElementById('toast'),livesEl=document.getElementById('lives'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield'),dizzyMeterEl=document.getElementById('dizzyMeter');
 const sceneTitle=document.getElementById('sceneTitle'),roomTitle=document.getElementById('roomTitle'),inventoryEl=document.getElementById('inventory'),floorsEl=document.getElementById('floors');
 let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null,dizzyCharge=0,dizzyUntil=0,noteClock=0;
 
@@ -100,8 +106,75 @@ Object.entries(artSources).forEach(([k,src])=>{
   art[k]=img;
 });
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
-const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
+const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,dashUntil:0,dashCooldownUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,crouching:false,crouchingTouch:false,hidden:false,pushCooldownUntil:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
+
+// Ability bank only. Stage 1 has not been configured yet.
+const dadAbilityCatalog={
+ wave:{id:'wave',name:'גל קול',cooldown:1850,kind:'ring',speed:180,maxRadius:350,thickness:16,height:'low'},
+ burst:{id:'burst',name:'פרץ גלים',cooldown:2600,kind:'burst',speed:245,height:'mid'},
+ wideWave:{id:'wideWave',name:'גל רחב',cooldown:3000,kind:'ring',speed:105,maxRadius:390,thickness:46,height:'low'},
+ beam:{id:'beam',name:'קרן קול',cooldown:2700,kind:'beam',width:30,warning:380,duration:900,height:'high'},
+ ring:{id:'ring',name:'טבעת קול',cooldown:3000,kind:'ring',speed:230,maxRadius:430,thickness:20,height:'low'},
+ echo:{id:'echo',name:'הד חוזר',cooldown:3600,kind:'echo',speed:175,maxRadius:340,thickness:18,height:'mid'},
+ bouncingNote:{id:'bouncingNote',name:'תו קופץ',cooldown:2800,kind:'projectile',speed:195,bounce:true,height:'mid'},
+ homingNote:{id:'homingNote',name:'תו רודף',cooldown:3800,kind:'projectile',speed:125,homing:true,height:'mid'},
+ chorusBoom:{id:'chorusBoom',name:'בום של פזמון',cooldown:4300,kind:'boom',warning:720,radius:140,height:'mid'},
+ surpriseShout:{id:'surpriseShout',name:'צעקת הפתעה',cooldown:3300,kind:'beam',width:52,warning:180,duration:650,height:'high'},
+ chaseSong:{id:'chaseSong',name:'רדיפה תוך כדי שירה',cooldown:0,kind:'movement'},
+ contact:{id:'contact',name:'מגע באבא',cooldown:0,kind:'contact'}
+};
+const libiDefenseCatalog={
+ run:{id:'run',name:'ריצה'},dash:{id:'dash',name:'דאש'},jump:{id:'jump',name:'קפיצה'},crouch:{id:'crouch',name:'התכופפות'},hide:{id:'hide',name:'התחבאות'},postHitIFrames:{id:'postHitIFrames',name:'חסינות אחרי פגיעה'},pushback:{id:'pushback',name:'דחיפה נגדית'},invisibility:{id:'invisibility',name:'בלתי נראות'},speed:{id:'speed',name:'מהירות'},headphones:{id:'headphones',name:'אוזניות'},radio:{id:'radio',name:'רדיו'},cover:{id:'cover',name:'מחסה'}
+};
+let activeDadAbilities=new Set();
+let dadAttacks=[],dadAbilityReady={};
+function configureDadAbilities(ids=[]){activeDadAbilities=new Set(ids.filter(id=>dadAbilityCatalog[id]));dadAbilityReady={};dadAttacks=[]}
+function renderLives(){if(livesEl)livesEl.textContent='❤️'.repeat(player.lives)+'🖤'.repeat(Math.max(0,player.maxLives-player.lives))}
+function damageLibi(amount=1,source='פגיעה'){
+ const now=performance.now();if(player.lives<=0||now<player.invulnerableUntil||now<player.dashUntil)return false;
+ player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1700;
+ const dx=player.x-dad.x,dy=player.y-dad.y,d=Math.hypot(dx,dy)||1;player.x=clamp(player.x+dx/d*42,28,932);player.y=clamp(player.y+dy/d*42,28,572);
+ renderLives();msg(player.lives?('💔 '+source+' — נשארו '+player.lives+' לבבות'):'💔 לליבי נגמרו הלבבות — עדיין לא הגדרנו מה קורה מכאן');return true
+}
+function healLibi(amount=1){const before=player.lives;player.lives=Math.min(player.maxLives,player.lives+amount);renderLives();return player.lives>before}
+function directionVector(){return player.dir==='left'?[-1,0]:player.dir==='right'?[1,0]:player.dir==='up'?[0,-1]:[0,1]}
+function triggerDash(){const now=performance.now();if(player.lives<=0||now<player.dashCooldownUntil)return false;const [dx,dy]=directionVector();player.dashCooldownUntil=now+900;player.dashUntil=now+290;player.invulnerableUntil=Math.max(player.invulnerableUntil,player.dashUntil);player.hidden=false;player.x=clamp(player.x+dx*105,28,932);player.y=clamp(player.y+dy*105,28,572);return true}
+function triggerJump(){const now=performance.now();if(player.lives<=0||now<player.jumpCooldownUntil)return false;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;player.hidden=false;return true}
+function toggleHide(){if(player.moving){player.hidden=false;msg('כדי להתחבא צריך לעצור ליד מחסה');return false}player.hidden=!player.hidden;if(player.hidden)player.crouching=true;msg(player.hidden?'🙈 מצב התחבאות מוכן — את נקודות המחסה נחבר כשנבנה את השלב':'ליבי יצאה מהמחבוא');return player.hidden}
+function pushDadAway(){const now=performance.now();if(now<player.pushCooldownUntil||player.scene!==dad.scene)return false;const dx=dad.x-player.x,dy=dad.y-player.y,d=Math.hypot(dx,dy)||1;if(d>78){msg('אבא רחוק מדי לדחיפה');return false}player.pushCooldownUntil=now+2200;dad.x=clamp(dad.x+dx/d*85,28,932);dad.y=clamp(dad.y+dy/d*85,28,572);msg('✋ ליבי הרחיקה את אבא');return true}
+function aimedAngle(){return Math.atan2(player.y-dad.y,player.x-dad.x)}
+function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'mid',born:performance.now(),life:5200,hit:false})}
+function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scene!==dad.scene)return false;const now=performance.now(),a=aimedAngle();
+ if(id==='burst'){[-.22,0,.22].forEach(o=>addNote(a+o,def.speed));return true}
+ if(id==='bouncingNote'){addNote(a,def.speed,{bounce:true});return true}
+ if(id==='homingNote'){addNote(a,def.speed,{homing:true});return true}
+ if(def.kind==='ring'||def.kind==='echo'){dadAttacks.push({type:def.kind,scene:dad.scene,x:dad.x,y:dad.y,radius:10,speed:def.speed,maxRadius:def.maxRadius,thickness:def.thickness,height:def.height,born:now,hit:false});return true}
+ if(def.kind==='beam'){dadAttacks.push({type:'beam',scene:dad.scene,x:dad.x,y:dad.y,angle:a,length:560,width:def.width,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+def.duration,hit:false});return true}
+ if(def.kind==='boom'){dadAttacks.push({type:'boom',scene:dad.scene,x:dad.x,y:dad.y,radius:def.radius,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+360,hit:false});return true}
+ return false}
+function attackDefended(a){const now=performance.now();if(now<player.dashUntil)return true;if(a.height==='low'&&now<player.jumpUntil)return true;if(a.height==='high'&&player.crouching)return true;if(player.hidden&&(a.type==='beam'||a.homing))return true;return false}
+function beamHits(a){const px=player.x-a.x,py=player.y-a.y,dx=Math.cos(a.angle),dy=Math.sin(a.angle),t=Math.max(0,Math.min(a.length,px*dx+py*dy)),cx=a.x+dx*t,cy=a.y+dy*t;return Math.hypot(player.x-cx,player.y-cy)<=a.width/2+player.r}
+function updateDadAttackSystem(dt){const now=performance.now();
+ if(player.scene===dad.scene&&activeDadAbilities.has('contact')&&Math.hypot(player.x-dad.x,player.y-dad.y)<=player.r+dad.r+4)damageLibi(1,'נגיעה באבא');
+ if(player.scene===dad.scene&&activeDadAbilities.has('chaseSong')&&dadSongPlaying()&&!player.hidden){dad.targetX=player.x;dad.targetY=player.y}
+ if(player.scene===dad.scene&&dadSongPlaying()){for(const id of activeDadAbilities){const def=dadAbilityCatalog[id];if(!def||def.kind==='contact'||def.kind==='movement')continue;if(now>=(dadAbilityReady[id]||0)){spawnDadAttack(id);dadAbilityReady[id]=now+def.cooldown}}}
+ for(const a of dadAttacks){if(a.scene!==player.scene)continue;
+  if(a.type==='ring'||a.type==='echo'){a.radius+=a.speed*dt;if(a.type==='echo'&&a.speed>0&&a.radius>=a.maxRadius)a.speed=-Math.abs(a.speed);if((a.type==='ring'&&a.radius>a.maxRadius)||(a.type==='echo'&&a.radius<=0))a.dead=true;const d=Math.hypot(player.x-a.x,player.y-a.y);if(!a.hit&&Math.abs(d-a.radius)<=a.thickness/2+player.r&&!attackDefended(a)){a.hit=damageLibi(1,a.type==='echo'?'ההד החוזר של אבא':'גל הקול של אבא')}}
+  else if(a.type==='note'){if(a.homing&&!player.hidden){const ang=Math.atan2(player.y-a.y,player.x-a.x),sp=Math.hypot(a.vx,a.vy);a.vx=a.vx*.93+Math.cos(ang)*sp*.07;a.vy=a.vy*.93+Math.sin(ang)*sp*.07}a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.bounce){if(a.x<20||a.x>940)a.vx*=-1;if(a.y<20||a.y>580)a.vy*=-1}if(now-a.born>a.life||a.x<-60||a.x>1020||a.y<-60||a.y>660)a.dead=true;if(!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=player.r+a.r&&!attackDefended(a)){a.hit=damageLibi(1,a.homing?'התו הרודף של אבא':'תו הקול של אבא');a.dead=true}}
+  else if(a.type==='beam'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&beamHits(a)&&!attackDefended(a))a.hit=damageLibi(1,'קרן הקול של אבא')}
+  else if(a.type==='boom'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=a.radius+player.r&&!attackDefended(a))a.hit=damageLibi(1,'בום הפזמון של אבא')}
+ }
+ dadAttacks=dadAttacks.filter(a=>!a.dead)
+}
+function drawDadAttacks(){const now=performance.now();ctx.save();ctx.lineCap='round';
+ for(const a of dadAttacks){if(a.scene!==player.scene)continue;ctx.strokeStyle='rgba(155,73,206,.86)';ctx.fillStyle='rgba(188,117,232,.22)';
+  if(a.type==='ring'||a.type==='echo'){ctx.lineWidth=a.thickness;ctx.setLineDash(a.type==='echo'?[12,9]:[]);ctx.beginPath();ctx.arc(a.x,a.y,Math.max(1,a.radius),0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+  else if(a.type==='note'){ctx.font='30px Arial';ctx.textAlign='center';ctx.fillStyle='#8e49bd';ctx.fillText('♪',a.x,a.y+10)}
+  else if(a.type==='beam'){const warning=now<a.warningUntil;ctx.globalAlpha=warning?.34:.9;ctx.lineWidth=warning?5:a.width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x+Math.cos(a.angle)*a.length,a.y+Math.sin(a.angle)*a.length);ctx.stroke();ctx.globalAlpha=1}
+  else if(a.type==='boom'){ctx.globalAlpha=now<a.warningUntil?.25:.65;ctx.lineWidth=now<a.warningUntil?5:24;ctx.beginPath();ctx.arc(a.x,a.y,a.radius,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
+ }ctx.restore()}
+
 const dadSongs=[
  ['אֲבַטִּיחַ הָלַךְ לַשִּׂיחַ','מֶלּוֹן הָלַךְ לִישׁוֹן'],
  ['בָּנָנָה נָסְעָה לְרַעֲנַנָּה','וְחָזְרָה עִם מַתָּנָה'],
@@ -144,7 +217,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function move(dx,dy,dt,sprint){
  const len=Math.hypot(dx,dy);player.moving=!!len;if(!len)return;dx/=len;dy/=len;
  if(Math.abs(dx)>Math.abs(dy))player.dir=dx>0?'right':'left';else player.dir=dy>0?'down':'up';
- let m=1;if(player.ability==='speed'&&performance.now()<player.abilityUntil)m*=1.6;if(sprint&&player.stamina>0){m*=1.7;player.stamina=Math.max(0,player.stamina-34*dt)}
+ let m=1;if(player.crouching)m*=.58;if(player.ability==='speed'&&performance.now()<player.abilityUntil)m*=1.6;if(sprint&&player.stamina>0){m*=1.7;player.stamina=Math.max(0,player.stamina-34*dt)}
  player.x=clamp(player.x+dx*player.speed*m*dt,28,932);player.y=clamp(player.y+dy*player.speed*m*dt,28,572);walk+=dt*m*8;
 }
 function collect(){
@@ -169,13 +242,15 @@ function findExit(){
 function transition(){if(!nearExit){msg('אין כאן מעבר');return}const e=nearExit;player.scene=e.to;player.x=e.spawn.x;player.y=e.spawn.y;nearExit=null;msg(scenes[player.scene].name);renderFloors()}
 function update(dt){
  let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
+ player.crouching=!!(keys.c||keys.Control||player.crouchingTouch||player.hidden);if((dx||dy)&&player.hidden)player.hidden=false;
  if(performance.now()<dizzyUntil){dx*=-1;dy*=-1;}
  const sprint=keys.Shift||runTouch;move(dx,dy,dt,sprint);if(!sprint||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
  if(player.ability&&performance.now()>=player.abilityUntil){if(player.ability==='invisible')player.invisible=false;player.ability=null}
  updateDad(dt);
+ updateDadAttackSystem(dt);
  collect();findExit();
  const r=roomAt(player.scene,player.x,player.y);sceneTitle.textContent=scenes[player.scene].name;roomTitle.textContent=r.name;
- staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';
+ renderLives();staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';
 }
 function hasItem(id){return player.inventory.some(i=>i.id===id)}
 function removeSelected(){
@@ -446,7 +521,8 @@ function pickups(){
  for(const p of abilities[player.scene])if(!p.taken){ctx.save();ctx.shadowColor='#b98cff';ctx.shadowBlur=18;ctx.fillStyle='#fff3a8';ctx.beginPath();ctx.arc(p.x,p.y,23,0,Math.PI*2);ctx.fill();ctx.font='28px Arial';ctx.textAlign='center';ctx.fillText(p.icon,p.x,p.y+9);ctx.restore()}
 }
 function libi(){
- const bob=player.moving?Math.sin(walk)*2:0;ctx.save();ctx.translate(player.x,player.y+bob);ctx.globalAlpha=player.invisible?.35:1;
+ const now=performance.now(),jumping=now<player.jumpUntil,jumpP=jumping?Math.max(0,Math.min(1,(now-player.jumpStartedAt)/Math.max(1,player.jumpUntil-player.jumpStartedAt))):0,lift=jumping?Math.sin(jumpP*Math.PI)*18:0;
+ const bob=player.moving?Math.sin(walk)*2:0;ctx.save();ctx.translate(player.x,player.y+bob-lift);if(player.crouching)ctx.scale(1,.78);ctx.globalAlpha=player.invisible?.35:(player.hidden?.18:1);if(player.invulnerableUntil>now&&Math.floor(now/90)%2===0)ctx.globalAlpha*=.35;
  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,19,17,7,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle='#f49bb0';ctx.fillRect(-11,-2,22,21);ctx.fillStyle='#efc1a1';ctx.beginPath();ctx.arc(0,-16,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4b342f';ctx.beginPath();ctx.arc(0,-21,14,Math.PI,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(10,-27,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-4,-17,3,3);ctx.fillRect(3,-17,3,3);ctx.fillStyle='#473538';ctx.fillRect(-3,-16,2,2);ctx.fillRect(4,-16,2,2);ctx.restore()
 }
@@ -461,17 +537,18 @@ function draw(){
  }else{
    drawBase(player.scene);furniture(player.scene);
  }
- exits();pickups();drawDad();libi();drawDizzyFX();
+ exits();pickups();drawDad();drawDadAttacks();libi();drawDizzyFX();
 }
 function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?'<span class="ico">'+it.icon+'</span><span>'+it.name+'</span><small style="font-size:10px;color:#756a74">'+((it.id==='headphones'||it.id==='radio')?'בחר ולחץ חפץ':'')+'</small><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
-addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerDash();if(e.key.toLowerCase()==='j'&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='h'&&!e.repeat)toggleHide();if(e.key.toLowerCase()==='x'&&!e.repeat)pushDadAway();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false;if(e.key.toLowerCase()==='c'||e.key==='Control')player.crouching=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
+document.getElementById('dash').onclick=triggerDash;document.getElementById('jump').onclick=triggerJump;document.getElementById('hide').onclick=toggleHide;document.getElementById('pushDad').onclick=pushDadAway;const crouchBtn=document.getElementById('crouch');crouchBtn.onpointerdown=e=>{e.preventDefault();player.crouchingTouch=true;crouchBtn.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>crouchBtn.addEventListener(ev,e=>{e.preventDefault();player.crouchingTouch=false;crouchBtn.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
 document.getElementById('musicToggle').onclick=toggleBgMusic;
