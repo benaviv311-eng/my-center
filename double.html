@@ -3,412 +3,126 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="theme-color" content="#091224">
+  <meta name="theme-color" content="#081122">
   <title>DOUBLE</title>
   <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;font-family:system-ui,Arial,sans-serif;background:#081122;color:#fff}
-    body{overflow:hidden}
-    button,a{font:inherit}
-    .landing{position:fixed;inset:0;overflow:hidden;background:
-      radial-gradient(circle at 18% 18%,rgba(67,143,255,.24),transparent 30%),
-      radial-gradient(circle at 82% 24%,rgba(255,205,73,.18),transparent 28%),
-      radial-gradient(circle at 50% 88%,rgba(85,224,181,.13),transparent 34%),
-      linear-gradient(145deg,#06101f,#101a37 52%,#171a37)}
-    .stars{position:absolute;inset:-15%;opacity:.28;background-image:
-      radial-gradient(circle,#fff 1px,transparent 1.8px),
-      radial-gradient(circle,#fff7 1px,transparent 1.5px);
-      background-size:44px 44px,73px 73px;animation:stars 28s linear infinite}
-    @keyframes stars{to{transform:translate3d(44px,73px,0)}}
-    .veil{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(4,9,18,.08),rgba(4,9,18,.58))}
-    .topbar{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;direction:ltr}
-    .brand{font-size:27px;font-weight:1000;letter-spacing:.07em;text-shadow:0 7px 24px #0008}
-    .menu-btn{width:52px;height:52px;border-radius:16px;border:1px solid #ffffff2b;background:#ffffff11;color:#fff;font-size:27px;cursor:pointer;backdrop-filter:blur(10px)}
-    .mode{position:absolute;z-index:7;top:84px;left:50%;transform:translateX(-50%);min-width:190px;padding:10px 18px;border-radius:999px;background:#081122b8;border:1px solid #ffffff29;backdrop-filter:blur(12px);font-weight:1000;text-align:center;box-shadow:0 14px 34px #0007;transition:.24s}
-    .mode.change{opacity:.2;transform:translateX(-50%) scale(.9)}
-    .score{position:absolute;z-index:6;top:139px;min-width:108px;padding:10px 12px;border-radius:18px;background:#07101f8f;border:1px solid #ffffff20;backdrop-filter:blur(10px);text-align:center;font-size:12px;font-weight:900}
-    .score strong{display:block;font-size:31px;line-height:1;margin-top:4px}
-    .score.p1{right:5vw;box-shadow:0 10px 30px #2a8dff36}
-    .score.p2{left:5vw;box-shadow:0 10px 30px #ff4f7b31}
-    .board{position:absolute;z-index:4;left:50%;top:49%;width:min(900px,92vw);height:min(540px,64vh);transform:translate(-50%,-50%)}
-    .card{position:absolute;top:50%;width:clamp(230px,31vw,375px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 42% 34%,#fff,#f5f8ff 55%,#dde7f5);border:7px solid #ffffffb8;box-shadow:0 28px 78px #0008,inset 0 0 0 3px #203f6622;transform:translateY(-50%)}
-    .card.left{left:0;animation:floatL 5.2s ease-in-out infinite}
-    .card.right{right:0;animation:floatR 5.2s ease-in-out infinite}
-    .card.gold{box-shadow:0 0 0 5px #ffd34d6b,0 28px 78px #d8950040,inset 0 0 0 3px #203f6622}
-    @keyframes floatL{0%,100%{transform:translateY(-50%) rotate(-4deg)}50%{transform:translateY(calc(-50% - 15px)) rotate(2deg)}}
-    @keyframes floatR{0%,100%{transform:translateY(-50%) rotate(4deg)}50%{transform:translateY(calc(-50% + 14px)) rotate(-2deg)}}
-    .sym{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));font-size:clamp(27px,4vw,53px);filter:drop-shadow(0 3px 4px #0002)}
-    .sym.match{animation:match 1.05s ease-in-out infinite;filter:drop-shadow(0 0 12px #ffc629)}
-    @keyframes match{50%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.24)}}
-    .cursor{position:absolute;width:44px;height:44px;border:4px solid currentColor;border-radius:50%;z-index:8;box-shadow:0 0 18px currentColor}
-    .cursor:after{content:"";position:absolute;inset:7px;border:2px dashed currentColor;border-radius:50%}
-    .cursor.p1{color:#49a6ff}.cursor.p2{color:#ff5c82}
-    .spark{position:absolute;z-index:9;font-size:22px;animation:spark .9s ease-out forwards;pointer-events:none}
-    @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.35) rotate(220deg)}}
-    .hero{position:absolute;z-index:8;left:50%;bottom:6.2vh;transform:translateX(-50%);width:min(780px,92vw);text-align:center}
-    .hero h1{margin:0;font-size:clamp(58px,10vw,112px);line-height:.9;letter-spacing:.08em;text-shadow:0 12px 38px #0009}
-    .hero p{margin:12px auto 18px;font-size:clamp(16px,2.1vw,22px);font-weight:800;color:#ffffffda}
-    .play{display:inline-block;border:0;border-radius:999px;background:linear-gradient(135deg,#ffd84d,#ffb83e);color:#171717;padding:15px 28px;font-size:18px;font-weight:1000;cursor:pointer;text-decoration:none;box-shadow:0 13px 35px #0005,0 0 0 5px #ffd84d20}
-    .lives{height:23px;margin-top:7px;color:#ff7694;font-weight:1000;letter-spacing:.1em}
-    
-    .overlay{position:absolute;inset:0;z-index:20;background:transparent;opacity:0;visibility:hidden}
-    .overlay.open{opacity:1;visibility:visible}
-    .dropdown{position:absolute;top:78px;right:18px;z-index:21;width:min(390px,calc(100vw - 36px));max-height:calc(100vh - 98px);overflow:auto;padding:14px;border-radius:22px;background:linear-gradient(180deg,#0a1530f5,#111d38f5);border:1px solid #ffffff22;box-shadow:0 24px 70px #0009;transform:translateY(-10px) scale(.98);transform-origin:top right;opacity:0;visibility:hidden;transition:.22s ease;backdrop-filter:blur(16px)}
-    .dropdown.open{transform:translateY(0) scale(1);opacity:1;visibility:visible}
-    .dropdown-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-    .dropdown-head h2{margin:0;font-size:22px}
-    .close{width:38px;height:38px;border-radius:12px;border:1px solid #ffffff1e;background:#ffffff10;color:#fff;font-size:18px;cursor:pointer}
-    .nav{display:grid;gap:8px}
-    .nav button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;border-radius:14px;border:1px solid #ffffff16;background:#ffffff0a;color:#fff;text-align:right;font-weight:900;cursor:pointer}
-    .nav button.primary-menu{background:linear-gradient(135deg,#2d82e6,#6b64ff);border-color:#78b7ff55}
-    .nav span{font-size:21px}
-    .drop-section{display:none;margin-top:4px;padding:10px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12}
-    .drop-section.open{display:block}
-    .drop-title{font-size:12px;font-weight:1000;opacity:.68;margin:0 2px 8px}
-    .mode-mini-grid,.voice-mini-grid,.player-mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-    .mode-mini,.voice-mini,.player-mini{min-height:54px!important;display:grid!important;gap:2px!important;align-content:center!important;padding:9px 10px!important}
-    .mode-mini b,.voice-mini b,.player-mini b{font-size:14px}.mode-mini small,.voice-mini small,.player-mini small{font-size:10px;opacity:.7}
-    .voice-mini.active{border-color:#ffd84d;background:#ffd84d1c;box-shadow:inset 0 0 0 1px #ffd84d66}
-    .player-root{justify-content:space-between!important}
-    .player-root .chev{margin-inline-start:auto;font-size:14px;opacity:.7;transition:transform .2s ease}
-    .player-root.open .chev{transform:rotate(180deg)}
-    .player-root.one{background:linear-gradient(135deg,#214a8a88,#2f78d255);border-color:#4e9bff55}
-    .player-root.two{background:linear-gradient(135deg,#8a244a88,#d34e7555);border-color:#ff6e9555}
-    .game-flow-choice{min-height:64px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:12px 14px!important}
-    .game-flow-choice b{font-size:15px}.game-flow-choice small{display:block;font-size:10px;opacity:.7;margin-top:2px}
-    .game-flow-choice .choice-copy{display:grid;text-align:right}
-    .game-flow-back{margin-bottom:8px!important;background:#ffffff08!important;justify-content:flex-start!important;font-size:12px!important;min-height:42px!important}
-    .difficulty-flow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-    .difficulty-choice{min-height:58px!important;display:grid!important;place-items:center!important;gap:2px!important;padding:9px 8px!important}
-    .difficulty-choice b{font-size:14px}.difficulty-choice small{font-size:9px;opacity:.68;text-align:center}
-    .difficulty-choice.active{background:#ffd84d1c!important;border-color:#ffd84d!important;box-shadow:inset 0 0 0 1px #ffd84d55}
-    @media(max-width:520px){.difficulty-flow-grid{grid-template-columns:1fr}}
-    .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s ease}
-    .game-shell.open{opacity:1;visibility:visible}
-    .game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}
-    .game-shell-close{position:absolute;z-index:3;top:12px;right:12px;border:1px solid #ffffff33;background:#0a1022d9;color:#fff;border-radius:14px;padding:10px 13px;font-weight:1000;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 8px 26px #0007}
-  
-    .how{position:absolute;z-index:12;left:50%;bottom:20vh;transform:translate(-50%,16px);width:min(480px,88vw);padding:13px 16px;border-radius:18px;background:#07101fe0;border:1px solid #ffffff28;backdrop-filter:blur(12px);text-align:center;font-weight:900;opacity:0;pointer-events:none;transition:.28s}
-    .how.show{opacity:1;transform:translate(-50%,0)}
-    @media(max-width:700px){
-      .board{width:98vw;height:54vh;top:46%}
-      .card{width:52vw;opacity:.78}
-      .card.left{left:-13vw}.card.right{right:-13vw}
-      .score{top:126px;min-width:82px;padding:8px}
-      .score.p1{right:10px}.score.p2{left:10px}
-      .mode{top:78px}
-      .hero{bottom:4.4vh}.hero h1{font-size:58px}
-      .how{bottom:20vh}
-    }
-    @media(prefers-reduced-motion:reduce){.stars,.card,.sym,.spark{animation:none!important}}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:system-ui,Arial,sans-serif;background:#081122;color:#fff}body{overflow:hidden}button{font:inherit}
+    .landing{position:fixed;inset:0;overflow:hidden;background:radial-gradient(circle at 18% 18%,#4b8fff38,transparent 30%),radial-gradient(circle at 82% 24%,#ffd34d2e,transparent 28%),radial-gradient(circle at 50% 88%,#54e0b522,transparent 34%),linear-gradient(145deg,#06101f,#101a37 52%,#171a37)}
+    .stars{position:absolute;inset:-15%;opacity:.25;background-image:radial-gradient(circle,#fff 1px,transparent 1.8px),radial-gradient(circle,#fff7 1px,transparent 1.5px);background-size:44px 44px,73px 73px;animation:stars 28s linear infinite}.veil{position:absolute;inset:0;background:linear-gradient(to bottom,#04091212,#0409128f)}@keyframes stars{to{transform:translate3d(44px,73px,0)}}
+    .topbar{position:relative;z-index:15;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;direction:ltr}.brand{font-size:27px;font-weight:1000;letter-spacing:.07em}.menu-btn{width:52px;height:52px;border-radius:16px;border:1px solid #ffffff2b;background:#ffffff11;color:#fff;font-size:27px;cursor:pointer;backdrop-filter:blur(10px)}
+    .preview-tag{position:absolute;z-index:8;top:80px;left:50%;transform:translateX(-50%);min-width:210px;padding:10px 18px;border-radius:999px;background:#081122c9;border:1px solid #ffffff29;backdrop-filter:blur(12px);font-weight:1000;text-align:center;box-shadow:0 14px 34px #0007}
+    .hud{position:absolute;z-index:7;top:132px;left:50%;transform:translateX(-50%);display:flex;gap:10px;direction:ltr}.hud-box{min-width:110px;padding:9px 12px;border-radius:17px;background:#07101f92;border:1px solid #ffffff20;backdrop-filter:blur(10px);text-align:center;font-size:11px;font-weight:900}.hud-box strong{display:block;font-size:27px;line-height:1.05;margin-top:3px}.hud-box.p1{box-shadow:0 10px 28px #2a8dff2e}.hud-box.p2{box-shadow:0 10px 28px #ff4f7b2e}.hud-box.hidden{display:none}
+    .board{position:absolute;z-index:4;left:50%;top:47%;width:min(900px,92vw);height:min(530px,62vh);transform:translate(-50%,-50%)}.card{position:absolute;top:50%;width:clamp(225px,31vw,370px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 42% 34%,#fff,#f5f8ff 55%,#dde7f5);border:7px solid #ffffffb8;box-shadow:0 28px 78px #0008,inset 0 0 0 3px #203f6622;transform:translateY(-50%);transition:.3s}.card.left{left:0;animation:floatL 5.2s ease-in-out infinite}.card.right{right:0;animation:floatR 5.2s ease-in-out infinite}.card.gold{box-shadow:0 0 0 6px #ffd34d7a,0 28px 78px #d8950048,inset 0 0 0 3px #203f6622}.card.hit{animation:hit .34s ease}.sym{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%) rotate(var(--r));font-size:clamp(27px,4vw,53px);filter:drop-shadow(0 3px 4px #0002)}.sym.match{animation:match 1.05s ease-in-out infinite;filter:drop-shadow(0 0 12px #ffc629)}
+    @keyframes floatL{0%,100%{transform:translateY(-50%) rotate(-4deg)}50%{transform:translateY(calc(-50% - 15px)) rotate(2deg)}}@keyframes floatR{0%,100%{transform:translateY(-50%) rotate(4deg)}50%{transform:translateY(calc(-50% + 14px)) rotate(-2deg)}}@keyframes hit{50%{filter:brightness(1.35);transform:translateY(-50%) scale(1.04)}}@keyframes match{50%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.24)}}
+    .cursor{position:absolute;width:44px;height:44px;border:4px solid currentColor;border-radius:50%;z-index:8;box-shadow:0 0 18px currentColor;transition:.25s}.cursor:after{content:"";position:absolute;inset:7px;border:2px dashed currentColor;border-radius:50%}.cursor.p1{color:#49a6ff}.cursor.p2{color:#ff5c82}.spark{position:absolute;z-index:10;font-size:22px;animation:spark .9s ease-out forwards;pointer-events:none}@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.35) rotate(220deg)}}
+    .mode-extra{position:absolute;z-index:9;left:50%;top:67%;transform:translateX(-50%);min-width:220px;text-align:center;font-weight:1000;text-shadow:0 5px 18px #0009}.progress{width:240px;max-width:60vw;height:10px;border-radius:999px;background:#ffffff1d;margin:8px auto 0;overflow:hidden}.progress i{display:block;height:100%;width:30%;border-radius:inherit;background:linear-gradient(90deg,#4da5ff,#ffd84d);transition:width .35s}.mode-extra .flash{display:inline-block;padding:7px 12px;border-radius:999px;background:#ffffff12;border:1px solid #ffffff1d}
+    .hero{position:absolute;z-index:10;left:50%;bottom:4.5vh;transform:translateX(-50%);width:min(780px,92vw);text-align:center}.hero h1{margin:0;font-size:clamp(54px,9vw,104px);line-height:.9;letter-spacing:.08em;text-shadow:0 12px 38px #0009}.selected-title{margin:10px 0 3px;font-size:clamp(18px,2.4vw,26px);font-weight:1000}.selected-sub{margin:0 auto 15px;font-size:14px;color:#ffffffbd;font-weight:800}.play{border:0;border-radius:999px;background:linear-gradient(135deg,#ffd84d,#ffb83e);color:#171717;padding:15px 28px;font-size:18px;font-weight:1000;cursor:pointer;box-shadow:0 13px 35px #0005,0 0 0 5px #ffd84d20}
+    .overlay{position:absolute;inset:0;z-index:20;background:transparent;opacity:0;visibility:hidden}.overlay.open{opacity:1;visibility:visible}.dropdown{position:absolute;top:78px;right:18px;z-index:21;width:min(400px,calc(100vw - 36px));max-height:calc(100vh - 98px);overflow:auto;padding:14px;border-radius:22px;background:linear-gradient(180deg,#0a1530f7,#111d38f7);border:1px solid #ffffff22;box-shadow:0 24px 70px #0009;transform:translateY(-10px) scale(.98);transform-origin:top right;opacity:0;visibility:hidden;transition:.22s;backdrop-filter:blur(16px)}.dropdown.open{transform:translateY(0) scale(1);opacity:1;visibility:visible}.dropdown-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.dropdown-head h2{margin:0;font-size:22px}.close{width:38px;height:38px;border-radius:12px;border:1px solid #ffffff1e;background:#ffffff10;color:#fff;font-size:18px;cursor:pointer}.nav{display:grid;gap:8px}.nav button{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;border-radius:14px;border:1px solid #ffffff16;background:#ffffff0a;color:#fff;text-align:right;font-weight:900;cursor:pointer}.nav span{font-size:20px}.root{justify-content:space-between!important;background:linear-gradient(135deg,#214a8a88,#2f78d255)!important}.root .chev{margin-inline-start:auto;font-size:14px;opacity:.7}.drop{display:none;margin-top:4px;padding:10px;border-radius:16px;background:#ffffff08;border:1px solid #ffffff12}.drop.open{display:block}.drop-title{font-size:12px;font-weight:1000;opacity:.68;margin:0 2px 8px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.choice,.mode-choice,.voice-choice,.difficulty-choice{min-height:56px!important;display:grid!important;gap:2px!important;align-content:center!important;padding:9px 10px!important}.choice b,.mode-choice b,.voice-choice b,.difficulty-choice b{font-size:14px}.choice small,.mode-choice small,.voice-choice small,.difficulty-choice small{font-size:10px;opacity:.7}.difficulty-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.difficulty-choice.active,.voice-choice.active{border-color:#ffd84d!important;background:#ffd84d1b!important;box-shadow:inset 0 0 0 1px #ffd84d55}.back{margin-bottom:8px!important;background:#ffffff08!important;justify-content:flex-start!important;font-size:12px!important;min-height:42px!important}
+    .how{position:absolute;z-index:12;left:50%;bottom:20vh;transform:translate(-50%,16px);width:min(480px,88vw);padding:13px 16px;border-radius:18px;background:#07101fe0;border:1px solid #ffffff28;backdrop-filter:blur(12px);text-align:center;font-weight:900;opacity:0;pointer-events:none;transition:.28s}.how.show{opacity:1;transform:translate(-50%,0)}
+    .game-shell{position:fixed;inset:0;z-index:120;background:#0b1025;opacity:0;visibility:hidden;transition:.25s}.game-shell.open{opacity:1;visibility:visible}.game-shell iframe{width:100%;height:100%;border:0;background:#0b1025}.game-close{position:absolute;z-index:3;top:12px;right:12px;border:1px solid #ffffff33;background:#0a1022df;color:#fff;border-radius:14px;padding:10px 13px;font-weight:1000;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 8px 26px #0007}
+    @media(max-width:700px){.board{width:98vw;height:50vh;top:44%}.card{width:52vw;opacity:.82}.card.left{left:-13vw}.card.right{right:-13vw}.hud{top:126px}.preview-tag{top:76px}.hero{bottom:3.5vh}.hero h1{font-size:56px}.mode-extra{top:64%}}@media(max-width:520px){.difficulty-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}}@media(prefers-reduced-motion:reduce){.stars,.card,.sym,.spark{animation:none!important}}
   </style>
 </head>
 <body>
   <main class="landing">
-    <div class="stars"></div>
-    <div class="veil"></div>
-
-    <header class="topbar">
-      <div class="brand">DOUBLE</div>
-      <button class="menu-btn" id="menuBtn" type="button" aria-label="פתח תפריט">☰</button>
-    </header>
-
-    <div class="mode" id="mode">⚡ קלאסי</div>
-    <div class="score p2">שחקן 2<strong id="score2">7</strong></div>
-    <div class="score p1">שחקן 1<strong id="score1">9</strong></div>
+    <div class="stars"></div><div class="veil"></div>
+    <header class="topbar"><div class="brand">DOUBLE</div><button class="menu-btn" id="menuBtn" type="button" aria-label="פתח תפריט">☰</button></header>
+    <div class="preview-tag" id="previewTag">⚡ קלאסי</div>
+    <div class="hud">
+      <div class="hud-box p2 hidden" id="hud2">שחקן 2<strong id="hud2Value">0</strong></div>
+      <div class="hud-box p1" id="hud1">ניקוד<strong id="hud1Value">0</strong></div>
+      <div class="hud-box" id="hudTime">זמן<strong id="hudTimeValue">60</strong></div>
+    </div>
     <div class="board" id="board"></div>
-
+    <div class="mode-extra" id="modeExtra"></div>
     <section class="hero">
       <h1>DOUBLE</h1>
-      <p id="sub">מצא מהר. צבור נקודות.</p>
-      <div class="lives" id="lives"></div>
-      <button class="play" type="button" data-open-game>▶ שחק עכשיו</button>
+      <div class="selected-title" id="selectedTitle">קלאסי</div>
+      <p class="selected-sub" id="selectedSub">צבור כמה שיותר נקודות</p>
+      <button class="play" id="playSelected" type="button">▶ שחק עכשיו</button>
     </section>
+    <div class="how" id="how">בחר משחק מהתפריט, ראה אותו קורה כאן, וכשתרצה להתחיל לחץ “שחק עכשיו”.</div>
 
-    <div class="how" id="how">מצא את הסמל היחיד שמופיע בשני הקלפים — ולחץ עליו לפני שהזמן או היריב מנצחים אותך.</div>
-
-    
     <div class="overlay" id="overlay"></div>
     <aside class="dropdown" id="dropdown" aria-hidden="true">
-      <div class="dropdown-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button" aria-label="סגור">✕</button></div>
+      <div class="dropdown-head"><h2>DOUBLE</h2><button class="close" id="closeBtn" type="button">✕</button></div>
       <nav class="nav">
-        <button class="player-root one" type="button" data-toggle-games>
-          <span>🎮</span><b>מצבי משחק</b><span class="chev">⌄</span>
-        </button>
-
-        <div class="drop-section" id="playerCountSection">
+        <button class="root" type="button" data-toggle-games><span>🎮</span><b>מצבי משחק</b><span class="chev">⌄</span></button>
+        <div class="drop" id="playerCountSection">
           <div class="drop-title">כמה שחקנים?</div>
-          <div class="player-mini-grid">
-            <button class="game-flow-choice" type="button" data-choose-player-count="1">
-              <span>🎮</span>
-              <span class="choice-copy"><b>שחקן אחד</b><small>משחקי יחיד, שלבים וזמן</small></span>
-              <span>←</span>
-            </button>
-            <button class="game-flow-choice" type="button" data-choose-player-count="2">
-              <span>👥</span>
-              <span class="choice-copy"><b>שני שחקנים</b><small>קרבות ראש בראש</small></span>
-              <span>←</span>
-            </button>
+          <div class="grid">
+            <button class="choice" type="button" data-players="1"><b>🎮 שחקן אחד</b><small>משחקי יחיד, שלבים וזמן</small></button>
+            <button class="choice" type="button" data-players="2"><b>👥 שני שחקנים</b><small>קרבות ראש בראש</small></button>
           </div>
         </div>
-
-        <div class="drop-section" id="difficultySection">
-          <button class="game-flow-back" type="button" data-back-player-choice>← חזרה לבחירת שחקנים</button>
+        <div class="drop" id="difficultySection">
+          <button class="back" type="button" data-back="players">← חזרה</button>
           <div class="drop-title">בחר רמת קושי</div>
-          <div class="difficulty-flow-grid">
-            <button class="difficulty-choice" type="button" data-difficulty-choice="easy">
-              <b>🌱 קל</b><small>יותר זמן וקצב רגוע</small>
-            </button>
-            <button class="difficulty-choice" type="button" data-difficulty-choice="normal">
-              <b>⚡ בינוני</b><small>הקצב הרגיל</small>
-            </button>
-            <button class="difficulty-choice" type="button" data-difficulty-choice="hard">
-              <b>🔥 קשה</b><small>פחות זמן וקצב מהיר</small>
-            </button>
+          <div class="difficulty-grid">
+            <button class="difficulty-choice" type="button" data-difficulty="easy"><b>🌱 קל</b><small>קצב רגוע</small></button>
+            <button class="difficulty-choice" type="button" data-difficulty="normal"><b>⚡ בינוני</b><small>קצב רגיל</small></button>
+            <button class="difficulty-choice" type="button" data-difficulty="hard"><b>🔥 קשה</b><small>קצב מהיר</small></button>
           </div>
         </div>
-
-        <div class="drop-section" id="onePlayerSection">
-          <button class="game-flow-back" type="button" data-back-player-count>← חזרה לבחירת שחקנים</button>
+        <div class="drop" id="oneSection">
+          <button class="back" type="button" data-back="difficulty">← חזרה לרמה</button>
           <div class="drop-title">שחקן אחד — בחר משחק</div>
-          <div class="player-mini-grid">
-            <button class="player-mini" type="button" data-launch-mode="classic"><b>⚡ קלאסי</b><small>צבור כמה שיותר נקודות</small></button>
-            <button class="player-mini" type="button" data-launch-mode="levels"><b>🗺️ עולם השלבים</b><small>המשך מהשלב הנוכחי</small></button>
-            <button class="player-mini" type="button" data-launch-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד התאמות בזמן</small></button>
-            <button class="player-mini" type="button" data-launch-mode="survival"><b>🛡️ הישרדות</b><small>כל הצלחה מוסיפה זמן</small></button>
-            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="5"><b>⏱️ מרוץ 5</b><small>5 הצלחות הכי מהר</small></button>
-            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="10"><b>⏱️ מרוץ 10</b><small>10 הצלחות הכי מהר</small></button>
-            <button class="player-mini" type="button" data-launch-mode="sprint" data-sprint-target="15"><b>⏱️ מרוץ 15</b><small>15 הצלחות הכי מהר</small></button>
+          <div class="grid">
+            <button class="mode-choice" type="button" data-mode="classic"><b>⚡ קלאסי</b><small>ניקוד ומהירות</small></button>
+            <button class="mode-choice" type="button" data-mode="levels"><b>🗺️ עולם השלבים</b><small>התקדמות בין שלבים</small></button>
+            <button class="mode-choice" type="button" data-mode="knockout"><b>🎯 נוקאאוט</b><small>יעד בזמן</small></button>
+            <button class="mode-choice" type="button" data-mode="survival"><b>🛡️ הישרדות</b><small>הצלחה מוסיפה זמן</small></button>
+            <button class="mode-choice" type="button" data-mode="sprint" data-target="5"><b>⏱️ מרוץ 5</b><small>5 הצלחות הכי מהר</small></button>
+            <button class="mode-choice" type="button" data-mode="sprint" data-target="10"><b>⏱️ מרוץ 10</b><small>10 הצלחות הכי מהר</small></button>
+            <button class="mode-choice" type="button" data-mode="sprint" data-target="15"><b>⏱️ מרוץ 15</b><small>15 הצלחות הכי מהר</small></button>
           </div>
         </div>
-
-        <div class="drop-section" id="twoPlayerSection">
-          <button class="game-flow-back" type="button" data-back-player-count>← חזרה לבחירת שחקנים</button>
+        <div class="drop" id="twoSection">
+          <button class="back" type="button" data-back="difficulty">← חזרה לרמה</button>
           <div class="drop-title">שני שחקנים — בחר קרב</div>
-          <div class="player-mini-grid">
-            <button class="player-mini" type="button" data-launch-versus="duel"><b>⚔️ דו־קרב קלאסי</b><small>הראשון ל־10</small></button>
-            <button class="player-mini" type="button" data-launch-versus="deck"><b>🃏 חפיסה מלאה</b><small>כל החפיסה</small></button>
-            <button class="player-mini" type="button" data-launch-versus="knockout"><b>❤️ נוקאאוט</b><small>3 חיים</small></button>
-            <button class="player-mini" type="button" data-launch-versus="race"><b>🏁 מרוץ ל־15</b><small>הראשון ליעד</small></button>
-            <button class="player-mini" type="button" data-launch-versus="combo"><b>🔥 קומבו</b><small>רצף של 5</small></button>
-            <button class="player-mini" type="button" data-launch-versus="sudden"><b>💥 מוות פתאומי</b><small>טעות אחת וזה נגמר</small></button>
-            <button class="player-mini" type="button" data-launch-versus="gold"><b>⭐ קלף זהב</b><small>כל סיבוב חמישי ×3</small></button>
+          <div class="grid">
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="duel"><b>⚔️ דו־קרב קלאסי</b><small>הראשון ל־10</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="deck"><b>🃏 חפיסה מלאה</b><small>כל החפיסה</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="knockout"><b>❤️ נוקאאוט</b><small>3 חיים</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="race"><b>🏁 מרוץ ל־15</b><small>הראשון ליעד</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="combo"><b>🔥 קומבו</b><small>רצף של 5</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="sudden"><b>💥 מוות פתאומי</b><small>טעות אחת וזה נגמר</small></button>
+            <button class="mode-choice" type="button" data-mode="versus" data-variant="gold"><b>⭐ קלף זהב</b><small>כל סיבוב חמישי ×3</small></button>
           </div>
         </div>
-
-        <button type="button" data-toggle-voices><span>🎙️</span>בחר כרוז</button>
-        <div class="drop-section" id="voicesSection">
-          <div class="drop-title">הבחירה נשמרת למשחק</div>
-          <div class="voice-mini-grid">
-            <button class="voice-mini" type="button" data-voice="british"><b>🇬🇧 British</b><small>בריטי</small></button>
-            <button class="voice-mini" type="button" data-voice="russian"><b>🇷🇺 Русский</b><small>רוסית</small></button>
-            <button class="voice-mini" type="button" data-voice="italian"><b>🇮🇹 Italiano</b><small>איטלקית</small></button>
-            <button class="voice-mini" type="button" data-voice="american"><b>🇺🇸 American</b><small>הייפ</small></button>
-            <button class="voice-mini" type="button" data-voice="japanese"><b>🇯🇵 日本語</b><small>יפנית</small></button>
-            <button class="voice-mini" type="button" data-voice="arcade"><b>🎮 Arcade</b><small>משחקי</small></button>
-          </div>
-        </div>
-
-        <button type="button" id="howBtn"><span>❓</span>איך משחקים</button>
+        <button type="button" data-toggle-voices><span>🎙️</span><b>בחר כרוז</b></button>
+        <div class="drop" id="voicesSection"><div class="grid">
+          <button class="voice-choice" type="button" data-voice="british"><b>🇬🇧 British</b></button><button class="voice-choice" type="button" data-voice="russian"><b>🇷🇺 Русский</b></button><button class="voice-choice" type="button" data-voice="italian"><b>🇮🇹 Italiano</b></button><button class="voice-choice" type="button" data-voice="american"><b>🇺🇸 American</b></button><button class="voice-choice" type="button" data-voice="japanese"><b>🇯🇵 日本語</b></button><button class="voice-choice" type="button" data-voice="arcade"><b>🎮 Arcade</b></button>
+        </div></div>
+        <button type="button" id="howBtn"><span>❓</span><b>איך משחקים</b></button>
       </nav>
     </aside>
 
-    <section class="game-shell" id="gameShell" aria-hidden="true">
-      <button class="game-shell-close" id="gameShellClose" type="button">✕ חזרה לדף הנחיתה</button>
-      <iframe id="gameFrame" title="DOUBLE game" loading="eager"></iframe>
-    </section>
+    <section class="game-shell" id="gameShell" aria-hidden="true"><button class="game-close" id="gameClose" type="button">✕ חזרה לדף הנחיתה</button><iframe id="gameFrame" title="DOUBLE game" allow="autoplay"></iframe></section>
   </main>
 
+  <script src="double/landing-selection.js?v=1"></script>
   <script>
-    (()=> {
-      const modes=[
-        {id:'classic',label:'⚡ קלאסי',sub:'מצא מהר. צבור נקודות.',a:9,b:7},
-        {id:'levels',label:'🗺️ עולם השלבים',sub:'כל שלב מהיר וקשה יותר.',a:5,b:4},
-        {id:'knockout',label:'🎯 נוקאאוט',sub:'טעות עולה ביוקר.',a:3,b:2},
-        {id:'survival',label:'🛡️ הישרדות',sub:'כל הצלחה קונה עוד זמן.',a:14,b:12},
-        {id:'sprint',label:'⏱️ מרוץ זמן',sub:'כמה מהר תגיע ליעד?',a:10,b:8},
-        {id:'versus',label:'👥 שני שחקנים',sub:'ראש בראש על אותו מסך.',a:10,b:10},
-        {id:'gold',label:'⭐ קלף זהב',sub:'סיבוב בונוס. יותר נקודות.',a:15,b:13}
-      ];
-      const symbols=['🐶','🦁','🍕','⚽','🏐','🚀','🌈','🔥','⭐','💎','🍓','🎸','👑','🐉','🤖','🎯','🍩','🦄'];
-      const spots=[[50,15,8],[24,29,-14],[74,30,15],[48,43,-5],[18,56,12],[80,57,-18],[34,75,5],[66,78,-8]];
-      const board=document.getElementById('board');
-      const mode=document.getElementById('mode');
-      const sub=document.getElementById('sub');
-      const s1=document.getElementById('score1');
-      const s2=document.getElementById('score2');
-      const lives=document.getElementById('lives');
-      let index=0;
-
-      function unique(used){let s;do{s=symbols[Math.floor(Math.random()*symbols.length)]}while(used.has(s));used.add(s);return s}
-      function card(side,common){
-        const el=document.createElement('div');el.className='card '+side;
-        const used=new Set([common]);
-        spots.forEach((p,i)=>{
-          const span=document.createElement('span');
-          span.className='sym'+(i===3?' match':'');
-          span.textContent=i===3?common:unique(used);
-          span.style.setProperty('--x',p[0]+'%');span.style.setProperty('--y',p[1]+'%');span.style.setProperty('--r',p[2]+'deg');
-          el.appendChild(span);
-        });
-        return el;
-      }
-      function cursors(){
-        const cards=[...board.querySelectorAll('.card')];
-        const br=board.getBoundingClientRect();
-        cards.forEach((c,i)=>{
-          const m=c.querySelector('.match'),r=m.getBoundingClientRect();
-          const cur=document.createElement('span');cur.className='cursor '+(i===0?'p2':'p1');
-          cur.style.left=(r.left-br.left+r.width/2-22)+'px';cur.style.top=(r.top-br.top+r.height/2-22)+'px';board.appendChild(cur);
-        });
-      }
-      function burst(){
-        for(let i=0;i<8;i++){const e=document.createElement('span');e.className='spark';e.textContent=i%3===0?'🪙':i%2?'✦':'★';e.style.left=(45+Math.random()*10)+'%';e.style.top=(43+Math.random()*12)+'%';e.style.setProperty('--dx',((Math.random()-.5)*190)+'px');e.style.setProperty('--dy',(-45-Math.random()*130)+'px');board.appendChild(e);setTimeout(()=>e.remove(),950)}
-      }
-      function round(m){
-        board.innerHTML='';const common=symbols[Math.floor(Math.random()*symbols.length)];
-        const l=card('left',common),r=card('right',common);
-        if(m.id==='gold'){l.classList.add('gold');r.classList.add('gold')}
-        board.append(l,r);
-        if(m.id==='versus') requestAnimationFrame(cursors);
-        burst();
-      }
-      function apply(){
-        const m=modes[index];mode.classList.add('change');
-        setTimeout(()=>{mode.textContent=m.label;sub.textContent=m.sub;s1.textContent=m.a;s2.textContent=m.b;lives.textContent=m.id==='knockout'?'❤️❤️❤️  ·  ❤️❤️':'';round(m);mode.classList.remove('change')},180);
-        index=(index+1)%modes.length;
-      }
-      apply();setInterval(apply,2900);
-
-      
-      const dropdown=document.getElementById('dropdown'),overlay=document.getElementById('overlay');
-      const playerCountSection=document.getElementById('playerCountSection');
-      const difficultySection=document.getElementById('difficultySection');
-      const onePlayerSection=document.getElementById('onePlayerSection');
-      const twoPlayerSection=document.getElementById('twoPlayerSection');
-      const voicesSection=document.getElementById('voicesSection');
-      const gamesToggle=document.querySelector('[data-toggle-games]');
-      const gameShell=document.getElementById('gameShell');
-      const gameFrame=document.getElementById('gameFrame');
-      const VOICE_KEY='double-announcer-pack-v1';
-      const DIFF_KEY='double-difficulty-v1';
-      let pendingPlayers=null;
-
-      const openMenu=()=>{dropdown.classList.add('open');overlay.classList.add('open');dropdown.setAttribute('aria-hidden','false')};
-      const closeMenu=()=>{
-        dropdown.classList.remove('open');
-        overlay.classList.remove('open');
-        dropdown.setAttribute('aria-hidden','true');
-        playerCountSection?.classList.remove('open');
-        difficultySection?.classList.remove('open');
-        onePlayerSection?.classList.remove('open');
-        twoPlayerSection?.classList.remove('open');
-        voicesSection?.classList.remove('open');
-        gamesToggle?.classList.remove('open');
-      };
-
-      function updateVoiceButtons(){
-        let selected='british';
-        try{selected=localStorage.getItem(VOICE_KEY)||'british'}catch(_){}
-        document.querySelectorAll('[data-voice]').forEach(b=>b.classList.toggle('active',b.dataset.voice===selected));
-      }
-
-      function updateDifficultyButtons(){
-        let selected='normal';
-        try{selected=localStorage.getItem(DIFF_KEY)||'normal'}catch(_){}
-        document.querySelectorAll('[data-difficulty-choice]').forEach(b=>b.classList.toggle('active',b.dataset.difficultyChoice===selected));
-      }
-
-      function launchGame(target,opts={}){
-        closeMenu();
-        gameShell.classList.add('open');
-        gameShell.setAttribute('aria-hidden','false');
-        const params=new URLSearchParams();
-        if(target) params.set('launch',target);
-        if(opts.variant) params.set('variant',opts.variant);
-        if(opts.target) params.set('target',String(opts.target));
-        gameFrame.src='double-game.html?v=5&'+params.toString();
-        gameFrame.onload=()=>{};
-      }
-
-      function closeGame(){
-        gameShell.classList.remove('open');
-        gameShell.setAttribute('aria-hidden','true');
-        gameFrame.src='about:blank';
-      }
-
-      document.getElementById('menuBtn').onclick=openMenu;
-      document.getElementById('closeBtn').onclick=closeMenu;
-      overlay.onclick=closeMenu;
-      const closeGameSections=()=>{
-        playerCountSection.classList.remove('open');
-        difficultySection.classList.remove('open');
-        onePlayerSection.classList.remove('open');
-        twoPlayerSection.classList.remove('open');
-        gamesToggle.classList.remove('open');
-      };
-      gamesToggle.onclick=()=>{
-        const open=!playerCountSection.classList.contains('open')&&!onePlayerSection.classList.contains('open')&&!twoPlayerSection.classList.contains('open');
-        closeGameSections();
-        voicesSection.classList.remove('open');
-        if(open){
-          playerCountSection.classList.add('open');
-          gamesToggle.classList.add('open');
-        }
-      };
-      document.querySelectorAll('[data-choose-player-count]').forEach(b=>b.addEventListener('click',()=>{
-        pendingPlayers=b.dataset.choosePlayerCount;
-        playerCountSection.classList.remove('open');
-        onePlayerSection.classList.remove('open');
-        twoPlayerSection.classList.remove('open');
-        difficultySection.classList.add('open');
-        updateDifficultyButtons();
-        gamesToggle.classList.add('open');
-      }));
-      document.querySelectorAll('[data-back-player-count]').forEach(b=>b.addEventListener('click',()=>{
-        onePlayerSection.classList.remove('open');
-        twoPlayerSection.classList.remove('open');
-        difficultySection.classList.add('open');
-        gamesToggle.classList.add('open');
-      }));
-      document.querySelector('[data-back-player-choice]').addEventListener('click',()=>{
-        difficultySection.classList.remove('open');
-        playerCountSection.classList.add('open');
-        gamesToggle.classList.add('open');
-      });
-      document.querySelectorAll('[data-difficulty-choice]').forEach(b=>b.addEventListener('click',()=>{
-        try{localStorage.setItem(DIFF_KEY,b.dataset.difficultyChoice)}catch(_){}
-        updateDifficultyButtons();
-        difficultySection.classList.remove('open');
-        if(pendingPlayers==='1') onePlayerSection.classList.add('open');
-        else twoPlayerSection.classList.add('open');
-        gamesToggle.classList.add('open');
-      }));
-      document.querySelector('[data-toggle-voices]').onclick=()=>{
-        const open=!voicesSection.classList.contains('open');
-        voicesSection.classList.toggle('open',open);
-        closeGameSections();
-      };
-      document.querySelectorAll('[data-launch-mode]').forEach(b=>b.addEventListener('click',()=>{
-        const opts={};
-        if(b.dataset.sprintTarget) opts.target=Number(b.dataset.sprintTarget);
-        launchGame(b.dataset.launchMode,opts);
-      }));
-      document.querySelectorAll('[data-launch-versus]').forEach(b=>b.addEventListener('click',()=>{
-        launchGame('versus',{variant:b.dataset.launchVersus});
-      }));
-      document.querySelectorAll('[data-voice]').forEach(b=>b.addEventListener('click',()=>{
-        try{localStorage.setItem(VOICE_KEY,b.dataset.voice)}catch(_){}
-        updateVoiceButtons();
-      }));
-      updateVoiceButtons();
-      updateDifficultyButtons();
-      document.getElementById('gameShellClose').onclick=closeGame;
-      document.getElementById('howBtn').onclick=()=>{closeMenu();const h=document.getElementById('how');h.classList.add('show');setTimeout(()=>h.classList.remove('show'),3500)};
-      document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(gameShell.classList.contains('open'))closeGame();else closeMenu()}});
-      window.addEventListener('resize',()=>{if(board.querySelector('.cursor')){const m=modes[(index-1+modes.length)%modes.length];round(m)}});
-    })();
+  (()=>{
+    'use strict';
+    const S=window.DoubleLandingSelection;
+    const symbols=['🐶','🦁','🍕','⚽','🏐','🚀','🌈','🔥','⭐','💎','🍓','🎸','👑','🐉','🤖','🎯','🍩','🦄'];
+    const spots=[[50,15,8],[24,29,-14],[74,30,15],[48,43,-5],[18,56,12],[80,57,-18],[34,75,5],[66,78,-8]];
+    const defs={classic:{label:'⚡ קלאסי',title:'קלאסי',sub:'צבור כמה שיותר נקודות'},levels:{label:'🗺️ עולם השלבים',title:'עולם השלבים',sub:'עבור שלבים והתקדם בעולם'},knockout:{label:'🎯 נוקאאוט',title:'נוקאאוט',sub:'השג את היעד לפני שהזמן נגמר'},survival:{label:'🛡️ הישרדות',title:'הישרדות',sub:'כל הצלחה מוסיפה לך זמן'},'sprint:5':{label:'⏱️ מרוץ 5',title:'מרוץ 5',sub:'5 הצלחות — כמה שפחות זמן'},'sprint:10':{label:'⏱️ מרוץ 10',title:'מרוץ 10',sub:'10 הצלחות — כמה שפחות זמן'},'sprint:15':{label:'⏱️ מרוץ 15',title:'מרוץ 15',sub:'15 הצלחות — כמה שפחות זמן'},'versus:duel':{label:'⚔️ דו־קרב קלאסי',title:'דו־קרב קלאסי',sub:'הראשון ל־10 מנצח'},'versus:deck':{label:'🃏 חפיסה מלאה',title:'חפיסה מלאה',sub:'מי שולט בכל החפיסה?'},'versus:knockout':{label:'❤️ נוקאאוט לשניים',title:'נוקאאוט לשניים',sub:'3 חיים לכל שחקן'},'versus:race':{label:'🏁 מרוץ ל־15',title:'מרוץ ל־15',sub:'ראשון ל־15 מנצח'},'versus:combo':{label:'🔥 קומבו',title:'קרב קומבו',sub:'ראשון לרצף של 5'},'versus:sudden':{label:'💥 מוות פתאומי',title:'מוות פתאומי',sub:'טעות אחת יכולה לסיים הכול'},'versus:gold':{label:'⭐ קלף זהב',title:'קרב קלף זהב',sub:'כל סיבוב חמישי שווה ×3'}};
+    let state=S.createState(),pendingPlayers=1,pendingDifficulty='normal',sim={},simTimer=null,roundTimer=null;
+    const $=id=>document.getElementById(id),board=$('board');const sections=['playerCountSection','difficultySection','oneSection','twoSection','voicesSection'].map($);
+    function openOnly(id){sections.forEach(x=>x?.classList.toggle('open',x.id===id))}function openMenu(){$('dropdown').classList.add('open');$('overlay').classList.add('open');$('dropdown').setAttribute('aria-hidden','false')}function closeMenu(){$('dropdown').classList.remove('open');$('overlay').classList.remove('open');$('dropdown').setAttribute('aria-hidden','true');sections.forEach(x=>x?.classList.remove('open'))}
+    function savedDifficulty(){try{return localStorage.getItem('double-difficulty-v1')||'normal'}catch(_){return 'normal'}}function saveDifficulty(v){try{localStorage.setItem('double-difficulty-v1',v)}catch(_){}}function updateDifficulty(){document.querySelectorAll('[data-difficulty]').forEach(b=>b.classList.toggle('active',b.dataset.difficulty===pendingDifficulty))}function updateVoices(){let v='british';try{v=localStorage.getItem('double-announcer-pack-v1')||v}catch(_){}document.querySelectorAll('[data-voice]').forEach(b=>b.classList.toggle('active',b.dataset.voice===v))}
+    function unique(used){let s;do{s=symbols[Math.floor(Math.random()*symbols.length)]}while(used.has(s));used.add(s);return s}function makeCard(side,common){const el=document.createElement('div');el.className='card '+side;const used=new Set([common]);spots.forEach((p,i)=>{const sp=document.createElement('span');sp.className='sym'+(i===3?' match':'');sp.textContent=i===3?common:unique(used);sp.style.setProperty('--x',p[0]+'%');sp.style.setProperty('--y',p[1]+'%');sp.style.setProperty('--r',p[2]+'deg');el.appendChild(sp)});return el}
+    function redrawCards(){board.innerHTML='';const common=symbols[Math.floor(Math.random()*symbols.length)],left=makeCard('left',common),right=makeCard('right',common);if(S.previewKey(state)==='versus:gold'){left.classList.add('gold');right.classList.add('gold')}board.append(left,right);if(state.players===2)requestAnimationFrame(addCursors);burst();setTimeout(()=>{left.classList.add('hit');right.classList.add('hit');setTimeout(()=>{left.classList.remove('hit');right.classList.remove('hit')},360)},500)}
+    function addCursors(){const cards=[...board.querySelectorAll('.card')],br=board.getBoundingClientRect();cards.forEach((c,i)=>{const m=c.querySelector('.match'),r=m.getBoundingClientRect(),cur=document.createElement('span');cur.className='cursor '+(i?'p1':'p2');cur.style.left=(r.left-br.left+r.width/2-22)+'px';cur.style.top=(r.top-br.top+r.height/2-22)+'px';board.appendChild(cur)})}function burst(){for(let i=0;i<8;i++){const e=document.createElement('span');e.className='spark';e.textContent=i%3===0?'🪙':i%2?'✦':'★';e.style.left=(45+Math.random()*10)+'%';e.style.top=(43+Math.random()*12)+'%';e.style.setProperty('--dx',((Math.random()-.5)*190)+'px');e.style.setProperty('--dy',(-45-Math.random()*130)+'px');board.appendChild(e);setTimeout(()=>e.remove(),950)}}
+    function resetSim(){clearInterval(simTimer);clearInterval(roundTimer);const key=S.previewKey(state);sim={score:0,score2:0,time:state.difficulty==='easy'?75:state.difficulty==='hard'?45:60,stage:1,progress:0,lives1:3,lives2:3,streak1:0,streak2:0,elapsed:0,matches:0};redrawCards();renderHud();roundTimer=setInterval(()=>{redrawCards();simulateSuccess(key)},1700);simTimer=setInterval(()=>{tick(key);renderHud()},500)}
+    function simulateSuccess(key){if(key==='classic'){sim.score+=100+Math.floor(Math.random()*80)}else if(key==='levels'){sim.progress+=22;if(sim.progress>=100){sim.progress=0;sim.stage=Math.min(20,sim.stage+1)}}else if(key==='knockout'){sim.matches++}else if(key==='survival'){sim.score+=100;sim.time+=2}else if(key.startsWith('sprint:')){sim.matches=Math.min(Number(key.split(':')[1]),sim.matches+1)}else if(key.startsWith('versus:')){const p=Math.random()<.52?1:2;if(p===1)sim.score++;else sim.score2++;if(key==='versus:combo'){if(p===1){sim.streak1++;sim.streak2=0}else{sim.streak2++;sim.streak1=0}}if(key==='versus:knockout'&&Math.random()<.25){if(p===1)sim.lives2=Math.max(0,sim.lives2-1);else sim.lives1=Math.max(0,sim.lives1-1)}}renderHud()}
+    function tick(key){if(key==='survival'||key==='classic'||key==='knockout')sim.time=Math.max(0,sim.time-.5);if(key.startsWith('sprint:'))sim.elapsed+=.5;if(key==='versus:sudden')sim.elapsed+=.5}
+    function renderHud(){const key=S.previewKey(state),h1=$('hud1'),h2=$('hud2'),ht=$('hudTime'),v1=$('hud1Value'),v2=$('hud2Value'),tv=$('hudTimeValue'),extra=$('modeExtra');h2.classList.toggle('hidden',state.players!==2);extra.innerHTML='';h1.firstChild.textContent=state.players===2?'שחקן 1':'ניקוד';v1.textContent=sim.score;v2.textContent=sim.score2;ht.firstChild.textContent='זמן';tv.textContent=Math.ceil(sim.time);if(key==='levels'){h1.firstChild.textContent='שלב';v1.textContent=sim.stage;ht.firstChild.textContent='התקדמות';tv.textContent=sim.progress+'%';extra.innerHTML='<span class="flash">שלב '+sim.stage+'</span><div class="progress"><i style="width:'+sim.progress+'%"></i></div>'}else if(key==='knockout'){h1.firstChild.textContent='התאמות';v1.textContent=sim.matches;extra.innerHTML='<span class="flash">יעד: '+(state.difficulty==='hard'?15:state.difficulty==='easy'?10:12)+'</span>'}else if(key==='survival'){h1.firstChild.textContent='ניקוד';extra.innerHTML='<span class="flash">+2 שניות בכל הצלחה</span>'}else if(key.startsWith('sprint:')){const target=Number(key.split(':')[1]);h1.firstChild.textContent='הצלחות';v1.textContent=sim.matches+'/'+target;ht.firstChild.textContent='שעון';tv.textContent=sim.elapsed.toFixed(1);extra.innerHTML='<span class="flash">שבור את השיא שלך</span>'}else if(key==='versus:knockout'){h1.firstChild.textContent='שחקן 1';v1.textContent='❤️'.repeat(sim.lives1);h2.firstChild.textContent='שחקן 2';v2.textContent='❤️'.repeat(sim.lives2);ht.classList.add('hidden')}else{ht.classList.toggle('hidden',state.players===2);if(key==='versus:race')extra.innerHTML='<span class="flash">הראשון ל־15</span>';if(key==='versus:combo')extra.innerHTML='<span class="flash">🔥 '+sim.streak1+' : '+sim.streak2+'</span>';if(key==='versus:sudden')extra.innerHTML='<span class="flash">💥 טעות אחת וזה נגמר</span>';if(key==='versus:gold')extra.innerHTML='<span class="flash">⭐ כל סיבוב חמישי ×3</span>'}if(key!=='versus:knockout')ht.classList.remove('hidden');if(state.players===2&&key!=='versus:knockout')ht.classList.add('hidden')}
+    function showSelection(){const key=S.previewKey(state),d=defs[key]||defs.classic;$('previewTag').textContent=d.label;$('selectedTitle').textContent=d.title;$('selectedSub').textContent=d.sub;resetSim()}function chooseGame(btn){state=S.selectGame(state,{players:pendingPlayers,difficulty:pendingDifficulty,mode:btn.dataset.mode,variant:btn.dataset.variant||null,target:btn.dataset.target||null});saveDifficulty(state.difficulty);closeMenu();showSelection()}function launchSelected(){saveDifficulty(state.difficulty);$('gameShell').classList.add('open');$('gameShell').setAttribute('aria-hidden','false');$('gameFrame').src='double-game.html?v=8&'+S.launchQuery(state)}
+    $('menuBtn').onclick=()=>{openMenu();openOnly('playerCountSection')};$('closeBtn').onclick=closeMenu;$('overlay').onclick=closeMenu;document.querySelector('[data-toggle-games]').onclick=()=>{openMenu();openOnly('playerCountSection')};document.querySelectorAll('[data-players]').forEach(b=>b.onclick=()=>{pendingPlayers=Number(b.dataset.players);pendingDifficulty=savedDifficulty();updateDifficulty();openOnly('difficultySection')});document.querySelectorAll('[data-difficulty]').forEach(b=>b.onclick=()=>{pendingDifficulty=b.dataset.difficulty;saveDifficulty(pendingDifficulty);updateDifficulty();openOnly(pendingPlayers===1?'oneSection':'twoSection')});document.querySelectorAll('[data-back="players"]').forEach(b=>b.onclick=()=>openOnly('playerCountSection'));document.querySelectorAll('[data-back="difficulty"]').forEach(b=>b.onclick=()=>openOnly('difficultySection'));document.querySelectorAll('.mode-choice').forEach(b=>b.onclick=()=>chooseGame(b));document.querySelector('[data-toggle-voices]').onclick=()=>{openMenu();openOnly('voicesSection')};document.querySelectorAll('[data-voice]').forEach(b=>b.onclick=()=>{try{localStorage.setItem('double-announcer-pack-v1',b.dataset.voice)}catch(_){}updateVoices()});$('howBtn').onclick=()=>{closeMenu();$('how').classList.add('show');setTimeout(()=>$('how').classList.remove('show'),3500)};$('playSelected').onclick=launchSelected;$('gameClose').onclick=()=>{$('gameShell').classList.remove('open');$('gameShell').setAttribute('aria-hidden','true');$('gameFrame').src='about:blank'};document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('gameShell').classList.contains('open'))$('gameClose').click();else closeMenu()}});window.addEventListener('resize',()=>{if(state.players===2)redrawCards()});pendingDifficulty=savedDifficulty();state=S.selectGame(state,{players:1,difficulty:pendingDifficulty,mode:'classic'});state.locked=false;updateDifficulty();updateVoices();showSelection();
+  })();
   </script>
 </body>
 </html>
