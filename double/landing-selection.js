@@ -37,7 +37,7 @@
   if(!document.querySelector('link[data-double-lobby]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='double/menu-lobby.css?v=6';
+    link.href='double/menu-lobby.css?v=7';
     link.dataset.doubleLobby='1';
     head.appendChild(link);
   }
@@ -55,9 +55,18 @@
     s.onload=()=>{s.dataset.loaded='1';next?.()};
     document.body.appendChild(s);
   }
-  const loadBridge=()=>load('double/landing-music-bridge.js?v=6','data-double-landing-music-bridge',()=>false);
-  const loadLobby=()=>load('double/menu-lobby-v3.js?v=6','data-double-lobby-ui',()=>false,loadBridge);
-  const loadMusic=()=>load('double/music-engine-state.js?v=6','data-double-music-state',()=>!!window.DoubleMusicState,()=>
-    load('double/music-engine.js?v=6','data-double-music-engine',()=>!!window.DoubleMusic,loadLobby));
-  load('double/menu-lobby-state.js?v=6','data-double-lobby-state',()=>!!window.DoubleMenuLobbyState,loadMusic);
+  function loadSprite(next){
+    load('double/icon-sprite-0.js?v=1','data-double-icon-sprite-0',()=>false,()=>
+      load('double/icon-sprite-1.js?v=1','data-double-icon-sprite-1',()=>false,()=>
+        load('double/icon-sprite-2.js?v=1','data-double-icon-sprite-2',()=>false,()=>
+          load('double/icon-sprite-3.js?v=1','data-double-icon-sprite-3',()=>false,()=>
+            load('double/icon-packs.js?v=1','data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))));
+  }
+  const loadBridge=()=>load('double/landing-music-bridge.js?v=7','data-double-landing-music-bridge',()=>false);
+  const loadPackUi=()=>load('double/icon-pack-ui.js?v=1','data-double-icon-pack-ui',()=>false,loadBridge);
+  const loadLobby=()=>load('double/menu-lobby-v3.js?v=7','data-double-lobby-ui',()=>false,loadPackUi);
+  const loadPacks=()=>loadSprite(loadLobby);
+  const loadMusic=()=>load('double/music-engine-state.js?v=7','data-double-music-state',()=>!!window.DoubleMusicState,()=>
+    load('double/music-engine.js?v=7','data-double-music-engine',()=>!!window.DoubleMusic,loadPacks));
+  load('double/menu-lobby-state.js?v=7','data-double-lobby-state',()=>!!window.DoubleMenuLobbyState,loadMusic);
 })();
