@@ -1,0 +1,51 @@
+name: Score Counter resize test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score-counter/index.html'
+      - 'score-counter/score-drag.js'
+      - 'score-counter/score-resize.js'
+      - 'score-counter/score-resize.css'
+      - '.github/workflows/score-counter-resize-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify resizable score cards and auto arrange reset
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const index=fs.readFileSync('score-counter/index.html','utf8');
+          const drag=fs.readFileSync('score-counter/score-drag.js','utf8');
+          if(!fs.existsSync('score-counter/score-resize.js') || !fs.existsSync('score-counter/score-resize.css')){
+            console.error('Missing resize assets');
+            process.exit(1);
+          }
+          const js=fs.readFileSync('score-counter/score-resize.js','utf8');
+          const css=fs.readFileSync('score-counter/score-resize.css','utf8');
+          const required=[
+            'team-score-card-sizes-v1',
+            'MIN_SCALE',
+            'MAX_SCALE',
+            'score-resize-handle',
+            'layoutSignature',
+            'normalizeCards',
+            'pointerdown',
+            'pointermove',
+            'pointerup'
+          ];
+          const missing=required.filter(x=>!js.includes(x));
+          if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
+          if(!drag.includes('data-score-scale')) missing.push('drag/resize transform composition');
+          if(!css.includes('.score-resize-handle')) missing.push('resize handle css');
+          if(missing.length){
+            console.error('Missing resize behavior markers:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('Resize and auto-arrange markers present.');
+          NODE
+          node --check score-counter/score-resize.js
+          node --check score-counter/score-drag.js
