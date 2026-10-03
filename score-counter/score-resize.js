@@ -1,7 +1,8 @@
 (function(){
   const SIZE_STORAGE_KEY='team-score-card-sizes-v1';
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
-  const MIN_SCALE_LIMIT=0.35;
+  const MIN_SCALE_LIMIT=0.25;
+  const MIN_CARD_WIDTH=150;
   const MAX_SCALE=1.6;
   const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
   const teams=document.getElementById('teams');
@@ -46,33 +47,50 @@
     let width=Number(card.dataset.scoreBaseWidth);
     let height=Number(card.dataset.scoreBaseHeight);
     if(width>0 && height>0) return {width,height};
+
     const previousWidth=card.style.width;
     const previousHeight=card.style.height;
-    const previousUiScale=card.style.getPropertyValue('--score-ui-scale');
     card.style.removeProperty('width');
     card.style.removeProperty('height');
-    card.style.setProperty('--score-ui-scale','1');
+    card.classList.add('score-measuring-natural');
     const rect=card.getBoundingClientRect();
     width=Math.max(1,rect.width);
-    height=Math.max(1,rect.height);
+    height=Math.max(1,rect.height,card.scrollHeight);
     card.dataset.scoreBaseWidth=String(width);
     card.dataset.scoreBaseHeight=String(height);
     card.style.width=previousWidth;
     card.style.height=previousHeight;
-    if(previousUiScale) card.style.setProperty('--score-ui-scale',previousUiScale);
-    else card.style.removeProperty('--score-ui-scale');
+    card.classList.remove('score-measuring-natural');
     return {width,height};
+  }
+
+  function measureNaturalHeight(card,width){
+    const previousWidth=card.style.width;
+    const previousHeight=card.style.height;
+    card.classList.add('score-measuring-natural');
+    card.style.width=Math.round(width)+'px';
+    card.style.height='auto';
+    void card.offsetHeight;
+    const rect=card.getBoundingClientRect();
+    const naturalHeight=Math.max(1,Math.ceil(rect.height),Math.ceil(card.scrollHeight));
+    card.style.width=previousWidth;
+    card.style.height=previousHeight;
+    card.classList.remove('score-measuring-natural');
+    return naturalHeight;
   }
 
   function applyCardBox(card,scale){
     const base=baseDimensions(card);
-    const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
-    const uiScale=Math.min(1,next);
+    const minScale=Math.max(MIN_SCALE_LIMIT,MIN_CARD_WIDTH/base.width);
+    const next=clamp(scale,minScale,MAX_SCALE);
+    const targetWidth=Math.max(MIN_CARD_WIDTH,Math.round(base.width*next));
+    const naturalHeight=measureNaturalHeight(card,targetWidth);
+    const targetHeight=Math.round(base.height*next);
+
     card.dataset.scoreScale=String(next);
-    card.style.width=Math.max(96,Math.round(base.width*next))+'px';
-    card.style.height=Math.max(120,Math.round(base.height*next))+'px';
-    card.style.setProperty('--score-ui-scale',uiScale.toFixed(4));
-    card.style.setProperty('--score-card-scale',next.toFixed(4));
+    card.style.width=targetWidth+'px';
+    card.style.height='auto';
+    card.style.height=Math.max(targetHeight,naturalHeight)+'px';
   }
 
   function updateResizeValues(card){
@@ -87,7 +105,7 @@
     baseDimensions(card);
     const saved=sizes[mode()][id];
     const wanted=saved && Number.isFinite(Number(saved.scale)) ? Number(saved.scale) : 1;
-    applyCardBox(card,clamp(wanted,MIN_SCALE_LIMIT,MAX_SCALE));
+    applyCardBox(card,wanted);
     updateResizeValues(card);
   }
 
@@ -135,7 +153,7 @@
       e.preventDefault();
       e.stopPropagation();
       const distance=Math.max(8,Math.hypot(e.clientX-centerX,e.clientY-centerY));
-      const next=clamp(startScale*(distance/startDistance),MIN_SCALE_LIMIT,MAX_SCALE);
+      const next=startScale*(distance/startDistance);
       applyCardBox(card,next);
       updateResizeValues(card);
     });
@@ -186,8 +204,6 @@
       card.dataset.scoreScale='1';
       card.style.removeProperty('width');
       card.style.removeProperty('height');
-      card.style.removeProperty('--score-ui-scale');
-      card.style.removeProperty('--score-card-scale');
       delete card.dataset.scoreBaseWidth;
       delete card.dataset.scoreBaseHeight;
       updateResizeValues(card);
@@ -235,7 +251,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. הכרטיס והתוכן מצטמצמים יחד עד 35% כך שההקטנה תמיד מגיבה.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור אחת מארבע הפינות. המסגרת מצטמצמת עד גבול התוכן; הטקסט והכפתורים נשארים בגודל קריא ואינם נמחצים.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
