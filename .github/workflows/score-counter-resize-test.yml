@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify text-fit card resize and fixed Mega row
+      - name: Verify intrinsic-content resize without runaway card width
         shell: bash
         run: |
           node <<'NODE'
@@ -26,11 +26,11 @@ jobs:
           const requiredJs=[
             'measureContentFloor',
             'contentFloor.width',
-            'contentFloor.height',
             'Math.max(contentFloor.width',
-            'Math.max(contentFloor.height',
+            'horizontalChrome',
+            'intrinsicControlsWidth',
+            'controls.getBoundingClientRect()',
             "card.style.setProperty('--score-content-min-width'",
-            "card.style.setProperty('--score-content-min-height'",
             "card.querySelector('.score-controls')",
             "controls.querySelector('.score-btn.plus')",
             "controls.querySelector('.score-btn.minus')",
@@ -49,7 +49,6 @@ jobs:
             'grid-area:minus',
             'grid-area:mega',
             'min-width:var(--score-content-min-width',
-            'min-height:var(--score-content-min-height',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
@@ -57,15 +56,17 @@ jobs:
           ];
           for(const marker of requiredCss){if(!css.includes(marker)) missing.push('css:'+marker);}
 
+          if(js.includes("card.style.width='max-content'")) missing.push('js:whole-card max-content measurement remains');
+          if(css.includes('.card.score-measuring-content-floor{\n  width:max-content')) missing.push('css:whole-card max-content measurement remains');
           if(js.includes('const MIN_CARD_WIDTH=150')) missing.push('js:fixed 150px minimum remains');
           if(js.includes('--score-ui-scale')) missing.push('js:old ui scaling remains');
           if(css.includes('transform:scale(var(--score-ui-scale,1))')) missing.push('css:old content scaling remains');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
 
           if(missing.length){
-            console.error('Missing text-fit resize behavior:',missing.join(', '));
+            console.error('Missing safe intrinsic resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Text-fit resize markers present.');
+          console.log('Safe intrinsic resize markers present.');
           NODE
           node --check score-counter/score-resize.js
