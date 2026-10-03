@@ -5,6 +5,41 @@
 })(typeof window!=='undefined'?window:globalThis,function(){
   'use strict';
 
+  const BROWN_RICE_COOKED={
+    id:'brownrice-cooked',name:'אורז מלא מבושל',aliases:['אורז מלא מבושל','אורז חום מבושל'],
+    p:2.6,c:23,f:0.9,fi:1.8,k:111,cat:'carb',max:450,dailyMax:450,perMealMax:250,
+    measures:[{name:'כוס',plural:'כוסות',grams:195}]
+  };
+  const BROWN_RICE_DRY={
+    id:'brownrice-dry',name:'אורז מלא יבש (לפני בישול)',aliases:['אורז מלא יבש','אורז חום יבש','אורז מלא לפני בישול','אורז חום לפני בישול'],
+    p:7.3,c:76.7,f:3.3,fi:3,k:366,cat:'carb',max:180,dailyMax:180,perMealMax:100
+  };
+
+  function normalizeText(value){
+    return String(value??'').toLowerCase().trim().replace(/[״׳'\"]/g,'').replace(/\s+/g,' ');
+  }
+
+  function isGenericBrownRice(text){
+    const n=normalizeText(text);
+    return n==='אורז מלא'||n==='אורז חום';
+  }
+
+  function preparedFoodFor(text){
+    const n=normalizeText(text);
+    if(isGenericBrownRice(n))return null;
+    if(BROWN_RICE_COOKED.aliases.some(a=>normalizeText(a)===n))return {...BROWN_RICE_COOKED,aliases:[...BROWN_RICE_COOKED.aliases],measures:BROWN_RICE_COOKED.measures.map(x=>({...x}))};
+    if(BROWN_RICE_DRY.aliases.some(a=>normalizeText(a)===n))return {...BROWN_RICE_DRY,aliases:[...BROWN_RICE_DRY.aliases]};
+    return null;
+  }
+
+  function preparationChoices(text){
+    if(!isGenericBrownRice(text))return [];
+    return [
+      {label:'מבושל',food:{...BROWN_RICE_COOKED,aliases:[...BROWN_RICE_COOKED.aliases],measures:BROWN_RICE_COOKED.measures.map(x=>({...x}))}},
+      {label:'יבש / לפני בישול',food:{...BROWN_RICE_DRY,aliases:[...BROWN_RICE_DRY.aliases]}}
+    ];
+  }
+
   function normalizeMealCount(value){
     const n=Math.round(Number(value));
     if(!Number.isFinite(n))return 3;
@@ -102,6 +137,8 @@
     caloriesForQuantity,
     mealCalories,
     dailyCalories,
-    reasonableDailyMax
+    reasonableDailyMax,
+    preparationChoices,
+    preparedFoodFor
   };
 });
