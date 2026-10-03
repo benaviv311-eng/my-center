@@ -3,6 +3,7 @@
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
   const MIN_SCALE=0.55;
   const MAX_SCALE=1.6;
+  const TEXT_FLOOR_SCALE=0.78;
   const teams=document.getElementById('teams');
   if(!teams) return;
 
@@ -21,11 +22,28 @@
   const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
   const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE,MAX_SCALE);
 
+  function markReadableText(card){
+    card.querySelectorAll('*').forEach(el=>{
+      if(el.classList.contains('score-resize-handle') || el.closest('.score-resize-handle')) return;
+      if(el.closest('button,input,select,textarea')) return;
+      const hasOwnText=Array.from(el.childNodes).some(node=>node.nodeType===3 && node.textContent.trim());
+      if(hasOwnText && el.children.length===0) el.classList.add('score-card-content');
+    });
+  }
+
+  function applyContentCompensation(card,scale){
+    const compensation=scale>=TEXT_FLOOR_SCALE ? 1/scale : 1/TEXT_FLOOR_SCALE;
+    card.style.setProperty('--score-content-compensation',compensation.toFixed(4));
+    card.style.setProperty('--score-card-scale',scale.toFixed(4));
+    markReadableText(card);
+  }
+
   function applyTransform(card){
     const x=Number(card.dataset.dragX)||0;
     const y=Number(card.dataset.dragY)||0;
     const scale=scaleOf(card);
     card.dataset.scoreScale=String(scale);
+    applyContentCompensation(card,scale);
     card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
   }
 
@@ -39,14 +57,15 @@
   function bindResize(card,id){
     if(!id || card.getAttribute('data-score-resize-ready')==='1') return;
     card.setAttribute('data-score-resize-ready','1');
+    markReadableText(card);
     applySavedSize(card,id);
 
     const handle=document.createElement('button');
     handle.type='button';
     handle.className='score-resize-handle';
     handle.setAttribute('aria-label','שינוי גודל כרטיס הקבוצה');
-    handle.setAttribute('title','גרור כדי להקטין או להגדיל');
-    handle.innerHTML='<span aria-hidden="true">⤢</span><b class="score-resize-value">100%</b>';
+    handle.setAttribute('title','גרור מהפינה באלכסון כדי להקטין או להגדיל');
+    handle.innerHTML='<b class="score-resize-value">100%</b>';
     card.appendChild(handle);
     const value=handle.querySelector('.score-resize-value');
     value.textContent=Math.round(scaleOf(card)*100)+'%';
@@ -100,6 +119,7 @@
 
   function attachCards(){
     teams.querySelectorAll(':scope > .card').forEach(card=>{
+      markReadableText(card);
       const id=cardId(card);
       if(id) bindResize(card,id);
     });
@@ -159,7 +179,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור את ידית ⤢ שעל הכרטיס כדי להקטין או להגדיל אותו.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור מהפינה האלכסונית של הכרטיס. הטקסט נשאר קריא ורק מצטמצם כשהכרטיס כבר קטן מדי.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',()=>{
       normalizeCards();
@@ -167,7 +187,7 @@
   }
 
   const observer=new MutationObserver(()=>requestAnimationFrame(attachCards));
-  observer.observe(teams,{childList:true});
+  observer.observe(teams,{childList:true,subtree:true});
   addResetControl();
   attachCards();
 })();
