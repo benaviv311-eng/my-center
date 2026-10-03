@@ -51,19 +51,42 @@
     return Array.from({length:n},(_,i)=>({name:`ארוחה ${i+1}`,items:[]}));
   }
 
-  function caloriesForQuantity(food,grams){
-    const k=Number(food?.k)||0;
-    const q=Number(grams)||0;
-    return k*q/100;
-  }
-
-  function numericValue(value){
+  function nullableNumber(value){
     if(typeof value==='number')return Number.isFinite(value)?value:null;
     if(typeof value!=='string'||!value.trim())return null;
     const normalized=value.trim().replace(',','.');
     if(!/^-?\d+(?:\.\d+)?$/.test(normalized))return null;
     const n=Number(normalized);
     return Number.isFinite(n)?n:null;
+  }
+
+  function foodIdentity(food){
+    if(!food)return '';
+    const id=String(food.id||food.code||food.name||'').trim();
+    const prep=String(food.preparation||'').trim();
+    if(!prep||/-cooked$|-dry$/.test(id))return id;
+    return `${id}::${prep}`;
+  }
+
+  function mergeDuplicateFoods(items){
+    const map=new Map();
+    (items||[]).forEach(item=>{
+      const q=Number(item?.q)||0;
+      if(q<=0||!item?.f)return;
+      const key=foodIdentity(item.f);
+      if(!key)return;
+      const existing=map.get(key);
+      if(existing)existing.q+=q;
+      else map.set(key,{f:item.f,q});
+    });
+    return [...map.values()];
+  }
+
+  function caloriesForQuantity(food,grams){
+    const k=nullableNumber(food?.k);
+    const q=nullableNumber(grams);
+    if(k===null||q===null)return 0;
+    return k*q/100;
   }
 
   function roundedNutritionValue(value){
@@ -73,10 +96,10 @@
   }
 
   function nutrientsForQuantity(data,grams){
-    const amount=Number(grams);
-    const factor=Number.isFinite(amount)&&amount>=0?amount/100:1;
+    const amount=nullableNumber(grams);
+    const factor=amount!==null&&amount>=0?amount/100:1;
     return Object.fromEntries(Object.entries(data||{}).map(([key,value])=>{
-      const n=numericValue(value);
+      const n=nullableNumber(value);
       return [key,n===null?value:roundedNutritionValue(n*factor)];
     }));
   }
@@ -94,15 +117,15 @@
   }
 
   function reasonableDailyMax(food){
-    const explicit=Number(food?.dailyMax);
-    if(Number.isFinite(explicit)&&explicit>0)return explicit;
-    const legacy=Number(food?.max);
-    return Number.isFinite(legacy)&&legacy>0?legacy:500;
+    const explicit=nullableNumber(food?.dailyMax);
+    if(explicit!==null&&explicit>0)return explicit;
+    const legacy=nullableNumber(food?.max);
+    return legacy!==null&&legacy>0?legacy:500;
   }
 
   function perMealMax(food){
-    const explicit=Number(food?.perMealMax);
-    if(Number.isFinite(explicit)&&explicit>0)return explicit;
+    const explicit=nullableNumber(food?.perMealMax);
+    if(explicit!==null&&explicit>0)return explicit;
     return Infinity;
   }
 
@@ -154,10 +177,27 @@
     return meals;
   }
 
+  function assignUniqueFoodsToMeals(items,count){
+    const meals=createMealShells(count);
+    const unique=mergeDuplicateFoods(items).sort((a,b)=>caloriesOf(b)-caloriesOf(a));
+    const loads=meals.map(()=>0);
+    unique.forEach(item=>{
+      let idx=0;
+      for(let i=1;i<loads.length;i++)if(loads[i]<loads[idx])idx=i;
+      meals[idx].items.push(item);
+      loads[idx]+=caloriesOf(item);
+    });
+    return meals;
+  }
+
   return {
     normalizeMealCount,
     createMealShells,
     distributeItems,
+    assignUniqueFoodsToMeals,
+    foodIdentity,
+    mergeDuplicateFoods,
+    nullableNumber,
     caloriesForQuantity,
     nutrientsForQuantity,
     mealCalories,
