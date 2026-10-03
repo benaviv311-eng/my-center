@@ -9,6 +9,7 @@ const mustExist = [
   'book-page.js',
   'book-page.css',
   'book-reading.js',
+  'book-structure.js',
   'library-book-links.js'
 ];
 
@@ -26,7 +27,9 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-key-points-toggle',
   'book-key-points-section',
   'book-key-points-list',
-  'book-key-points-more',
+  'book-learning-points-section',
+  'book-learning-points-list',
+  'book-learning-points-toggle',
   'book-reading-toc',
   'book-reading-body',
   'book-reading-progress',
@@ -50,10 +53,27 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   assert.ok(html.includes(`id="${id}"`), `book.html should contain ${id}`);
 });
 
-['library-discovery.js', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
+['library-discovery.js', 'book-structure.js', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
   assert.ok(html.includes(file), `book.html should load ${file}`);
 });
-assert.ok(html.indexOf('book-reading-body') < html.indexOf('book-infinite-feed'), 'reading body should precede the infinite feed');
+
+const approvedOrder = [
+  'book-intro',
+  'book-key-points-section',
+  'book-learning-points-section',
+  'book-reading-body',
+  'book-infinite-feed',
+  'book-ideas',
+  'book-topics',
+  'book-note'
+];
+for(let i=1;i<approvedOrder.length;i++){
+  assert.ok(
+    html.indexOf(approvedOrder[i-1]) < html.indexOf(approvedOrder[i]),
+    `${approvedOrder[i-1]} should appear before ${approvedOrder[i]}`
+  );
+}
+assert.ok(!/id="book-key-points-section"[^>]*\bhidden\b/.test(html), 'key points should be a permanent part of every book structure');
 assert.ok(html.includes('עוד מהספר'), 'infinite feed should be framed as supplemental discovery');
 assert.ok(html.includes('editorial-book'), 'book page should opt into the editorial reading design');
 
@@ -66,9 +86,11 @@ assert.ok(js.includes('book-reading-progress'), 'book page should update reading
 assert.ok(js.includes('data-source-expand'), 'book page should preserve source provenance expansion');
 assert.ok(js.includes('URLSearchParams'), 'book page should resolve a book from the URL');
 assert.ok(js.includes('book-surprise'), 'book page should support surprise learning');
+assert.ok(js.includes('BookStructure'), 'book page should use the shared universal book structure');
+assert.ok(js.includes('renderBookLearningPoints'), 'book page should render the expanded learning-points section');
 
 const pageCss = fs.readFileSync(path.join(root, 'book-page.css'), 'utf8');
-['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section'].forEach(token => {
+['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section','book-key-points-section','book-learning-points-section'].forEach(token => {
   assert.ok(pageCss.includes(token), `book-page.css should style ${token}`);
 });
 assert.ok(pageCss.includes('grid-template-areas:"reader toc"'), 'desktop reading layout should keep the table of contents on the physical left');
@@ -85,7 +107,6 @@ assert.ok(library.includes('library-book-links.js'), 'library.html should load s
 
 console.log('standalone book page tests: OK');
 
-
 assert.ok(js.includes('c8596613-aa90-49f3-8410-09d305926710'), 'reader prototype should be limited to the approved prototype book');
 assert.ok(js.includes('renderChapterSummary'), 'prototype should update a short summary for the active chapter');
 assert.ok(js.includes('speechSynthesis'), 'prototype should support browser read-aloud');
@@ -94,53 +115,36 @@ assert.ok(js.includes('book-read-aloud'), 'prototype should wire a chapter read-
 assert.ok(pageCss.includes('book-prototype-reading'), 'prototype should have an opt-in three-column reading layout');
 assert.ok(pageCss.includes('grid-template-areas:"summary reader toc"'), 'prototype desktop layout should place summary on the physical left and TOC on the physical right');
 assert.ok(pageCss.includes('book-chapter-summary-card'), 'prototype should style a sticky chapter summary');
-
 assert.ok(!js.includes('title.textContent=`משפטי מפתח'), 'left rail should not show a redundant key-sentences heading');
 assert.ok(js.includes('points.length===6'), 'left rail should expose six concise nuggets when enough material exists');
 assert.ok(pageCss.includes('.book-chapter-summary-wrap{') && pageCss.includes('position:sticky'), 'left chapter summary rail should stay fixed while scrolling on desktop');
-
 assert.ok(pageCss.includes('.book-prototype-reading .book-reading-toc-wrap{') && pageCss.includes('position:sticky'), 'prototype TOC wrapper should stay fixed while scrolling on desktop');
 assert.ok(js.includes('excludeTitles'), 'prototype refresh should exclude the chapter titles currently on screen');
 assert.ok(js.includes('fullRefresh:true'), 'prototype refresh should request a completely fresh chapter set');
-
 assert.ok(js.includes('chapter.keySentences'), 'left rail should render key sentences supplied by the chapter model');
 assert.ok(pageCss.includes('.book-prototype-reading .book-chapter-summary-head') && pageCss.includes('display:none'), 'prototype nugget rail should hide meta headings and show only ideas');
-
 assert.ok(html.includes('0.75') && html.includes('1.25') && html.includes('1.5'), 'read-aloud prototype should offer multiple playback speeds');
 assert.ok(js.includes('function readRate()'), 'reader should resolve the selected playback rate');
 assert.ok(js.includes('utterance.rate=readRate()'), 'speech synthesis should use the selected playback rate');
 assert.ok(pageCss.includes('.book-prototype-reading #book-refresh-all') && pageCss.includes('position:fixed'), 'refresh-all should stay fixed near the bottom of the viewport in the prototype');
-
 assert.ok(html.includes('id="book-refresh-all"') && html.includes('aria-label="רענן הכול"'), 'refresh-all should keep an accessible label');
 assert.ok(/id="book-refresh-all"[^>]*>🔄<\/button>/.test(html), 'refresh-all should render as an icon-only button');
 assert.ok(pageCss.includes('left:16px'), 'refresh icon should be pinned to the physical left edge');
 assert.ok(pageCss.includes('width:46px') && pageCss.includes('height:46px'), 'refresh icon should be compact');
-
 assert.ok(pageCss.includes('bottom:calc(154px + env(safe-area-inset-bottom))'), 'desktop refresh icon should sit above the site chat button');
 assert.ok(pageCss.includes('bottom:calc(144px + env(safe-area-inset-bottom))'), 'mobile refresh icon should sit above the site chat button');
-
 assert.ok(html.includes('he-IL') && html.includes('ar-SA') && html.includes('it-IT') && html.includes('ru-RU') && html.includes('es-ES'), 'read-aloud should offer language switching across the site language set');
 assert.ok(js.includes('function readLanguage()'), 'reader should resolve the selected read-aloud language');
 assert.ok(js.includes('utterance.lang=readLanguage()'), 'speech synthesis should use the selected language');
 assert.ok(js.includes('compactSummaryText(value,88)'), 'chapter key sentences should be noticeably shorter');
-
 assert.ok(js.includes("stopReadAloud('ההקראה נעצרה בגלל רענון.')"), 'refresh-all should stop active read-aloud before replacing chapters');
 assert.ok(js.includes('utterance.onboundary'), 'read-aloud should follow speech boundary events');
 assert.ok(js.includes('data-speech-start'), 'reader should mark spoken words with character offsets');
 assert.ok(js.includes('scrollIntoView({behavior:\'smooth\',block:\'center\''), 'spoken word tracking should auto-scroll the current word into view');
 assert.ok(pageCss.includes('.speech-word.is-speaking-word'), 'current spoken word should have a visible highlight style');
-
 assert.ok(html.includes('<option value="en-US">אנגלית</option>'), 'read-aloud language selector should include English');
 assert.ok(pageCss.includes('.book-prototype-reading #book-read-floating') && pageCss.includes('position:fixed'), 'read-aloud should have a fixed floating control in the prototype');
 assert.ok(pageCss.includes('bottom:calc(212px + env(safe-area-inset-bottom))'), 'floating read control should sit above refresh on desktop');
 assert.ok(js.includes("$('book-read-floating').addEventListener"), 'floating read control should trigger read-aloud');
-
 assert.ok(pageCss.includes('.book-summary-points li::marker'), 'nugget bullets should have an explicit marker style');
 assert.ok(pageCss.includes('color:#111'), 'nugget text and bullets should render in solid black');
-
-assert.ok(js.includes('function bookPointSets()'), 'book page should derive a universal key-points view for every book');
-assert.ok(js.includes('c.key_points'), 'book page should prefer curated key points when a book provides them');
-assert.ok(js.includes('c.learning_points'), 'book page should support an expanded learning-points collection');
-assert.ok(js.includes('c.feed_posts'), 'book page should fall back to existing book material when curated key points are absent');
-assert.ok(pageCss.includes('.book-key-points-section'), 'book page should style the quick key-points section');
-assert.ok(pageCss.includes('.book-key-points-list'), 'book page should style key points as an editorial reading list');
