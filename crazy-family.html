@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.13</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.14</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -51,8 +51,8 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
           <button class="abtn blue" id="itemUse">חפץ<br>✦</button>
           <button class="abtn blue" id="action">פעולה<br>✋</button>
           <button class="abtn" id="run">ריצה<br>⚡</button>
-          <button class="abtn skill" id="dash">דאש<br>Space</button>
-          <button class="abtn skill" id="jump">קפיצה<br>J</button>
+          <button class="abtn skill" id="dash">דאש<br>כפתור</button>
+          <button class="abtn skill" id="jump">קפיצה<br>Space</button>
           <button class="abtn skill guard" id="crouch">התכופפות<br>C</button>
           <button class="abtn skill guard" id="hide">התחבאות<br>H</button>
           <button class="abtn skill guard" id="pushDad">דחיפה<br>X</button>
@@ -543,7 +543,7 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerDash();if(e.key.toLowerCase()==='j'&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='h'&&!e.repeat)toggleHide();if(e.key.toLowerCase()==='x'&&!e.repeat)pushDadAway();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='h'&&!e.repeat)toggleHide();if(e.key.toLowerCase()==='x'&&!e.repeat)pushDadAway();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false;if(e.key.toLowerCase()==='c'||e.key==='Control')player.crouching=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
