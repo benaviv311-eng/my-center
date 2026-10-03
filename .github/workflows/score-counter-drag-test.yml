@@ -34,11 +34,12 @@ jobs:
             'startClientX=latestClientX',
             'startClientY=latestClientY',
             'suppressNextClick',
-            'score-resize-handle',
+            'score-resize-handle,.score-size-menu',
             "card.addEventListener('pointerdown'",
             "card.addEventListener('pointermove'",
             "card.addEventListener('pointerup'",
             "card.addEventListener('click'",
+            "scale('+scale.toFixed(3)+')",
             'איפוס מיקום הכרטיסים',
             'MutationObserver'
           ];
@@ -46,12 +47,11 @@ jobs:
           if(js.includes("e.pointerType==='touch'")) missing.push('touch pointer path still bypassed');
           if(js.includes('isInteractive(e.target)')) missing.push('interactive card content still blocks long-press drag');
           if(!css.includes('touch-action:pan-y')) missing.push('touch-action:pan-y');
-          if(/card\.style\.transform=.*scale\(/.test(js)) missing.push('whole-card scale transform');
           if(!index.includes('score-drag.js') || !index.includes('score-drag.css')) missing.push('loader assets');
           if(missing.length){
             console.error('Missing whole-card drag behavior:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Whole-card long-press drag markers present.');
+          console.log('Whole-card long-press drag markers present with resize scale composition.');
           NODE
           node --check score-counter/score-drag.js
