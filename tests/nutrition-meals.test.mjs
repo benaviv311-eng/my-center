@@ -102,6 +102,13 @@ test('profile meal helper does not install a self-triggering MutationObserver lo
   assert.doesNotMatch(source, /new MutationObserver/);
 });
 
+test('meal-count helper uses shared NutritionProfile persistence', () => {
+  const source = readFileSync(new URL('../nutrition-profile-meals.js', import.meta.url), 'utf8');
+  assert.match(source, /NutritionProfile\?\.migrate/);
+  assert.match(source, /NutritionProfile\?\.save/);
+  assert.doesNotMatch(source, /localStorage\.setItem\(PROFILE_KEY/);
+});
+
 test('stable food identity merges duplicate rows but keeps preparations distinct', () => {
   assert.equal(Meals.foodIdentity({ id: 'chicken' }), 'chicken');
   assert.equal(Meals.foodIdentity({ id: 'rice', preparation: 'cooked' }), 'rice::cooked');
