@@ -61,7 +61,7 @@ function updateProfileHome(){
   const meta=el('profileCardMeta');if(meta&&!meta.textContent.includes('ארוחות'))meta.textContent+=` · ${n} ארוחות`;
   const bar=document.querySelector('#profileHome .profile-editbar');if(bar){
     let b=el('profileMealCountBtn');if(!b){b=document.createElement('button');b.id='profileMealCountBtn';b.className='profile-secondary';b.onclick=quickChange;bar.insertBefore(b,bar.children[1]||null)}
-    b.textContent=`🍽️ ${n} ארוחות`;
+    const text=`🍽️ ${n} ארוחות`;if(b.textContent!==text)b.textContent=text;
   }
 }
 
@@ -70,7 +70,7 @@ function ensureBars(){
   ['step2','step3'].forEach(id=>{
     const step=el(id);if(!step)return;let bar=step.querySelector('.meal-count-bar');
     if(!bar){bar=document.createElement('div');bar.className='meal-count-bar';bar.innerHTML='<span></span><button>שנה מספר ארוחות</button>';bar.querySelector('button').onclick=quickChange;step.prepend(bar)}
-    bar.querySelector('span').innerHTML=`🍽️ <b>${n} ארוחות ביום</b>`;
+    const span=bar.querySelector('span'),html=`🍽️ <b>${n} ארוחות ביום</b>`;if(span.innerHTML!==html)span.innerHTML=html;
   });
 }
 
@@ -83,8 +83,6 @@ window.quickNutritionMealCount=quickChange;
 
 function init(){
   injectStyles();ensureField();ensureSaveHook();refreshAll();
-  const observer=new MutationObserver(()=>{ensureField();ensureSaveHook();refreshAll()});
-  observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
