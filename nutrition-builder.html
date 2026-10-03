@@ -546,14 +546,8 @@ function renderMenu(unknown=[]){
     : 'המאכלים שכתבת קיבלו עדיפות, והמערכת השלימה לפי הצורך.';
 
   const chosen=res.foods.map((f,i)=>({f,q:res.amounts[i]})).filter(x=>x.q>0);
-  const meals=[{name:'ארוחת בוקר',items:[]},{name:'ארוחת צהריים',items:[]},{name:'ארוחת ערב',items:[]},{name:'נשנוש',items:[]}];
-  chosen.forEach((x,i)=>{
-    let idx=i%4;
-    if(x.f.cat==='protein') idx=[0,1,2][i%3];
-    if(x.f.cat==='fat') idx=(i%2===0)?0:2;
-    if(x.f.cat==='fiber'&&i%3===0) idx=3;
-    meals[idx].items.push(x);
-  });
+  const mealCount=window.getNutritionMealCount?window.getNutritionMealCount():3;
+  const meals=window.NutritionMeals?window.NutritionMeals.distributeItems(chosen,mealCount):[{name:'ארוחה 1',items:chosen}];
 
   const wrap=qs('meals');wrap.innerHTML='';
   meals.forEach((m,mi)=>{
@@ -660,6 +654,8 @@ function showFocusedFix(suggestions){
   }catch(e){}
 })();
 </script>
+<script src="nutrition-meals.js?v=1"></script>
 <script src="nutrition-profile.js?v=1"></script>
+<script src="nutrition-profile-meals.js?v=1"></script>
 </body>
 </html>
