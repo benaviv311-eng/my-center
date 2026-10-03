@@ -1,7 +1,7 @@
 (function(){
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
-  const LONG_PRESS_MS=450;
-  const MOVE_CANCEL_PX=12;
+  const LONG_PRESS_MS=380;
+  const MOVE_CANCEL_PX=28;
   const EDGE=8;
   const teams=document.getElementById('teams');
   if(!teams) return;
@@ -21,9 +21,7 @@
   const transform=(card,x,y)=>{
     card.dataset.dragX=String(Math.round(x));
     card.dataset.dragY=String(Math.round(y));
-    const scale=Math.max(.55,Math.min(1.6,Number(card.dataset.scoreScale)||1));
-    card.setAttribute('data-score-scale',String(scale));
-    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
+    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0)';
   };
   const readPos=(card,id)=>{
     const saved=positions[mode()][id]||{};
@@ -41,6 +39,7 @@
     let pressTimer=null;
     let active=false;
     let startClientX=0,startClientY=0;
+    let latestClientX=0,latestClientY=0;
     let baseX=0,baseY=0;
     let baseRect=null;
     let pointerId=null;
@@ -50,9 +49,13 @@
       active=false;
       startClientX=clientX;
       startClientY=clientY;
+      latestClientX=clientX;
+      latestClientY=clientY;
       pressTimer=setTimeout(()=>{
         pressTimer=null;
         active=true;
+        startClientX=latestClientX;
+        startClientY=latestClientY;
         baseX=Number(card.dataset.dragX)||0;
         baseY=Number(card.dataset.dragY)||0;
         baseRect=card.getBoundingClientRect();
@@ -66,11 +69,13 @@
       if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
     }
     function move(clientX,clientY,prevent){
-      const dx=clientX-startClientX,dy=clientY-startClientY;
       if(!active){
-        if(Math.hypot(dx,dy)>MOVE_CANCEL_PX) cancelArm();
+        latestClientX=clientX;
+        latestClientY=clientY;
+        if(Math.hypot(clientX-startClientX,clientY-startClientY)>MOVE_CANCEL_PX) cancelArm();
         return;
       }
+      const dx=clientX-startClientX,dy=clientY-startClientY;
       if(prevent) prevent();
       if(!baseRect) return;
       const visibleWidth=Math.min(baseRect.width,window.innerWidth-EDGE*2);
@@ -154,14 +159,12 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>מיקום כרטיסי הניקוד</strong><span>לחיצה ארוכה על כרטיס קבוצה ואז גרירה לכל מקום במסך.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreDragReset">↺ איפוס מיקום הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>מיקום כרטיסי הניקוד</strong><span>לחיצה ארוכה ואז המשך גרירה באותה לחיצה — בלי לשחרר.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreDragReset">↺ איפוס מיקום הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreDragReset').addEventListener('click',()=>{
       positions={normal:{},projection:{}};
       persist();
-      teams.querySelectorAll(':scope > .card').forEach(card=>{
-        transform(card,0,0);
-      });
+      teams.querySelectorAll(':scope > .card').forEach(card=>transform(card,0,0));
     });
   }
 
