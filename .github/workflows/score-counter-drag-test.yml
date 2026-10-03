@@ -25,8 +25,13 @@ jobs:
           const js=fs.readFileSync('score-counter/score-drag.js','utf8');
           const required=[
             'team-score-card-positions-v1',
-            'LONG_PRESS_MS=450',
+            'LONG_PRESS_MS=380',
+            'MOVE_CANCEL_PX=28',
             'data-score-drag-ready',
+            'latestClientX',
+            'latestClientY',
+            'startClientX=latestClientX',
+            'startClientY=latestClientY',
             'איפוס מיקום הכרטיסים',
             'MutationObserver',
             'pointerdown',
@@ -34,11 +39,12 @@ jobs:
             'pointerup'
           ];
           const missing=required.filter(x=>!js.includes(x));
+          if(/card\.style\.transform=.*scale\(/.test(js)) missing.push('whole-card scale transform');
           if(!index.includes('score-drag.js') || !index.includes('score-drag.css')) missing.push('loader assets');
           if(missing.length){
             console.error('Missing drag behavior markers:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Score card drag behavior markers present.');
+          console.log('Continuous long-press score card drag markers present.');
           NODE
           node --check score-counter/score-drag.js
