@@ -17,7 +17,7 @@
 
   const mode=()=>document.body.classList.contains('projection-mode')?'projection':'normal';
   const persist=()=>{try{localStorage.setItem(DRAG_STORAGE_KEY,JSON.stringify(positions));}catch{}};
-  const isInteractive=target=>!!target.closest('button,input,select,textarea,a,label,[contenteditable="true"]');
+  const isResizeHandle=target=>!!(target && target.closest && target.closest('.score-resize-handle'));
   const transform=(card,x,y)=>{
     card.dataset.dragX=String(Math.round(x));
     card.dataset.dragY=String(Math.round(y));
@@ -38,15 +38,19 @@
 
     let pressTimer=null;
     let active=false;
+    let moved=false;
+    let suppressNextClick=false;
     let startClientX=0,startClientY=0;
     let latestClientX=0,latestClientY=0;
     let baseX=0,baseY=0;
     let baseRect=null;
     let pointerId=null;
 
-    function arm(clientX,clientY){
+    function arm(clientX,clientY,nextPointerId){
       clearTimeout(pressTimer);
       active=false;
+      moved=false;
+      pointerId=nextPointerId;
       startClientX=clientX;
       startClientY=clientY;
       latestClientX=clientX;
@@ -65,21 +69,25 @@
         if(navigator.vibrate){try{navigator.vibrate(18);}catch{}}
       },LONG_PRESS_MS);
     }
+
     function cancelArm(){
       if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}
     }
-    function move(clientX,clientY,prevent){
+
+    function move(clientX,clientY,event){
+      latestClientX=clientX;
+      latestClientY=clientY;
       if(!active){
-        latestClientX=clientX;
-        latestClientY=clientY;
         if(Math.hypot(clientX-startClientX,clientY-startClientY)>MOVE_CANCEL_PX) cancelArm();
         return;
       }
-      const dx=clientX-startClientX,dy=clientY-startClientY;
-      if(prevent) prevent();
+      if(event && event.cancelable) event.preventDefault();
+      const dx=clientX-startClientX;
+      const dy=clientY-startClientY;
+      if(Math.abs(dx)>2 || Math.abs(dy)>2) moved=true;
       if(!baseRect) return;
-      const visibleWidth=Math.min(baseRect.width,window.innerWidth-EDGE*2);
-      const visibleHeight=Math.min(baseRect.height,window.innerHeight-EDGE*2);
+      const visibleWidth=Math.min(baseRect.width,Math.max(1,window.innerWidth-EDGE*2));
+      const visibleHeight=Math.min(baseRect.height,Math.max(1,window.innerHeight-EDGE*2));
       const maxLeft=Math.max(EDGE,window.innerWidth-visibleWidth-EDGE);
       const maxTop=Math.max(EDGE,window.innerHeight-visibleHeight-EDGE);
       const wantedLeft=baseRect.left+dx;
@@ -88,7 +96,8 @@
       const top=Math.min(maxTop,Math.max(EDGE,wantedTop));
       transform(card,baseX+(left-baseRect.left),baseY+(top-baseRect.top));
     }
-    function finish(){
+
+    function finish(e){
       cancelArm();
       if(active){
         positions[mode()][id]={
@@ -96,52 +105,52 @@
           y:Number(card.dataset.dragY)||0
         };
         persist();
+        suppressNextClick=true;
+        if(e && e.cancelable) e.preventDefault();
       }
       if(pointerId!==null && card.releasePointerCapture){try{card.releasePointerCapture(pointerId);}catch{}}
       active=false;
+      moved=false;
       baseRect=null;
+      pointerId=null;
       card.classList.remove('score-card-dragging');
       document.body.classList.remove('score-card-dragging');
     }
 
     card.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='touch' || isInteractive(e.target)) return;
+      if(isResizeHandle(e.target)) return;
       if(e.button!==undefined && e.button!==0) return;
-      pointerId=e.pointerId;
-      arm(e.clientX,e.clientY);
-    });
-    card.addEventListener('pointermove',e=>{
-      if(e.pointerType==='touch' || pointerId!==e.pointerId) return;
-      move(e.clientX,e.clientY,()=>e.preventDefault());
-    });
-    card.addEventListener('pointerup',e=>{
-      if(e.pointerType==='touch' || pointerId!==e.pointerId) return;
-      finish();
-      pointerId=null;
-    });
-    card.addEventListener('pointercancel',e=>{
-      if(e.pointerType==='touch' || pointerId!==e.pointerId) return;
-      finish();
-      pointerId=null;
-    });
-    card.addEventListener('pointerleave',e=>{
-      if(e.pointerType!=='touch' && !active) cancelArm();
+      arm(e.clientX,e.clientY,e.pointerId);
     });
 
-    card.addEventListener('touchstart',e=>{
-      if(e.touches.length!==1 || isInteractive(e.target)) return;
-      const t=e.touches[0];
-      arm(t.clientX,t.clientY);
-    },{passive:true});
-    card.addEventListener('touchmove',e=>{
-      if(e.touches.length!==1){cancelArm();return;}
-      const t=e.touches[0];
-      move(t.clientX,t.clientY,()=>e.preventDefault());
-    },{passive:false});
-    card.addEventListener('touchend',finish,{passive:true});
-    card.addEventListener('touchcancel',finish,{passive:true});
+    card.addEventListener('pointermove',e=>{
+      if(pointerId!==e.pointerId) return;
+      move(e.clientX,e.clientY,e);
+    });
+
+    card.addEventListener('pointerup',e=>{
+      if(pointerId!==e.pointerId) return;
+      finish(e);
+    });
+
+    card.addEventListener('pointercancel',e=>{
+      if(pointerId!==e.pointerId) return;
+      finish(e);
+    });
+
+    card.addEventListener('pointerleave',e=>{
+      if(pointerId===e.pointerId && !active) cancelArm();
+    });
+
+    card.addEventListener('click',e=>{
+      if(!suppressNextClick) return;
+      suppressNextClick=false;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    },true);
+
     card.addEventListener('contextmenu',e=>{
-      if(card.classList.contains('score-card-dragging')) e.preventDefault();
+      if(active || card.classList.contains('score-card-dragging')) e.preventDefault();
     });
   }
 
@@ -159,7 +168,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>מיקום כרטיסי הניקוד</strong><span>לחיצה ארוכה ואז המשך גרירה באותה לחיצה — בלי לשחרר.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreDragReset">↺ איפוס מיקום הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>מיקום כרטיסי הניקוד</strong><span>לחיצה ארוכה על כל מקום בכרטיס ואז גרירה באותה לחיצה — גם מעל המספר או הכפתורים.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreDragReset">↺ איפוס מיקום הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreDragReset').addEventListener('click',()=>{
       positions={normal:{},projection:{}};
