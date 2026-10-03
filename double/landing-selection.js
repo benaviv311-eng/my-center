@@ -31,28 +31,24 @@
   return {createState,selectGame,previewKey,launchQuery};
 });
 
-// Load the richer lobby UI without changing the landing-page game logic above.
 (function(){
   if(typeof document==='undefined') return;
   const head=document.head||document.documentElement;
   if(!document.querySelector('link[data-double-lobby]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='double/menu-lobby.css?v=3';
+    link.href='double/menu-lobby.css?v=4';
     link.dataset.doubleLobby='1';
     head.appendChild(link);
   }
-  const loadLobby=()=>{
-    if(document.querySelector('script[data-double-lobby-ui]')) return;
-    const ui=document.createElement('script');
-    ui.src='double/menu-lobby.js?v=3';
-    ui.dataset.doubleLobbyUi='1';
-    document.body.appendChild(ui);
-  };
-  if(window.DoubleMenuLobbyState){loadLobby();return;}
-  const state=document.createElement('script');
-  state.src='double/menu-lobby-state.js?v=3';
-  state.dataset.doubleLobbyState='1';
-  state.onload=loadLobby;
-  document.body.appendChild(state);
+  function load(src,attr,ready,next){
+    if(ready&&ready()){next?.();return;}
+    const existing=document.querySelector(`script[${attr}]`);
+    if(existing){existing.addEventListener('load',()=>next?.(),{once:true});return;}
+    const s=document.createElement('script');s.src=src;s.setAttribute(attr,'1');s.onload=()=>next?.();document.body.appendChild(s);
+  }
+  const loadLobby=()=>load('double/menu-lobby-v3.js?v=4','data-double-lobby-ui',()=>false);
+  const loadMusic=()=>load('double/music-engine-state.js?v=1','data-double-music-state',()=>!!window.DoubleMusicState,()=>
+    load('double/music-engine.js?v=2','data-double-music-engine',()=>!!window.DoubleMusic,loadLobby));
+  load('double/menu-lobby-state.js?v=4','data-double-lobby-state',()=>!!window.DoubleMenuLobbyState,loadMusic);
 })();
