@@ -411,9 +411,6 @@ function calculateTargets(){
   qs('tFiber').textContent=fiber;
   qs('tWater').textContent=water;
   qs('targetsWrap').classList.remove('hidden');
-  localStorage.setItem('nutritionProfile',JSON.stringify({
-    age,w,h,sex,activity:state.activity,goal:state.goal,targets:state.targets
-  }));
 }
 
 async function addFood(type){
@@ -640,21 +637,6 @@ function showFocusedFix(suggestions){
   alert(text+'\n\nאפשרויות לדוגמה: '+suggestions.map(f=>f.name).join(', '));
 }
 
-(function loadProfile(){
-  try{
-    const p=JSON.parse(localStorage.getItem('nutritionProfile')||'null');
-    if(!p)return;
-    if(p.age)qs('age').value=p.age;if(p.w)qs('weight').value=p.w;if(p.h)qs('height').value=p.h;if(p.sex)qs('sex').value=p.sex;
-    if(p.activity){
-      state.activity=p.activity;
-      document.querySelectorAll('#activityChoices .choice').forEach(b=>b.classList.toggle('selected',+b.dataset.value===p.activity));
-    }
-    if(p.goal){
-      state.goal=p.goal;
-      document.querySelectorAll('#goalChoices .choice').forEach(b=>b.classList.toggle('selected',b.dataset.value===p.goal));
-    }
-  }catch(e){}
-})();
 </script>
 <script src="nutrition-meals.js?v=3"></script>
 <script src="nutrition-profile.js?v=1"></script>
