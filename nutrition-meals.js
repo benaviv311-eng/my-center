@@ -66,6 +66,10 @@
     return Number.isFinite(n)?n:null;
   }
 
+  function nullableNumber(value){
+    return numericValue(value);
+  }
+
   function roundedNutritionValue(value){
     if(!Number.isFinite(value))return value;
     if(Math.abs(value)>=100)return Math.round(value*10)/10;
@@ -76,6 +80,7 @@
     const amount=Number(grams);
     const factor=Number.isFinite(amount)&&amount>=0?amount/100:1;
     return Object.fromEntries(Object.entries(data||{}).map(([key,value])=>{
+      if(value===null||value===undefined||value==='')return [key,value??null];
       const n=numericValue(value);
       return [key,n===null?value:roundedNutritionValue(n*factor)];
     }));
@@ -104,6 +109,29 @@
     const explicit=Number(food?.perMealMax);
     if(Number.isFinite(explicit)&&explicit>0)return explicit;
     return Infinity;
+  }
+
+  function foodIdentity(food){
+    if(!food)return '';
+    const id=String(food.id??food.code??food.name??'').trim();
+    const preparation=normalizeText(food.preparation||'');
+    if(!preparation)return id;
+    const normalizedId=normalizeText(id);
+    if(normalizedId.includes(preparation))return id;
+    return `${id}::${preparation}`;
+  }
+
+  function mergeDuplicateFoods(items){
+    const merged=new Map();
+    (items||[]).forEach(item=>{
+      const q=Number(item?.q)||0;
+      if(q<=0||!item?.f)return;
+      const key=foodIdentity(item.f);
+      const existing=merged.get(key);
+      if(existing)existing.q+=q;
+      else merged.set(key,{f:item.f,q});
+    });
+    return [...merged.values()];
   }
 
   function chunkByPortion(item){
@@ -154,10 +182,27 @@
     return meals;
   }
 
+  function assignUniqueFoodsToMeals(items,count){
+    const meals=createMealShells(count);
+    const unique=mergeDuplicateFoods(items).sort((a,b)=>caloriesOf(b)-caloriesOf(a)||foodIdentity(a.f).localeCompare(foodIdentity(b.f)));
+    const loads=meals.map(()=>0);
+    unique.forEach(item=>{
+      let idx=0;
+      for(let i=1;i<loads.length;i++)if(loads[i]<loads[idx])idx=i;
+      meals[idx].items.push(item);
+      loads[idx]+=caloriesOf(item);
+    });
+    return meals;
+  }
+
   return {
     normalizeMealCount,
     createMealShells,
     distributeItems,
+    assignUniqueFoodsToMeals,
+    foodIdentity,
+    mergeDuplicateFoods,
+    nullableNumber,
     caloriesForQuantity,
     nutrientsForQuantity,
     mealCalories,
