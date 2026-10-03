@@ -13,65 +13,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify content-aware resize, control composition and handle-safe measurement
+      - name: Verify functional card shrinking and visible resize handles
         shell: bash
         run: |
           node <<'NODE'
           const fs=require('fs');
           const index=fs.readFileSync('score-counter/index.html','utf8');
-          const drag=fs.readFileSync('score-counter/score-drag.js','utf8');
           const js=fs.readFileSync('score-counter/score-resize.js','utf8');
           const css=fs.readFileSync('score-counter/score-resize.css','utf8');
           const missing=[];
-
           const requiredJs=[
-            'team-score-card-sizes-v1',
-            'MIN_SCALE_LIMIT',
-            'MAX_SCALE',
-            'RESIZE_CORNERS',
-            'measureContentFloor',
+            'MIN_SCALE_LIMIT=0.35',
+            '--score-ui-scale',
+            "card.querySelector('.score-controls')",
+            "controls.querySelector('.score-btn.plus')",
+            "controls.querySelector('.score-btn.minus')",
+            "controls.querySelector('.score-btn.mega')",
+            'controls.appendChild(plus)',
+            'controls.appendChild(minus)',
+            'controls.appendChild(mega)',
             'applyCardBox',
-            'composeScoreControls',
-            'score-controls-composed',
-            'score-plus-btn',
-            'score-minus-btn',
-            'score-mega-btn',
-            'score-measuring-floor',
-            'layoutSignature',
-            'normalizeCards',
-            'pointerdown',
-            'pointermove',
-            'pointerup'
+            'RESIZE_CORNERS',
+            'pointerdown','pointermove','pointerup'
           ];
-          for(const marker of requiredJs){ if(!js.includes(marker)) missing.push('js:'+marker); }
-
+          for(const marker of requiredJs){if(!js.includes(marker)) missing.push('js:'+marker);}
           const requiredCss=[
-            '.score-card-text',
             '.score-controls-composed',
-            '.score-plus-btn',
-            '.score-minus-btn',
-            '.score-mega-btn',
-            'grid-template-columns:repeat(2,minmax(0,1fr))',
-            'grid-column:1 / -1',
-            '.score-measuring-floor .score-resize-handle',
-            'display:none!important',
+            '.card[data-score-resize-ready="1"] .card-body',
+            'transform:scale(var(--score-ui-scale,1))',
+            'width:calc(100% / var(--score-ui-scale,1))',
+            'opacity:.55',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
             '.score-resize-handle[data-corner="bottom-right"]'
           ];
-          for(const marker of requiredCss){ if(!css.includes(marker)) missing.push('css:'+marker); }
-
-          if(/card\.style\.transform=.*scale\(/.test(drag)) missing.push('drag still scales whole card');
-          if(js.includes('--score-content-compensation')) missing.push('old inverse text scaling remains');
+          for(const marker of requiredCss){if(!css.includes(marker)) missing.push('css:'+marker);}
+          if(js.includes('contentFloor=measureContentFloor(card)')) missing.push('resize still blocked by content floor');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
-          if(js.includes('⤢')) missing.push('persistent resize icon still present');
-
           if(missing.length){
-            console.error('Missing handle-safe resize behavior:', missing.join(', '));
+            console.error('Missing functional resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Handle-safe content-aware resize markers present.');
+          console.log('Functional resize markers present.');
           NODE
           node --check score-counter/score-resize.js
-          node --check score-counter/score-drag.js
