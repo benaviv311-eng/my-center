@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify resizable score cards and adaptive text scaling
+      - name: Verify resizable score cards, four corners and adaptive text
         shell: bash
         run: |
           node <<'NODE'
@@ -26,31 +26,44 @@ jobs:
           }
           const js=fs.readFileSync('score-counter/score-resize.js','utf8');
           const css=fs.readFileSync('score-counter/score-resize.css','utf8');
-          const required=[
+          const requiredJs=[
             'team-score-card-sizes-v1',
             'MIN_SCALE',
             'MAX_SCALE',
             'TEXT_FLOOR_SCALE',
-            'score-card-content',
+            'TEXT_BOOST',
+            'RESIZE_CORNERS',
+            'top-left',
+            'top-right',
+            'bottom-left',
+            'bottom-right',
+            'score-card-text',
             '--score-content-compensation',
-            'score-resize-handle',
+            '--score-text-boost',
             'layoutSignature',
             'normalizeCards',
             'pointerdown',
             'pointermove',
             'pointerup'
           ];
-          const missing=required.filter(x=>!js.includes(x));
+          const missing=requiredJs.filter(x=>!js.includes(x));
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
           if(!drag.includes('data-score-scale')) missing.push('drag/resize transform composition');
-          if(!css.includes('.score-card-content')) missing.push('adaptive content css');
-          if(!css.includes('.score-resize-handle::after')) missing.push('diagonal corner affordance');
+          const requiredCss=[
+            '.score-card-text',
+            '.score-resize-handle[data-corner="top-left"]',
+            '.score-resize-handle[data-corner="top-right"]',
+            '.score-resize-handle[data-corner="bottom-left"]',
+            '.score-resize-handle[data-corner="bottom-right"]',
+            '--score-text-boost'
+          ];
+          for(const marker of requiredCss){ if(!css.includes(marker)) missing.push(marker); }
           if(js.includes('⤢')) missing.push('persistent resize icon still present');
           if(missing.length){
             console.error('Missing resize behavior markers:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Adaptive resize markers present.');
+          console.log('Four-corner adaptive resize markers present.');
           NODE
           node --check score-counter/score-resize.js
           node --check score-counter/score-drag.js
