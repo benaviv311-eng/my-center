@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import Profile from '../nutrition-profile.js';
 
 function fakeStorage(initial={}){
@@ -58,4 +59,11 @@ test('government saved food keeps stable lookup metadata without requiring nutri
   assert.equal(saved.sourceCode,'123');
   assert.equal(saved.preparation,'מבושל');
   assert.equal('k' in saved,false);
+});
+
+test('builder no longer reads or writes the legacy nutritionProfile key directly', () => {
+  const html=readFileSync(new URL('../nutrition-builder.html',import.meta.url),'utf8');
+  assert.doesNotMatch(html,/localStorage\.setItem\(['"]nutritionProfile['"]/);
+  assert.doesNotMatch(html,/localStorage\.getItem\(['"]nutritionProfile['"]/);
+  assert.match(html,/nutrition-profile\.js/);
 });
