@@ -1,0 +1,48 @@
+.card[data-score-resize-ready="1"]{
+  position:relative;
+  transform-origin:center center;
+}
+.score-resize-handle{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:35;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-width:42px;
+  height:34px;
+  padding:0 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(8,13,22,.78);
+  color:#fff;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  touch-action:none;
+  cursor:nwse-resize;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.score-resize-handle span{font-size:18px;line-height:1}
+.score-resize-value{
+  display:none;
+  font-size:11px;
+  font-weight:800;
+  direction:ltr;
+  white-space:nowrap;
+}
+.card.score-card-resizing{
+  z-index:85!important;
+  outline:3px solid rgba(96,165,250,.78);
+  outline-offset:3px;
+  box-shadow:0 26px 68px rgba(0,0,0,.48)!important;
+}
+.card.score-card-resizing .score-resize-value{display:block}
+body.score-card-resizing{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+#scoreResizeReset{white-space:nowrap}
+@media (max-width:700px){
+  .score-resize-handle{left:7px;height:32px;min-width:38px;padding:0 7px}
+}
