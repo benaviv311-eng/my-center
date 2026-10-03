@@ -88,6 +88,15 @@ test('builder opens nutrition values for the exact menu quantity', () => {
   assert.match(html, /ערכים ל־\$\{Math\.round\(amount\)\} גרם/);
 });
 
+test('builder inline javascript is syntactically valid and build button is wired', () => {
+  const html = readFileSync(new URL('../nutrition-builder.html', import.meta.url), 'utf8');
+  const inlineScripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  assert.ok(inlineScripts.length > 0);
+  for (const source of inlineScripts) assert.doesNotThrow(() => new Function(source));
+  assert.match(html, /id="buildBtn">בנה לי תפריט<\/button>/);
+  assert.match(html, /qs\('buildBtn'\)\.addEventListener\('click',buildMenu\)/);
+});
+
 test('profile meal helper does not install a self-triggering MutationObserver loop', () => {
   const source = readFileSync(new URL('../nutrition-profile-meals.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /new MutationObserver/);
