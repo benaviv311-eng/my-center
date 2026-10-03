@@ -7,7 +7,7 @@
   let ctx=null,master=null,scene='lobby',streak=0,step=0,timer=null,enabled=readEnabled(),unlocked=false;
 
   function readEnabled(){try{return localStorage.getItem(MUSIC_KEY)!=='0'}catch(_){return true}}
-  function saveEnabled(v){try{localStorage.setItem(MUSIC_KEY,v?'1':'0')}catch(_){}}
+  function saveEnabled(v){try{localStorage.setItem(MUSIC_KEY,v?'1':'0')}catch(_){} }
   function audioContext(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;
@@ -15,7 +15,7 @@
       if(!ctx){
         ctx=new C();
         master=ctx.createGain();
-        master.gain.value=.055;
+        master.gain.value=.35;
         master.connect(ctx.destination);
       }
       if(ctx.state==='suspended') ctx.resume();
@@ -90,6 +90,14 @@
     if(enabled&&unlocked){audioContext();restart()}else{clearInterval(timer);timer=null}
   }
   function isEnabled(){return enabled}
+  function preview(){
+    unlock();
+    if(!enabled)return false;
+    tone(523.25,.16,.12,'triangle');
+    tone(659.25,.16,.11,'triangle',.055);
+    tone(783.99,.2,.10,'triangle',.11);
+    return true;
+  }
   function stinger(kind='victory'){
     if(!enabled||!unlocked)return;
     const patterns={
@@ -105,5 +113,5 @@
   function stop(){clearInterval(timer);timer=null}
   function currentScene(){return scene}
 
-  window.DoubleMusic={unlock,setScene,setStreak,updateState,setEnabled,isEnabled,stinger,stop,currentScene};
+  window.DoubleMusic={unlock,setScene,setStreak,updateState,setEnabled,isEnabled,preview,stinger,stop,currentScene};
 })();
