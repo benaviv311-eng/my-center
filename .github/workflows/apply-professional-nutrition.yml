@@ -1,0 +1,35 @@
+name: Apply professional nutrition integration
+
+on:
+  push:
+    branches:
+      - feature/professional-nutrition-engine
+    paths:
+      - 'scripts/patch-professional-nutrition.py'
+      - '.github/workflows/apply-professional-nutrition.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/professional-nutrition-engine
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/patch-professional-nutrition.py
+      - name: Commit patched builder
+        run: |
+          if git diff --quiet; then
+            echo 'No changes'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add nutrition-builder.html
+          git commit -m 'feat: integrate professional nutrition planner'
+          git push origin HEAD:feature/professional-nutrition-engine
