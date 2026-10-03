@@ -20,6 +20,14 @@ test('build button uses the professional planner instead of legacy optimizer',()
   assert.doesNotMatch(build,/optimize\(/);
 });
 
+test('legacy macro optimizer implementation is removed from the builder',()=>{
+  const s=html();
+  assert.doesNotMatch(s,/function optimize\(/);
+  assert.doesNotMatch(s,/function defaultsForMissing\(/);
+  assert.doesNotMatch(s,/function issueList\(/);
+  assert.doesNotMatch(s,/function loss\(/);
+});
+
 test('menu exposes save-to-profile action and quality diagnostics',()=>{
   const s=html();
   assert.match(s,/שמור בפרופיל/);
