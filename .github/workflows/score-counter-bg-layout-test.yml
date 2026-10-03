@@ -1,0 +1,32 @@
+name: Score Counter background layout test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score-counter/index.html'
+      - '.github/workflows/score-counter-bg-layout-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify centered half-width full-height background
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('score-counter/index.html','utf8');
+          const required=[
+            'background:#000',
+            'left:25vw',
+            'width:50vw',
+            'height:100vh',
+            'object-fit:contain'
+          ];
+          const missing=required.filter(x=>!s.includes(x));
+          if(missing.length){
+            console.error('Missing background layout markers:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('Centered half-width full-height background markers present.');
+          NODE
