@@ -277,10 +277,11 @@ const dadPreClips=[
 ];
 dadPreClips.forEach(a=>{a.preload='auto';a.volume=.96});
 function primeDadVoice(){
- const a=dadVoiceClips[0];
- if(!a)return true;
- const old=a.volume;a.volume=.001;
- a.play().then(()=>{a.pause();a.currentTime=0;a.volume=old}).catch(()=>{a.volume=old});
+ const clips=[...dadVoiceClips,...dadPreClips];
+ clips.forEach(a=>{
+   const old=a.volume;a.volume=.001;
+   a.play().then(()=>{a.pause();a.currentTime=0;a.volume=old}).catch(()=>{a.volume=old});
+ });
  return true;
 }
 function dadPrePlaying(){return !!(dadPreAudio&&!dadPreAudio.paused&&!dadPreAudio.ended)}
@@ -347,8 +348,8 @@ function updateDad(dt){
    if(dadEncounterStage){dadEncounterStage=0;dadSongStartAt=0;stopDadPre()}
  }else{
    if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800){playDadPre(Math.floor(Math.random()*3));dadEncounterStage=1;lastPreAt=now}
-   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200){playDadPre(3+Math.floor(Math.random()*3));dadEncounterStage=2;lastPreAt=now}
-   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900){playDadPre(6+Math.floor(Math.random()*3));dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
+   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200&&!dadPrePlaying()){playDadPre(3+Math.floor(Math.random()*3));dadEncounterStage=2;lastPreAt=now}
+   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()){playDadPre(6+Math.floor(Math.random()*3));dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
    if(distToPlayer<300){dad.targetX=player.x;dad.targetY=player.y}
  }
  if(!player.invisible && distToPlayer<210 && dadEncounterStage>=3 && now>=dadSongStartAt && !dadPrePlaying()){
