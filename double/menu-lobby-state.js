@@ -13,14 +13,14 @@
     arcade:{flag:'🎮',label:'Arcade',lang:'en-US',text:'Ready? Go!'}
   };
   function createState(opts={}){
-    return {screen:'home',players:1,difficulty:opts.difficulty||'normal',voice:opts.voice||'british',mode:'classic',variant:null,target:null,modeLabel:'קלאסי'};
+    return {screen:'players',players:1,difficulty:opts.difficulty||'normal',voice:opts.voice||'british',mode:'classic',variant:null,target:null,modeLabel:'קלאסי'};
   }
-  function choosePlayers(s,players){return {...s,players:Number(players)===2?2:1,screen:'difficulty'};}
-  function chooseDifficulty(s,difficulty){return {...s,difficulty:diffMeta[difficulty]?difficulty:'normal',screen:'modes'};}
-  function chooseMode(s,mode){return {...s,mode:mode.mode||'classic',variant:mode.variant||null,target:mode.target||null,modeLabel:mode.label||'קלאסי',screen:'home'};}
+  function choosePlayers(s,players){return {...s,players:Number(players)===2?2:1,screen:'modes'};}
+  function chooseMode(s,mode){return {...s,mode:mode.mode||'classic',variant:mode.variant||null,target:mode.target||null,modeLabel:mode.label||'קלאסי',screen:'difficulty'};}
+  function chooseDifficulty(s,difficulty){return {...s,difficulty:diffMeta[difficulty]?difficulty:'normal',screen:'home'};}
   function openVoice(s){return {...s,screen:'voice'};}
-  function chooseVoice(s,voice){return {...s,voice:voiceMeta[voice]?voice:'british',screen:'voice'};}
-  function loadoutLabel(s){const d=diffMeta[s.difficulty]||diffMeta.normal,v=voiceMeta[s.voice]||voiceMeta.british;return `${s.players===2?'👥 2 שחקנים':'🎮 1 שחקן'} · ${d.icon} ${d.label} · ${v.flag} ${v.label}`;}
+  function chooseVoice(s,voice){return {...s,voice:voiceMeta[voice]?voice:'british'};}
+  function loadoutLabel(s){const d=diffMeta[s.difficulty]||diffMeta.normal;return `${s.players===2?'👥 2 שחקנים':'🎮 1 שחקן'} · ${s.modeLabel||'קלאסי'} · ${d.icon} ${d.label}`;}
   function voiceSample(v){return voiceMeta[v]||voiceMeta.british;}
-  return {createState,choosePlayers,chooseDifficulty,chooseMode,openVoice,chooseVoice,loadoutLabel,voiceSample,diffMeta,voiceMeta};
+  return {createState,choosePlayers,chooseMode,chooseDifficulty,openVoice,chooseVoice,loadoutLabel,voiceSample,diffMeta,voiceMeta};
 });
