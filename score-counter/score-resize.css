@@ -5,7 +5,6 @@
   justify-self:center;
   align-self:start;
   min-width:var(--score-content-min-width,0px)!important;
-  min-height:var(--score-content-min-height,0px)!important;
 }
 .score-controls-composed{
   display:grid!important;
@@ -55,13 +54,6 @@
 }
 .card.score-measuring-natural .score-resize-handle,
 .card.score-measuring-content-floor .score-resize-handle{display:none!important}
-.card.score-measuring-content-floor{
-  width:max-content!important;
-  height:auto!important;
-  min-width:0!important;
-  min-height:0!important;
-  max-width:none!important;
-}
 .card.score-measuring-content-floor .score-controls-composed{
   width:max-content!important;
   grid-template-columns:max-content max-content!important;
