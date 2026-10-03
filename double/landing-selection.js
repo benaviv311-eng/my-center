@@ -47,7 +47,8 @@
     if(existing){existing.addEventListener('load',()=>next?.(),{once:true});return;}
     const s=document.createElement('script');s.src=src;s.setAttribute(attr,'1');s.onload=()=>next?.();document.body.appendChild(s);
   }
-  const loadLobby=()=>load('double/menu-lobby-v3.js?v=4','data-double-lobby-ui',()=>false);
+  const loadBridge=()=>load('double/landing-music-bridge.js?v=1','data-double-landing-music-bridge',()=>false);
+  const loadLobby=()=>load('double/menu-lobby-v3.js?v=4','data-double-lobby-ui',()=>false,loadBridge);
   const loadMusic=()=>load('double/music-engine-state.js?v=1','data-double-music-state',()=>!!window.DoubleMusicState,()=>
     load('double/music-engine.js?v=2','data-double-music-engine',()=>!!window.DoubleMusic,loadLobby));
   load('double/menu-lobby-state.js?v=4','data-double-lobby-state',()=>!!window.DoubleMenuLobbyState,loadMusic);
