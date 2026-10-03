@@ -7,36 +7,37 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TeamScore">
-
-
-<title>TeamScore — Clean</title>
+<title>TeamScore</title>
 <style>
 html,body{margin:0;min-height:100%;background:#0b1020;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 body{display:grid;place-items:center}
 #load{padding:24px;text-align:center;font-weight:800}
 small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 </style>
-<style>#cleanBadge{position:fixed;left:8px;bottom:8px;z-index:2147483647;background:#0009;color:#fff;padding:4px 7px;border-radius:6px;font:11px system-ui;pointer-events:none}</style></head>
-<body><div id="cleanBadge">CLEAN IMAGE BUILD</div>
+</head>
+<body>
 <div id="load">TeamScore<small>טוען את האפליקציה…</small></div>
 <script>
 (async function(){
   const tnames=["../team-score/t1.txt","../team-score/t2.txt","../team-score/t3.txt","../team-score/t4.txt"];
-  const bnames=["../team-score/b1.txt","../team-score/b2.txt","../team-score/b3.txt","../team-score/b4.txt"];
-  const read=async n=>{const r=await fetch(n+"?clean=1",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
+  const backgrounds=Array.from({length:8},(_,i)=>"assets/backgrounds/bg"+String(i+1).padStart(2,"0")+".webp?v=hq1");
+  const read=async n=>{const r=await fetch(n+"?hq=1",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
-  const bgs=await Promise.all(bnames.map(read));
   const bin=atob(parts.join(""));
   const bytes=new Uint8Array(bin.length);
   for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
   if(typeof DecompressionStream==="undefined")throw new Error("הדפדפן ישן מדי");
   const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
   let html=await new Response(stream).text();
-  bgs.forEach((b,i)=>{html=html.replaceAll("__BG"+(i+1)+"__","data:image/webp;base64,"+b.trim())});
-  const sharp=bgs.map(b=>"data:image/webp;base64,"+b.trim());
-  const sharpCss='<style id="sharpBgCss">.rotating-bg{display:none!important}#sharpBg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#11151d;pointer-events:none}#sharpBg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 28%;opacity:0;transition:opacity 1.2s ease;filter:saturate(1.03) contrast(1.03) brightness(.98)}#sharpBg img.active{opacity:1}.wrap{position:relative!important;z-index:2!important}</style>';
-  const sharpHtml='<div id="sharpBg" aria-hidden="true"><img id="sharpA" class="active" src="'+sharp[0]+'" alt=""><img id="sharpB" src="'+sharp[1]+'" alt=""></div>';
-  const sharpJs='<script>(function(){var imgs='+JSON.stringify(sharp)+',a=document.getElementById("sharpA"),b=document.getElementById("sharpB"),i=0,onA=true;if(!a||!b)return;imgs.forEach(function(s){var x=new Image();x.src=s});setInterval(function(){i=(i+1)%imgs.length;var n=onA?b:a,c=onA?a:b;n.src=imgs[i];n.classList.add("active");c.classList.remove("active");onA=!onA},15000)})();<\/script>';
+
+  for(let i=0;i<4;i++){
+    html=html.replaceAll("__BG"+(i+1)+"__",backgrounds[i]);
+  }
+
+  const sharpCss='<style id="sharpBgCss">.rotating-bg{display:none!important}#sharpBg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#11151d;pointer-events:none}#sharpBg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;opacity:0;transition:opacity 1.15s ease;image-rendering:auto}#sharpBg img.active{opacity:1}.wrap{position:relative!important;z-index:2!important}</style>';
+  const sharpHtml='<div id="sharpBg" aria-hidden="true"><img id="sharpA" class="active" src="'+backgrounds[0]+'" alt="" decoding="async"><img id="sharpB" alt="" decoding="async"></div>';
+  const sharpJs='<script>(function(){var imgs='+JSON.stringify(backgrounds)+',a=document.getElementById("sharpA"),b=document.getElementById("sharpB"),i=0,onA=true;if(!a||!b)return;function preload(n){var x=new Image();x.decoding="async";x.src=imgs[n%imgs.length]}preload(1);setInterval(function(){i=(i+1)%imgs.length;var n=onA?b:a,c=onA?a:b;var next=imgs[i];var show=function(){n.classList.add("active");c.classList.remove("active");preload(i+1)};if(n.src.endsWith(next)){show()}else{n.onload=show;n.src=next}onA=!onA},15000)})();<\/script>';
+
   html=html.replace("</head>",sharpCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
