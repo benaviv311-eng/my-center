@@ -64,31 +64,29 @@
   }
 
   function measureContentFloor(card){
-    const previousWidth=card.style.width;
-    const previousHeight=card.style.height;
-    const previousMinWidth=card.style.getPropertyValue('--score-content-min-width');
-    const previousMinHeight=card.style.getPropertyValue('--score-content-min-height');
+    const controls=card.querySelector('.score-controls-composed') || card.querySelector('.score-controls');
+    if(!controls){
+      card.style.setProperty('--score-content-min-width','1px');
+      return {width:1};
+    }
 
     card.style.removeProperty('--score-content-min-width');
-    card.style.removeProperty('--score-content-min-height');
-    card.style.width='max-content';
-    card.style.height='auto';
+    const cardRect=card.getBoundingClientRect();
+    const controlsWidthBefore=Math.max(1,controls.getBoundingClientRect().width);
+    const horizontalChrome=Math.max(0,cardRect.width-controlsWidthBefore);
+
     card.classList.add('score-measuring-content-floor');
-    void card.offsetWidth;
-
-    const rect=card.getBoundingClientRect();
-    const width=Math.max(1,Math.ceil(rect.width),Math.ceil(card.scrollWidth));
-    const height=Math.max(1,Math.ceil(rect.height),Math.ceil(card.scrollHeight));
-
+    void controls.offsetWidth;
+    const intrinsicControlsWidth=Math.max(
+      1,
+      Math.ceil(controls.getBoundingClientRect().width),
+      Math.ceil(controls.scrollWidth)
+    );
     card.classList.remove('score-measuring-content-floor');
-    card.style.width=previousWidth;
-    card.style.height=previousHeight;
-    if(previousMinWidth) card.style.setProperty('--score-content-min-width',previousMinWidth);
-    if(previousMinHeight) card.style.setProperty('--score-content-min-height',previousMinHeight);
 
-    card.style.setProperty('--score-content-min-width',Math.ceil(width)+'px');
-    card.style.setProperty('--score-content-min-height',Math.ceil(height)+'px');
-    return {width,height};
+    const width=Math.max(1,Math.ceil(horizontalChrome+intrinsicControlsWidth));
+    card.style.setProperty('--score-content-min-width',width+'px');
+    return {width};
   }
 
   function measureNaturalHeight(card,width){
@@ -112,7 +110,7 @@
     const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
     const targetWidth=Math.max(contentFloor.width,Math.round(base.width*next));
     const naturalHeight=measureNaturalHeight(card,targetWidth);
-    const targetHeight=Math.max(contentFloor.height,Math.round(base.height*next),naturalHeight);
+    const targetHeight=Math.max(Math.round(base.height*next),naturalHeight);
 
     card.dataset.scoreScale=String(next);
     card.style.width=targetWidth+'px';
