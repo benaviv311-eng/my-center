@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>בונה תפריט אישי | בית ספר אור</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#6d778b;--blue:#2869d8;--blue2:#173b78;
+  --line:#e5eaf2;--green:#16895f;--greenbg:#eaf8f2;--amber:#9a6610;--amberbg:#fff6df;--red:#b43b3b;--redbg:#fff0f0;
+}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit}
+.app{max-width:1050px;margin:auto;padding:18px 16px 90px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.back{border:0;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 4px 18px #14213d12;cursor:pointer}
+.brand{font-weight:800}
+.hero{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;border-radius:28px;padding:26px;box-shadow:0 14px 35px #1d4ed833}
+.hero h1{margin:6px 0 8px;font-size:clamp(28px,6vw,44px)}
+.hero p{margin:0;line-height:1.55;max-width:760px;opacity:.92}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.step{background:#fff;border:1px solid var(--line);padding:12px;border-radius:16px;text-align:center;font-weight:700;color:#7b8598;cursor:pointer}
+.step.active{color:var(--blue);border-color:#b9d0f7;background:#f1f6ff}
+.panel{background:#fff;border-radius:24px;padding:22px;margin-top:14px;box-shadow:0 5px 22px #14213d0c}
+.panel h2{margin:0 0 8px}
+.panel h3{margin:20px 0 8px}
+.sub{color:var(--muted);line-height:1.5;margin:0 0 16px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-weight:700;font-size:14px}
+.field input,.field select{width:100%;border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+.activity-grid,.goal-grid,.mode-grid{display:grid;gap:10px}
+.activity-grid{grid-template-columns:repeat(5,1fr)}
+.goal-grid,.mode-grid{grid-template-columns:repeat(2,1fr)}
+.choice{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;text-align:right;cursor:pointer;min-height:92px}
+.choice strong{display:block;margin-bottom:6px}
+.choice small{color:var(--muted);line-height:1.35;display:block}
+.choice.selected{border:2px solid var(--blue);background:#f2f7ff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{border:0;border-radius:14px;padding:12px 18px;font-weight:800;cursor:pointer}
+.primary{background:var(--blue);color:#fff}
+.secondary{background:#edf4ff;color:#235bb1}
+.ghost{background:#fff;border:1px solid var(--line);color:var(--text)}
+.targets{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:18px}
+.target{background:#f8faff;border:1px solid #e5edf9;border-radius:18px;padding:14px;text-align:center}
+.target b{display:block;font-size:22px;margin-bottom:4px}
+.target span{font-size:12px;color:var(--muted)}
+.food-sections{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.foodbox{border:1px solid var(--line);border-radius:18px;padding:15px}
+.foodbox h3{margin:0 0 5px}
+.foodbox p{font-size:13px;color:var(--muted);margin:0 0 10px}
+.entry{display:flex;gap:8px}
+.entry input{flex:1;border:1px solid var(--line);border-radius:13px;padding:11px}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chip{display:flex;gap:7px;align-items:center;background:#f2f5f9;border-radius:999px;padding:7px 10px;font-size:13px}
+.chip.unknown{background:var(--amberbg);color:var(--amber)}
+.chip button{border:0;background:transparent;cursor:pointer}
+.note{border-radius:16px;padding:13px 15px;line-height:1.45;margin-top:12px}
+.info{background:#edf4ff;color:#244e8d}
+.warn{background:var(--amberbg);color:#7c570d}
+.danger{background:var(--redbg);color:#8e3030}
+.success{background:var(--greenbg);color:#126c4c}
+.meals{display:grid;gap:12px;margin-top:14px}
+.meal{border:1px solid var(--line);border-radius:20px;padding:15px}
+.mealhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.meal h3{margin:0}
+.foodrow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:10px 0;border-top:1px solid #eef1f5}
+.foodrow:first-of-type{margin-top:10px}
+.foodrow .muted{font-size:12px;color:var(--muted)}
+.mini{border:0;border-radius:10px;padding:7px 10px;background:#f1f5fb;color:#315e9f;cursor:pointer;font-weight:700}
+.balance{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-top:12px}
+.barbox{background:#f8f9fb;border-radius:14px;padding:10px}
+.barline{height:7px;background:#e7ebf0;border-radius:99px;overflow:hidden;margin-top:7px}
+.barfill{height:100%;background:var(--blue);width:0}
+.hidden{display:none!important}
+.footer-note{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.5}.source-tag{display:inline-block;font-size:11px;background:#eef4ff;color:#315e9f;border-radius:999px;padding:3px 7px;margin-top:4px}.modal-back{position:fixed;inset:0;background:#0007;display:grid;place-items:center;z-index:100;padding:16px}.modal-card{background:#fffdf8;border-radius:20px;padding:18px;width:min(720px,100%);max-height:85vh;overflow:auto}.nutrient-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.nutrient-item{border:1px solid #e8dfcf;border-radius:10px;padding:8px}.nutrient-item b{display:block}.loading-chip{opacity:.7}
+@media(max-width:800px){
+  .activity-grid{grid-template-columns:1fr}
+  .targets{grid-template-columns:repeat(2,1fr)}
+  .food-sections,.grid2,.goal-grid,.mode-grid{grid-template-columns:1fr}
+  .balance{grid-template-columns:1fr}
+  .stepper{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="top">
+    <div class="brand">☀️ בית ספר אור · תזונה</div>
+    <button class="back" onclick="location.href='index.html'">← חזרה</button>
+  </div>
+
+  <section class="hero">
+    <small>כלי אישי</small>
+    <h1>בונה תפריט</h1>
+    <p>קודם מחשבים מה הגוף צריך. אחר כך כותבים רק את המאכלים שנגישים לך — או נותנים למערכת להשלים בעצמה.</p>
+  </section>
+
+  <div class="stepper">
+    <button class="step active" data-step="1">1 · מה הגוף צריך</button>
+    <button class="step" data-step="2">2 · מה יש לי</button>
+    <button class="step" data-step="3">3 · בנה תפריט</button>
+  </div>
+
+  <section class="panel" id="step1">
+    <h2>מה הגוף צריך?</h2>
+    <p class="sub">ענה בלחיצות קצרות. הנתונים משמשים לחישוב יעד יומי משוער.</p>
+
+    <div class="grid2">
+      <div class="field"><label>גיל</label><input id="age" type="number" min="18" max="90" value="32"></div>
+      <div class="field"><label>מין לחישוב</label><select id="sex"><option value="male">זכר</option><option value="female">נקבה</option></select></div>
+      <div class="field"><label>משקל (ק״ג)</label><input id="weight" type="number" min="35" max="250" step="0.1" value="80"></div>
+      <div class="field"><label>גובה (ס״מ)</label><input id="height" type="number" min="130" max="230" value="178"></div>
+    </div>
+
+  
