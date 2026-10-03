@@ -2,6 +2,7 @@
   will-change:transform;
   cursor:grab;
   -webkit-touch-callout:none;
+  touch-action:pan-y;
   transition:box-shadow .15s ease,outline-color .15s ease;
 }
 .card[data-score-drag-ready="1"].score-card-dragging{
@@ -13,7 +14,11 @@
   user-select:none;
   -webkit-user-select:none;
 }
-body.score-card-dragging{overscroll-behavior:none}
+body.score-card-dragging{
+  overscroll-behavior:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
 #scoreDragReset{white-space:nowrap}
 @media (hover:hover){
   .card[data-score-drag-ready="1"]:hover{outline:1px solid rgba(255,255,255,.12);outline-offset:2px}
