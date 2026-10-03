@@ -512,28 +512,31 @@ function bestFiberSuggestions(excludedIds){
 
 function buildMenu(){
   if(!state.targets){calculateTargets(); if(!state.targets)return;}
+  if(!window.NutritionPlanner){alert('מנוע התפריט עדיין נטען. נסה שוב בעוד רגע.');return;}
   const entered=enteredFoods();
   const unknown=Object.values(state.foods).flat().filter(x=>!x.id);
   if(state.mode==='strict' && entered.length===0){
     alert('במצב "רק ממה שיש לי" צריך לכתוב לפחות מאכל אחד.');
     return;
   }
-  let allowed=entered;
-  if(state.mode==='auto') allowed=defaultsForMissing(entered);
-  let res=optimize(allowed,state.targets);
-
-  // במצב אוטומטי: אם נותר חוסר ברור, מרחיבים את מאגר האפשרויות מאחורי הקלעים.
-  if(state.mode==='auto' && issueList(res).length){
-    const expanded=[...allowed];
-    DB.forEach(f=>{
-      if(!expanded.some(x=>x.id===f.id)){
-        const useful=(f.fi>4||f.p>15||f.cat==='carb'||f.cat==='fat');
-        if(useful)expanded.push(f);
-      }
-    });
-    res=optimize(expanded,state.targets);
-  }
-  state.result=res;
+  const profile=window.NutritionProfile?.load(localStorage)||null;
+  const savedFoodIds=(profile?.savedFoods||[]).map(x=>window.NutritionProfile?.foodIdentity(x)||x.id).filter(Boolean);
+  const mealCount=window.getNutritionMealCount?window.getNutritionMealCount():(profile?.mealCount||3);
+  const planned=window.NutritionPlanner.planDay({
+    foods:entered,
+    fallbackFoods:state.mode==='auto'?DB:[],
+    targets:state.targets,
+    mealCount,
+    mode:state.mode,
+    savedFoodIds,
+    sportMode:Boolean(profile?.sportMode)
+  });
+  state.result={
+    ...planned,
+    planner:true,
+    foods:planned.items.map(x=>x.f),
+    amounts:planned.items.map(x=>x.q)
+  };
   renderMenu(unknown);
   goStep(3);
 }
@@ -546,7 +549,7 @@ function renderMenu(unknown=[]){
 
   const chosen=res.foods.map((f,i)=>({f,q:res.amounts[i]})).filter(x=>x.q>0);
   const mealCount=window.getNutritionMealCount?window.getNutritionMealCount():3;
-  const meals=window.NutritionMeals?window.NutritionMeals.distributeItems(chosen,mealCount):[{name:'ארוחה 1',items:chosen}];
+  const meals=res.meals||(window.NutritionMeals?window.NutritionMeals.assignUniqueFoodsToMeals(chosen,mealCount):[{name:'ארוחה 1',items:chosen}]);
 
   const wrap=qs('meals');wrap.innerHTML='';
   meals.forEach((m,mi)=>{
@@ -638,9 +641,10 @@ function showFocusedFix(suggestions){
 }
 
 </script>
-<script src="nutrition-meals.js?v=3"></script>
-<script src="nutrition-profile.js?v=1"></script>
-<script src="nutrition-profile-meals.js?v=2"></script>
+<script src="nutrition-meals.js?v=4"></script>
+<script src="nutrition-profile.js?v=2"></script>
+<script src="nutrition-profile-meals.js?v=3"></script>
+<script src="nutrition-planner.js?v=1"></script>
 <script src="nutrition-safety.js?v=1"></script>
 </body>
 </html>
