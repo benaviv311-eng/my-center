@@ -1,0 +1,11 @@
+const assert=require('assert');
+const S=require('./menu-lobby-state.js');
+let s=S.createState();
+s=S.choosePlayers(s,2);
+assert.equal(s.screen,'modes','player choice should lead to modes');
+s=S.chooseMode(s,{mode:'versus',variant:'gold',label:'קלף זהב'});
+assert.equal(s.screen,'difficulty','mode choice should lead to difficulty');
+s=S.chooseDifficulty(s,'hard');
+assert.equal(s.screen,'home','difficulty should complete selection');
+assert(!S.loadoutLabel(s).includes('British'),'voice should not dominate the main loadout label');
+console.log('menu lobby state tests passed');
