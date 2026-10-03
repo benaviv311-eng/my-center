@@ -4,9 +4,13 @@ on:
   push:
     paths:
       - 'tests/nutrition-meals.test.mjs'
+      - 'tests/nutrition-profile.test.mjs'
+      - 'tests/nutrition-planner.test.mjs'
       - 'nutrition-meals.js'
       - 'nutrition-safety.js'
       - 'nutrition-profile.js'
+      - 'nutrition-profile-meals.js'
+      - 'nutrition-planner.js'
       - 'nutrition-builder.html'
       - '.github/workflows/nutrition-meals-test.yml'
 
@@ -23,4 +27,8 @@ jobs:
           node-version: '22'
       - run: node --check nutrition-meals.js
       - run: node --check nutrition-safety.js
+      - run: node --check nutrition-profile.js
+      - run: if [ -f nutrition-planner.js ]; then node --check nutrition-planner.js; fi
       - run: node --test tests/nutrition-meals.test.mjs
+      - run: if [ -f tests/nutrition-profile.test.mjs ]; then node --test tests/nutrition-profile.test.mjs; fi
+      - run: if [ -f tests/nutrition-planner.test.mjs ]; then node --test tests/nutrition-planner.test.mjs; fi
