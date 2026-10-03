@@ -53,3 +53,17 @@ test('honors an explicit reasonable daily maximum over a legacy max', () => {
   assert.equal(Meals.reasonableDailyMax({ max: 700, dailyMax: 450, cat: 'carb' }), 450);
   assert.equal(Meals.reasonableDailyMax({ max: 700, cat: 'carb' }), 700);
 });
+
+test('generic brown rice requires a cooked or dry preparation choice', () => {
+  const options = Meals.preparationChoices('אורז מלא');
+  assert.equal(options.length, 2);
+  assert.deepEqual(options.map(x => x.label), ['מבושל', 'יבש / לפני בישול']);
+  assert.equal(options[0].food.k, 111);
+  assert.equal(options[1].food.k, 366);
+});
+
+test('explicit brown rice preparation resolves directly', () => {
+  assert.equal(Meals.preparedFoodFor('אורז מלא מבושל').id, 'brownrice-cooked');
+  assert.equal(Meals.preparedFoodFor('אורז מלא יבש').id, 'brownrice-dry');
+  assert.equal(Meals.preparedFoodFor('אורז מלא'), null);
+});
