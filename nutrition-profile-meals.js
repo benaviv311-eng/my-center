@@ -1,10 +1,15 @@
 (function(){
 'use strict';
-const PROFILE_KEY='nutritionProfileV1';
 function el(id){return document.getElementById(id)}
 function normalize(v){return window.NutritionMeals?.normalizeMealCount(v)??Math.min(6,Math.max(1,Math.round(Number(v)||3)))}
-function load(){try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'null')}catch(e){return null}}
-function save(p){localStorage.setItem(PROFILE_KEY,JSON.stringify(p))}
+function load(){
+  if(window.NutritionProfile?.migrate)return window.NutritionProfile.migrate(localStorage);
+  try{return JSON.parse(localStorage.getItem('nutritionProfileV1')||'null')}catch(e){return null}
+}
+function save(p){
+  if(window.NutritionProfile?.save)return window.NutritionProfile.save(localStorage,p);
+  localStorage.setItem('nutritionProfileV1',JSON.stringify(p));return p;
+}
 
 function injectStyles(){
   if(el('nutritionMealCountStyles'))return;
@@ -30,7 +35,7 @@ function ensureField(){
 
 function patchSavedProfileFromForm(){
   const p=load();if(!p)return;
-  const next={...p,mealCount:selectedFromForm(),updatedAt:p.updatedAt||new Date().toISOString()};save(next);refreshAll();
+  const next={...p,mealCount:selectedFromForm(),updatedAt:new Date().toISOString()};save(next);refreshAll();
 }
 
 function ensureSaveHook(){
