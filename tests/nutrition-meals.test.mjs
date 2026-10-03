@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import Meals from '../nutrition-meals.js';
 
 test('meal count defaults to 3 and is constrained to 1-6', () => {
@@ -30,6 +31,19 @@ test('splits available food portions when needed so requested meals are not empt
 test('calculates calories from grams using values per 100g', () => {
   assert.equal(Meals.caloriesForQuantity({ k: 111 }, 700), 777);
   assert.equal(Meals.caloriesForQuantity({ k: 350 }, 700), 2450);
+});
+
+test('scales all numeric nutrient values to the actual gram amount', () => {
+  const scaled = Meals.nutrientsForQuantity({
+    food_energy: 200,
+    protein: 10,
+    iron: '2.5',
+    label: 'example'
+  }, 150);
+  assert.equal(scaled.food_energy, 300);
+  assert.equal(scaled.protein, 15);
+  assert.equal(scaled.iron, 3.75);
+  assert.equal(scaled.label, 'example');
 });
 
 test('does not place more than a food per-meal maximum in one meal', () => {
@@ -66,4 +80,15 @@ test('explicit brown rice preparation resolves directly', () => {
   assert.equal(Meals.preparedFoodFor('אורז מלא מבושל').id, 'brownrice-cooked');
   assert.equal(Meals.preparedFoodFor('אורז מלא יבש').id, 'brownrice-dry');
   assert.equal(Meals.preparedFoodFor('אורז מלא'), null);
+});
+
+test('builder opens nutrition values for the exact menu quantity', () => {
+  const html = readFileSync(new URL('../nutrition-builder.html', import.meta.url), 'utf8');
+  assert.match(html, /showFoodValues\(f,q\)/);
+  assert.match(html, /ערכים ל־\$\{Math\.round\(amount\)\} גרם/);
+});
+
+test('profile meal helper does not install a self-triggering MutationObserver loop', () => {
+  const source = readFileSync(new URL('../nutrition-profile-meals.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /new MutationObserver/);
 });
