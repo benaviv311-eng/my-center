@@ -2,35 +2,63 @@
   position:relative;
   transform-origin:center center;
 }
+.score-card-content{
+  scale:var(--score-content-compensation,1);
+  transform-origin:center center;
+  transition:scale .08s linear;
+}
 .score-resize-handle{
   position:absolute;
-  left:10px;
-  top:50%;
-  transform:translateY(-50%);
+  left:-4px;
+  bottom:-4px;
   z-index:35;
-  display:flex;
-  align-items:center;
-  gap:5px;
-  min-width:42px;
-  height:34px;
-  padding:0 8px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.28);
-  background:rgba(8,13,22,.78);
+  width:42px;
+  height:42px;
+  padding:0;
+  border:0;
+  border-radius:0 14px 0 14px;
+  background:transparent;
   color:#fff;
-  box-shadow:0 6px 18px rgba(0,0,0,.28);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
+  box-shadow:none;
   touch-action:none;
   cursor:nwse-resize;
   user-select:none;
   -webkit-user-select:none;
+  opacity:1;
 }
-.score-resize-handle span{font-size:18px;line-height:1}
+.score-resize-handle::after{
+  content:"";
+  position:absolute;
+  left:7px;
+  bottom:7px;
+  width:17px;
+  height:17px;
+  opacity:0;
+  pointer-events:none;
+  background:
+    linear-gradient(135deg,transparent 43%,rgba(255,255,255,.92) 45%,rgba(255,255,255,.92) 53%,transparent 55%) 0 0/100% 100% no-repeat;
+  transition:opacity .14s ease,transform .14s ease;
+  transform:translate(-2px,2px);
+}
+.score-resize-handle:hover::after,
+.score-resize-handle:focus-visible::after,
+.card.score-card-resizing .score-resize-handle::after{
+  opacity:1;
+  transform:translate(0,0);
+}
 .score-resize-value{
+  position:absolute;
+  left:2px;
+  bottom:34px;
   display:none;
+  min-width:44px;
+  padding:4px 7px;
+  border-radius:999px;
+  background:rgba(8,13,22,.82);
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
   font-size:11px;
   font-weight:800;
+  line-height:1;
   direction:ltr;
   white-space:nowrap;
 }
@@ -44,5 +72,6 @@
 body.score-card-resizing{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
 #scoreResizeReset{white-space:nowrap}
 @media (max-width:700px){
-  .score-resize-handle{left:7px;height:32px;min-width:38px;padding:0 7px}
+  .score-resize-handle{left:-6px;bottom:-6px;width:48px;height:48px}
+  .score-resize-handle::after{left:9px;bottom:9px;width:18px;height:18px}
 }
