@@ -56,8 +56,13 @@
       }
       function setOuterCloseVisible(visible){
         const btn=outerCloseButton();
-        if(btn)btn.style.display=visible?'':'none';
+        if(btn){
+          btn.textContent='✕ יציאה';
+          btn.setAttribute('aria-label','יציאה');
+          btn.style.display=visible?'':'none';
+        }
       }
+      setOuterCloseVisible(true);
       function showEndOverlay(title,description){
         endTitle.textContent=(title||'המשחק הסתיים').trim()||'המשחק הסתיים';
         endText.textContent=(description||'רוצה לנסות שוב?').trim()||'רוצה לנסות שוב?';
@@ -147,6 +152,7 @@
         setTimeout(checkEnd,180);
       }
       frame.addEventListener('load',()=>{
+        setOuterCloseVisible(true);
         try{watch(frame.contentDocument)}catch(_){ }
       });
     })();
