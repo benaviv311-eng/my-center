@@ -10,6 +10,7 @@ const mustExist = [
   'book-page.css',
   'book-reading.js',
   'book-structure.js',
+  'book-structure-ui.js',
   'library-book-links.js'
 ];
 
@@ -53,7 +54,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   assert.ok(html.includes(`id="${id}"`), `book.html should contain ${id}`);
 });
 
-['library-discovery.js', 'book-structure.js', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
+['library-discovery.js', 'book-structure.js', 'book-structure-ui.js', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
   assert.ok(html.includes(file), `book.html should load ${file}`);
 });
 
@@ -74,6 +75,7 @@ for(let i=1;i<approvedOrder.length;i++){
   );
 }
 assert.ok(!/id="book-key-points-section"[^>]*\bhidden\b/.test(html), 'key points should be a permanent part of every book structure');
+assert.ok(html.indexOf('book-reading-body') < html.indexOf('book-infinite-feed'), 'reading body should precede the infinite feed');
 assert.ok(html.includes('עוד מהספר'), 'infinite feed should be framed as supplemental discovery');
 assert.ok(html.includes('editorial-book'), 'book page should opt into the editorial reading design');
 
@@ -86,8 +88,11 @@ assert.ok(js.includes('book-reading-progress'), 'book page should update reading
 assert.ok(js.includes('data-source-expand'), 'book page should preserve source provenance expansion');
 assert.ok(js.includes('URLSearchParams'), 'book page should resolve a book from the URL');
 assert.ok(js.includes('book-surprise'), 'book page should support surprise learning');
-assert.ok(js.includes('BookStructure'), 'book page should use the shared universal book structure');
-assert.ok(js.includes('renderBookLearningPoints'), 'book page should render the expanded learning-points section');
+
+const structureUi = fs.readFileSync(path.join(root, 'book-structure-ui.js'), 'utf8');
+assert.ok(structureUi.includes('BookStructure'), 'universal UI should use the shared structure model');
+assert.ok(structureUi.includes('renderUniversalBookStructure'), 'universal UI should render the approved structure after book data loads');
+assert.ok(structureUi.includes('book-learning-points-list'), 'universal UI should render expanded learning points');
 
 const pageCss = fs.readFileSync(path.join(root, 'book-page.css'), 'utf8');
 ['book-reading-layout','book-reading-toc-card','reading-chapter','reading-deep-panel','book-takeaways-section','book-key-points-section','book-learning-points-section'].forEach(token => {
@@ -148,3 +153,6 @@ assert.ok(pageCss.includes('bottom:calc(212px + env(safe-area-inset-bottom))'), 
 assert.ok(js.includes("$('book-read-floating').addEventListener"), 'floating read control should trigger read-aloud');
 assert.ok(pageCss.includes('.book-summary-points li::marker'), 'nugget bullets should have an explicit marker style');
 assert.ok(pageCss.includes('color:#111'), 'nugget text and bullets should render in solid black');
+assert.ok(js.includes('function bookPointSets()'), 'legacy key-points renderer should remain compatible during the universal structure rollout');
+assert.ok(js.includes('c.key_points'), 'book page should still prefer curated key points when available');
+assert.ok(js.includes('c.learning_points'), 'book page should still understand expanded learning points');
