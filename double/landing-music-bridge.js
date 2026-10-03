@@ -49,6 +49,17 @@
     }
   }
 
+  document.addEventListener('click',event=>{
+    const btn=event.target?.closest?.('[data-sound="music"]');
+    if(!btn)return;
+    setTimeout(()=>{
+      if(Music.isEnabled()){
+        Music.unlock();
+        Music.preview?.();
+      }
+    },0);
+  });
+
   document.getElementById('playSelected')?.addEventListener('click',()=>{Music.unlock();Music.setScene('play')});
   document.getElementById('gameClose')?.addEventListener('click',()=>{coreObserver?.disconnect();endObserver?.disconnect();Music.setScene('lobby');Music.unlock()});
   gameFrame.addEventListener('load',()=>{if(gameFrame.src&&gameFrame.src!=='about:blank')attachWrapper()});
