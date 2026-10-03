@@ -134,6 +134,7 @@ function initUI(win){
       .profile-goals{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.profile-goal{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}.profile-goal b{display:block;font-size:18px}.profile-goal span{font-size:11px;color:var(--muted)}
       .profile-editbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.profile-editbar button{border:0;border-radius:12px;padding:10px 13px;font-weight:800;cursor:pointer}.profile-primary{background:var(--blue);color:#fff}.profile-secondary{background:#edf4ff;color:#235bb1}.profile-ghost{background:#fff;border:1px solid var(--line)!important}
       .profile-chip{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f4f7fb;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}.profile-chip button{border:0;background:transparent;color:var(--blue);font-weight:800;cursor:pointer}
+      .profile-saved{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.profile-saved h3{margin:0 0 9px;font-size:16px}.profile-saved-list{display:flex;gap:7px;flex-wrap:wrap}.saved-food-chip{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:13px}.saved-food-chip button{border:0;background:transparent;cursor:pointer;color:#8e3030;font-weight:900}.saved-food-empty{color:var(--muted);font-size:13px}
       @media(max-width:800px){.profile-goals{grid-template-columns:repeat(2,1fr)}}`;
     doc.head.appendChild(style);
   }
@@ -152,6 +153,7 @@ function initUI(win){
     const card=doc.createElement('section');card.id='profileHome';card.className='profile-card hidden';card.innerHTML=`
       <div class="profile-head"><div><div class="profile-name" id="profileCardName">הפרופיל שלי</div><div class="profile-meta" id="profileCardMeta"></div></div><div class="profile-meta" id="profileUpdated"></div></div>
       <div class="profile-goals" id="profileGoals"></div>
+      <div class="profile-saved"><h3>⭐ מאכלים שמורים</h3><div class="profile-saved-list" id="profileSavedFoods"></div></div>
       <div class="profile-editbar"><button class="profile-primary" id="profileBuildBtn">בנה לי תפריט</button><button class="profile-secondary" id="profileWeightBtn">עדכן רק משקל</button><button class="profile-ghost" id="profileEditBtn">ערוך פרופיל</button></div>`;
     stepper.before(card);el('profileBuildBtn').onclick=openBuilderFromProfile;el('profileWeightBtn').onclick=quickWeightUpdate;el('profileEditBtn').onclick=editProfile;
   }
@@ -178,7 +180,16 @@ function initUI(win){
   function renderProfileHome(p){
     ensureProfileHome();el('profileCardName').textContent='👤 '+(p.name||'הפרופיל שלי');el('profileCardMeta').textContent=`${p.weight} ק״ג · ${p.height} ס״מ · פעילות ${activityName(p.activity)} · ${goalName(p.goal)}`;el('profileUpdated').textContent='עודכן לאחרונה: '+fmtDate(p.updatedAt);
     const t=p.targets||{};el('profileGoals').innerHTML=[['קלוריות',t.cal,'קק״ל'],['חלבון',t.protein,'ג׳'],['פחמימות',t.carbs,'ג׳'],['שומן',t.fat,'ג׳'],['סיבים',t.fiber,'ג׳']].map(([label,v,u])=>`<div class="profile-goal"><b>${esc(v)} ${u}</b><span>${label}</span></div>`).join('');
+    renderSavedFoods(p);
   }
+  function renderSavedFoods(p){
+    const wrap=el('profileSavedFoods');if(!wrap)return;const list=p?.savedFoods||[];wrap.innerHTML='';
+    if(!list.length){wrap.innerHTML='<span class="saved-food-empty">עוד לא שמרת מאכלים בפרופיל.</span>';return;}
+    list.forEach(food=>{const chip=doc.createElement('span');chip.className='saved-food-chip';const source=food.source?` · ${esc(food.source)}`:'';chip.innerHTML=`<span>${esc(food.name)}${source}</span><button aria-label="הסר מאכל שמור">×</button>`;chip.querySelector('button').onclick=()=>{const next=storeProfile(removeSavedFood(currentProfile()||p,foodIdentity(food)));renderProfileHome(next);notifyProfileChange(next)};wrap.appendChild(chip)});
+  }
+  function notifyProfileChange(profile){try{doc.dispatchEvent(new CustomEvent('nutrition-profile-change',{detail:{profile}}))}catch(e){}}
+  function toggleSavedFoodFor(food){const current=currentProfile()||normalizeProfile({version:PROFILE_VERSION,mealCount:3,savedFoods:[]});const next=storeProfile(toggleSavedFood(current,food));if(el('profileHome'))renderProfileHome(next);notifyProfileChange(next);return isSaved(next,food)}
+  win.toggleSavedFoodFor=toggleSavedFoodFor;
   function showProfileHome(){const p=currentProfile();if(!p)return false;applyProfile(p);renderProfileHome(p);el('profileHome').classList.remove('hidden');doc.querySelector('.stepper')?.classList.add('hidden');[1,2,3].forEach(i=>el('step'+i)?.classList.add('hidden'));return true}
   function showProfileChip(){
     el('profileChip')?.remove();const step2=el('step2');if(!step2)return;const p=currentProfile();if(!p)return;

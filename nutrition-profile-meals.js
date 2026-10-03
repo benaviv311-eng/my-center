@@ -33,7 +33,7 @@ function openPicker(current,onPick){
   back.querySelectorAll('[data-meals]').forEach(b=>b.onclick=()=>{const value=normalize(b.dataset.meals);back.remove();onPick(value)});back.querySelector('[data-close]').onclick=()=>back.remove();back.onclick=e=>{if(e.target===back)back.remove()};document.body.appendChild(back);
 }
 function quickChange(){
-  const p=load();const current=normalize(p?.mealCount||selectedFromForm());openPicker(current,n=>{setForm(n);if(p)save({...p,mealCount:n,updatedAt:new Date().toISOString()});refreshAll();if(typeof renderMenu==='function'&&typeof state!=='undefined'&&state.result)renderMenu()});
+  const p=load();const current=normalize(p?.mealCount||selectedFromForm());openPicker(current,n=>{setForm(n);if(p)save({...p,mealCount:n,updatedAt:new Date().toISOString()});refreshAll();if(typeof buildMenu==='function'&&typeof state!=='undefined'&&state.result)buildMenu()});
 }
 function updateProfileHome(){
   const p=load();if(!p)return;const n=normalize(p.mealCount||3);const meta=el('profileCardMeta');if(meta&&!meta.textContent.includes('ארוחות'))meta.textContent+=` · ${n} ארוחות`;
