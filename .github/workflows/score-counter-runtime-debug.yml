@@ -1,0 +1,32 @@
+name: Score Counter runtime debug
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/score-counter-runtime-debug.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode TeamScore and inspect card structure
+        shell: bash
+        run: |
+          python <<'PY'
+          import base64,gzip,re,pathlib
+          root=pathlib.Path('.')
+          data=''.join((root/f'team-score/t{i}.txt').read_text() for i in range(1,5))
+          html=gzip.decompress(base64.b64decode(data)).decode('utf-8')
+          print('decoded_chars=',len(html))
+          for needle in ['delete-team','class="card"','className = "card"','className="card"','serviceWorker','touch-action']:
+              print('\n===',needle,'===')
+              found=False
+              for m in re.finditer(re.escape(needle),html,re.I):
+                  found=True
+                  a=max(0,m.start()-700); b=min(len(html),m.end()+1400)
+                  print(html[a:b].replace('\n',' ')[:2200])
+                  print('\n---')
+                  break
+              if not found: print('NOT FOUND')
+          pathlib.Path('/tmp/teamscore-decoded.html').write_text(html)
+          PY
