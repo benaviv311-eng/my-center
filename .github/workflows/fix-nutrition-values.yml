@@ -14,36 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch builder
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('nutrition-builder.html')
-          s=p.read_text(encoding='utf-8')
-          old="""function showFoodValues(food){
-  const data=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
-  const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
-  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class=\"nutrient-item\"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
-  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class=\"modal-card\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:center\"><div><h2 style=\"margin:0\">${food.name}</h2><div class=\"muted\">ערכים ל־100 גרם · ${food.source||'מאגר פנימי'}</div></div><button class=\"mini\">✕</button></div><div class=\"nutrient-grid\" style=\"margin-top:14px\">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
-}"""
-          new="""function showFoodValues(food,grams=100){
-  const amount=Number(grams)>0?Number(grams):100;
-  const base=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
-  const data=window.NutritionMeals?.nutrientsForQuantity?window.NutritionMeals.nutrientsForQuantity(base,amount):base;
-  const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
-  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class=\"nutrient-item\"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
-  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class=\"modal-card\"><div style=\"display:flex;justify-content:space-between;gap:10px;align-items:center\"><div><h2 style=\"margin:0\">${food.name}</h2><div class=\"muted\">ערכים ל־${Math.round(amount)} גרם · ${food.source||'מאגר פנימי'}</div></div><button class=\"mini\">✕</button></div><div class=\"nutrient-grid\" style=\"margin-top:14px\">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
-}"""
-          if old not in s:
-              raise SystemExit('showFoodValues block not found')
-          s=s.replace(old,new,1)
-          if "btns[0].onclick=()=>showFoodValues(f);" not in s:
-              raise SystemExit('values button handler not found')
-          s=s.replace("btns[0].onclick=()=>showFoodValues(f);","btns[0].onclick=()=>showFoodValues(f,q);",1)
-          s=s.replace('<button class="btn primary" id="buildBtn">בנה תפריט</button>','<button class="btn primary" id="buildBtn">בנה לי תפריט</button>',1)
-          s=s.replace('nutrition-meals.js?v=2','nutrition-meals.js?v=3')
-          s=s.replace('nutrition-profile-meals.js?v=1','nutrition-profile-meals.js?v=2')
-          p.write_text(s,encoding='utf-8')
-          PY
+        run: echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnAgPSBQYXRoKCJudXRyaXRpb24tYnVpbGRlci5odG1sIikKcyA9IHAucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCnN0YXJ0ID0gcy5maW5kKCJmdW5jdGlvbiBzaG93Rm9vZFZhbHVlcyhmb29kKXsiKQppZiBzdGFydCA8IDA6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJzaG93Rm9vZFZhbHVlcyBzdGFydCBub3QgZm91bmQiKQplbmQgPSBzLmZpbmQoIlxuZnVuY3Rpb24gcXMo aWQpIiwgc3RhcnQpCmlmIGVuZCA8IDA6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJzaG93Rm9vZFZhbHVlcyBlbmQgbm90IGZvdW5kIikKbmV3X2Z1bmMgPSAiIiJmdW5jdGlvbiBzaG93Rm9vZFZhbHVlcyhmb29kLGdyYW1zPTEwMCl7CiAgY29uc3QgYW1vdW50PU51bWJlcihncmFtcyk+MD9OdW1iZXIoZ3JhbXMpOjEwMDsKICBjb25zdCBiYXNlPWZvb2QuYWxsfHx7Zm9vZF9lbmVyZ3k6Zm9vZC5rLHByb3RlaW46Zm9vZC5wLGNhcmJvaHlkcmF0ZXM6Zm9vZC5jLHRvdGFsX2ZhdDpmb29kLmYsdG90YWxfZGlldGFyeV9maWJlcjpmb29kLmZpfTsKICBjb25zdCBkYXRhPXdpbmRvdy5OdXRyaXRpb25NZWFscz8ubnV0cmllbnRzRm9yUXVhbnRpdHk/d2luZG93Lk51dHJpdGlvbk1lYWxzLm51dHJpZW50c0ZvclF1YW50aXR5KGJhc2UsYW1vdW50KTpiYXNlOwogIGNvbnN0IHNraXA9bmV3IFNldChbJ19pZCcsJ0NvZGUnLCdjb2RlJywnc21sbWl0enJhY2gnLCdzaG1taXR6cmFjaCcsJ21ha29yJywndGFyaWNoX3B0aWhhJywndGFyaWNoX2lka3VuJywnZW5nbGlzaF9uYW1lJ10pOwogIGNvbnN0IHJvd3M9T2JqZWN0LmVudHJpZXMoZGF0YSkuZmlsdGVyKChbayx2XSk9PiFza2lwLmhhcyhrKSYm diE9PW51bGwmJnYhPT0nJyYmdiE9PXVuZGVmaW5lZCYmISh0eXBlb2Ygdj09PSdudW1iZXInJiZOdW1iZXIuaXNOYU4odikpLm1hcCgoW2ssdl0pPT5gPGRpdiBjbGFzcz0ibnV0cmllbnQtaXRlbSI+PGI+JHtOVVRSSUVOVF9MQUJFTFNba118fGt9PC9iPjxzcGFuPiR7dn0ke251dHJpZW50VW5pdChrKX08L3NwYW4+PC9kaXY+YCkuam9pbignJyk7CiAgY29uc3QgYmFjaz1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdkaXYnKTtiYWNrLmNsYXNzTmFtZT0nbW9kYWwtYmFjayc7YmFjay5pbm5lckhUTUw9YD xkaXYgY2xhc3M9Im1vZGFsLWNhcmQiPjxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MTBweDthbGlnbi1pdGVtczpjZW50ZXIiPjxkaXY+PGgyIHN0eWxlPSJtYXJnaW46MCI+JHtmb29kLm5hbWV9PC9oMj48ZGl2IGNsYXNzPSJtdXRlZCI+16LXqNeb15nXnSDXnC3igJoke01hdGgucm91bmQoYW1vdW50KX0g15LXqNe +ICfCtCAke2Zvb2Quc291cmNlfHwn157XkNeS16gg16TXoNeZ157XmSd9PC9kaXY+PC9kaXY+PGJ1dHRvbiBjbGFzcz0ibWluaSI+4pyVPC9idXR0b24+PC9kaXY+PGRpdiBjbGFzcz0ibnV0cmllbnQtZ3JpZCIgc3R5bGU9Im1hcmdpbi10b3A6MTRweCI+JHtyb3dzfHwnPGRpdj7XkNeZ158g16DXqNeV16DXmdedINeg15XXodek15nXnS48L2Rpdj4nfTwvZGl2PjwvZGl2PmA7YmFjay5vbmNsaWNrPWU9PntpZihlLnRhcmdldD09PWJhY2spYmFjay5yZW1vdmUoKX07YmFjay5xdWVyeVNlbGVjdG9yKCdidXR0b24nKS5vbmNsaWNrPSgpPT5iYWNrLnJlbW92ZSgpO2RvY3VtZW50LmJvZHkuYXBwZW5kQ2hpbGQoYmFjayk7Cn0iIiIKcyA9IHNbOnN0YXJ0XSArIG5ld19mdW5jICsgc1tlbmQ6XQpvbGRfaGFuZGxlciA9ICJidG5zWzBdLm9uY2xpY2s9KCk9PnNob3dGb29kVmFsdWVzKGYpOyIK aWYgb2xkX2hhbmRsZXIgbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJ2YWx1ZXMgYnV0dG9uIGhhbmRsZXIgbm90IGZvdW5kIikKcyA9IHMucmVwbGFjZShvbGRfaGFuZGxlciwgImJ0bnNbMF0ub25jbGljaz0oKT0+c2hvd0Zvb2RWYWx1ZXMoZixxKTsiLCAxKQpzID0gcy5yZXBsYWNlKCc8YnV0dG9uIGNsYXNzPSJidG4gcHJpbWFyeSIgaWQ9ImJ1aWxkQnRuIj7Xkdeg15Qg16rXpNeo15nXmzwvYnV0dG9uPicsCiAgICAgICAgICAgICAgJzxidXR0b24gY2xhc3M9ImJ0biBwcmltYXJ5IiBpZD0iYnVpbGRCdG4iPtee16DXlCDXnNeZINeq16TXqNeZ15g8L2J1dHRvbj4nLCAxKQpzID0gcy5yZXBsYWNlKCdudXRyaXRpb24tbWVhbHMuanM/dj0yJywgJ251dHJpdGlvbi1tZWFscy5qcz92PTMnKQpzID0gcy5yZXBsYWNlKCdudXRyaXRpb24tcHJvZmlsZS1tZWFscy5qcz92PTEnLCAnbnV0cml0aW9uLXByb2ZpbGUtbWVhbHMuanM/dj0yJykKcC53cml0ZV90ZXh0KHMsIGVuY29kaW5nPSJ1dGYtOCIpCg==' | tr -d ' ' | base64 -d > /tmp/patch.py && python /tmp/patch.py
       - name: Commit builder patch
         run: |
           git config user.name "github-actions[bot]"
