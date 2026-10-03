@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'score-counter/index.html'
+      - 'score-counter/score-drag.js'
+      - 'score-counter/score-drag.css'
       - '.github/workflows/score-counter-drag-test.yml'
 jobs:
   test:
@@ -15,7 +17,12 @@ jobs:
         run: |
           node <<'NODE'
           const fs=require('fs');
-          const s=fs.readFileSync('score-counter/index.html','utf8');
+          const index=fs.readFileSync('score-counter/index.html','utf8');
+          if(!fs.existsSync('score-counter/score-drag.js')){
+            console.error('Missing score-counter/score-drag.js');
+            process.exit(1);
+          }
+          const js=fs.readFileSync('score-counter/score-drag.js','utf8');
           const required=[
             'team-score-card-positions-v1',
             'LONG_PRESS_MS=450',
@@ -26,10 +33,12 @@ jobs:
             'pointermove',
             'pointerup'
           ];
-          const missing=required.filter(x=>!s.includes(x));
+          const missing=required.filter(x=>!js.includes(x));
+          if(!index.includes('score-drag.js') || !index.includes('score-drag.css')) missing.push('loader assets');
           if(missing.length){
             console.error('Missing drag behavior markers:', missing.join(', '));
             process.exit(1);
           }
           console.log('Score card drag behavior markers present.');
           NODE
+          node --check score-counter/score-drag.js
