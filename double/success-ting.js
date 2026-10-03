@@ -42,16 +42,3 @@
 
   return {patternFor,play};
 });
-
-(function(){
-  if(typeof document==='undefined'||!document.getElementById('core')) return;
-  function load(src,attr,ready,next){
-    if(ready&&ready()){next?.();return;}
-    const existing=document.querySelector(`script[${attr}]`);
-    if(existing){existing.addEventListener('load',()=>next?.(),{once:true});return;}
-    const s=document.createElement('script');s.src=src;s.setAttribute(attr,'1');s.onload=()=>next?.();document.body.appendChild(s);
-  }
-  load('double/music-engine-state.js?v=1','data-double-music-state',()=>!!window.DoubleMusicState,()=>
-    load('double/music-engine.js?v=2','data-double-music-engine',()=>!!window.DoubleMusic,()=>
-      load('double/music-game-bridge.js?v=1','data-double-music-bridge',()=>false)));
-})();
