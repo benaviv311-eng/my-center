@@ -1,10 +1,8 @@
 (function(){
   const SIZE_STORAGE_KEY='team-score-card-sizes-v1';
   const DRAG_STORAGE_KEY='team-score-card-positions-v1';
-  const MIN_SCALE=0.55;
+  const MIN_SCALE_LIMIT=0.28;
   const MAX_SCALE=1.6;
-  const TEXT_FLOOR_SCALE=0.68;
-  const TEXT_BOOST=1.18;
   const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
   const teams=document.getElementById('teams');
   if(!teams) return;
@@ -22,7 +20,7 @@
   const clamp=(n,min,max)=>Math.min(max,Math.max(min,n));
   const persist=()=>{try{localStorage.setItem(SIZE_STORAGE_KEY,JSON.stringify(sizes));}catch{}};
   const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
-  const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE,MAX_SCALE);
+  const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE_LIMIT,MAX_SCALE);
 
   function wrapReadableText(card){
     const walker=document.createTreeWalker(card,NodeFilter.SHOW_TEXT);
@@ -41,22 +39,94 @@
     });
   }
 
-  function applyContentCompensation(card,scale){
-    const compensation=scale>=TEXT_FLOOR_SCALE ? 1/scale : 1/TEXT_FLOOR_SCALE;
-    card.style.setProperty('--score-content-compensation',compensation.toFixed(4));
-    card.style.setProperty('--score-text-boost',TEXT_BOOST.toFixed(4));
-    card.style.setProperty('--score-text-scale',(compensation*TEXT_BOOST).toFixed(4));
-    card.style.setProperty('--score-card-scale',scale.toFixed(4));
-    wrapReadableText(card);
+  function composeScoreControls(card){
+    const buttons=Array.from(card.querySelectorAll('button')).filter(button=>!button.classList.contains('score-resize-handle'));
+    const label=button=>(button.textContent||'').replace(/\s+/g,' ').trim();
+    const plus=buttons.find(button=>/^[+＋]$/.test(label(button)));
+    const minus=buttons.find(button=>/^[-−–]$/.test(label(button)));
+    const mega=buttons.find(button=>/^(mega\b|מגה)/i.test(label(button)));
+
+    if(plus) plus.classList.add('score-plus-btn');
+    if(minus) minus.classList.add('score-minus-btn');
+    if(mega) mega.classList.add('score-mega-btn');
+
+    if(plus && minus && plus.parentElement===minus.parentElement && plus.parentElement!==card){
+      const parent=plus.parentElement;
+      const directButtons=Array.from(parent.children).filter(child=>child.tagName==='BUTTON');
+      if(directButtons.length<=4){
+        parent.classList.add('score-controls-composed');
+        if(mega && mega.parentElement===parent) mega.classList.add('score-mega-in-grid');
+      }
+    }
   }
 
-  function applyTransform(card){
-    const x=Number(card.dataset.dragX)||0;
-    const y=Number(card.dataset.dragY)||0;
-    const scale=scaleOf(card);
-    card.dataset.scoreScale=String(scale);
-    applyContentCompensation(card,scale);
-    card.style.transform='translate3d('+Math.round(x)+'px,'+Math.round(y)+'px,0) scale('+scale.toFixed(3)+')';
+  function baseDimensions(card){
+    let width=Number(card.dataset.scoreBaseWidth);
+    let height=Number(card.dataset.scoreBaseHeight);
+    if(width>0 && height>0) return {width,height};
+
+    const previousWidth=card.style.width;
+    const previousHeight=card.style.height;
+    card.style.removeProperty('width');
+    card.style.removeProperty('height');
+    const rect=card.getBoundingClientRect();
+    width=Math.max(1,rect.width);
+    height=Math.max(1,rect.height);
+    card.dataset.scoreBaseWidth=String(width);
+    card.dataset.scoreBaseHeight=String(height);
+    card.style.width=previousWidth;
+    card.style.height=previousHeight;
+    return {width,height};
+  }
+
+  function applyCardBox(card,scale){
+    const base=baseDimensions(card);
+    const next=clamp(scale,MIN_SCALE_LIMIT,MAX_SCALE);
+    card.dataset.scoreScale=String(next);
+    card.style.width=Math.round(base.width*next)+'px';
+    card.style.height=Math.round(base.height*next)+'px';
+  }
+
+  function overflows(card){
+    return card.scrollWidth>card.clientWidth+2 || card.scrollHeight>card.clientHeight+2;
+  }
+
+  function measureContentFloor(card){
+    const base=baseDimensions(card);
+    const previousWidth=card.style.width;
+    const previousHeight=card.style.height;
+    const previousScale=card.dataset.scoreScale;
+    card.classList.add('score-measuring-floor');
+
+    const test=scale=>{
+      card.style.width=Math.round(base.width*scale)+'px';
+      card.style.height=Math.round(base.height*scale)+'px';
+      void card.offsetWidth;
+      return overflows(card);
+    };
+
+    let floor=MIN_SCALE_LIMIT;
+    if(test(MIN_SCALE_LIMIT)){
+      let low=MIN_SCALE_LIMIT;
+      let high=1;
+      if(test(1)){
+        floor=1;
+      }else{
+        for(let i=0;i<12;i++){
+          const mid=(low+high)/2;
+          if(test(mid)) low=mid;
+          else high=mid;
+        }
+        floor=Math.min(1,high+0.008);
+      }
+    }
+
+    card.style.width=previousWidth;
+    card.style.height=previousHeight;
+    if(previousScale===undefined) delete card.dataset.scoreScale;
+    else card.dataset.scoreScale=previousScale;
+    card.classList.remove('score-measuring-floor');
+    return clamp(floor,MIN_SCALE_LIMIT,1);
   }
 
   function updateResizeValues(card){
@@ -65,11 +135,27 @@
   }
 
   function applySavedSize(card,id){
+    composeScoreControls(card);
+    wrapReadableText(card);
+    baseDimensions(card);
+    const floor=measureContentFloor(card);
     const saved=sizes[mode()][id];
-    const scale=saved && Number.isFinite(Number(saved.scale)) ? clamp(Number(saved.scale),MIN_SCALE,MAX_SCALE) : 1;
-    card.dataset.scoreScale=String(scale);
-    applyTransform(card);
+    const wanted=saved && Number.isFinite(Number(saved.scale)) ? Number(saved.scale) : 1;
+    applyCardBox(card,clamp(wanted,floor,MAX_SCALE));
     updateResizeValues(card);
+  }
+
+  function protectContent(card,id){
+    if(card.classList.contains('score-card-resizing')) return;
+    const current=scaleOf(card);
+    if(!overflows(card)) return;
+    const floor=measureContentFloor(card);
+    if(current<floor){
+      applyCardBox(card,floor);
+      sizes[mode()][id]={scale:floor};
+      persist();
+      updateResizeValues(card);
+    }
   }
 
   function bindHandle(card,id,handle){
@@ -77,7 +163,7 @@
     handle.dataset.scoreResizeBound='1';
     let active=false;
     let pointerId=null;
-    let centerX=0,centerY=0,startDistance=1,startScale=1;
+    let centerX=0,centerY=0,startDistance=1,startScale=1,contentFloor=MIN_SCALE_LIMIT;
 
     function finish(){
       if(!active) return;
@@ -95,6 +181,10 @@
       if(e.button!==undefined && e.button!==0) return;
       e.preventDefault();
       e.stopPropagation();
+      composeScoreControls(card);
+      wrapReadableText(card);
+      contentFloor=measureContentFloor(card);
+      if(scaleOf(card)<contentFloor) applyCardBox(card,contentFloor);
       const r=card.getBoundingClientRect();
       centerX=r.left+r.width/2;
       centerY=r.top+r.height/2;
@@ -115,9 +205,8 @@
       e.preventDefault();
       e.stopPropagation();
       const distance=Math.max(8,Math.hypot(e.clientX-centerX,e.clientY-centerY));
-      const next=clamp(startScale*(distance/startDistance),MIN_SCALE,MAX_SCALE);
-      card.dataset.scoreScale=String(next);
-      applyTransform(card);
+      const next=clamp(startScale*(distance/startDistance),contentFloor,MAX_SCALE);
+      applyCardBox(card,next);
       updateResizeValues(card);
     });
     handle.addEventListener('pointerup',e=>{if(e.pointerId===pointerId) finish();});
@@ -145,14 +234,14 @@
 
   function bindResize(card,id){
     if(!id) return;
+    composeScoreControls(card);
     wrapReadableText(card);
     if(card.getAttribute('data-score-resize-ready')!=='1'){
       card.setAttribute('data-score-resize-ready','1');
       applySavedSize(card,id);
-    }else{
-      applyContentCompensation(card,scaleOf(card));
     }
     ensureResizeHandles(card,id);
+    protectContent(card,id);
   }
 
   function attachCards(){
@@ -167,7 +256,10 @@
     persist();
     teams.querySelectorAll(':scope > .card').forEach(card=>{
       card.dataset.scoreScale='1';
-      applyTransform(card);
+      card.style.removeProperty('width');
+      card.style.removeProperty('height');
+      delete card.dataset.scoreBaseWidth;
+      delete card.dataset.scoreBaseHeight;
       updateResizeValues(card);
     });
     window.dispatchEvent(new CustomEvent('scorecards:autoarrange'));
@@ -213,15 +305,13 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור מכל אחת מארבע הפינות באלכסון. המסגרת קטנה קודם, והטקסט נשאר גדול עד שהכרטיס כבר מתקרב אליו.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור מכל אחת מארבע הפינות. הכרטיס מצטמצם עד גבול התוכן בלי לדחוס את Mega או את +/−.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
-    document.getElementById('scoreResizeReset').addEventListener('click',()=>{
-      normalizeCards();
-    });
+    document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
 
   const observer=new MutationObserver(()=>requestAnimationFrame(attachCards));
-  observer.observe(teams,{childList:true,subtree:true});
+  observer.observe(teams,{childList:true,subtree:true,characterData:true});
   addResetControl();
   attachCards();
 })();
