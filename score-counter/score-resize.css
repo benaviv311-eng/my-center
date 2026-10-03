@@ -1,15 +1,51 @@
 .card[data-score-resize-ready="1"]{
   position:relative;
+  box-sizing:border-box;
   transform-origin:center center;
-  --score-text-boost:1.18;
 }
 .score-card-text{
   display:inline-block;
-  transform:scale(var(--score-text-scale,var(--score-text-boost,1.18)));
-  transform-origin:center center;
-  transition:transform .08s linear;
+  font-size:1.12em;
+  line-height:1.08;
   pointer-events:none;
 }
+.score-controls-composed{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  align-items:stretch!important;
+  width:100%!important;
+}
+.score-controls-composed > .score-plus-btn,
+.score-controls-composed > .score-minus-btn{
+  width:100%!important;
+  min-width:56px!important;
+  min-height:46px!important;
+  margin:0!important;
+  white-space:nowrap!important;
+}
+.score-controls-composed > .score-mega-btn.score-mega-in-grid{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:44px!important;
+  margin:0!important;
+  white-space:nowrap!important;
+}
+.score-plus-btn,
+.score-minus-btn{
+  flex:1 1 0!important;
+  min-width:56px!important;
+  min-height:46px!important;
+}
+.score-mega-btn{
+  flex:1 0 100%!important;
+  width:100%!important;
+  min-height:44px!important;
+  white-space:nowrap!important;
+  line-height:1.1!important;
+}
+.score-measuring-floor .score-resize-handle{display:none!important}
 .score-resize-handle{
   position:absolute;
   z-index:35;
@@ -99,4 +135,10 @@ body.score-card-resizing{overscroll-behavior:none;user-select:none;-webkit-user-
   .score-resize-handle[data-corner="bottom-left"]{left:-7px;bottom:-7px}
   .score-resize-handle[data-corner="bottom-right"]{right:-7px;bottom:-7px}
   .score-resize-handle::after{width:19px;height:19px}
+  .score-controls-composed{gap:8px!important}
+  .score-controls-composed > .score-plus-btn,
+  .score-controls-composed > .score-minus-btn,
+  .score-plus-btn,
+  .score-minus-btn{min-width:52px!important;min-height:44px!important}
+  .score-mega-btn{min-height:42px!important}
 }
