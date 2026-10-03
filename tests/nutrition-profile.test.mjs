@@ -35,6 +35,14 @@ test('meal count is normalized to 1-6 on save', () => {
   assert.equal(Profile.load(s).mealCount,6);
 });
 
+test('sport mode defaults to false and persists when enabled', () => {
+  const s=storage();
+  Profile.save(s,{version:2,mealCount:3,savedFoods:[]});
+  assert.equal(Profile.load(s).sportMode,false);
+  Profile.save(s,{...Profile.load(s),sportMode:true});
+  assert.equal(Profile.load(s).sportMode,true);
+});
+
 test('migration prefers nutritionProfileV1 and safely merges useful legacy fields', () => {
   const s=storage({
     nutritionProfile:JSON.stringify({age:32,w:91,h:178,sex:'male',activity:3,goal:'maintain'}),
