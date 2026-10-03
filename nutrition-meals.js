@@ -57,6 +57,30 @@
     return k*q/100;
   }
 
+  function numericValue(value){
+    if(typeof value==='number')return Number.isFinite(value)?value:null;
+    if(typeof value!=='string'||!value.trim())return null;
+    const normalized=value.trim().replace(',','.');
+    if(!/^-?\d+(?:\.\d+)?$/.test(normalized))return null;
+    const n=Number(normalized);
+    return Number.isFinite(n)?n:null;
+  }
+
+  function roundedNutritionValue(value){
+    if(!Number.isFinite(value))return value;
+    if(Math.abs(value)>=100)return Math.round(value*10)/10;
+    return Math.round(value*100)/100;
+  }
+
+  function nutrientsForQuantity(data,grams){
+    const amount=Number(grams);
+    const factor=Number.isFinite(amount)&&amount>=0?amount/100:1;
+    return Object.fromEntries(Object.entries(data||{}).map(([key,value])=>{
+      const n=numericValue(value);
+      return [key,n===null?value:roundedNutritionValue(n*factor)];
+    }));
+  }
+
   function caloriesOf(item){
     return caloriesForQuantity(item?.f,item?.q);
   }
@@ -135,6 +159,7 @@
     createMealShells,
     distributeItems,
     caloriesForQuantity,
+    nutrientsForQuantity,
     mealCalories,
     dailyCalories,
     reasonableDailyMax,
