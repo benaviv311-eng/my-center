@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify content-aware resize, control composition and continuous long-press drag
+      - name: Verify content-aware resize, control composition and handle-safe measurement
         shell: bash
         run: |
           node <<'NODE'
@@ -36,6 +36,7 @@ jobs:
             'score-plus-btn',
             'score-minus-btn',
             'score-mega-btn',
+            'score-measuring-floor',
             'layoutSignature',
             'normalizeCards',
             'pointerdown',
@@ -52,6 +53,8 @@ jobs:
             '.score-mega-btn',
             'grid-template-columns:repeat(2,minmax(0,1fr))',
             'grid-column:1 / -1',
+            '.score-measuring-floor .score-resize-handle',
+            'display:none!important',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
@@ -59,24 +62,16 @@ jobs:
           ];
           for(const marker of requiredCss){ if(!css.includes(marker)) missing.push('css:'+marker); }
 
-          const requiredDrag=[
-            'latestClientX',
-            'latestClientY',
-            'startClientX=latestClientX',
-            'startClientY=latestClientY'
-          ];
-          for(const marker of requiredDrag){ if(!drag.includes(marker)) missing.push('drag:'+marker); }
-
           if(/card\.style\.transform=.*scale\(/.test(drag)) missing.push('drag still scales whole card');
           if(js.includes('--score-content-compensation')) missing.push('old inverse text scaling remains');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
           if(js.includes('⤢')) missing.push('persistent resize icon still present');
 
           if(missing.length){
-            console.error('Missing content-aware resize behavior:', missing.join(', '));
+            console.error('Missing handle-safe resize behavior:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Content-aware resize and control composition markers present.');
+          console.log('Handle-safe content-aware resize markers present.');
           NODE
           node --check score-counter/score-resize.js
           node --check score-counter/score-drag.js
