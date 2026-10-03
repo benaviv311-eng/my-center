@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import Planner from '../nutrition-planner.js';
 import Meals from '../nutrition-meals.js';
 
@@ -73,4 +74,13 @@ test('planner output exposes target and quality diagnostics',()=>{
   assert.ok(result.targetDiagnostics);
   assert.ok(result.qualityDiagnostics);
   assert.equal(result.qualityDiagnostics.uniqueFoods,result.items.length);
+});
+
+test('builder build path loads and calls the professional planner',()=>{
+  const html=readFileSync(new URL('../nutrition-builder.html',import.meta.url),'utf8');
+  assert.match(html,/nutrition-planner\.js/);
+  const build=html.match(/function buildMenu\(\)\{([\s\S]*?)\n\}\n\nfunction renderMenu/);
+  assert.ok(build,'buildMenu function should be present');
+  assert.match(build[1],/NutritionPlanner\.planDay/);
+  assert.doesNotMatch(build[1],/optimize\(/);
 });
