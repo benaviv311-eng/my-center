@@ -1,0 +1,23 @@
+name: Nutrition meal count tests
+
+on:
+  push:
+    paths:
+      - 'tests/nutrition-meals.test.mjs'
+      - 'nutrition-meals.js'
+      - 'nutrition-profile.js'
+      - 'nutrition-builder.html'
+      - '.github/workflows/nutrition-meals-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/nutrition-meals.test.mjs
