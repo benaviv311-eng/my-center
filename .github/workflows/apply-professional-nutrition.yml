@@ -6,6 +6,7 @@ on:
       - feature/professional-nutrition-engine
     paths:
       - 'scripts/patch-professional-nutrition.py'
+      - 'scripts/cleanup-professional-nutrition.py'
       - '.github/workflows/apply-professional-nutrition.yml'
 
 permissions:
@@ -22,6 +23,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python scripts/patch-professional-nutrition.py
+      - run: python scripts/cleanup-professional-nutrition.py
       - name: Commit patched builder
         run: |
           if git diff --quiet; then
@@ -31,5 +33,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add nutrition-builder.html
-          git commit -m 'feat: integrate professional nutrition planner'
+          git commit -m 'refactor: remove legacy nutrition optimizer'
           git push origin HEAD:feature/professional-nutrition-engine
