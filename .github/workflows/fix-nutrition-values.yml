@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/fix-nutrition-values.yml'
+      - '.github/scripts/patch_nutrition_builder.py'
 
 permissions:
   contents: write
@@ -14,11 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch builder
-        run: echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCnAgPSBQYXRoKCJudXRyaXRpb24tYnVpbGRlci5odG1sIikKcyA9IHAucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCnN0YXJ0ID0gcy5maW5kKCJmdW5jdGlvbiBzaG93Rm9vZFZhbHVlcyhmb29kKXsiKQppZiBzdGFydCA8IDA6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJzaG93Rm9vZFZhbHVlcyBzdGFydCBub3QgZm91bmQiKQplbmQgPSBzLmZpbmQoIlxuZnVuY3Rpb24gcXMo aWQpIiwgc3RhcnQpCmlmIGVuZCA8IDA6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJzaG93Rm9vZFZhbHVlcyBlbmQgbm90IGZvdW5kIikKbmV3X2Z1bmMgPSAiIiJmdW5jdGlvbiBzaG93Rm9vZFZhbHVlcyhmb29kLGdyYW1zPTEwMCl7CiAgY29uc3QgYW1vdW50PU51bWJlcihncmFtcyk+MD9OdW1iZXIoZ3JhbXMpOjEwMDsKICBjb25zdCBiYXNlPWZvb2QuYWxsfHx7Zm9vZF9lbmVyZ3k6Zm9vZC5rLHByb3RlaW46Zm9vZC5wLGNhcmJvaHlkcmF0ZXM6Zm9vZC5jLHRvdGFsX2ZhdDpmb29kLmYsdG90YWxfZGlldGFyeV9maWJlcjpmb29kLmZpfTsKICBjb25zdCBkYXRhPXdpbmRvdy5OdXRyaXRpb25NZWFscz8ubnV0cmllbnRzRm9yUXVhbnRpdHk/d2luZG93Lk51dHJpdGlvbk1lYWxzLm51dHJpZW50c0ZvclF1YW50aXR5KGJhc2UsYW1vdW50KTpiYXNlOwogIGNvbnN0IHNraXA9bmV3IFNldChbJ19pZCcsJ0NvZGUnLCdjb2RlJywnc21sbWl0enJhY2gnLCdzaG1taXR6cmFjaCcsJ21ha29yJywndGFyaWNoX3B0aWhhJywndGFyaWNoX2lka3VuJywnZW5nbGlzaF9uYW1lJ10pOwogIGNvbnN0IHJvd3M9T2JqZWN0LmVudHJpZXMoZGF0YSkuZmlsdGVyKChbayx2XSk9PiFza2lwLmhhcyhrKSYm diE9PW51bGwmJnYhPT0nJyYmdiE9PXVuZGVmaW5lZCYmISh0eXBlb2Ygdj09PSdudW1iZXInJiZOdW1iZXIuaXNOYU4odikpLm1hcCgoW2ssdl0pPT5gPGRpdiBjbGFzcz0ibnV0cmllbnQtaXRlbSI+PGI+JHtOVVRSSUVOVF9MQUJFTFNba118fGt9PC9iPjxzcGFuPiR7dn0ke251dHJpZW50VW5pdChrKX08L3NwYW4+PC9kaXY+YCkuam9pbignJyk7CiAgY29uc3QgYmFjaz1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdkaXYnKTtiYWNrLmNsYXNzTmFtZT0nbW9kYWwtYmFjayc7YmFjay5pbm5lckhUTUw9YD xkaXYgY2xhc3M9Im1vZGFsLWNhcmQiPjxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtnYXA6MTBweDthbGlnbi1pdGVtczpjZW50ZXIiPjxkaXY+PGgyIHN0eWxlPSJtYXJnaW46MCI+JHtmb29kLm5hbWV9PC9oMj48ZGl2IGNsYXNzPSJtdXRlZCI+16LXqNeb15nXnSDXnC3igJoke01hdGgucm91bmQoYW1vdW50KX0g15LXqNe +ICfCtCAke2Zvb2Quc291cmNlfHwn157XkNeS16gg16TXoNeZ157XmSd9PC9kaXY+PC9kaXY+PGJ1dHRvbiBjbGFzcz0ibWluaSI+4pyVPC9idXR0b24+PC9kaXY+PGRpdiBjbGFzcz0ibnV0cmllbnQtZ3JpZCIgc3R5bGU9Im1hcmdpbi10b3A6MTRweCI+JHtyb3dzfHwnPGRpdj7XkNeZ158g16DXqNeV16DXmdedINeg15XXodek15nXnS48L2Rpdj4nfTwvZGl2PjwvZGl2PmA7YmFjay5vbmNsaWNrPWU9PntpZihlLnRhcmdldD09PWJhY2spYmFjay5yZW1vdmUoKX07YmFjay5xdWVyeVNlbGVjdG9yKCdidXR0b24nKS5vbmNsaWNrPSgpPT5iYWNrLnJlbW92ZSgpO2RvY3VtZW50LmJvZHkuYXBwZW5kQ2hpbGQoYmFjayk7Cn0iIiIKcyA9IHNbOnN0YXJ0XSArIG5ld19mdW5jICsgc1tlbmQ6XQpvbGRfaGFuZGxlciA9ICJidG5zWzBdLm9uY2xpY2s9KCk9PnNob3dGb29kVmFsdWVzKGYpOyIK aWYgb2xkX2hhbmRsZXIgbm90IGluIHM6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJ2YWx1ZXMgYnV0dG9uIGhhbmRsZXIgbm90IGZvdW5kIikKcyA9IHMucmVwbGFjZShvbGRfaGFuZGxlciwgImJ0bnNbMF0ub25jbGljaz0oKT0+c2hvd0Zvb2RWYWx1ZXMoZixxKTsiLCAxKQpzID0gcy5yZXBsYWNlKCc8YnV0dG9uIGNsYXNzPSJidG4gcHJpbWFyeSIgaWQ9ImJ1aWxkQnRuIj7Xkdeg15Qg16rXpNeo15nXmzwvYnV0dG9uPicsCiAgICAgICAgICAgICAgJzxidXR0b24gY2xhc3M9ImJ0biBwcmltYXJ5IiBpZD0iYnVpbGRCdG4iPtee16DXlCDXnNeZINeq16TXqNeZ15g8L2J1dHRvbj4nLCAxKQpzID0gcy5yZXBsYWNlKCdudXRyaXRpb24tbWVhbHMuanM/dj0yJywgJ251dHJpdGlvbi1tZWFscy5qcz92PTMnKQpzID0gcy5yZXBsYWNlKCdudXRyaXRpb24tcHJvZmlsZS1tZWFscy5qcz92PTEnLCAnbnV0cml0aW9uLXByb2ZpbGUtbWVhbHMuanM/dj0yJykKcC53cml0ZV90ZXh0KHMsIGVuY29kaW5nPSJ1dGYtOCIpCg==' | tr -d ' ' | base64 -d > /tmp/patch.py && python /tmp/patch.py
+        run: python .github/scripts/patch_nutrition_builder.py
+      - name: Check patch
+        run: |
+          grep -F 'function showFoodValues(food,grams=100)' nutrition-builder.html
+          grep -F 'showFoodValues(f,q)' nutrition-builder.html
+          grep -F 'ערכים ל־${Math.round(amount)} גרם' nutrition-builder.html
+          grep -F 'nutrition-meals.js?v=3' nutrition-builder.html
+          grep -F 'nutrition-profile-meals.js?v=2' nutrition-builder.html
       - name: Commit builder patch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add nutrition-builder.html
-          git diff --cached --quiet || git commit -m "Use actual grams in nutrition values and refresh scripts"
+          git diff --cached --quiet || git commit -m "Fix nutrition values and builder responsiveness"
           git push
