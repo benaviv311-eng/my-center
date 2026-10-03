@@ -4,15 +4,9 @@
   transform-origin:center center;
   justify-self:center;
   align-self:start;
-  --score-ui-scale:1;
+  min-width:150px!important;
+  min-height:0!important;
 }
-.card[data-score-resize-ready="1"] .card-body{
-  width:calc(100% / var(--score-ui-scale,1));
-  box-sizing:border-box;
-  transform:scale(var(--score-ui-scale,1));
-  transform-origin:top left;
-}
-.score-card-text{display:inline-block;line-height:1.08}
 .score-controls-composed{
   display:grid!important;
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -42,6 +36,7 @@
   min-width:0!important;
   margin:0!important;
 }
+.card.score-measuring-natural .score-resize-handle{display:none!important}
 .score-resize-handle{
   position:absolute;
   z-index:70;
