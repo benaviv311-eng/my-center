@@ -38,20 +38,20 @@
   if(!document.querySelector('link[data-double-lobby]')){
     const link=document.createElement('link');
     link.rel='stylesheet';
-    link.href='double/menu-lobby.css?v=2';
+    link.href='double/menu-lobby.css?v=3';
     link.dataset.doubleLobby='1';
     head.appendChild(link);
   }
   const loadLobby=()=>{
     if(document.querySelector('script[data-double-lobby-ui]')) return;
     const ui=document.createElement('script');
-    ui.src='double/menu-lobby.js?v=2';
+    ui.src='double/menu-lobby.js?v=3';
     ui.dataset.doubleLobbyUi='1';
     document.body.appendChild(ui);
   };
   if(window.DoubleMenuLobbyState){loadLobby();return;}
   const state=document.createElement('script');
-  state.src='double/menu-lobby-state.js?v=2';
+  state.src='double/menu-lobby-state.js?v=3';
   state.dataset.doubleLobbyState='1';
   state.onload=loadLobby;
   document.body.appendChild(state);
