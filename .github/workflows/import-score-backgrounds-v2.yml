@@ -1,0 +1,74 @@
+name: Import Score Counter full-player backgrounds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-score-backgrounds-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-backgrounds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download prepared sprites
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/score-bg
+          curl -fL --retry 3 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/e346cb2f-01eb-43e9-9942-b89ea9f6d3d4.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNjAzZDVlYmZmNTM0MDg1ZSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTE0OTg4N30.sEEsEm9v0qPUdMjpZ3MpJlABRAc9zh-0JGP0_corUFc' -o /tmp/score-bg/s1.png
+          curl -fL --retry 3 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/ea4b87bd-48c1-41a6-b438-e8bd36b38823.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjMxOGU3NGFhM2I1YThkNSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTE3NzAzNH0.JUIjVD9VbbioawRwlV-TO22vhc_wnIQKyg2yCSVtLAk' -o /tmp/score-bg/s2.png
+          curl -fL --retry 3 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/fe21ed13-2300-48ce-9d97-821050f82eac.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYWMwNjMxZGYzNTc2ZGQ4MyIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTEzOTkzNX0.06eVsWquLVfe7HArudW4GLJjLukhY1ax-xTf-KpuH5U' -o /tmp/score-bg/s3.png
+          curl -fL --retry 3 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/126f2f60-9fd0-4422-acb4-46bc0c6b8785.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiOTgxMzFiZmI3ZGIwZTAzOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTE1NTU3OX0.7fQgdEo_pJuZqu8Zqfif3C5YgzmFu2g3e9qzj3HHTh0' -o /tmp/score-bg/s4.png
+          curl -fL --retry 3 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/5e52125c-9331-466a-b6b9-e4f45091132e.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjc2MWE3NWE4N2UzODIzMiIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTE2ODg1OH0.XvBL_SKDagNWYMlIWyxAh4Qvduj-h3q7fiTwx4-ileQ' -o /tmp/score-bg/s5.png
+
+      - name: Split and encode high-quality WebP backgrounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          W,H=941,1672
+          out=Path('score-counter/assets/backgrounds')
+          out.mkdir(parents=True,exist_ok=True)
+          for old in out.glob('bg*.webp'):
+              old.unlink()
+          n=1
+          for si in range(1,6):
+              sheet=Image.open(f'/tmp/score-bg/s{si}.png').convert('RGB')
+              count=4 if si<5 else 2
+              for j in range(count):
+                  x=(j%2)*W; y=(j//2)*H
+                  tile=sheet.crop((x,y,x+W,y+H))
+                  tile.save(out/f'bg{n:02d}.webp','WEBP',quality=92,method=6)
+                  n+=1
+          assert n==19, n
+          for p in sorted(out.glob('bg*.webp')):
+              assert p.stat().st_size > 100_000, (p, p.stat().st_size)
+              im=Image.open(p)
+              assert im.size == (W,H), (p,im.size)
+          print('Created',n-1,'backgrounds')
+          PY
+
+      - name: Commit backgrounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add score-counter/assets/backgrounds
+          if git diff --cached --quiet; then
+            echo 'No background changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Add 18 full-player Score Counter backgrounds'
+          git push
