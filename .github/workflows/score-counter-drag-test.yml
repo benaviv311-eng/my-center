@@ -1,0 +1,35 @@
+name: Score Counter drag test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score-counter/index.html'
+      - '.github/workflows/score-counter-drag-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify draggable score cards
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const s=fs.readFileSync('score-counter/index.html','utf8');
+          const required=[
+            'team-score-card-positions-v1',
+            'LONG_PRESS_MS=450',
+            'data-score-drag-ready',
+            'איפוס מיקום הכרטיסים',
+            'MutationObserver',
+            'pointerdown',
+            'pointermove',
+            'pointerup'
+          ];
+          const missing=required.filter(x=>!s.includes(x));
+          if(missing.length){
+            console.error('Missing drag behavior markers:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('Score card drag behavior markers present.');
+          NODE
