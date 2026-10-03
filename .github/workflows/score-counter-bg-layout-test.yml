@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify half-width filled stage with uncropped athlete
+      - name: Verify half-width filled stage with enlarged foreground photo
         shell: bash
         run: |
           node <<'NODE'
@@ -25,12 +25,14 @@ jobs:
             'background-image:var(--sharp-bg)',
             'background-size:cover',
             'object-fit:contain',
+            'transform:scale(1.3)',
+            'transform-origin:center center',
             'style.setProperty("--sharp-bg"'
           ];
           const missing=required.filter(x=>!s.includes(x));
           if(missing.length){
-            console.error('Missing filled-stage layout markers:', missing.join(', '));
+            console.error('Missing enlarged-photo layout markers:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Half-width filled stage and uncropped athlete markers present.');
+          console.log('Half-width stage and 30 percent foreground zoom markers present.');
           NODE
