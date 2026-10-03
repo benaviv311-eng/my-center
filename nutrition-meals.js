@@ -16,10 +16,50 @@
     return Array.from({length:n},(_,i)=>({name:`ארוחה ${i+1}`,items:[]}));
   }
 
-  function caloriesOf(item){
-    const k=Number(item?.f?.k)||0;
-    const q=Number(item?.q)||0;
+  function caloriesForQuantity(food,grams){
+    const k=Number(food?.k)||0;
+    const q=Number(grams)||0;
     return k*q/100;
+  }
+
+  function caloriesOf(item){
+    return caloriesForQuantity(item?.f,item?.q);
+  }
+
+  function mealCalories(meal){
+    return (meal?.items||[]).reduce((sum,item)=>sum+caloriesOf(item),0);
+  }
+
+  function dailyCalories(meals){
+    return (meals||[]).reduce((sum,meal)=>sum+mealCalories(meal),0);
+  }
+
+  function reasonableDailyMax(food){
+    const explicit=Number(food?.dailyMax);
+    if(Number.isFinite(explicit)&&explicit>0)return explicit;
+    const legacy=Number(food?.max);
+    return Number.isFinite(legacy)&&legacy>0?legacy:500;
+  }
+
+  function perMealMax(food){
+    const explicit=Number(food?.perMealMax);
+    if(Number.isFinite(explicit)&&explicit>0)return explicit;
+    return Infinity;
+  }
+
+  function chunkByPortion(item){
+    const total=Number(item?.q)||0;
+    if(total<=0)return [];
+    const cap=perMealMax(item.f);
+    if(!Number.isFinite(cap)||total<=cap)return [{f:item.f,q:total}];
+    const out=[];
+    let left=total;
+    while(left>0){
+      const q=Math.min(cap,left);
+      out.push({f:item.f,q});
+      left-=q;
+    }
+    return out;
   }
 
   function splitLargest(portions){
@@ -38,7 +78,9 @@
 
   function distributeItems(items,count){
     const meals=createMealShells(count);
-    const portions=(items||[]).filter(x=>Number(x?.q)>0).map(x=>({f:x.f,q:Number(x.q)}));
+    const portions=(items||[])
+      .filter(x=>Number(x?.q)>0)
+      .flatMap(x=>chunkByPortion({f:x.f,q:Number(x.q)}));
     while(portions.length<meals.length){
       if(!splitLargest(portions))break;
     }
@@ -53,5 +95,13 @@
     return meals;
   }
 
-  return {normalizeMealCount,createMealShells,distributeItems};
+  return {
+    normalizeMealCount,
+    createMealShells,
+    distributeItems,
+    caloriesForQuantity,
+    mealCalories,
+    dailyCalories,
+    reasonableDailyMax
+  };
 });
