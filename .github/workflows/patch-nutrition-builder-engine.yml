@@ -20,12 +20,14 @@ jobs:
         with:
           node-version: '22'
       - run: node tools/patch-nutrition-builder-engine.mjs
+      - run: node --check nutrition-profile.js
+      - run: node --check nutrition-profile-meals.js
       - run: node --check nutrition-planner.js
       - run: node --test tests/nutrition-meals.test.mjs tests/nutrition-profile.test.mjs tests/nutrition-planner.test.mjs
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add nutrition-builder.html
+          git add nutrition-builder.html nutrition-profile.js nutrition-profile-meals.js
           git diff --cached --quiet && exit 0
-          git commit -m "feat: integrate professional nutrition planner"
+          git commit -m "feat: add saved nutrition foods UI"
           git push origin HEAD:nutrition-professional-engine
