@@ -1,0 +1,108 @@
+   <h3>רמת פעילות</h3>
+    <div class="activity-grid" id="activityChoices">
+      <button class="choice" data-value="1"><strong>1 · נמוכה מאוד</strong><small>רוב היום בישיבה, בלי אימונים קבועים.</small></button>
+      <button class="choice" data-value="2"><strong>2 · קלה</strong><small>1–3 אימונים קלים או עבודה עם עמידה ותנועה.</small></button>
+      <button class="choice selected" data-value="3"><strong>3 · בינונית</strong><small>3–5 אימונים או עבודה פיזית עם תנועה והדגמות.</small></button>
+      <button class="choice" data-value="4"><strong>4 · גבוהה</strong><small>פעילות משמעותית כמעט כל יום או שעות רבות בתנועה.</small></button>
+      <button class="choice" data-value="5"><strong>5 · גבוהה מאוד</strong><small>נפח אימונים גבוה מאוד, עבודה פיזית קשה או שני אימונים ביום.</small></button>
+    </div>
+
+    <h3>מטרה</h3>
+    <div class="goal-grid" id="goalChoices">
+      <button class="choice selected" data-value="maintain"><strong>שמירה</strong><small>לשמור על משקל ותפקוד.</small></button>
+      <button class="choice" data-value="loss"><strong>ירידה בשומן</strong><small>גירעון מתון עם דגש על שמירת חלבון.</small></button>
+      <button class="choice" data-value="gain"><strong>בניית שריר</strong><small>עודף מתון ותמיכה באימונים.</small></button>
+      <button class="choice" data-value="performance"><strong>ביצועים</strong><small>דגש גדול יותר על זמינות אנרגיה ופחמימות.</small></button>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="calcBtn">חשב את היעדים שלי</button>
+    </div>
+
+    <div id="targetsWrap" class="hidden">
+      <div class="targets">
+        <div class="target"><b id="tCal">—</b><span>קלוריות</span></div>
+        <div class="target"><b id="tProtein">—</b><span>גרם חלבון</span></div>
+        <div class="target"><b id="tCarbs">—</b><span>גרם פחמימות</span></div>
+        <div class="target"><b id="tFat">—</b><span>גרם שומן</span></div>
+        <div class="target"><b id="tFiber">—</b><span>גרם סיבים</span></div>
+        <div class="target"><b id="tWater">—</b><span>ליטר מים</span></div>
+      </div>
+      <div class="note info">היעדים הם הערכה כללית למבוגר בריא. הם אינם מיועדים לילדים, היריון/הנקה או מצב רפואי שמצריך התאמה אישית.</div>
+      <div class="actions"><button class="btn primary" onclick="goStep(2)">המשך למאכלים הזמינים ←</button></div>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="step2">
+    <h2>איזה מאכלים זמינים לי?</h2>
+    <p class="sub">המאגר לא מוצג. אתה רק כותב מה יש לך. קודם מחפשים במאגר המקומי המהיר, ואם המזון לא נמצא — המערכת מחפשת במאגר התזונה הלאומי הישראלי של משרד הבריאות.</p><div class="note info">המאגר הממשלתי כולל אלפי מזונות ומתכונים בעברית ועשרות רכיבי תזונה לכל מזון. חיפוש מקוון דורש חיבור לאינטרנט.</div>
+
+    <div class="mode-grid" id="modeChoices">
+      <button class="choice selected" data-value="auto"><strong>✨ חולל אוטומטית</strong><small>מה שאכתוב מקבל עדיפות. אם חסר משהו, המערכת יכולה להשלים בעצמה.</small></button>
+      <button class="choice" data-value="strict"><strong>🔒 רק ממה שיש לי</strong><small>אסור למערכת להכניס מאכל שלא כתבתי. אם יש חוסר איזון — היא תציע שינוי, אבל לא תבצע בלי אישור.</small></button>
+    </div>
+
+    <div class="food-sections" style="margin-top:14px">
+      <div class="foodbox">
+        <h3>🥩 חלבון</h3><p>כתוב מקורות חלבון שנגישים לך.</p>
+        <div class="entry"><input id="proteinInput" placeholder="למשל: ביצים"><button class="btn secondary" onclick="addFood('protein')">הוסף</button></div>
+        <div class="chips" id="proteinChips"></div>
+      </div>
+      <div class="foodbox">
+        <h3>🍚 פחמימות</h3><p>כתוב מקורות פחמימה שנגישים לך.</p>
+        <div class="entry"><input id="carbInput" placeholder="למשל: אורז"><button class="btn secondary" onclick="addFood('carb')">הוסף</button></div>
+        <div class="chips" id="carbChips"></div>
+      </div>
+      <div class="foodbox">
+        <h3>🥑 שומנים</h3><p>כתוב מקורות שומן שנגישים לך.</p>
+        <div class="entry"><input id="fatInput" placeholder="למשל: טחינה"><button class="btn secondary" onclick="addFood('fat')">הוסף</button></div>
+        <div class="chips" id="fatChips"></div>
+      </div>
+      <div class="foodbox">
+        <h3>🌾 סיבים</h3><p>כתוב מאכלים עשירים בסיבים שנגישים לך.</p>
+        <div class="entry"><input id="fiberInput" placeholder="למשל: עדשים"><button class="btn secondary" onclick="addFood('fiber')">הוסף</button></div>
+        <div class="chips" id="fiberChips"></div>
+      </div>
+    </div>
+
+    <div id="recognitionNote" class="note info">אפשר לכתוב גם מאכל ששייך ליותר מקטגוריה אחת. לדוגמה, עדשים יתרמו גם פחמימות, גם חלבון וגם סיבים.</div>
+    <div class="actions">
+      <button class="btn primary" id="buildBtn">בנה תפריט</button>
+      <button class="btn ghost" onclick="goStep(1)">חזרה ליעדים</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="step3">
+    <h2>התפריט שלך</h2>
+    <p class="sub" id="menuIntro"></p>
+
+    <div id="imbalance"></div>
+    <div class="meals" id="meals"></div>
+
+    <h3>מצב היעדים</h3>
+    <div class="balance" id="balance"></div>
+
+    <div class="actions">
+      <button class="btn secondary" onclick="rebuild()">בנה יום אחר</button>
+      <button class="btn ghost" onclick="goStep(2)">שנה מאכלים זמינים</button>
+    </div>
+
+    <p class="footer-note">הכמויות מוצגות בגרמים וביחידת מטבח שימושית כאשר קיימת המרה מתאימה. מאכלים שלא נמצאים במאגר המקומי נחפשים במאגר התזונה הלאומי הישראלי של משרד הבריאות. ערכים ומשקלי יחידות עשויים להשתנות לפי גודל, מותג ושיטת הכנה.</p>
+  </section>
+</main>
+
+<script>
+const DB = [
+  {id:'egg',name:'ביצים',aliases:['ביצה','ביצים'],p:12.6,c:1.1,f:10.6,fi:0,k:143,cat:'protein',max:300,measures:[{name:'ביצה',plural:'ביצים',grams:50}]},
+  {id:'chicken',name:'חזה עוף',aliases:['עוף','חזה עוף','חזה עוף מבושל'],p:31,c:0,f:3.6,fi:0,k:165,cat:'protein',max:400},
+  {id:'turkey',name:'חזה הודו',aliases:['הודו','חזה הודו'],p:29,c:0,f:2,fi:0,k:135,cat:'protein',max:400},
+  {id:'tuna',name:'טונה במים',aliases:['טונה','טונה במים'],p:25.5,c:0,f:1,fi:0,k:116,cat:'protein',max:300},
+  {id:'salmon',name:'סלמון',aliases:['סלמון'],p:20,c:0,f:13,fi:0,k:208,cat:'protein',max:300},
+  {id:'tilapia',name:'אמנון',aliases:['אמנון','דג אמנון'],p:26,c:0,f:2.7,fi:0,k:128,cat:'protein',max:350},
+  {id:'beef',name:'בקר רזה',aliases:['בקר','בשר בקר','בקר רזה'],p:26,c:0,f:10,fi:0,k:200,cat:'protein',max:350},
+  {id:'cottage',name:'קוטג׳ 5%',aliases:['קוטג','קוטג׳','קוטג 5','קוטג׳ 5%'],p:11.5,c:3,f:5,fi:0,k:103,cat:'protein',max:400},
+  {id:'skyr',name:'סקיר',aliases:['סקיר','יוגורט סקיר'],p:11,c:4,f:0.2,fi:0,k:63,cat:'protein',max:500},
+  {id:'greek',name:'יוגורט יווני',aliases:['יוגורט','יוגורט יווני'],p:9,c:4,f:5,fi:0,k:98,cat:'protein',max:500},
+  {id:'tofu',name:'טופו',aliases:['טופו'],p:14,c:2.8,f:8.7,fi:2.3,k:144,cat:'protein',max:400},
+  {id:'lentils',name:'עדשים מבושלות',aliases:['עדשים','עדשים מבושלות'],p:9,c:20,f:0.4,fi:7.9,k:116,cat:'fiber',max:500,measures:[{name:'כוס',plural:'כוסות',grams:198}]},
+  {id:'chickpeas',name:'חומוס מבושל',aliases:[
