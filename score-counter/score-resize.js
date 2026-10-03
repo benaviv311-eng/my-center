@@ -4,7 +4,7 @@
   const MIN_SCALE=0.55;
   const MAX_SCALE=1.6;
   const TEXT_FLOOR_SCALE=0.68;
-  const TEXT_BOOST=1.14;
+  const TEXT_BOOST=1.18;
   const RESIZE_CORNERS=['top-left','top-right','bottom-left','bottom-right'];
   const teams=document.getElementById('teams');
   if(!teams) return;
@@ -82,6 +82,7 @@
     function finish(){
       if(!active) return;
       active=false;
+      handle.classList.remove('score-resize-active');
       card.classList.remove('score-card-resizing');
       document.body.classList.remove('score-card-resizing');
       sizes[mode()][id]={scale:scaleOf(card)};
@@ -101,6 +102,7 @@
       startScale=scaleOf(card);
       active=true;
       pointerId=e.pointerId;
+      handle.classList.add('score-resize-active');
       card.classList.add('score-card-resizing');
       document.body.classList.add('score-card-resizing');
       updateResizeValues(card);
