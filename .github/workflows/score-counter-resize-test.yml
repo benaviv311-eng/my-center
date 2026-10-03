@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify functional card shrinking and visible resize handles
+      - name: Verify content-preserving card resize
         shell: bash
         run: |
           node <<'NODE'
@@ -22,39 +22,40 @@ jobs:
           const js=fs.readFileSync('score-counter/score-resize.js','utf8');
           const css=fs.readFileSync('score-counter/score-resize.css','utf8');
           const missing=[];
+
           const requiredJs=[
-            'MIN_SCALE_LIMIT=0.35',
-            '--score-ui-scale',
+            'MIN_CARD_WIDTH',
+            'measureNaturalHeight',
+            "card.style.height='auto'",
+            'Math.max(targetHeight,naturalHeight)',
             "card.querySelector('.score-controls')",
             "controls.querySelector('.score-btn.plus')",
             "controls.querySelector('.score-btn.minus')",
             "controls.querySelector('.score-btn.mega')",
-            'controls.appendChild(plus)',
-            'controls.appendChild(minus)',
-            'controls.appendChild(mega)',
-            'applyCardBox',
             'RESIZE_CORNERS',
             'pointerdown','pointermove','pointerup'
           ];
           for(const marker of requiredJs){if(!js.includes(marker)) missing.push('js:'+marker);}
+
           const requiredCss=[
             '.score-controls-composed',
-            '.card[data-score-resize-ready="1"] .card-body',
-            'transform:scale(var(--score-ui-scale,1))',
-            'width:calc(100% / var(--score-ui-scale,1))',
-            'opacity:.55',
+            'min-height:0!important',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
             '.score-resize-handle[data-corner="bottom-right"]'
           ];
           for(const marker of requiredCss){if(!css.includes(marker)) missing.push('css:'+marker);}
-          if(js.includes('contentFloor=measureContentFloor(card)')) missing.push('resize still blocked by content floor');
+
+          if(js.includes('--score-ui-scale')) missing.push('js:old ui scaling remains');
+          if(css.includes('transform:scale(var(--score-ui-scale,1))')) missing.push('css:old content scaling remains');
+          if(css.includes('width:calc(100% / var(--score-ui-scale,1))')) missing.push('css:old inverse body width remains');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
+
           if(missing.length){
-            console.error('Missing functional resize behavior:',missing.join(', '));
+            console.error('Missing content-preserving resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Functional resize markers present.');
+          console.log('Content-preserving resize markers present.');
           NODE
           node --check score-counter/score-resize.js
