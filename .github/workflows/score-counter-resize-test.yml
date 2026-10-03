@@ -38,6 +38,7 @@ jobs:
             'bottom-left',
             'bottom-right',
             'score-card-text',
+            'score-resize-active',
             '--score-content-compensation',
             '--score-text-boost',
             'layoutSignature',
@@ -55,6 +56,7 @@ jobs:
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
             '.score-resize-handle[data-corner="bottom-right"]',
+            '.score-resize-handle.score-resize-active::after',
             '--score-text-boost'
           ];
           for(const marker of requiredCss){ if(!css.includes(marker)) missing.push(marker); }
