@@ -423,12 +423,20 @@ async function addFood(type){
 }
 function renderChips(type){
   const wrap=qs(type+'Chips'); wrap.innerHTML='';
+  const profile=window.NutritionProfile?.load(localStorage)||null;
   state.foods[type].forEach((item,idx)=>{
     const f=item.id?DB.find(x=>x.id===item.id):null;
     const chip=document.createElement('span');
     chip.className='chip'+(f?'':' unknown');
-    chip.innerHTML=`${f?'✓ '+f.name:'? '+item.raw+' · לא זוהה'} <button aria-label="הסר">×</button>`;
-    chip.querySelector('button').onclick=()=>{state.foods[type].splice(idx,1);renderChips(type)};
+    if(f){
+      const saved=window.NutritionProfile?.isSaved(profile,f)||false;
+      chip.innerHTML=`✓ ${f.name} <button class="save-food" data-save aria-label="שמור בפרופיל">${saved?'★':'☆'} שמור בפרופיל</button> <button data-remove aria-label="הסר">×</button>`;
+      chip.querySelector('[data-save]').onclick=e=>{e.stopPropagation();toggleSavedFoodFor(f);renderChips(type);if(state.result)renderMenu()};
+      chip.querySelector('[data-remove]').onclick=()=>{state.foods[type].splice(idx,1);renderChips(type)};
+    }else{
+      chip.innerHTML=`? ${item.raw} · לא זוהה <button data-remove aria-label="הסר">×</button>`;
+      chip.querySelector('[data-remove]').onclick=()=>{state.foods[type].splice(idx,1);renderChips(type)};
+    }
     wrap.appendChild(chip);
   });
 }
@@ -558,11 +566,13 @@ function renderMenu(unknown=[]){
     card.innerHTML=`<div class="mealhead"><h3>${m.name}</h3><button class="mini" onclick="shuffleMeal(${mi})">הצע ארוחה אחרת</button></div>`;
     m.items.forEach(({f,q})=>{
       const row=document.createElement('div');row.className='foodrow';
-      row.innerHTML=`<div><strong>${f.name}</strong><div class="muted">${humanQuantity(f,q)}</div>${f.source?`<span class="source-tag">${f.source}</span>`:''}</div><button class="mini">ערכים</button><button class="mini">החלף</button><button class="mini">כמות</button>`;
+      const saved=window.NutritionProfile?.isSaved(window.NutritionProfile?.load(localStorage),f)||false;
+      row.innerHTML=`<div><strong>${f.name}</strong><div class="muted">${humanQuantity(f,q)}</div>${f.source?`<span class="source-tag">${f.source}</span>`:''}</div><button class="mini" data-menu-save>${saved?'★':'☆'} שמור בפרופיל</button><button class="mini">ערכים</button><button class="mini">החלף</button><button class="mini">כמות</button>`;
       const btns=row.querySelectorAll('button');
-      btns[0].onclick=()=>showFoodValues(f,q);
-      btns[1].onclick=()=>replaceFood(f.id);
-      btns[2].onclick=()=>changeQty(f.id);
+      btns[0].onclick=()=>{toggleSavedFoodFor(f);renderMenu(unknown)};
+      btns[1].onclick=()=>showFoodValues(f,q);
+      btns[2].onclick=()=>replaceFood(f.id);
+      btns[3].onclick=()=>changeQty(f.id);
       card.appendChild(row);
     });
     wrap.appendChild(card);
@@ -642,8 +652,8 @@ function showFocusedFix(suggestions){
 
 </script>
 <script src="nutrition-meals.js?v=4"></script>
-<script src="nutrition-profile.js?v=2"></script>
-<script src="nutrition-profile-meals.js?v=3"></script>
+<script src="nutrition-profile.js?v=3"></script>
+<script src="nutrition-profile-meals.js?v=4"></script>
 <script src="nutrition-planner.js?v=1"></script>
 <script src="nutrition-safety.js?v=1"></script>
 </body>
