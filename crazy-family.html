@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.7</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.8</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -56,7 +56,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות; בכל מפגש נבחר שיר אחר.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות. לפני השיר הוא גם מדבר בשלושה שלבים: מרחוק, כשהוא מתקרב, ורגע לפני שהוא מתחיל לשיר.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -250,7 +250,7 @@ function toggleBgMusic(){
  if(bgMusicOn){startBgMusic();if(bgGain)bgGain.gain.value=.10}
  else if(bgGain)bgGain.gain.value=0;
 }
-let dadWasSinging=false,dadClipIndex=-1;
+let dadWasSinging=false,dadClipIndex=-1,dadEncounterStage=0,dadSongStartAt=0,lastPreAt=0,dadPreAudio=null;
 const dadVoiceClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-01.mp3'),
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-02.mp3'),
@@ -264,6 +264,18 @@ const dadVoiceClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-10.mp3')
 ];
 dadVoiceClips.forEach(a=>{a.preload='auto';a.volume=.96});
+const dadPreClips=[
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-01.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-02.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-03.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-04.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-05.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-06.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-07.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-08.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-09.mp3')
+];
+dadPreClips.forEach(a=>{a.preload='auto';a.volume=.96});
 function primeDadVoice(){
  const a=dadVoiceClips[0];
  if(!a)return true;
@@ -271,9 +283,23 @@ function primeDadVoice(){
  a.play().then(()=>{a.pause();a.currentTime=0;a.volume=old}).catch(()=>{a.volume=old});
  return true;
 }
+function dadPrePlaying(){return !!(dadPreAudio&&!dadPreAudio.paused&&!dadPreAudio.ended)}
+function stopDadPre(){
+ if(!dadPreAudio)return;
+ try{dadPreAudio.pause();dadPreAudio.currentTime=0}catch(e){}
+ dadPreAudio=null;
+ if(!dadWasSinging)setBgDuck(false);
+}
+function playDadPre(index){
+ if(index<0||index>=dadPreClips.length)return;
+ stopDadPre();
+ const a=dadPreClips[index];dadPreAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);
+ a.onended=()=>{if(dadPreAudio===a)dadPreAudio=null;if(!dadWasSinging)setBgDuck(false)};
+ a.play().catch(()=>{if(dadPreAudio===a)dadPreAudio=null});
+}
 function stopDadSong(){
  dadVoiceClips.forEach(a=>{try{a.pause();a.currentTime=0}catch(e){}});
- setBgDuck(false);
+ if(!dadPrePlaying())setBgDuck(false);
 }
 function playDadClip(index){
  if(index<0||index>=dadVoiceClips.length)return;
@@ -311,12 +337,21 @@ function updateDad(dt){
    dad.singing=false;
    dizzyCharge=Math.max(0,dizzyCharge-35*dt);
    if(dadWasSinging){stopDadSong();dadWasSinging=false}
+   dadEncounterStage=0;dadSongStartAt=0;stopDadPre();
    return
  }
  const now=performance.now();
  chooseDadTarget(now);
  const distToPlayer=Math.hypot(player.x-dad.x,player.y-dad.y);
- if(!player.invisible && distToPlayer<210){
+ if(player.invisible||distToPlayer>430){
+   if(dadEncounterStage){dadEncounterStage=0;dadSongStartAt=0;stopDadPre()}
+ }else{
+   if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800){playDadPre(Math.floor(Math.random()*3));dadEncounterStage=1;lastPreAt=now}
+   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200){playDadPre(3+Math.floor(Math.random()*3));dadEncounterStage=2;lastPreAt=now}
+   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900){playDadPre(6+Math.floor(Math.random()*3));dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
+   if(distToPlayer<300){dad.targetX=player.x;dad.targetY=player.y}
+ }
+ if(!player.invisible && distToPlayer<210 && dadEncounterStage>=3 && now>=dadSongStartAt && !dadPrePlaying()){
    dad.singing=true;
    dad.targetX=player.x;dad.targetY=player.y;
    if(distToPlayer<155){
