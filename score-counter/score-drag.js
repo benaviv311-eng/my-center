@@ -29,31 +29,12 @@
     const y=Number.isFinite(Number(saved.y))?Number(saved.y):0;
     transform(card,x,y);
   };
-  const keepVisible=(card,id,saveChange=false)=>{
-    let x=Number(card.dataset.dragX)||0;
-    let y=Number(card.dataset.dragY)||0;
-    const rect=card.getBoundingClientRect();
-    const maxLeft=Math.max(EDGE,window.innerWidth-Math.min(rect.width,window.innerWidth-EDGE*2)-EDGE);
-    const maxTop=Math.max(EDGE,window.innerHeight-Math.min(rect.height,window.innerHeight-EDGE*2)-EDGE);
-    const targetLeft=Math.min(maxLeft,Math.max(EDGE,rect.left));
-    const targetTop=Math.min(maxTop,Math.max(EDGE,rect.top));
-    const nextX=x+(targetLeft-rect.left);
-    const nextY=y+(targetTop-rect.top);
-    if(Math.abs(nextX-x)>.5 || Math.abs(nextY-y)>.5){
-      transform(card,nextX,nextY);
-      if(saveChange){
-        positions[mode()][id]={x:Math.round(nextX),y:Math.round(nextY)};
-        persist();
-      }
-    }
-  };
 
   function bindCard(card,id){
     if(!id || card.getAttribute('data-score-drag-ready')==='1') return;
     card.setAttribute('data-score-drag-ready','1');
     card.dataset.dragTeamId=id;
     readPos(card,id);
-    requestAnimationFrame(()=>keepVisible(card,id,true));
 
     let pressTimer=null;
     let active=false;
@@ -75,6 +56,7 @@
         baseRect=card.getBoundingClientRect();
         card.classList.add('score-card-dragging');
         document.body.classList.add('score-card-dragging');
+        if(pointerId!==null && card.setPointerCapture){try{card.setPointerCapture(pointerId);}catch{}}
         if(navigator.vibrate){try{navigator.vibrate(18);}catch{}}
       },LONG_PRESS_MS);
     }
@@ -108,6 +90,7 @@
         };
         persist();
       }
+      if(pointerId!==null && card.releasePointerCapture){try{card.releasePointerCapture(pointerId);}catch{}}
       active=false;
       baseRect=null;
       card.classList.remove('score-card-dragging');
@@ -133,6 +116,9 @@
       if(e.pointerType==='touch' || pointerId!==e.pointerId) return;
       finish();
       pointerId=null;
+    });
+    card.addEventListener('pointerleave',e=>{
+      if(e.pointerType!=='touch' && !active) cancelArm();
     });
 
     card.addEventListener('touchstart',e=>{
@@ -181,15 +167,4 @@
   observer.observe(teams,{childList:true});
   addResetControl();
   attachCards();
-
-  let resizeTimer=null;
-  window.addEventListener('resize',()=>{
-    clearTimeout(resizeTimer);
-    resizeTimer=setTimeout(()=>{
-      teams.querySelectorAll(':scope > .card[data-score-drag-ready="1"]').forEach(card=>{
-        const id=card.dataset.dragTeamId;
-        if(id) keepVisible(card,id,true);
-      });
-    },120);
-  });
 })();
