@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify draggable score cards
+      - name: Verify whole-card long-press dragging
         shell: bash
         run: |
           node <<'NODE'
@@ -23,6 +23,7 @@ jobs:
             process.exit(1);
           }
           const js=fs.readFileSync('score-counter/score-drag.js','utf8');
+          const css=fs.readFileSync('score-counter/score-drag.css','utf8');
           const required=[
             'team-score-card-positions-v1',
             'LONG_PRESS_MS=380',
@@ -32,19 +33,25 @@ jobs:
             'latestClientY',
             'startClientX=latestClientX',
             'startClientY=latestClientY',
+            'suppressNextClick',
+            'score-resize-handle',
+            "card.addEventListener('pointerdown'",
+            "card.addEventListener('pointermove'",
+            "card.addEventListener('pointerup'",
+            "card.addEventListener('click'",
             'איפוס מיקום הכרטיסים',
-            'MutationObserver',
-            'pointerdown',
-            'pointermove',
-            'pointerup'
+            'MutationObserver'
           ];
           const missing=required.filter(x=>!js.includes(x));
+          if(js.includes("e.pointerType==='touch'")) missing.push('touch pointer path still bypassed');
+          if(js.includes('isInteractive(e.target)')) missing.push('interactive card content still blocks long-press drag');
+          if(!css.includes('touch-action:pan-y')) missing.push('touch-action:pan-y');
           if(/card\.style\.transform=.*scale\(/.test(js)) missing.push('whole-card scale transform');
           if(!index.includes('score-drag.js') || !index.includes('score-drag.css')) missing.push('loader assets');
           if(missing.length){
-            console.error('Missing drag behavior markers:', missing.join(', '));
+            console.error('Missing whole-card drag behavior:', missing.join(', '));
             process.exit(1);
           }
-          console.log('Continuous long-press score card drag markers present.');
+          console.log('Whole-card long-press drag markers present.');
           NODE
           node --check score-counter/score-drag.js
