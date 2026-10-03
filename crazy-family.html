@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.14</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.15</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -51,11 +51,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
           <button class="abtn blue" id="itemUse">חפץ<br>✦</button>
           <button class="abtn blue" id="action">פעולה<br>✋</button>
           <button class="abtn" id="run">ריצה<br>⚡</button>
-          <button class="abtn skill" id="dash">דאש<br>כפתור</button>
           <button class="abtn skill" id="jump">קפיצה<br>Space</button>
-          <button class="abtn skill guard" id="crouch">התכופפות<br>C</button>
-          <button class="abtn skill guard" id="hide">התחבאות<br>H</button>
-          <button class="abtn skill guard" id="pushDad">דחיפה<br>X</button>
         </div>
       </div>
     </div>
@@ -106,7 +102,7 @@ Object.entries(artSources).forEach(([k,src])=>{
   art[k]=img;
 });
 const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
-const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,dashUntil:0,dashCooldownUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,crouching:false,crouchingTouch:false,hidden:false,pushCooldownUntil:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
+const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,inventory:[],capacity:3,selected:0,ability:null,abilityUntil:0,invisible:false,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
 
 // Ability bank only. Stage 1 has not been configured yet.
@@ -124,25 +120,19 @@ const dadAbilityCatalog={
  chaseSong:{id:'chaseSong',name:'רדיפה תוך כדי שירה',cooldown:0,kind:'movement'},
  contact:{id:'contact',name:'מגע באבא',cooldown:0,kind:'contact'}
 };
-const libiDefenseCatalog={
- run:{id:'run',name:'ריצה'},dash:{id:'dash',name:'דאש'},jump:{id:'jump',name:'קפיצה'},crouch:{id:'crouch',name:'התכופפות'},hide:{id:'hide',name:'התחבאות'},postHitIFrames:{id:'postHitIFrames',name:'חסינות אחרי פגיעה'},pushback:{id:'pushback',name:'דחיפה נגדית'},invisibility:{id:'invisibility',name:'בלתי נראות'},speed:{id:'speed',name:'מהירות'},headphones:{id:'headphones',name:'אוזניות'},radio:{id:'radio',name:'רדיו'},cover:{id:'cover',name:'מחסה'}
-};
+const libiDefenseCatalog={jump:{id:'jump',name:'קפיצה'}};
 let activeDadAbilities=new Set();
 let dadAttacks=[],dadAbilityReady={};
 function configureDadAbilities(ids=[]){activeDadAbilities=new Set(ids.filter(id=>dadAbilityCatalog[id]));dadAbilityReady={};dadAttacks=[]}
 function renderLives(){if(livesEl)livesEl.textContent='❤️'.repeat(player.lives)+'🖤'.repeat(Math.max(0,player.maxLives-player.lives))}
 function damageLibi(amount=1,source='פגיעה'){
- const now=performance.now();if(player.lives<=0||now<player.invulnerableUntil||now<player.dashUntil)return false;
+ const now=performance.now();if(player.lives<=0||now<player.invulnerableUntil)return false;
  player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1700;
  const dx=player.x-dad.x,dy=player.y-dad.y,d=Math.hypot(dx,dy)||1;player.x=clamp(player.x+dx/d*42,28,932);player.y=clamp(player.y+dy/d*42,28,572);
  renderLives();msg(player.lives?('💔 '+source+' — נשארו '+player.lives+' לבבות'):'💔 לליבי נגמרו הלבבות — עדיין לא הגדרנו מה קורה מכאן');return true
 }
 function healLibi(amount=1){const before=player.lives;player.lives=Math.min(player.maxLives,player.lives+amount);renderLives();return player.lives>before}
-function directionVector(){return player.dir==='left'?[-1,0]:player.dir==='right'?[1,0]:player.dir==='up'?[0,-1]:[0,1]}
-function triggerDash(){const now=performance.now();if(player.lives<=0||now<player.dashCooldownUntil)return false;const [dx,dy]=directionVector();player.dashCooldownUntil=now+900;player.dashUntil=now+290;player.invulnerableUntil=Math.max(player.invulnerableUntil,player.dashUntil);player.hidden=false;player.x=clamp(player.x+dx*105,28,932);player.y=clamp(player.y+dy*105,28,572);return true}
-function triggerJump(){const now=performance.now();if(player.lives<=0||now<player.jumpCooldownUntil)return false;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;player.hidden=false;return true}
-function toggleHide(){if(player.moving){player.hidden=false;msg('כדי להתחבא צריך לעצור ליד מחסה');return false}player.hidden=!player.hidden;if(player.hidden)player.crouching=true;msg(player.hidden?'🙈 מצב התחבאות מוכן — את נקודות המחסה נחבר כשנבנה את השלב':'ליבי יצאה מהמחבוא');return player.hidden}
-function pushDadAway(){const now=performance.now();if(now<player.pushCooldownUntil||player.scene!==dad.scene)return false;const dx=dad.x-player.x,dy=dad.y-player.y,d=Math.hypot(dx,dy)||1;if(d>78){msg('אבא רחוק מדי לדחיפה');return false}player.pushCooldownUntil=now+2200;dad.x=clamp(dad.x+dx/d*85,28,932);dad.y=clamp(dad.y+dy/d*85,28,572);msg('✋ ליבי הרחיקה את אבא');return true}
+function triggerJump(){const now=performance.now();if(player.lives<=0||now<player.jumpCooldownUntil)return false;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;return true}
 function aimedAngle(){return Math.atan2(player.y-dad.y,player.x-dad.x)}
 function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'mid',born:performance.now(),life:5200,hit:false})}
 function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scene!==dad.scene)return false;const now=performance.now(),a=aimedAngle();
@@ -153,15 +143,15 @@ function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scen
  if(def.kind==='beam'){dadAttacks.push({type:'beam',scene:dad.scene,x:dad.x,y:dad.y,angle:a,length:560,width:def.width,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+def.duration,hit:false});return true}
  if(def.kind==='boom'){dadAttacks.push({type:'boom',scene:dad.scene,x:dad.x,y:dad.y,radius:def.radius,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+360,hit:false});return true}
  return false}
-function attackDefended(a){const now=performance.now();if(now<player.dashUntil)return true;if(a.height==='low'&&now<player.jumpUntil)return true;if(a.height==='high'&&player.crouching)return true;if(player.hidden&&(a.type==='beam'||a.homing))return true;return false}
+function attackDefended(a){const now=performance.now();return a.height==='low'&&now<player.jumpUntil}
 function beamHits(a){const px=player.x-a.x,py=player.y-a.y,dx=Math.cos(a.angle),dy=Math.sin(a.angle),t=Math.max(0,Math.min(a.length,px*dx+py*dy)),cx=a.x+dx*t,cy=a.y+dy*t;return Math.hypot(player.x-cx,player.y-cy)<=a.width/2+player.r}
 function updateDadAttackSystem(dt){const now=performance.now();
  if(player.scene===dad.scene&&activeDadAbilities.has('contact')&&Math.hypot(player.x-dad.x,player.y-dad.y)<=player.r+dad.r+4)damageLibi(1,'נגיעה באבא');
- if(player.scene===dad.scene&&activeDadAbilities.has('chaseSong')&&dadSongPlaying()&&!player.hidden){dad.targetX=player.x;dad.targetY=player.y}
+ if(player.scene===dad.scene&&activeDadAbilities.has('chaseSong')&&dadSongPlaying()&&!player.invisible){dad.targetX=player.x;dad.targetY=player.y}
  if(player.scene===dad.scene&&dadSongPlaying()){for(const id of activeDadAbilities){const def=dadAbilityCatalog[id];if(!def||def.kind==='contact'||def.kind==='movement')continue;if(now>=(dadAbilityReady[id]||0)){spawnDadAttack(id);dadAbilityReady[id]=now+def.cooldown}}}
  for(const a of dadAttacks){if(a.scene!==player.scene)continue;
   if(a.type==='ring'||a.type==='echo'){a.radius+=a.speed*dt;if(a.type==='echo'&&a.speed>0&&a.radius>=a.maxRadius)a.speed=-Math.abs(a.speed);if((a.type==='ring'&&a.radius>a.maxRadius)||(a.type==='echo'&&a.radius<=0))a.dead=true;const d=Math.hypot(player.x-a.x,player.y-a.y);if(!a.hit&&Math.abs(d-a.radius)<=a.thickness/2+player.r&&!attackDefended(a)){a.hit=damageLibi(1,a.type==='echo'?'ההד החוזר של אבא':'גל הקול של אבא')}}
-  else if(a.type==='note'){if(a.homing&&!player.hidden){const ang=Math.atan2(player.y-a.y,player.x-a.x),sp=Math.hypot(a.vx,a.vy);a.vx=a.vx*.93+Math.cos(ang)*sp*.07;a.vy=a.vy*.93+Math.sin(ang)*sp*.07}a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.bounce){if(a.x<20||a.x>940)a.vx*=-1;if(a.y<20||a.y>580)a.vy*=-1}if(now-a.born>a.life||a.x<-60||a.x>1020||a.y<-60||a.y>660)a.dead=true;if(!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=player.r+a.r&&!attackDefended(a)){a.hit=damageLibi(1,a.homing?'התו הרודף של אבא':'תו הקול של אבא');a.dead=true}}
+  else if(a.type==='note'){if(a.homing&&!player.invisible){const ang=Math.atan2(player.y-a.y,player.x-a.x),sp=Math.hypot(a.vx,a.vy);a.vx=a.vx*.93+Math.cos(ang)*sp*.07;a.vy=a.vy*.93+Math.sin(ang)*sp*.07}a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.bounce){if(a.x<20||a.x>940)a.vx*=-1;if(a.y<20||a.y>580)a.vy*=-1}if(now-a.born>a.life||a.x<-60||a.x>1020||a.y<-60||a.y>660)a.dead=true;if(!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=player.r+a.r&&!attackDefended(a)){a.hit=damageLibi(1,a.homing?'התו הרודף של אבא':'תו הקול של אבא');a.dead=true}}
   else if(a.type==='beam'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&beamHits(a)&&!attackDefended(a))a.hit=damageLibi(1,'קרן הקול של אבא')}
   else if(a.type==='boom'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=a.radius+player.r&&!attackDefended(a))a.hit=damageLibi(1,'בום הפזמון של אבא')}
  }
@@ -217,7 +207,7 @@ function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function move(dx,dy,dt,sprint){
  const len=Math.hypot(dx,dy);player.moving=!!len;if(!len)return;dx/=len;dy/=len;
  if(Math.abs(dx)>Math.abs(dy))player.dir=dx>0?'right':'left';else player.dir=dy>0?'down':'up';
- let m=1;if(player.crouching)m*=.58;if(player.ability==='speed'&&performance.now()<player.abilityUntil)m*=1.6;if(sprint&&player.stamina>0){m*=1.7;player.stamina=Math.max(0,player.stamina-34*dt)}
+ let m=1;if(player.ability==='speed'&&performance.now()<player.abilityUntil)m*=1.6;if(sprint&&player.stamina>0){m*=1.7;player.stamina=Math.max(0,player.stamina-34*dt)}
  player.x=clamp(player.x+dx*player.speed*m*dt,28,932);player.y=clamp(player.y+dy*player.speed*m*dt,28,572);walk+=dt*m*8;
 }
 function collect(){
@@ -242,7 +232,6 @@ function findExit(){
 function transition(){if(!nearExit){msg('אין כאן מעבר');return}const e=nearExit;player.scene=e.to;player.x=e.spawn.x;player.y=e.spawn.y;nearExit=null;msg(scenes[player.scene].name);renderFloors()}
 function update(dt){
  let dx=0,dy=0;if(keys.ArrowLeft||keys.a)dx--;if(keys.ArrowRight||keys.d)dx++;if(keys.ArrowUp||keys.w)dy--;if(keys.ArrowDown||keys.s)dy++;
- player.crouching=!!(keys.c||keys.Control||player.crouchingTouch||player.hidden);if((dx||dy)&&player.hidden)player.hidden=false;
  if(performance.now()<dizzyUntil){dx*=-1;dy*=-1;}
  const sprint=keys.Shift||runTouch;move(dx,dy,dt,sprint);if(!sprint||(!dx&&!dy))player.stamina=Math.min(100,player.stamina+20*dt);
  if(player.ability&&performance.now()>=player.abilityUntil){if(player.ability==='invisible')player.invisible=false;player.ability=null}
@@ -522,7 +511,7 @@ function pickups(){
 }
 function libi(){
  const now=performance.now(),jumping=now<player.jumpUntil,jumpP=jumping?Math.max(0,Math.min(1,(now-player.jumpStartedAt)/Math.max(1,player.jumpUntil-player.jumpStartedAt))):0,lift=jumping?Math.sin(jumpP*Math.PI)*18:0;
- const bob=player.moving?Math.sin(walk)*2:0;ctx.save();ctx.translate(player.x,player.y+bob-lift);if(player.crouching)ctx.scale(1,.78);ctx.globalAlpha=player.invisible?.35:(player.hidden?.18:1);if(player.invulnerableUntil>now&&Math.floor(now/90)%2===0)ctx.globalAlpha*=.35;
+ const bob=player.moving?Math.sin(walk)*2:0;ctx.save();ctx.translate(player.x,player.y+bob-lift);ctx.globalAlpha=player.invisible?.35:1;if(player.invulnerableUntil>now&&Math.floor(now/90)%2===0)ctx.globalAlpha*=.35;
  ctx.fillStyle='rgba(0,0,0,.18)';ctx.beginPath();ctx.ellipse(0,19,17,7,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle='#f49bb0';ctx.fillRect(-11,-2,22,21);ctx.fillStyle='#efc1a1';ctx.beginPath();ctx.arc(0,-16,14,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4b342f';ctx.beginPath();ctx.arc(0,-21,14,Math.PI,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(10,-27,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-4,-17,3,3);ctx.fillRect(3,-17,3,3);ctx.fillStyle='#473538';ctx.fillRect(-3,-16,2,2);ctx.fillRect(4,-16,2,2);ctx.restore()
 }
@@ -543,12 +532,12 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='h'&&!e.repeat)toggleHide();if(e.key.toLowerCase()==='x'&&!e.repeat)pushDadAway();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
-addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false;if(e.key.toLowerCase()==='c'||e.key==='Control')player.crouching=false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3','4'].includes(e.key)){player.selected=Math.min(+e.key-1,player.capacity-1);renderInv()}},{passive:false});
+addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
 const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault();runTouch=true;run.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>run.addEventListener(ev,e=>{e.preventDefault();runTouch=false;run.classList.remove('pressed')}));
-document.getElementById('dash').onclick=triggerDash;document.getElementById('jump').onclick=triggerJump;document.getElementById('hide').onclick=toggleHide;document.getElementById('pushDad').onclick=pushDadAway;const crouchBtn=document.getElementById('crouch');crouchBtn.onpointerdown=e=>{e.preventDefault();player.crouchingTouch=true;crouchBtn.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>crouchBtn.addEventListener(ev,e=>{e.preventDefault();player.crouchingTouch=false;crouchBtn.classList.remove('pressed')}));
+document.getElementById('jump').onclick=triggerJump;
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
 document.getElementById('musicToggle').onclick=toggleBgMusic;
