@@ -42,3 +42,30 @@
 
   return {patternFor,play};
 });
+
+(function(){
+  if(typeof document==='undefined'||!document.getElementById('core')) return;
+
+  try{
+    if(window.parent&&window.parent!==window&&window.parent.DoubleMusic){
+      window.DoubleMusic=window.parent.DoubleMusic;
+    }
+  }catch(_){ }
+
+  function load(src,attr,ready,next){
+    if(ready&&ready()){next?.();return;}
+    const existing=document.querySelector(`script[${attr}]`);
+    if(existing){existing.addEventListener('load',()=>next?.(),{once:true});return;}
+    const s=document.createElement('script');
+    s.src=src;
+    s.setAttribute(attr,'1');
+    s.onload=()=>next?.();
+    document.body.appendChild(s);
+  }
+
+  const loadBridge=()=>load('double/music-game-bridge.js?v=5','data-double-music-bridge',()=>false);
+  if(window.DoubleMusic){loadBridge();return;}
+
+  load('double/music-engine-state.js?v=5','data-double-music-state',()=>!!window.DoubleMusicState,()=>
+    load('double/music-engine.js?v=5','data-double-music-engine',()=>!!window.DoubleMusic,loadBridge));
+})();
