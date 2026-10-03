@@ -2,103 +2,103 @@
   position:relative;
   box-sizing:border-box;
   transform-origin:center center;
+  justify-self:center;
+  align-self:start;
+  --score-ui-scale:1;
 }
-.score-card-text{
-  display:inline-block;
-  font-size:1.12em;
-  line-height:1.08;
-  pointer-events:none;
+.card[data-score-resize-ready="1"] .card-body{
+  width:calc(100% / var(--score-ui-scale,1));
+  box-sizing:border-box;
+  transform:scale(var(--score-ui-scale,1));
+  transform-origin:top left;
 }
+.score-card-text{display:inline-block;line-height:1.08}
 .score-controls-composed{
   display:grid!important;
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  gap:10px!important;
+  gap:8px!important;
   align-items:stretch!important;
   width:100%!important;
 }
 .score-controls-composed > .score-plus-btn,
 .score-controls-composed > .score-minus-btn{
   width:100%!important;
-  min-width:56px!important;
-  min-height:46px!important;
-  margin:0!important;
-  white-space:nowrap!important;
-}
-.score-controls-composed > .score-mega-btn.score-mega-in-grid{
-  grid-column:1 / -1!important;
-  width:100%!important;
   min-width:0!important;
   min-height:44px!important;
   margin:0!important;
   white-space:nowrap!important;
 }
-.score-plus-btn,
-.score-minus-btn{
-  flex:1 1 0!important;
-  min-width:56px!important;
-  min-height:46px!important;
-}
-.score-mega-btn{
-  flex:1 0 100%!important;
+.score-controls-composed > .score-mega-btn{
+  grid-column:1 / -1!important;
   width:100%!important;
-  min-height:44px!important;
+  min-width:0!important;
+  min-height:42px!important;
+  margin:0!important;
   white-space:nowrap!important;
-  line-height:1.1!important;
 }
-.score-measuring-floor .score-resize-handle{display:none!important}
+.score-controls-composed > .score-reset-btn{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+}
 .score-resize-handle{
   position:absolute;
-  z-index:35;
-  width:40px;
-  height:40px;
+  z-index:70;
+  width:44px;
+  height:44px;
   padding:0;
   border:0;
-  background:transparent;
+  background:transparent!important;
   color:#fff;
-  box-shadow:none;
+  box-shadow:none!important;
   touch-action:none;
   user-select:none;
   -webkit-user-select:none;
   opacity:1;
 }
-.score-resize-handle[data-corner="top-left"]{left:-5px;top:-5px;cursor:nwse-resize}
-.score-resize-handle[data-corner="top-right"]{right:-5px;top:-5px;cursor:nesw-resize}
-.score-resize-handle[data-corner="bottom-left"]{left:-5px;bottom:-5px;cursor:nesw-resize}
-.score-resize-handle[data-corner="bottom-right"]{right:-5px;bottom:-5px;cursor:nwse-resize}
+.score-resize-handle[data-corner="top-left"]{left:-3px;top:-3px;cursor:nwse-resize}
+.score-resize-handle[data-corner="top-right"]{right:-3px;top:-3px;cursor:nesw-resize}
+.score-resize-handle[data-corner="bottom-left"]{left:-3px;bottom:-3px;cursor:nesw-resize}
+.score-resize-handle[data-corner="bottom-right"]{right:-3px;bottom:-3px;cursor:nwse-resize}
 .score-resize-handle::after{
   content:"";
   position:absolute;
   width:18px;
   height:18px;
-  opacity:0;
+  opacity:.55;
   pointer-events:none;
-  transition:opacity .14s ease,transform .14s ease;
+  transition:opacity .12s ease,transform .12s ease;
 }
 .score-resize-handle[data-corner="top-left"]::after{
   left:7px;top:7px;
-  background:linear-gradient(135deg,transparent 43%,rgba(255,255,255,.94) 45%,rgba(255,255,255,.94) 53%,transparent 55%);
-  transform:translate(-2px,-2px);
+  border-left:3px solid rgba(255,255,255,.96);
+  border-top:3px solid rgba(255,255,255,.96);
+  border-radius:4px 0 0 0;
 }
 .score-resize-handle[data-corner="top-right"]::after{
   right:7px;top:7px;
-  background:linear-gradient(45deg,transparent 43%,rgba(255,255,255,.94) 45%,rgba(255,255,255,.94) 53%,transparent 55%);
-  transform:translate(2px,-2px);
+  border-right:3px solid rgba(255,255,255,.96);
+  border-top:3px solid rgba(255,255,255,.96);
+  border-radius:0 4px 0 0;
 }
 .score-resize-handle[data-corner="bottom-left"]::after{
   left:7px;bottom:7px;
-  background:linear-gradient(45deg,transparent 43%,rgba(255,255,255,.94) 45%,rgba(255,255,255,.94) 53%,transparent 55%);
-  transform:translate(-2px,2px);
+  border-left:3px solid rgba(255,255,255,.96);
+  border-bottom:3px solid rgba(255,255,255,.96);
+  border-radius:0 0 0 4px;
 }
 .score-resize-handle[data-corner="bottom-right"]::after{
   right:7px;bottom:7px;
-  background:linear-gradient(135deg,transparent 43%,rgba(255,255,255,.94) 45%,rgba(255,255,255,.94) 53%,transparent 55%);
-  transform:translate(2px,2px);
+  border-right:3px solid rgba(255,255,255,.96);
+  border-bottom:3px solid rgba(255,255,255,.96);
+  border-radius:0 0 4px 0;
 }
 .score-resize-handle:hover::after,
 .score-resize-handle:focus-visible::after,
 .score-resize-handle.score-resize-active::after{
   opacity:1;
-  transform:translate(0,0);
+  transform:scale(1.12);
 }
 .score-resize-value{
   position:absolute;
@@ -106,7 +106,7 @@
   min-width:44px;
   padding:4px 7px;
   border-radius:999px;
-  background:rgba(8,13,22,.86);
+  background:rgba(8,13,22,.9);
   box-shadow:0 5px 16px rgba(0,0,0,.28);
   font-size:11px;
   font-weight:800;
@@ -122,23 +122,17 @@
 .score-resize-handle.score-resize-active .score-resize-value{display:block}
 .card.score-card-resizing{
   z-index:85!important;
-  outline:3px solid rgba(96,165,250,.78);
+  outline:3px solid rgba(96,165,250,.9);
   outline-offset:3px;
   box-shadow:0 26px 68px rgba(0,0,0,.48)!important;
 }
 body.score-card-resizing{overscroll-behavior:none;user-select:none;-webkit-user-select:none}
 #scoreResizeReset{white-space:nowrap}
 @media (max-width:700px){
-  .score-resize-handle{width:48px;height:48px}
-  .score-resize-handle[data-corner="top-left"]{left:-7px;top:-7px}
-  .score-resize-handle[data-corner="top-right"]{right:-7px;top:-7px}
-  .score-resize-handle[data-corner="bottom-left"]{left:-7px;bottom:-7px}
-  .score-resize-handle[data-corner="bottom-right"]{right:-7px;bottom:-7px}
-  .score-resize-handle::after{width:19px;height:19px}
-  .score-controls-composed{gap:8px!important}
-  .score-controls-composed > .score-plus-btn,
-  .score-controls-composed > .score-minus-btn,
-  .score-plus-btn,
-  .score-minus-btn{min-width:52px!important;min-height:44px!important}
-  .score-mega-btn{min-height:42px!important}
+  .score-resize-handle{width:54px;height:54px}
+  .score-resize-handle[data-corner="top-left"]{left:-4px;top:-4px}
+  .score-resize-handle[data-corner="top-right"]{right:-4px;top:-4px}
+  .score-resize-handle[data-corner="bottom-left"]{left:-4px;bottom:-4px}
+  .score-resize-handle[data-corner="bottom-right"]{right:-4px;bottom:-4px}
+  .score-resize-handle::after{width:20px;height:20px;opacity:.7}
 }
