@@ -183,7 +183,7 @@ button,input,select{font:inherit}
 
     <div id="recognitionNote" class="note info">אפשר לכתוב גם מאכל ששייך ליותר מקטגוריה אחת. לדוגמה, עדשים יתרמו גם פחמימות, גם חלבון וגם סיבים.</div>
     <div class="actions">
-      <button class="btn primary" id="buildBtn">בנה תפריט</button>
+      <button class="btn primary" id="buildBtn">בנה לי תפריט</button>
       <button class="btn ghost" onclick="goStep(1)">חזרה ליעדים</button>
     </div>
   </section>
@@ -346,8 +346,8 @@ function showFoodValues(food,grams=100){
   const base=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
   const data=window.NutritionMeals?.nutrientsForQuantity?window.NutritionMeals.nutrientsForQuantity(base,amount):base;
   const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
-  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v)).map(([k,v])=>`<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
-  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">${food.name}</h2><div class="muted">ערכים ל-‚${Math.round(amount)} גר׾ '´ ${food.source||'מאגר פנימי'}</div></div><button class="mini">✕</button></div><div class="nutrient-grid" style="margin-top:14px">${rows||'<div>אין נרונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
+  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
+  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">${food.name}</h2><div class="muted">ערכים ל־${Math.round(amount)} גרם · ${food.source||'מאגר פנימי'}</div></div><button class="mini">✕</button></div><div class="nutrient-grid" style="margin-top:14px">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
 }
 function qs(id){return document.getElementById(id)}
 
