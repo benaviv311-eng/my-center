@@ -101,3 +101,40 @@ test('profile meal helper does not install a self-triggering MutationObserver lo
   const source = readFileSync(new URL('../nutrition-profile-meals.js', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /new MutationObserver/);
 });
+
+test('stable food identity merges duplicate rows but keeps preparations distinct', () => {
+  assert.equal(Meals.foodIdentity({ id: 'chicken' }), 'chicken');
+  assert.equal(Meals.foodIdentity({ id: 'rice', preparation: 'cooked' }), 'rice::cooked');
+  const merged = Meals.mergeDuplicateFoods([
+    { f: { id: 'chicken', name: 'חזה עוף' }, q: 120 },
+    { f: { id: 'chicken', name: 'חזה עוף' }, q: 80 },
+    { f: { id: 'brownrice-cooked', name: 'אורז מלא מבושל' }, q: 150 },
+    { f: { id: 'brownrice-dry', name: 'אורז מלא יבש' }, q: 70 }
+  ]);
+  assert.equal(merged.length, 3);
+  assert.equal(merged.find(x => x.f.id === 'chicken').q, 200);
+  assert.ok(merged.some(x => x.f.id === 'brownrice-cooked'));
+  assert.ok(merged.some(x => x.f.id === 'brownrice-dry'));
+});
+
+test('unique assignment never clones a food just to fill requested meals', () => {
+  const items = [
+    { f: { id: 'rice', k: 130 }, q: 300 },
+    { f: { id: 'chicken', k: 165 }, q: 300 }
+  ];
+  const meals = Meals.assignUniqueFoodsToMeals(items, 4);
+  assert.equal(meals.length, 4);
+  const assigned = meals.flatMap(m => m.items);
+  assert.equal(assigned.length, 2);
+  assert.equal(new Set(assigned.map(x => Meals.foodIdentity(x.f))).size, 2);
+  assert.equal(assigned.reduce((sum, x) => sum + x.q, 0), 600);
+  assert.equal(meals.filter(m => m.items.length === 0).length, 2);
+});
+
+test('nullableNumber keeps zero but returns null for missing or invalid values', () => {
+  assert.equal(Meals.nullableNumber(0), 0);
+  assert.equal(Meals.nullableNumber('2.5'), 2.5);
+  assert.equal(Meals.nullableNumber(''), null);
+  assert.equal(Meals.nullableNumber(null), null);
+  assert.equal(Meals.nullableNumber('abc'), null);
+});
