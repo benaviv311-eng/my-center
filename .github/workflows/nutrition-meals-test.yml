@@ -5,6 +5,7 @@ on:
     paths:
       - 'tests/nutrition-meals.test.mjs'
       - 'nutrition-meals.js'
+      - 'nutrition-safety.js'
       - 'nutrition-profile.js'
       - 'nutrition-builder.html'
       - '.github/workflows/nutrition-meals-test.yml'
@@ -20,4 +21,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --check nutrition-meals.js
+      - run: node --check nutrition-safety.js
       - run: node --test tests/nutrition-meals.test.mjs
