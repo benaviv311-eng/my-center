@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify content-preserving card resize
+      - name: Verify text-fit card resize and fixed Mega row
         shell: bash
         run: |
           node <<'NODE'
@@ -24,10 +24,13 @@ jobs:
           const missing=[];
 
           const requiredJs=[
-            'MIN_CARD_WIDTH',
-            'measureNaturalHeight',
-            "card.style.height='auto'",
-            'Math.max(targetHeight,naturalHeight)',
+            'measureContentFloor',
+            'contentFloor.width',
+            'contentFloor.height',
+            'Math.max(contentFloor.width',
+            'Math.max(contentFloor.height',
+            "card.style.setProperty('--score-content-min-width'",
+            "card.style.setProperty('--score-content-min-height'",
             "card.querySelector('.score-controls')",
             "controls.querySelector('.score-btn.plus')",
             "controls.querySelector('.score-btn.minus')",
@@ -39,7 +42,14 @@ jobs:
 
           const requiredCss=[
             '.score-controls-composed',
-            'min-height:0!important',
+            'grid-template-areas:',
+            '"minus plus"',
+            '"mega mega"',
+            'grid-area:plus',
+            'grid-area:minus',
+            'grid-area:mega',
+            'min-width:var(--score-content-min-width',
+            'min-height:var(--score-content-min-height',
             '.score-resize-handle[data-corner="top-left"]',
             '.score-resize-handle[data-corner="top-right"]',
             '.score-resize-handle[data-corner="bottom-left"]',
@@ -47,15 +57,15 @@ jobs:
           ];
           for(const marker of requiredCss){if(!css.includes(marker)) missing.push('css:'+marker);}
 
+          if(js.includes('const MIN_CARD_WIDTH=150')) missing.push('js:fixed 150px minimum remains');
           if(js.includes('--score-ui-scale')) missing.push('js:old ui scaling remains');
           if(css.includes('transform:scale(var(--score-ui-scale,1))')) missing.push('css:old content scaling remains');
-          if(css.includes('width:calc(100% / var(--score-ui-scale,1))')) missing.push('css:old inverse body width remains');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
 
           if(missing.length){
-            console.error('Missing content-preserving resize behavior:',missing.join(', '));
+            console.error('Missing text-fit resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Content-preserving resize markers present.');
+          console.log('Text-fit resize markers present.');
           NODE
           node --check score-counter/score-resize.js
