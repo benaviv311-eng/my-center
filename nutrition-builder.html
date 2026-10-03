@@ -341,11 +341,13 @@ async function getGovMeasures(code){
 }
 const NUTRIENT_LABELS={protein:'חלבון',total_fat:'שומן כולל',carbohydrates:'פחמימות',food_energy:'קלוריות',total_dietary_fiber:'סיבים',total_sugars:'סוכרים',sodium:'נתרן',potassium:'אשלגן',calcium:'סידן',iron:'ברזל',magnesium:'מגנזיום',phosphorus:'זרחן',zinc:'אבץ',copper:'נחושת',cholesterol:'כולסטרול',saturated_fat:'שומן רווי',mono_unsaturated_fat:'שומן חד בלתי רווי',poly_unsaturated_fat:'שומן רב בלתי רווי',trans_fatty_acids:'שומן טראנס',vitamin_c:'ויטמין C',vitamin_e:'ויטמין E',vitamin_d:'ויטמין D',vitamin_k:'ויטמין K',vitamin_a_iu:'ויטמין A',thiamin:'B1 תיאמין',riboflavin:'B2 ריבופלבין',niacin:'B3 ניאצין',vitamin_b6:'ויטמין B6',vitamin_b12:'ויטמין B12',folate:'פולאט',selenium:'סלניום',iodine:'יוד',choline:'כולין',manganese:'מנגן'};
 function nutrientUnit(k){if(k==='food_energy')return ' קק״ל';if(k==='vitamin_a_iu')return ' IU';if(['protein','total_fat','carbohydrates','total_dietary_fiber','total_sugars','saturated_fat','mono_unsaturated_fat','poly_unsaturated_fat','trans_fatty_acids','alcohol','moisture','sugar_alcohols','fructose','isoleucine','leucine','valine','lysine','threonine','methionine','phenylalanine','tryptophan','histidine','tyrosine','arginine','cystine','serine'].includes(k))return ' ג׳';if(['calcium','iron','magnesium','phosphorus','potassium','sodium','zinc','copper','cholesterol','vitamin_c','vitamin_e','niacin','thiamin','riboflavin','vitamin_b6','pantothenic_acid','manganese'].includes(k))return ' מ״ג';return ''}
-function showFoodValues(food){
-  const data=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
+function showFoodValues(food,grams=100){
+  const amount=Number(grams)>0?Number(grams):100;
+  const base=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
+  const data=window.NutritionMeals?.nutrientsForQuantity?window.NutritionMeals.nutrientsForQuantity(base,amount):base;
   const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
-  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
-  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">${food.name}</h2><div class="muted">ערכים ל־100 גרם · ${food.source||'מאגר פנימי'}</div></div><button class="mini">✕</button></div><div class="nutrient-grid" style="margin-top:14px">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
+  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v)).map(([k,v])=>`<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
+  const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">${food.name}</h2><div class="muted">ערכים ל-‚${Math.round(amount)} גר׾ '´ ${food.source||'מאגר פנימי'}</div></div><button class="mini">✕</button></div><div class="nutrient-grid" style="margin-top:14px">${rows||'<div>אין נרונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
 }
 function qs(id){return document.getElementById(id)}
 
@@ -558,7 +560,7 @@ function renderMenu(unknown=[]){
       const row=document.createElement('div');row.className='foodrow';
       row.innerHTML=`<div><strong>${f.name}</strong><div class="muted">${humanQuantity(f,q)}</div>${f.source?`<span class="source-tag">${f.source}</span>`:''}</div><button class="mini">ערכים</button><button class="mini">החלף</button><button class="mini">כמות</button>`;
       const btns=row.querySelectorAll('button');
-      btns[0].onclick=()=>showFoodValues(f);
+      btns[0].onclick=()=>showFoodValues(f,q);
       btns[1].onclick=()=>replaceFood(f.id);
       btns[2].onclick=()=>changeQty(f.id);
       card.appendChild(row);
@@ -654,9 +656,9 @@ function showFocusedFix(suggestions){
   }catch(e){}
 })();
 </script>
-<script src="nutrition-meals.js?v=2"></script>
+<script src="nutrition-meals.js?v=3"></script>
 <script src="nutrition-profile.js?v=1"></script>
-<script src="nutrition-profile-meals.js?v=1"></script>
+<script src="nutrition-profile-meals.js?v=2"></script>
 <script src="nutrition-safety.js?v=1"></script>
 </body>
 </html>
