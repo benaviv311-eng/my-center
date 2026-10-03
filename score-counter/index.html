@@ -20,7 +20,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
 <script>
 (async function(){
   const tnames=["../team-score/t1.txt","../team-score/t2.txt","../team-score/t3.txt","../team-score/t4.txt"];
-  const backgrounds=Array.from({length:18},(_,i)=>"assets/backgrounds/bg"+String(i+1).padStart(2,"0")+".webp?v=full18");
+  const backgrounds=Array.from({length:18},(_,i)=>"assets/backgrounds/bg"+String(i+1).padStart(2,"0")+".webp?v=full18drag1");
   const read=async n=>{const r=await fetch(n+"?hq=1",{cache:"no-store"});if(!r.ok)throw new Error(n+" "+r.status);return r.text()};
   const parts=await Promise.all(tnames.map(read));
   const bin=atob(parts.join(""));
@@ -37,8 +37,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const sharpCss='<style id="sharpBgCss">.rotating-bg{display:none!important}#sharpBg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#11151d;pointer-events:none}#sharpBg img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center center;opacity:0;transition:opacity 1.15s ease;image-rendering:auto}#sharpBg img.active{opacity:1}.wrap{position:relative!important;z-index:2!important}</style>';
   const sharpHtml='<div id="sharpBg" aria-hidden="true"><img id="sharpA" class="active" src="'+backgrounds[0]+'" alt="" decoding="async"><img id="sharpB" alt="" decoding="async"></div>';
   const sharpJs='<script>(function(){var imgs='+JSON.stringify(backgrounds)+',a=document.getElementById("sharpA"),b=document.getElementById("sharpB"),i=0,onA=true;if(!a||!b)return;function preload(n){var x=new Image();x.decoding="async";x.src=imgs[n%imgs.length]}preload(1);setInterval(function(){i=(i+1)%imgs.length;var n=onA?b:a,c=onA?a:b;var next=imgs[i];var show=function(){n.classList.add("active");c.classList.remove("active");preload(i+1)};if(n.src.endsWith(next)){show()}else{n.onload=show;n.src=next}onA=!onA},15000)})();<\/script>';
+  const dragCss='<link rel="stylesheet" href="score-drag.css?v=1">';
+  const dragJs='<script src="score-drag.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+"</body>");
+  html=html.replace("</head>",sharpCss+dragCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+dragJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
