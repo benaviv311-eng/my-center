@@ -195,8 +195,11 @@ button,input,select{font:inherit}
     <div id="imbalance"></div>
     <div class="meals" id="meals"></div>
 
-    <h3>מצב היעדים</h3>
+    <h3>התאמה ליעדים</h3>
     <div class="balance" id="balance"></div>
+
+    <h3>איכות וגיוון</h3>
+    <div id="qualityDiagnostics"></div>
 
     <div class="actions">
       <button class="btn secondary" onclick="rebuild()">בנה יום אחר</button>
@@ -293,6 +296,7 @@ const GOV_MAIN_RESOURCE='c3cb0630-0650-46c1-a068-82d575c094b2';
 const GOV_API='https://data.gov.il/api/3/action/';
 let jsonpSeq=0,govMetaPromise=null,govUnitsPromise=null;
 function num(v){const n=parseFloat(v);return Number.isFinite(n)?n:0}
+function nullableNumber(v){if(window.NutritionMeals?.nullableNumber)return window.NutritionMeals.nullableNumber(v);if(v===null||v===undefined||v==='')return null;const n=Number(String(v).replace(',','.'));return Number.isFinite(n)?n:null}
 function jsonp(action,params={}){
   return new Promise((resolve,reject)=>{
     const cb='__nutritionGov'+(++jsonpSeq),script=document.createElement('script');
@@ -303,10 +307,11 @@ function jsonp(action,params={}){
   });
 }
 function govFoodFromRow(r){
-  const p=num(r.protein),f=num(r.total_fat),c=num(r.carbohydrates),fi=num(r.total_dietary_fiber),k=num(r.food_energy);
+  const p=nullableNumber(r.protein),f=nullableNumber(r.total_fat),c=nullableNumber(r.carbohydrates),fi=nullableNumber(r.total_dietary_fiber),k=nullableNumber(r.food_energy);
   const code=r.Code??r.code??r.CODE??r._id,name=r.shmmitzrach||r.english_name||'מזון';
-  let cat='carb';if(fi>=5)cat='fiber';else if(f>=15)cat='fat';else if(p>=Math.max(c/2,f/2))cat='protein';
-  return {id:'gov-'+code,code,name,aliases:[name],p,c,f,fi,k,cat,max:800,all:r,source:'משרד הבריאות'};
+  const pv=p??0,fv=f??0,cv=c??0,fiv=fi??0;
+  let cat='carb';if(fiv>=5)cat='fiber';else if(fv>=15)cat='fat';else if(pv>=Math.max(cv/2,fv/2))cat='protein';
+  return {id:'gov-'+code,code,sourceCode:String(code),name,aliases:[name],p,c,f,fi,k,cat,max:800,all:r,source:'משרד הבריאות'};
 }
 function govName(r){return r.shmmitzrach||r.english_name||''}
 function govScore(r,q){const n=normalize(govName(r)),x=normalize(q);if(n===x)return 1000;if(n.startsWith(x))return 700-x.length*.01;if(n.includes(x))return 500-x.length*.01;return 100-Math.min(99,levenshtein(n,x))}
@@ -346,7 +351,7 @@ function showFoodValues(food,grams=100){
   const base=food.all||{food_energy:food.k,protein:food.p,carbohydrates:food.c,total_fat:food.f,total_dietary_fiber:food.fi};
   const data=window.NutritionMeals?.nutrientsForQuantity?window.NutritionMeals.nutrientsForQuantity(base,amount):base;
   const skip=new Set(['_id','Code','code','smlmitzrach','shmmitzrach','makor','tarich_ptiha','tarich_idkun','english_name']);
-  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v))).map(([k,v])=>`<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${v}${nutrientUnit(k)}</span></div>`).join('');
+  const rows=Object.entries(data).filter(([k,v])=>!skip.has(k)&&(NUTRIENT_LABELS[k]||v!==null&&v!==''&&v!==undefined&&!(typeof v==='number'&&Number.isNaN(v)))).map(([k,v])=>{const missing=v===null||v===''||v===undefined||typeof v==='number'&&Number.isNaN(v);return `<div class="nutrient-item"><b>${NUTRIENT_LABELS[k]||k}</b><span>${missing?'אין נתון':v+nutrientUnit(k)}</span></div>`}).join('');
   const back=document.createElement('div');back.className='modal-back';back.innerHTML=`<div class="modal-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">${food.name}</h2><div class="muted">ערכים ל־${Math.round(amount)} גרם · ${food.source||'מאגר פנימי'}</div></div><button class="mini">✕</button></div><div class="nutrient-grid" style="margin-top:14px">${rows||'<div>אין נתונים נוספים.</div>'}</div></div>`;back.onclick=e=>{if(e.target===back)back.remove()};back.querySelector('button').onclick=()=>back.remove();document.body.appendChild(back);
 }
 function qs(id){return document.getElementById(id)}
@@ -578,7 +583,7 @@ function renderMenu(unknown=[]){
     wrap.appendChild(card);
   });
 
-  const issues=issueList(res);
+  const issues=res.planner?(res.gaps||[]):issueList(res);
   const imb=qs('imbalance');imb.innerHTML='';
   if(issues.length){
     const box=document.createElement('div');box.className='note warn';
@@ -600,6 +605,7 @@ function renderMenu(unknown=[]){
   }
 
   renderBalance();
+  renderQualityDiagnostics();
 }
 
 function renderBalance(){
@@ -612,9 +618,20 @@ function renderBalance(){
     ['סיבים','fiber',t.fiber,' ג׳']
   ];
   qs('balance').innerHTML=rows.map(([label,k,goal,u])=>{
+    const d=state.result?.targetDiagnostics?.[k];
+    if(d?.unknown){const known=Math.round(d.actual||0);return `<div class="barbox"><strong>${label}</strong><div>לפחות ${known}${u} / ${Math.round(goal)}${u}</div><div class="barline"><div class="barfill" style="width:0"></div></div><small>אין נתון מלא</small></div>`;}
     const val=Math.round(a[k]);const pct=Math.min(130,Math.round(val/goal*100));
     return `<div class="barbox"><strong>${label}</strong><div>${val}${u} / ${Math.round(goal)}${u}</div><div class="barline"><div class="barfill" style="width:${Math.min(100,pct)}%"></div></div><small>${pct}%</small></div>`;
   }).join('');
+}
+
+function renderQualityDiagnostics(){
+  const wrap=qs('qualityDiagnostics');if(!wrap)return;
+  const q=state.result?.qualityDiagnostics;
+  if(!q){wrap.innerHTML='<div class="note info">נתוני איכות וגיוון יופיעו לאחר בניית התפריט.</div>';return;}
+  const messages=q.messages||[];
+  const status=q.concentrationWarning||!q.portionsReasonable?'warn':'success';
+  wrap.innerHTML=`<div class="note ${status}"><strong>${q.uniqueFoods} מאכלים ייחודיים</strong><br>${messages.map(x=>'• '+x).join('<br>')}</div>`;
 }
 
 function replaceFood(id){
@@ -651,10 +668,10 @@ function showFocusedFix(suggestions){
 }
 
 </script>
-<script src="nutrition-meals.js?v=4"></script>
+<script src="nutrition-meals.js?v=5"></script>
 <script src="nutrition-profile.js?v=3"></script>
 <script src="nutrition-profile-meals.js?v=4"></script>
-<script src="nutrition-planner.js?v=1"></script>
+<script src="nutrition-planner.js?v=2"></script>
 <script src="nutrition-safety.js?v=1"></script>
 </body>
 </html>

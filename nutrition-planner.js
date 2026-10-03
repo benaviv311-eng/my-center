@@ -109,7 +109,7 @@ function buildSelection(current,fallback,mode,mealCount,saved){
 
   CATEGORY_ORDER.forEach(cat=>addFood(selected,selectBest(currentUnique.filter(f=>f.cat===cat),saved)));
 
-  const desired=Math.min(currentUnique.length,Math.max(4,Meals.normalizeMealCount(mealCount)+1));
+  const desired=Math.min(currentUnique.length,Math.max(5,Meals.normalizeMealCount(mealCount)+2));
   const remaining=currentUnique
     .filter(f=>!selected.some(x=>Meals.foodIdentity(x)===Meals.foodIdentity(f)))
     .sort((a,b)=>categoryUtility(b,saved)-categoryUtility(a,saved)||Meals.foodIdentity(a).localeCompare(Meals.foodIdentity(b)));

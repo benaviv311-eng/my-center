@@ -80,7 +80,7 @@
     const amount=Number(grams);
     const factor=Number.isFinite(amount)&&amount>=0?amount/100:1;
     return Object.fromEntries(Object.entries(data||{}).map(([key,value])=>{
-      if(value===null||value===undefined||value==='')return [key,value??null];
+      if(value===null||value===undefined||value==='')return [key,null];
       const n=numericValue(value);
       return [key,n===null?value:roundedNutritionValue(n*factor)];
     }));
