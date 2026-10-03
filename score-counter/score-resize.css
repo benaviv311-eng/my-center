@@ -6,6 +6,21 @@
   align-self:start;
   min-width:var(--score-content-min-width,0px)!important;
 }
+.card[data-score-resize-ready="1"] .card-body{
+  min-width:0!important;
+}
+.card[data-score-resize-ready="1"] .team-head{
+  min-width:0!important;
+}
+.card[data-score-resize-ready="1"] .small-actions{
+  flex-wrap:wrap!important;
+  justify-content:center!important;
+  max-width:100%!important;
+}
+.card[data-score-resize-ready="1"] .small-actions button{
+  flex:0 1 auto!important;
+  max-width:100%!important;
+}
 .score-controls-composed{
   display:grid!important;
   grid-template-columns:minmax(max-content,1fr) minmax(max-content,1fr)!important;
