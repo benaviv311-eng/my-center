@@ -2,6 +2,21 @@
   position:relative;
   transform-origin:center center;
 }
+.card[data-score-compact="1"]{
+  width:var(--score-card-fit-width)!important;
+  max-width:min(92vw,320px)!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  justify-self:start!important;
+  align-self:start!important;
+  padding:10px 12px!important;
+}
+.card[data-score-compact="1"] > *:not(.score-resize-handle):not(.score-size-menu){
+  max-width:100%;
+  box-sizing:border-box;
+}
 .score-resize-handle{
   position:absolute;
   left:-5px;
@@ -114,6 +129,10 @@ body.score-card-resizing{
 }
 #scoreResizeReset{white-space:nowrap}
 @media (max-width:700px){
+  .card[data-score-compact="1"]{
+    max-width:min(88vw,300px)!important;
+    padding:9px 10px!important;
+  }
   .score-resize-handle{
     width:44px;
     height:44px;
