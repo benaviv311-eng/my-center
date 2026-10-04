@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify professional one-handle resize with presets
+      - name: Verify compact text-fit score cards with professional resize presets
         shell: bash
         run: |
           node <<'NODE'
@@ -27,6 +27,12 @@ jobs:
           const requiredResize=[
             "const RESIZE_CORNER='bottom-left'",
             'const PRESET_SCALES=[0.7,0.85,1,1.2,1.4]',
+            'const COMPACT_MIN_WIDTH=180',
+            'const COMPACT_MAX_WIDTH=320',
+            'function measureTextFitWidth(card)',
+            'function applyCompactBase(card)',
+            "card.setAttribute('data-score-compact','1')",
+            "card.style.setProperty('--score-card-fit-width'",
             'function applyScale(card,id,scale)',
             'function createPresetMenu(card,id,handle)',
             'data-score-preset',
@@ -36,6 +42,12 @@ jobs:
           for(const marker of requiredResize){if(!resize.includes(marker)) missing.push('resize:'+marker);}
 
           const requiredCss=[
+            '.card[data-score-compact="1"]',
+            'width:var(--score-card-fit-width)',
+            'height:auto!important',
+            'min-height:0!important',
+            'justify-self:start!important',
+            'align-self:start!important',
             '.score-resize-handle[data-corner="bottom-left"]',
             '.score-size-menu',
             '.score-size-option',
@@ -46,15 +58,15 @@ jobs:
           if(!drag.includes("scale('+scale.toFixed(3)+')")) missing.push('drag:translate and scale must be composed');
           if(resize.includes('composeScoreControls')) missing.push('resize:must not rearrange original card controls');
           if(resize.includes('score-controls-composed')) missing.push('resize:must not depend on composed controls');
-          if(resize.includes("card.style.width=")) missing.push('resize:must not rewrite card width');
+          if(resize.includes('max-content')) missing.push('resize:must not use max-content measurement on whole card');
           if(resize.includes("card.style.height=")) missing.push('resize:must not rewrite card height');
           if(!index.includes('score-resize.js') || !index.includes('score-resize.css')) missing.push('loader assets');
 
           if(missing.length){
-            console.error('Missing professional resize behavior:',missing.join(', '));
+            console.error('Missing compact text-fit resize behavior:',missing.join(', '));
             process.exit(1);
           }
-          console.log('Professional resize model markers present.');
+          console.log('Compact text-fit score card markers present.');
           NODE
           node --check score-counter/score-resize.js
           node --check score-counter/score-drag.js
