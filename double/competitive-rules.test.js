@@ -1,0 +1,12 @@
+const assert=require('assert');
+const R=require('./competitive-rules.js');
+assert.equal(R.skipDifficulty('sprint'),true);
+assert.equal(R.skipDifficulty('versus'),true);
+assert.equal(R.skipDifficulty('classic'),false);
+assert.equal(R.allowShuffle('sprint'),false);
+assert.equal(R.allowShuffle('versus'),false);
+assert.equal(R.allowShuffle('classic'),true);
+assert.equal(R.fixedDifficulty('sprint'),'normal');
+assert.equal(R.fixedDifficulty('versus'),'normal');
+assert.equal(R.fixedDifficulty('classic'),null);
+console.log('competitive rules OK');
