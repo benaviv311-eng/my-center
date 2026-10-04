@@ -5,6 +5,9 @@
   const MAX_SCALE=1.6;
   const RESIZE_CORNER='bottom-left';
   const PRESET_SCALES=[0.7,0.85,1,1.2,1.4];
+  const COMPACT_MIN_WIDTH=180;
+  const COMPACT_MAX_WIDTH=320;
+  const COMPACT_GUTTER=28;
   const teams=document.getElementById('teams');
   if(!teams) return;
 
@@ -22,6 +25,35 @@
   const persist=()=>{try{localStorage.setItem(SIZE_STORAGE_KEY,JSON.stringify(sizes));}catch{}};
   const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
   const scaleOf=card=>clamp(Number(card.dataset.scoreScale)||1,MIN_SCALE,MAX_SCALE);
+  const textCanvas=document.createElement('canvas');
+  const textContext=textCanvas.getContext('2d');
+
+  function measureTextFitWidth(card){
+    let required=COMPACT_MIN_WIDTH;
+    if(!textContext) return required;
+    card.querySelectorAll('*').forEach(el=>{
+      if(el.closest('.score-resize-handle,.score-size-menu')) return;
+      const style=getComputedStyle(el);
+      if(style.display==='none' || style.visibility==='hidden') return;
+      const directText=Array.from(el.childNodes)
+        .filter(node=>node.nodeType===Node.TEXT_NODE)
+        .map(node=>node.textContent.trim())
+        .filter(Boolean)
+        .join(' ');
+      if(!directText) return;
+      textContext.font=style.font || [style.fontStyle,style.fontWeight,style.fontSize,style.fontFamily].filter(Boolean).join(' ');
+      const textWidth=textContext.measureText(directText).width;
+      const chrome=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0)+(parseFloat(style.borderLeftWidth)||0)+(parseFloat(style.borderRightWidth)||0);
+      required=Math.max(required,textWidth+chrome+COMPACT_GUTTER);
+    });
+    return Math.round(clamp(required,COMPACT_MIN_WIDTH,COMPACT_MAX_WIDTH));
+  }
+
+  function applyCompactBase(card){
+    const width=measureTextFitWidth(card);
+    card.setAttribute('data-score-compact','1');
+    card.style.setProperty('--score-card-fit-width',width+'px');
+  }
 
   function applyTransform(card){
     const x=Number(card.dataset.dragX)||0;
@@ -156,6 +188,7 @@
 
   function bindResize(card,id){
     if(!id) return;
+    applyCompactBase(card);
     card.querySelectorAll('.score-resize-handle').forEach(old=>{
       if(old.dataset.corner!==RESIZE_CORNER) old.remove();
     });
@@ -193,6 +226,7 @@
     sizes[mode()]={};
     persist();
     teams.querySelectorAll(':scope > .card').forEach(card=>{
+      applyCompactBase(card);
       card.dataset.scoreScale='1';
       applyTransform(card);
       updateResizeValue(card);
@@ -246,7 +280,7 @@
     if(!actions) return;
     const line=document.createElement('div');
     line.className='setting-line';
-    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>גרור את הידית בפינה לשינוי חופשי, או לחץ עליה ובחר 70%, 85%, 100%, 120% או 140%.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
+    line.innerHTML='<div class="setting-copy"><strong>גודל כרטיסי הקבוצות</strong><span>הכרטיס מתאים את עצמו אוטומטית לטקסט. גרור את הידית לשינוי נוסף, או לחץ עליה ובחר 70%, 85%, 100%, 120% או 140%.</span></div><div class="setting-control"><button type="button" class="btn ghost" id="scoreResizeReset">↺ איפוס גודל הכרטיסים</button></div>';
     actions.before(line);
     document.getElementById('scoreResizeReset').addEventListener('click',normalizeCards);
   }
