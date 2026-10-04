@@ -45,6 +45,13 @@
 
 (function(){
   if(typeof document==='undefined'||!document.getElementById('core')) return;
+  const V='8';
+  const frame=document.getElementById('core');
+
+  try{
+    const params=new URLSearchParams(location.search);
+    if(['sprint','versus'].includes(params.get('launch')))localStorage.setItem('double-difficulty-v1','normal');
+  }catch(_){ }
 
   try{
     if(window.parent&&window.parent!==window&&window.parent.DoubleMusic){
@@ -67,23 +74,44 @@
     document.body.appendChild(s);
   }
 
-  const loadBridge=()=>load('double/music-game-bridge.js?v=7','data-double-music-bridge',()=>false);
+  const loadBridge=()=>load('double/music-game-bridge.js?v='+V,'data-double-music-bridge',()=>false);
   if(window.DoubleMusic){loadBridge()}else{
-    load('double/music-engine-state.js?v=7','data-double-music-state',()=>!!window.DoubleMusicState,()=>
-      load('double/music-engine.js?v=7','data-double-music-engine',()=>!!window.DoubleMusic,loadBridge));
+    load('double/music-engine-state.js?v='+V,'data-double-music-state',()=>!!window.DoubleMusicState,()=>
+      load('double/music-engine.js?v='+V,'data-double-music-engine',()=>!!window.DoubleMusic,loadBridge));
   }
 
-  function loadPackBridge(){load('double/icon-pack-game-bridge.js?v=1','data-double-icon-pack-game-bridge',()=>false)}
+  function loadPackBridge(){load('double/icon-pack-game-bridge.js?v='+V,'data-double-icon-pack-game-bridge',()=>false)}
+  let reusedParentPacks=false;
   try{
     if(window.parent&&window.parent!==window&&window.parent.DoubleIconPacks){
       window.DoubleIconPacks=window.parent.DoubleIconPacks;
+      reusedParentPacks=true;
       loadPackBridge();
-      return;
     }
   }catch(_){ }
-  load('double/icon-sprite-0.js?v=1','data-double-icon-sprite-0',()=>false,()=>
-    load('double/icon-sprite-1.js?v=1','data-double-icon-sprite-1',()=>false,()=>
-      load('double/icon-sprite-2.js?v=1','data-double-icon-sprite-2',()=>false,()=>
-        load('double/icon-sprite-3.js?v=1','data-double-icon-sprite-3',()=>false,()=>
-          load('double/icon-packs.js?v=1','data-double-icon-packs',()=>!!window.DoubleIconPacks,loadPackBridge)))));
+  if(!reusedParentPacks){
+    load('double/icon-sprite-0.js?v='+V,'data-double-icon-sprite-0',()=>false,()=>
+      load('double/icon-sprite-1.js?v='+V,'data-double-icon-sprite-1',()=>false,()=>
+        load('double/icon-sprite-2.js?v='+V,'data-double-icon-sprite-2',()=>false,()=>
+          load('double/icon-sprite-3.js?v='+V,'data-double-icon-sprite-3',()=>false,()=>
+            load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,loadPackBridge)))));
+  }
+
+  function injectCoreFix(){
+    let doc;
+    try{doc=frame.contentDocument}catch(_){return}
+    if(!doc?.body||doc.querySelector('script[data-double-competitive-game-fix]'))return;
+    const rules=doc.createElement('script');
+    rules.src='double/competitive-rules.js?v='+V;
+    rules.setAttribute('data-double-competitive-rules','1');
+    rules.onload=()=>{
+      const fix=doc.createElement('script');
+      fix.src='double/competitive-game-fix.js?v='+V;
+      fix.setAttribute('data-double-competitive-game-fix','1');
+      doc.body.appendChild(fix);
+    };
+    doc.body.appendChild(rules);
+  }
+  frame.addEventListener('load',injectCoreFix);
+  try{if(frame.contentDocument?.body)injectCoreFix()}catch(_){ }
 })();
