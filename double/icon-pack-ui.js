@@ -22,7 +22,9 @@
   function injectSettings(){
     document.querySelectorAll('.lobby-settings').forEach(settings=>{
       let shell=settings.querySelector(':scope > .icon-pack-shell');
-      if(!shell){shell=document.createElement('div');shell.className='icon-pack-shell';const row=settings.querySelector('.compact-settings-row');settings.insertBefore(shell,row||null)}
+      if(shell)return;
+      shell=document.createElement('div');shell.className='icon-pack-shell';
+      const row=settings.querySelector('.compact-settings-row');settings.insertBefore(shell,row||null);
       renderShell(shell);
     });
   }
@@ -30,12 +32,26 @@
   function applyLandingPack(){
     const gabby=P.getSelected()==='gabby-cats';
     document.querySelectorAll('#board .sym').forEach(el=>{
-      const source=el.dataset.packSource??el.textContent;if(!el.dataset.packSource)el.dataset.packSource=source;
-      if(gabby)P.applyPreview(el,source);else P.restorePreview(el);
+      const source=el.dataset.packSource??el.textContent;
+      if(el.dataset.packSource==null)el.dataset.packSource=source;
+      if(gabby){
+        if(el.dataset.iconPack==='gabby-cats')return;
+        P.applyPreview(el,source);
+      }else{
+        if(el.dataset.iconPack!=='gabby-cats')return;
+        P.restorePreview(el);
+      }
     });
   }
   function refresh(){ensureStyle();injectSettings();applyLandingPack()}
   const root=document.querySelector('.landing')||document.body;
-  const observer=new MutationObserver(()=>refresh());observer.observe(root,{subtree:true,childList:true});
-  window.addEventListener('double-icon-pack-change',refresh);refresh();
+  let queued=false;
+  const observer=new MutationObserver(()=>{
+    if(queued)return;
+    queued=true;
+    requestAnimationFrame(()=>{queued=false;refresh()});
+  });
+  observer.observe(root,{subtree:true,childList:true});
+  window.addEventListener('double-icon-pack-change',()=>{renderAll();applyLandingPack()});
+  refresh();
 })();
