@@ -153,7 +153,7 @@
 
     const candidates=Array.from(card.querySelectorAll('*')).filter(el=>{
       if(el.closest('button,.score-card-menu')) return false;
-      return /^\d{1,4}$/u.test((el.textContent||'').trim());
+      return /^-?\d{1,4}$/u.test((el.textContent||'').trim());
     });
     if(!candidates.length) return null;
     candidates.sort((a,b)=>{
@@ -277,13 +277,56 @@
     const originalParents=[plus.parentElement,minus.parentElement,score.parentElement];
     if(mega) originalParents.push(mega.parentElement);
 
+    const scoreSourceIsInput=score.matches('input');
+    const scoreSourceValue=()=>{
+      if(scoreSourceIsInput) return String(score.value ?? '0');
+      const text=(score.textContent||'').trim();
+      const match=text.match(/-?\d+/u);
+      return match ? match[0] : '0';
+    };
+
+    const scoreDisplay=document.createElement('input');
+    scoreDisplay.type='number';
+    scoreDisplay.step='1';
+    scoreDisplay.inputMode='numeric';
+    scoreDisplay.className='score-board-value';
+    scoreDisplay.setAttribute('aria-label',score.getAttribute('aria-label')||'ניקוד');
+    scoreDisplay.value=scoreSourceValue();
+    scoreDisplay.readOnly=!scoreSourceIsInput || !!score.disabled;
+    if(scoreDisplay.readOnly) scoreDisplay.setAttribute('aria-readonly','true');
+
+    const syncScoreWidth=()=>{
+      const digits=Math.max(1,String(scoreDisplay.value||'0').trim().length);
+      scoreDisplay.style.setProperty('--score-digits',String(digits));
+    };
+    syncScoreWidth();
+    scoreDisplay.addEventListener('input',syncScoreWidth);
+    scoreDisplay.addEventListener('focus',()=>{
+      if(!scoreDisplay.readOnly) scoreDisplay.select();
+    });
+    scoreDisplay.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        scoreDisplay.blur();
+      }else if(e.key==='Escape'){
+        e.preventDefault();
+        scoreDisplay.value=scoreSourceValue();
+        syncScoreWidth();
+        scoreDisplay.blur();
+      }
+    });
+    scoreDisplay.addEventListener('blur',()=>{
+      if(!scoreSourceIsInput || scoreDisplay.readOnly) return;
+      score.value=scoreDisplay.value;
+      score.dispatchEvent(new Event('blur'));
+    });
+
     const row=document.createElement('div');
     row.className='score-board-row';
     minus.classList.add('score-board-minus');
     plus.classList.add('score-board-plus');
-    score.classList.add('score-board-value');
     row.appendChild(minus);
-    row.appendChild(score);
+    row.appendChild(scoreDisplay);
     row.appendChild(plus);
 
     if(anchor) card.insertBefore(row,anchor);
@@ -295,6 +338,14 @@
       megaRow.appendChild(mega);
       row.after(megaRow);
     }
+
+    const sourceHost=document.createElement('div');
+    sourceHost.className='score-board-source-host';
+    score.classList.add('score-board-source');
+    score.setAttribute('aria-hidden','true');
+    score.tabIndex=-1;
+    sourceHost.appendChild(score);
+    card.appendChild(sourceHost);
 
     originalParents.forEach(parent=>removeEmptyContainer(parent,card));
 
