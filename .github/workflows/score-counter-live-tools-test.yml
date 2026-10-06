@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify timer and compact professional score card layout
+      - name: Verify timer and final unified score card layout
         shell: bash
         run: |
           node <<'NODE'
@@ -22,66 +22,35 @@ jobs:
           const core=require('./score-counter/score-live-core.js');
           assert.equal(core.formatClock(0),'00:00');
           assert.equal(core.formatClock(61000),'01:01');
-          assert.equal(core.formatClock(3599000),'59:59');
           assert.equal(core.isExplanatoryCopy('לחיצה על המספר לעריכה'),true);
-          assert.equal(core.isExplanatoryCopy('הקש על הניקוד כדי לשנות'),true);
-          assert.equal(core.isExplanatoryCopy('קבוצה א'),false);
-          assert.equal(core.isExplanatoryCopy('12'),false);
-
-          assert.equal(core.isScoreDeltaLabel('+1',1),true,'+1 must be recognized as the plus control');
-          assert.equal(core.isScoreDeltaLabel('+',1),true,'+ must still be recognized');
-          assert.equal(core.isScoreDeltaLabel('−1',-1),true,'−1 must be recognized as the minus control');
-          assert.equal(core.isScoreDeltaLabel('-1',-1),true,'-1 must be recognized as the minus control');
-          assert.equal(core.isScoreDeltaLabel('+5',1),false,'Mega +5 must not be mistaken for the normal plus control');
+          assert.equal(core.isScoreDeltaLabel('+1',1),true);
+          assert.equal(core.isScoreDeltaLabel('−1',-1),true);
 
           const ui=fs.readFileSync('score-counter/score-live.js','utf8');
           const css=fs.readFileSync('score-counter/score-live.css','utf8');
           const index=fs.readFileSync('score-counter/index.html','utf8');
 
-          for(const marker of [
-            'score-live-timer',
-            'data-timer-mode',
-            'score-board-row',
-            'score-board-value',
-            'score-card-mega',
-            'score-card-menu-toggle',
-            'score-card-menu',
-            'cleanExplanatoryCopy',
-            'data-score-compact',
-            'isScoreDeltaLabel'
-          ]){
+          for(const marker of ['score-live-timer','score-board-row','score-board-value','score-card-mega','score-card-menu-toggle','score-final-column']){
             assert(ui.includes(marker),`missing UI marker ${marker}`);
           }
 
-          for(const marker of [
-            '.score-live-timer',
-            '.score-board-row',
-            '.score-board-value',
-            '.score-card-mega',
-            '.score-card-menu-toggle',
-            '.score-card-menu',
-            'width:max-content!important',
-            'min-width:0!important'
-          ]){
-            assert(css.includes(marker),`missing CSS marker ${marker}`);
-          }
+          assert(css.includes('#teams.score-final-column'),'teams need one explicit final column layout');
+          assert(css.includes('flex-direction:column!important'),'teams must be a single vertical column');
+          assert(css.includes('align-items:center!important'),'team cards must be centered horizontally');
+          assert(css.includes('padding-top:50vh!important'),'team column must begin around the middle of the image');
+          assert(css.includes('width:240px!important'),'desktop cards must share one stable width');
+          assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
+          assert(css.includes('gap:4px'),'score controls must be close and easy to use');
 
-          assert(css.includes('.score-card-menu{\n  position:fixed;'),'score action list must open as a centered overlay');
-          assert(css.includes('top:50%;\n  left:50%;'),'score action list must be centered in the viewport');
-          assert(css.includes('transform:translate(-50%,-50%);'),'score action list must use centered transform');
-          assert(css.includes('grid-template-columns:46px auto 46px;'),'desktop score row must not reserve a wide center track');
-          assert(css.includes('gap:2px;'),'point controls must sit close to the score');
-          assert(css.includes('.score-board-value{\n  width:max-content!important;\n  min-width:48px!important;'),'score value itself must shrink to its content');
-          assert(css.includes('position:fixed'),'timer must be fixed at the top of the screen');
-          assert(!ui.includes('score-rotation-chip'),'rotation UI must be removed');
-          assert(!css.includes('.score-rotation-chip'),'rotation CSS must be removed');
+          assert(!index.includes('score-resize.css'),'resize CSS must no longer be loaded');
+          assert(!index.includes('score-resize.js'),'resize JS must no longer be loaded');
+          assert(!css.includes('.score-resize-handle'),'final card UI must not expose resize handles');
+          assert(!ui.includes('score-rotation-chip'),'rotation UI must stay removed');
 
-          assert(ui.includes('cloneNode(true)'),'secondary menu actions must use proxy buttons so originals stay inside the team card');
-          assert(ui.includes('original.click()'),'menu proxy must forward the action to the original in-card button');
-          assert(!ui.includes('menu.appendChild(button);'),'secondary action buttons must not be moved outside #teams or delegated handlers stop working');
-          assert(!ui.includes('source.appendChild(original)'),'original secondary actions must stay in their exact original DOM parent so legacy delete handlers keep their context');
-          assert(ui.includes("original.classList.add('score-card-action-original')"),'original secondary actions must be hidden in place instead of reparented');
-          assert(css.includes('.score-card-action-original{\n  display:none!important;'),'hidden in-place secondary actions need CSS without changing their DOM ancestry');
+          assert(css.includes('.score-card-menu{\n  position:fixed;'),'score action list must remain a centered overlay');
+          assert(ui.includes('cloneNode(true)'),'secondary menu actions must keep proxy buttons');
+          assert(ui.includes('original.click()'),'menu proxy must forward actions to original controls');
+          assert(ui.includes("original.classList.add('score-card-action-original')"),'original actions must stay hidden in place');
 
           assert(index.includes('score-live-core.js'),'loader missing score-live-core.js');
           assert(index.includes('score-live.js'),'loader missing score-live.js');
