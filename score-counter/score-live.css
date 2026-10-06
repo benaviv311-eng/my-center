@@ -152,44 +152,65 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   grid-column:auto!important;
   float:none!important;
   transform:none!important;
-  display:grid!important;
-  place-items:center!important;
-  width:max-content!important;
+  display:block!important;
+  --score-digits:1;
+  width:var(--score-width,48px)!important;
   min-width:48px!important;
-  max-width:none!important;
+  max-width:128px!important;
   min-height:0!important;
-  height:auto!important;
+  height:58px!important;
   margin:0!important;
   padding:0!important;
+  box-sizing:border-box!important;
+  appearance:textfield!important;
+  -moz-appearance:textfield;
   background:transparent!important;
   border:0!important;
   border-radius:0!important;
   box-shadow:none!important;
+  outline:none!important;
+  color:#fff!important;
+  caret-color:#fff!important;
   text-align:center!important;
-  font-size:58px!important;
-  font-weight:900!important;
-  line-height:.95!important;
+  font:900 58px/.95 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
   letter-spacing:-2px!important;
   font-variant-numeric:tabular-nums!important;
   direction:ltr!important;
   white-space:nowrap!important;
+  cursor:text!important;
 }
-.score-board-value *{
-  position:static!important;
-  inset:auto!important;
-  float:none!important;
-  transform:none!important;
-  width:auto!important;
+.score-board-value[readonly]{cursor:default!important}
+.score-board-value::-webkit-outer-spin-button,
+.score-board-value::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.score-board-source-host{
+  position:absolute!important;
+  width:0!important;
   min-width:0!important;
-  max-width:none!important;
+  height:0!important;
   min-height:0!important;
-  height:auto!important;
   margin:0!important;
   padding:0!important;
-  background:transparent!important;
+  overflow:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.score-board-source{
+  position:absolute!important;
+  inset:0!important;
+  width:0!important;
+  min-width:0!important;
+  max-width:0!important;
+  height:0!important;
+  min-height:0!important;
+  max-height:0!important;
+  margin:0!important;
+  padding:0!important;
   border:0!important;
-  border-radius:0!important;
-  box-shadow:none!important;
+  opacity:0!important;
+  pointer-events:none!important;
 }
 .score-card-mega{
   display:flex!important;
@@ -288,7 +309,12 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
     border-radius:13px!important;
     font-size:27px!important;
   }
-  .score-board-value{min-width:46px!important;font-size:54px!important}
+  .score-board-value{
+    min-width:46px!important;
+    max-width:118px!important;
+    height:54px!important;
+    font-size:54px!important;
+  }
   .score-card-mega > button{min-width:100px!important;min-height:32px!important;font-size:11px!important}
   .score-card-menu-toggle{top:5px!important;left:5px!important;width:27px!important;min-width:27px!important;height:27px!important;min-height:27px!important}
   .score-card-menu{width:min(228px,calc(100vw - 24px));padding:8px}
