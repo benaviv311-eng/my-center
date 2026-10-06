@@ -28,5 +28,11 @@
     return Math.round((m*60+s)*1000);
   }
 
-  return {formatClock,nextRotation,clockMs};
+  function isExplanatoryCopy(value){
+    const text=String(value||'').replace(/\s+/g,' ').trim();
+    if(!text || /^\d+(?::\d+)?$/u.test(text)) return false;
+    return /(לחיצה|לחצו|הקש|הקישו|כדי\s+(?:ל|ש)|לעריכה|לשינוי|לשנות|גררו|גרירה|לחיצה\s+ארוכה|tap\s+to|click\s+to|press\s+to|drag\s+to)/iu.test(text);
+  }
+
+  return {formatClock,nextRotation,clockMs,isExplanatoryCopy};
 });
