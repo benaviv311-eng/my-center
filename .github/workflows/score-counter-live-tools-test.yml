@@ -1,0 +1,45 @@
+name: Score Counter live tools test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score-counter/index.html'
+      - 'score-counter/score-live-core.js'
+      - 'score-counter/score-live.js'
+      - 'score-counter/score-live.css'
+      - '.github/workflows/score-counter-live-tools-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify timer core and rotation logic
+        shell: bash
+        run: |
+          node <<'NODE'
+          const assert=require('assert');
+          const fs=require('fs');
+          const core=require('./score-counter/score-live-core.js');
+          assert.equal(core.formatClock(0),'00:00');
+          assert.equal(core.formatClock(61000),'01:01');
+          assert.equal(core.formatClock(3599000),'59:59');
+          assert.equal(core.nextRotation(1,1),2);
+          assert.equal(core.nextRotation(6,1),1);
+          assert.equal(core.nextRotation(1,-1),6);
+          assert.equal(core.nextRotation(4,-1),3);
+
+          const ui=fs.readFileSync('score-counter/score-live.js','utf8');
+          const css=fs.readFileSync('score-counter/score-live.css','utf8');
+          const index=fs.readFileSync('score-counter/index.html','utf8');
+          for(const marker of ['score-live-timer','data-timer-mode','score-rotation-chip','score-rotation-prev','score-rotation-next']){
+            assert(ui.includes(marker),`missing UI marker ${marker}`);
+          }
+          for(const marker of ['.score-live-timer','.score-rotation-chip']){
+            assert(css.includes(marker),`missing CSS marker ${marker}`);
+          }
+          assert(index.includes('score-live-core.js'),'loader missing score-live-core.js');
+          assert(index.includes('score-live.js'),'loader missing score-live.js');
+          assert(index.includes('score-live.css'),'loader missing score-live.css');
+          NODE
+          node --check score-counter/score-live-core.js
+          node --check score-counter/score-live.js
