@@ -237,7 +237,6 @@
 
   function professionalizeCard(card){
     if(card.getAttribute('data-score-professional')==='1') return;
-    card.querySelectorAll('.score-rotation-chip').forEach(el=>el.remove());
 
     const buttons=Array.from(card.querySelectorAll('button')).filter(button=>
       !button.closest('.score-resize-handle,.score-size-menu,.score-card-menu')
