@@ -28,6 +28,12 @@ jobs:
           assert.equal(core.isExplanatoryCopy('קבוצה א'),false);
           assert.equal(core.isExplanatoryCopy('12'),false);
 
+          assert.equal(core.isScoreDeltaLabel('+1',1),true,'+1 must be recognized as the plus control');
+          assert.equal(core.isScoreDeltaLabel('+',1),true,'+ must still be recognized');
+          assert.equal(core.isScoreDeltaLabel('−1',-1),true,'−1 must be recognized as the minus control');
+          assert.equal(core.isScoreDeltaLabel('-1',-1),true,'-1 must be recognized as the minus control');
+          assert.equal(core.isScoreDeltaLabel('+5',1),false,'Mega +5 must not be mistaken for the normal plus control');
+
           const ui=fs.readFileSync('score-counter/score-live.js','utf8');
           const css=fs.readFileSync('score-counter/score-live.css','utf8');
           const index=fs.readFileSync('score-counter/index.html','utf8');
@@ -41,7 +47,8 @@ jobs:
             'score-card-menu-toggle',
             'score-card-menu',
             'cleanExplanatoryCopy',
-            'data-score-compact'
+            'data-score-compact',
+            'isScoreDeltaLabel'
           ]){
             assert(ui.includes(marker),`missing UI marker ${marker}`);
           }
@@ -59,6 +66,10 @@ jobs:
             assert(css.includes(marker),`missing CSS marker ${marker}`);
           }
 
+          assert(css.includes('.score-card-menu{\n  position:fixed;'),'score action list must open as a centered overlay');
+          assert(css.includes('top:50%;\n  left:50%;'),'score action list must be centered in the viewport');
+          assert(css.includes('transform:translate(-50%,-50%);'),'score action list must use centered transform');
+          assert(css.includes('gap:6px;'),'point controls should be visually tighter around the score');
           assert(css.includes('position:fixed'),'timer must be fixed at the top of the screen');
           assert(!ui.includes('score-rotation-chip'),'rotation UI must be removed');
           assert(!css.includes('.score-rotation-chip'),'rotation CSS must be removed');
