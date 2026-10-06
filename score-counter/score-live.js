@@ -4,6 +4,7 @@
   if(!core || !teams) return;
 
   const DEFAULT_COUNTDOWN_MS=5*60*1000;
+  teams.classList.add('score-final-column');
 
   function buildTimer(){
     if(document.querySelector('.score-live-timer')) return;
@@ -151,7 +152,7 @@
     }
 
     const candidates=Array.from(card.querySelectorAll('*')).filter(el=>{
-      if(el.closest('button,.score-size-menu,.score-resize-handle,.score-card-menu')) return false;
+      if(el.closest('button,.score-card-menu')) return false;
       return /^\d{1,4}$/u.test((el.textContent||'').trim());
     });
     if(!candidates.length) return null;
@@ -193,7 +194,7 @@
   }
 
   function cleanExplanatoryCopy(card){
-    const protectedSelector='button,input,.score-board-row,.score-card-mega,.score-card-menu,.score-card-menu-toggle,.score-size-menu,.score-resize-handle';
+    const protectedSelector='button,input,.score-board-row,.score-card-mega,.score-card-menu,.score-card-menu-toggle';
     card.querySelectorAll('.hint,.help,.helper,.description,.score-hint,[data-help]').forEach(el=>{
       if(!el.closest(protectedSelector)) el.remove();
     });
@@ -201,7 +202,6 @@
       if(el===card || el.children.length || el.closest(protectedSelector)) return;
       if(core.isExplanatoryCopy(el.textContent||'')) el.remove();
     });
-    card.setAttribute('data-score-compact','1');
   }
 
   function buildMenu(card,actions){
@@ -261,10 +261,11 @@
 
   function professionalizeCard(card){
     if(card.getAttribute('data-score-professional')==='1') return;
+    card.querySelectorAll('.score-resize-handle,.score-size-menu').forEach(el=>el.remove());
     cleanExplanatoryCopy(card);
 
     const buttons=Array.from(card.querySelectorAll('button')).filter(button=>
-      !button.closest('.score-resize-handle,.score-size-menu,.score-card-menu')
+      !button.closest('.score-card-menu')
     );
     const plus=buttons.find(isPlusButton);
     const minus=buttons.find(isMinusButton);
@@ -303,6 +304,9 @@
     cleanExplanatoryCopy(card);
     card.classList.add('score-card-professional');
     card.setAttribute('data-score-professional','1');
+    card.style.removeProperty('width');
+    card.style.removeProperty('height');
+    card.style.removeProperty('transform');
   }
 
   function cleanupOrphanMenus(){
@@ -312,6 +316,7 @@
   }
 
   function attachProfessionalCards(){
+    teams.classList.add('score-final-column');
     teams.querySelectorAll(':scope > .card').forEach(professionalizeCard);
     cleanupOrphanMenus();
   }
