@@ -69,7 +69,9 @@ jobs:
           assert(css.includes('.score-card-menu{\n  position:fixed;'),'score action list must open as a centered overlay');
           assert(css.includes('top:50%;\n  left:50%;'),'score action list must be centered in the viewport');
           assert(css.includes('transform:translate(-50%,-50%);'),'score action list must use centered transform');
-          assert(css.includes('gap:6px;'),'point controls should be visually tighter around the score');
+          assert(css.includes('grid-template-columns:46px auto 46px;'),'desktop score row must not reserve a wide center track');
+          assert(css.includes('gap:2px;'),'point controls must sit close to the score');
+          assert(css.includes('.score-board-value{\n  width:max-content!important;\n  min-width:48px!important;'),'score value itself must shrink to its content');
           assert(css.includes('position:fixed'),'timer must be fixed at the top of the screen');
           assert(!ui.includes('score-rotation-chip'),'rotation UI must be removed');
           assert(!css.includes('.score-rotation-chip'),'rotation CSS must be removed');
