@@ -1,57 +1,33 @@
-name: Score Counter drag test
+name: Score Counter centered column test
 on:
   push:
     branches: [main]
     paths:
       - 'score-counter/index.html'
-      - 'score-counter/score-drag.js'
-      - 'score-counter/score-drag.css'
+      - 'score-counter/score-live.css'
+      - 'score-counter/score-live.js'
       - '.github/workflows/score-counter-drag-test.yml'
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify whole-card long-press dragging
+      - name: Verify cards stay in one centered column
         shell: bash
         run: |
           node <<'NODE'
+          const assert=require('assert');
           const fs=require('fs');
           const index=fs.readFileSync('score-counter/index.html','utf8');
-          if(!fs.existsSync('score-counter/score-drag.js')){
-            console.error('Missing score-counter/score-drag.js');
-            process.exit(1);
-          }
-          const js=fs.readFileSync('score-counter/score-drag.js','utf8');
-          const css=fs.readFileSync('score-counter/score-drag.css','utf8');
-          const required=[
-            'team-score-card-positions-v1',
-            'LONG_PRESS_MS=380',
-            'MOVE_CANCEL_PX=28',
-            'data-score-drag-ready',
-            'latestClientX',
-            'latestClientY',
-            'startClientX=latestClientX',
-            'startClientY=latestClientY',
-            'suppressNextClick',
-            'score-resize-handle,.score-size-menu',
-            "card.addEventListener('pointerdown'",
-            "card.addEventListener('pointermove'",
-            "card.addEventListener('pointerup'",
-            "card.addEventListener('click'",
-            "scale('+scale.toFixed(3)+')",
-            'איפוס מיקום הכרטיסים',
-            'MutationObserver'
-          ];
-          const missing=required.filter(x=>!js.includes(x));
-          if(js.includes("e.pointerType==='touch'")) missing.push('touch pointer path still bypassed');
-          if(js.includes('isInteractive(e.target)')) missing.push('interactive card content still blocks long-press drag');
-          if(!css.includes('touch-action:pan-y')) missing.push('touch-action:pan-y');
-          if(!index.includes('score-drag.js') || !index.includes('score-drag.css')) missing.push('loader assets');
-          if(missing.length){
-            console.error('Missing whole-card drag behavior:', missing.join(', '));
-            process.exit(1);
-          }
-          console.log('Whole-card long-press drag markers present with resize scale composition.');
+          const css=fs.readFileSync('score-counter/score-live.css','utf8');
+          const js=fs.readFileSync('score-counter/score-live.js','utf8');
+          assert(!index.includes('score-drag.js'),'drag JS must not be loaded in the fixed column view');
+          assert(!index.includes('score-drag.css'),'drag CSS must not be loaded in the fixed column view');
+          assert(js.includes("teams.classList.add('score-final-column')"),'final column class must be applied');
+          assert(css.includes('#teams.score-final-column'),'final column CSS missing');
+          assert(css.includes('flex-direction:column!important'),'cards must form one vertical column');
+          assert(css.includes('align-items:center!important'),'cards must stay horizontally centered');
+          assert(css.includes('transform:none!important'),'old drag transforms must not affect the final layout');
+          assert(css.includes('padding:50vh 12px 56px!important'),'column must begin around the middle of the image');
           NODE
-          node --check score-counter/score-drag.js
+          node --check score-counter/score-live.js
