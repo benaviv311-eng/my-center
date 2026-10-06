@@ -3,15 +3,7 @@
   const teams=document.getElementById('teams');
   if(!core || !teams) return;
 
-  const ROTATION_STORAGE_KEY='team-score-rotations-v1';
   const DEFAULT_COUNTDOWN_MS=5*60*1000;
-  let rotations={};
-  try{
-    const saved=JSON.parse(localStorage.getItem(ROTATION_STORAGE_KEY)||'{}');
-    rotations=saved && typeof saved==='object' ? saved : {};
-  }catch{}
-  const saveRotations=()=>{try{localStorage.setItem(ROTATION_STORAGE_KEY,JSON.stringify(rotations));}catch{}};
-  const cardId=card=>card.querySelector('.delete-team')?.dataset.teamId || card.dataset.dragTeamId || '';
 
   function buildTimer(){
     if(document.querySelector('.score-live-timer')) return;
@@ -87,10 +79,7 @@
     });
 
     play.addEventListener('click',()=>{
-      if(running){
-        pause();
-        return;
-      }
+      if(running){pause();return;}
       if(timerMode==='down' && baseMs<=0) baseMs=countdownPresetMs;
       startedAt=Date.now();
       running=true;
@@ -129,48 +118,180 @@
     render();
   }
 
-  function buildRotationChip(card,id){
-    if(!id || card.querySelector('.score-rotation-chip')) return;
-    const current=Number(rotations[id]);
-    const rotation=Number.isFinite(current) && current>=1 && current<=6 ? current : 1;
-    rotations[id]=rotation;
+  const descriptor=el=>[
+    el.textContent,
+    el.getAttribute('aria-label'),
+    el.getAttribute('title'),
+    el.id,
+    typeof el.className==='string'?el.className:''
+  ].filter(Boolean).join(' ').trim().toLowerCase();
 
-    const chip=document.createElement('div');
-    chip.className='score-rotation-chip';
-    chip.dataset.teamId=id;
-    chip.innerHTML='\
-      <button type="button" class="score-rotation-prev" aria-label="רוטציה קודמת">‹</button>\
-      <span class="score-rotation-label">רוטציה <b>'+rotation+'</b>/6</span>\
-      <button type="button" class="score-rotation-next" aria-label="רוטציה הבאה">›</button>';
+  const isMegaButton=button=>/(mega|מגה)/i.test(descriptor(button));
+  const isPlusButton=button=>{
+    if(isMegaButton(button)) return false;
+    const text=(button.textContent||'').trim();
+    return /^\+$/u.test(text) || /(plus|increment|הוסף|הוספת נקודה)/i.test(descriptor(button));
+  };
+  const isMinusButton=button=>{
+    const text=(button.textContent||'').trim();
+    return /^[-−–]$/u.test(text) || /(minus|decrement|הפחת|הורד)/i.test(descriptor(button));
+  };
+  const isSecondaryAction=button=>{
+    const text=descriptor(button);
+    return button.classList.contains('delete-team') || /(delete|remove|trash|מחק|מחיקה|edit|ערוך|עריכה|reset|איפוס)/i.test(text);
+  };
 
-    const label=chip.querySelector('.score-rotation-label b');
-    const update=delta=>{
-      const next=core.nextRotation(rotations[id]||1,delta);
-      rotations[id]=next;
-      label.textContent=String(next);
-      saveRotations();
+  function findScoreValue(card){
+    const selectors=[
+      '.score-value','.team-score','.score-number','.points-value','.points','.score','[data-role="score"]','[data-score]'
+    ];
+    for(const selector of selectors){
+      const found=card.querySelector(selector);
+      if(found && !found.closest('button')) return found;
+    }
+
+    const candidates=Array.from(card.querySelectorAll('*')).filter(el=>{
+      if(el.closest('button,.score-size-menu,.score-resize-handle,.score-card-menu')) return false;
+      return /^\d{1,4}$/u.test((el.textContent||'').trim());
+    });
+    if(!candidates.length) return null;
+    candidates.sort((a,b)=>{
+      const aSize=parseFloat(getComputedStyle(a).fontSize)||0;
+      const bSize=parseFloat(getComputedStyle(b).fontSize)||0;
+      return bSize-aSize;
+    });
+    return candidates[0];
+  }
+
+  function directCardChild(node,card){
+    let current=node;
+    while(current && current.parentElement && current.parentElement!==card){
+      current=current.parentElement;
+    }
+    return current && current.parentElement===card ? current : null;
+  }
+
+  function earliestAnchor(card,nodes){
+    const children=Array.from(card.children);
+    const direct=nodes.map(node=>directCardChild(node,card)).filter(Boolean);
+    direct.sort((a,b)=>children.indexOf(a)-children.indexOf(b));
+    return direct[0]||null;
+  }
+
+  function removeEmptyContainer(node,card){
+    let current=node;
+    while(current && current!==card){
+      const parent=current.parentElement;
+      const meaningfulText=(current.textContent||'').trim();
+      if(current.childElementCount===0 && !meaningfulText){
+        current.remove();
+        current=parent;
+        continue;
+      }
+      break;
+    }
+  }
+
+  function buildMenu(card,actions){
+    if(card.querySelector('.score-card-menu-toggle')) return;
+    const toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.className='score-card-menu-toggle';
+    toggle.setAttribute('aria-label','פעולות נוספות');
+    toggle.setAttribute('aria-expanded','false');
+    toggle.textContent='⋯';
+
+    const menu=document.createElement('div');
+    menu.className='score-card-menu';
+    menu.hidden=true;
+
+    actions.forEach(button=>{
+      const oldParent=button.parentElement;
+      menu.appendChild(button);
+      removeEmptyContainer(oldParent,card);
+    });
+
+    const setOpen=open=>{
+      menu.hidden=!open;
+      toggle.setAttribute('aria-expanded',open?'true':'false');
     };
 
-    chip.querySelector('.score-rotation-prev').addEventListener('click',e=>{
-      e.preventDefault();e.stopPropagation();update(-1);
+    toggle.addEventListener('pointerdown',e=>e.stopPropagation());
+    menu.addEventListener('pointerdown',e=>e.stopPropagation());
+    toggle.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.score-card-menu:not([hidden])').forEach(other=>{
+        if(other!==menu) other.hidden=true;
+      });
+      document.querySelectorAll('.score-card-menu-toggle[aria-expanded="true"]').forEach(other=>{
+        if(other!==toggle) other.setAttribute('aria-expanded','false');
+      });
+      setOpen(menu.hidden);
     });
-    chip.querySelector('.score-rotation-next').addEventListener('click',e=>{
-      e.preventDefault();e.stopPropagation();update(1);
-    });
-    chip.addEventListener('pointerdown',e=>e.stopPropagation());
-    chip.addEventListener('click',e=>e.stopPropagation());
-    card.appendChild(chip);
+    menu.addEventListener('click',e=>e.stopPropagation());
+
+    card.appendChild(toggle);
+    card.appendChild(menu);
   }
 
-  function attachRotations(){
-    teams.querySelectorAll(':scope > .card').forEach(card=>{
-      const id=cardId(card);
-      if(id) buildRotationChip(card,id);
-    });
+  function professionalizeCard(card){
+    if(card.getAttribute('data-score-professional')==='1') return;
+    card.querySelectorAll('.score-rotation-chip').forEach(el=>el.remove());
+
+    const buttons=Array.from(card.querySelectorAll('button')).filter(button=>
+      !button.closest('.score-resize-handle,.score-size-menu,.score-card-menu')
+    );
+    const plus=buttons.find(isPlusButton);
+    const minus=buttons.find(isMinusButton);
+    const mega=buttons.find(isMegaButton);
+    const score=findScoreValue(card);
+    if(!plus || !minus || !score) return;
+
+    const anchor=earliestAnchor(card,[plus,minus,mega,score].filter(Boolean));
+    const originalParents=[plus.parentElement,minus.parentElement,score.parentElement];
+    if(mega) originalParents.push(mega.parentElement);
+
+    const row=document.createElement('div');
+    row.className='score-board-row';
+    minus.classList.add('score-board-minus');
+    plus.classList.add('score-board-plus');
+    score.classList.add('score-board-value');
+    row.appendChild(minus);
+    row.appendChild(score);
+    row.appendChild(plus);
+
+    if(anchor) card.insertBefore(row,anchor);
+    else card.appendChild(row);
+
+    if(mega){
+      const megaRow=document.createElement('div');
+      megaRow.className='score-card-mega';
+      megaRow.appendChild(mega);
+      row.after(megaRow);
+    }
+
+    originalParents.forEach(parent=>removeEmptyContainer(parent,card));
+
+    const secondary=buttons.filter(button=>button!==plus && button!==minus && button!==mega && isSecondaryAction(button));
+    if(secondary.length) buildMenu(card,secondary);
+
+    card.classList.add('score-card-professional');
+    card.setAttribute('data-score-professional','1');
   }
+
+  function attachProfessionalCards(){
+    teams.querySelectorAll(':scope > .card').forEach(professionalizeCard);
+  }
+
+  document.addEventListener('pointerdown',e=>{
+    if(e.target.closest && e.target.closest('.score-card-menu,.score-card-menu-toggle')) return;
+    document.querySelectorAll('.score-card-menu:not([hidden])').forEach(menu=>menu.hidden=true);
+    document.querySelectorAll('.score-card-menu-toggle[aria-expanded="true"]').forEach(toggle=>toggle.setAttribute('aria-expanded','false'));
+  },true);
 
   buildTimer();
-  attachRotations();
-  const observer=new MutationObserver(()=>requestAnimationFrame(attachRotations));
+  attachProfessionalCards();
+  const observer=new MutationObserver(()=>requestAnimationFrame(attachProfessionalCards));
   observer.observe(teams,{childList:true});
 })();
