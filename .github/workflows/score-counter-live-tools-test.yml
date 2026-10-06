@@ -75,6 +75,11 @@ jobs:
           assert(css.includes('position:fixed'),'timer must be fixed at the top of the screen');
           assert(!ui.includes('score-rotation-chip'),'rotation UI must be removed');
           assert(!css.includes('.score-rotation-chip'),'rotation CSS must be removed');
+
+          assert(ui.includes('cloneNode(true)'),'secondary menu actions must use proxy buttons so originals stay inside the team card');
+          assert(ui.includes('original.click()'),'menu proxy must forward the action to the original in-card button');
+          assert(!ui.includes('menu.appendChild(button);'),'secondary action buttons must not be moved outside #teams or delegated handlers stop working');
+
           assert(index.includes('score-live-core.js'),'loader missing score-live-core.js');
           assert(index.includes('score-live.js'),'loader missing score-live.js');
           assert(index.includes('score-live.css'),'loader missing score-live.css');
