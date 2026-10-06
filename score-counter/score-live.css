@@ -88,10 +88,10 @@
 }
 .score-board-row{
   display:grid!important;
-  grid-template-columns:46px minmax(74px,max-content) 46px;
+  grid-template-columns:46px auto 46px;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:2px;
   width:max-content;
   max-width:100%;
   margin:4px auto 5px;
@@ -111,9 +111,11 @@
   box-shadow:0 6px 16px rgba(0,0,0,.2)!important;
 }
 .score-board-value{
-  min-width:74px;
+  width:max-content!important;
+  min-width:48px!important;
+  max-width:none!important;
   margin:0!important;
-  padding:0 3px!important;
+  padding:0 1px!important;
   text-align:center!important;
   font-size:clamp(46px,10vw,76px)!important;
   font-weight:900!important;
@@ -201,8 +203,8 @@
   .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
   .card.score-card-professional{padding:8px 10px 9px!important}
   .score-board-row{
-    grid-template-columns:42px minmax(66px,max-content) 42px;
-    gap:4px;
+    grid-template-columns:42px auto 42px;
+    gap:1px;
     margin-top:2px;
   }
   .score-board-row > button{
@@ -213,7 +215,7 @@
     border-radius:13px!important;
     font-size:26px!important;
   }
-  .score-board-value{min-width:66px;font-size:clamp(42px,15vw,66px)!important}
+  .score-board-value{min-width:42px!important;font-size:clamp(42px,15vw,66px)!important}
   .score-card-mega > button{min-width:98px!important;min-height:30px!important;font-size:11px!important}
   .score-card-menu-toggle{top:4px!important;left:4px!important;width:25px!important;min-width:25px!important;height:25px!important;min-height:25px!important}
   .score-card-menu{width:min(228px,calc(100vw - 24px));padding:8px}
