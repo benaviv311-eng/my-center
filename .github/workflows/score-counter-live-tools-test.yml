@@ -37,7 +37,9 @@ jobs:
           assert(css.includes('#teams.score-final-column'),'teams need one explicit final column layout');
           assert(css.includes('flex-direction:column!important'),'teams must be a single vertical column');
           assert(css.includes('align-items:center!important'),'team cards must be centered horizontally');
-          assert(css.includes('padding-top:50vh!important'),'team column must begin around the middle of the image');
+          assert(css.includes('padding:108px 12px 56px!important'),'desktop team column must begin just below the top header');
+          assert(css.includes('padding-top:100px!important'),'mobile team column must begin just below the top header');
+          assert(!css.includes('padding-top:50vh!important'),'old mid-screen mobile offset must stay removed');
           assert(css.includes('width:240px!important'),'desktop cards must share one stable width');
           assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
           assert(css.includes('gap:4px'),'score controls must be close and easy to use');
