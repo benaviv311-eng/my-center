@@ -174,7 +174,7 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   direction:ltr!important;
   white-space:nowrap!important;
 }
-.score-board-value > *{
+.score-board-value *{
   position:static!important;
   inset:auto!important;
   float:none!important;
