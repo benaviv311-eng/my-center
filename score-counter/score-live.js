@@ -130,11 +130,11 @@
   const isPlusButton=button=>{
     if(isMegaButton(button)) return false;
     const text=(button.textContent||'').trim();
-    return /^\+$/u.test(text) || /(plus|increment|הוסף|הוספת נקודה)/i.test(descriptor(button));
+    return core.isScoreDeltaLabel(text,1) || /(plus|increment|הוסף|הוספת נקודה)/i.test(descriptor(button));
   };
   const isMinusButton=button=>{
     const text=(button.textContent||'').trim();
-    return /^[-−–]$/u.test(text) || /(minus|decrement|הפחת|הורד)/i.test(descriptor(button));
+    return core.isScoreDeltaLabel(text,-1) || /(minus|decrement|הפחת|הורד)/i.test(descriptor(button));
   };
   const isSecondaryAction=button=>{
     const text=descriptor(button);
@@ -216,6 +216,7 @@
     const menu=document.createElement('div');
     menu.className='score-card-menu';
     menu.hidden=true;
+    menu._scoreOwner=card;
 
     actions.forEach(button=>{
       const oldParent=button.parentElement;
@@ -241,10 +242,13 @@
       });
       setOpen(menu.hidden);
     });
-    menu.addEventListener('click',e=>e.stopPropagation());
+    menu.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(e.target.closest('button')) setOpen(false);
+    });
 
     card.appendChild(toggle);
-    card.appendChild(menu);
+    document.body.appendChild(menu);
   }
 
   function professionalizeCard(card){
@@ -293,8 +297,15 @@
     card.setAttribute('data-score-professional','1');
   }
 
+  function cleanupOrphanMenus(){
+    document.querySelectorAll('.score-card-menu').forEach(menu=>{
+      if(menu._scoreOwner && !menu._scoreOwner.isConnected) menu.remove();
+    });
+  }
+
   function attachProfessionalCards(){
     teams.querySelectorAll(':scope > .card').forEach(professionalizeCard);
+    cleanupOrphanMenus();
   }
 
   document.addEventListener('pointerdown',e=>{
