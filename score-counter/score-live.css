@@ -1,22 +1,25 @@
 .score-live-timer{
-  position:sticky;
-  top:6px;
-  z-index:78;
+  position:fixed;
+  top:max(6px,env(safe-area-inset-top));
+  left:50%;
+  transform:translateX(-50%);
+  z-index:120;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:5px;
   width:max-content;
   max-width:calc(100vw - 18px);
-  margin:6px auto 10px;
+  margin:0;
   padding:5px 7px;
   border:1px solid rgba(255,255,255,.16);
   border-radius:14px;
-  background:rgba(7,12,22,.82);
+  background:rgba(7,12,22,.88);
   box-shadow:0 8px 24px rgba(0,0,0,.28);
   backdrop-filter:blur(10px);
   direction:rtl;
 }
+.score-live-timer + #teams{margin-top:54px!important}
 .score-live-timer button{
   border:1px solid rgba(255,255,255,.13);
   background:rgba(255,255,255,.08);
@@ -66,11 +69,22 @@
   font:800 15px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
 }
 .score-live-timer.score-timer-finished{animation:scoreTimerPulse .3s ease 3}
-@keyframes scoreTimerPulse{50%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(248,113,113,.24)}}
+@keyframes scoreTimerPulse{50%{transform:translateX(-50%) scale(1.04);box-shadow:0 0 0 4px rgba(248,113,113,.24)}}
 
 .card.score-card-professional{
   position:relative;
   overflow:visible!important;
+  width:max-content!important;
+  min-width:0!important;
+  max-width:calc(100vw - 16px)!important;
+  min-height:0!important;
+  height:auto!important;
+  box-sizing:border-box!important;
+  margin-inline:auto!important;
+  padding:10px 12px 11px!important;
+}
+.card.score-card-professional[data-score-compact="1"]{
+  align-self:start;
 }
 .score-board-row{
   display:grid!important;
@@ -80,7 +94,7 @@
   gap:9px;
   width:max-content;
   max-width:100%;
-  margin:8px auto 5px;
+  margin:4px auto 5px;
   direction:ltr;
 }
 .score-board-row > button{
@@ -112,43 +126,44 @@
 .score-card-mega{
   display:flex;
   justify-content:center;
-  width:100%;
-  margin:0 auto 3px;
+  width:max-content;
+  max-width:100%;
+  margin:0 auto;
 }
 .score-card-mega > button{
   width:auto!important;
-  min-width:118px!important;
-  min-height:34px!important;
+  min-width:104px!important;
+  min-height:32px!important;
   margin:0!important;
-  padding:6px 14px!important;
+  padding:5px 12px!important;
   border-radius:999px!important;
-  font-size:13px!important;
+  font-size:12px!important;
   line-height:1!important;
   box-shadow:0 5px 14px rgba(0,0,0,.18)!important;
 }
 .score-card-menu-toggle{
   position:absolute!important;
-  top:7px!important;
-  left:7px!important;
+  top:5px!important;
+  left:5px!important;
   z-index:82!important;
-  width:30px!important;
-  min-width:30px!important;
-  height:30px!important;
-  min-height:30px!important;
+  width:27px!important;
+  min-width:27px!important;
+  height:27px!important;
+  min-height:27px!important;
   margin:0!important;
   padding:0!important;
   border:1px solid rgba(255,255,255,.14)!important;
-  border-radius:10px!important;
+  border-radius:9px!important;
   background:rgba(3,8,18,.44)!important;
   color:#fff!important;
-  font:900 20px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
+  font:900 18px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
   box-shadow:none!important;
   backdrop-filter:blur(6px);
 }
 .score-card-menu{
   position:absolute;
-  top:41px;
-  left:7px;
+  top:36px;
+  left:5px;
   z-index:84;
   display:grid;
   gap:5px;
@@ -174,14 +189,16 @@
 }
 
 @media (max-width:700px){
-  .score-live-timer{top:4px;gap:3px;padding:4px 5px;margin-bottom:7px}
+  .score-live-timer{top:max(4px,env(safe-area-inset-top));gap:3px;padding:4px 5px}
+  .score-live-timer + #teams{margin-top:48px!important}
   .score-live-timer button{min-height:30px;padding:4px 6px;font-size:11px}
   .score-timer-display{min-width:68px;font-size:20px!important}
   .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
+  .card.score-card-professional{padding:8px 10px 9px!important}
   .score-board-row{
     grid-template-columns:42px minmax(66px,max-content) 42px;
     gap:7px;
-    margin-top:6px;
+    margin-top:2px;
   }
   .score-board-row > button{
     width:42px!important;
@@ -192,7 +209,7 @@
     font-size:26px!important;
   }
   .score-board-value{min-width:66px;font-size:clamp(42px,15vw,66px)!important}
-  .score-card-mega > button{min-width:108px!important;min-height:32px!important;font-size:12px!important}
-  .score-card-menu-toggle{top:6px!important;left:6px!important;width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important}
-  .score-card-menu{top:38px;left:6px}
+  .score-card-mega > button{min-width:98px!important;min-height:30px!important;font-size:11px!important}
+  .score-card-menu-toggle{top:4px!important;left:4px!important;width:25px!important;min-width:25px!important;height:25px!important;min-height:25px!important}
+  .score-card-menu{top:33px;left:4px}
 }
