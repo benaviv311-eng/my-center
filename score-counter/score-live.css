@@ -80,7 +80,7 @@
   max-width:none!important;
   min-height:100vh!important;
   margin:0 auto!important;
-  padding:50vh 12px 56px!important;
+  padding:108px 12px 56px!important;
   box-sizing:border-box!important;
   column-count:auto!important;
   grid-template-columns:none!important;
@@ -288,7 +288,7 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   .score-live-timer button{min-height:30px;padding:4px 6px;font-size:11px}
   .score-timer-display{min-width:68px;font-size:20px!important}
   .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
-  #teams.score-final-column{gap:10px!important;padding-top:50vh!important;padding-inline:8px!important}
+  #teams.score-final-column{gap:10px!important;padding-top:100px!important;padding-inline:8px!important}
   #teams.score-final-column > .card.score-card-professional,
   body.projection-mode #teams.score-final-column > .card.score-card-professional{
     width:228px!important;
