@@ -13,6 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inspect legacy score markup
+        shell: bash
+        run: |
+          python <<'PY'
+          import base64, gzip, re
+          payload=''.join(open(f'team-score/t{i}.txt',encoding='utf-8').read().strip() for i in range(1,5))
+          html=gzip.decompress(base64.b64decode(payload)).decode('utf-8','replace')
+          print('legacy html chars:',len(html))
+          needles=['score-value','team-score','score-number','points-value','class="score"','data-score']
+          for needle in needles:
+              pos=html.find(needle)
+              if pos>=0:
+                  lo=max(0,pos-350); hi=min(len(html),pos+900)
+                  print(f'--- legacy snippet for {needle} ---')
+                  print(re.sub(r'\s+',' ',html[lo:hi]))
+          PY
       - name: Verify timer and final unified score card layout
         shell: bash
         run: |
@@ -42,13 +58,16 @@ jobs:
           assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
           assert(css.includes('gap:4px'),'score controls must be close and easy to use');
 
-          assert(css.includes('.score-board-row > button{\n  position:static!important;'),'minus and plus must stay in the score row');
-          assert(css.includes('.score-board-value{\n  position:static!important;'),'score value must sit normally between minus and plus');
+          assert(ui.includes("scoreDisplay.className='score-board-value'"),'score must use a new clean display node');
+          assert(ui.includes("score.classList.add('score-board-source')"),'legacy score node must be retained only as a hidden data source');
+          assert(ui.includes("row.appendChild(scoreDisplay)"),'clean score display must occupy the middle score cell');
+          assert(ui.includes("new MutationObserver(syncScoreDisplay)"),'clean display must follow legacy score mutations');
+          assert(!ui.includes("score.classList.add('score-board-value')"),'legacy score markup must never be reused as the visible center value');
+          assert(css.includes('.score-board-source-host{'),'legacy score source needs a zero-size hidden host');
+          assert(css.includes('.score-board-value{\n  position:static!important;'),'clean score value must sit normally between minus and plus');
           assert(css.includes('background:transparent!important'),'score value must not keep the legacy rectangle background');
           assert(css.includes('border:0!important'),'score value must not keep a legacy border');
           assert(css.includes('box-shadow:none!important'),'score value must not keep a legacy shadow');
-          assert(css.includes('.score-board-value *{'),'every nested score descendant must be neutralized so the number cannot escape the center cell');
-          assert(!css.includes('.score-board-value > *{'),'direct-child-only reset is insufficient for deeply nested legacy score markup');
 
           assert(!index.includes('score-resize.css'),'resize CSS must no longer be loaded');
           assert(!index.includes('score-resize.js'),'resize JS must no longer be loaded');
