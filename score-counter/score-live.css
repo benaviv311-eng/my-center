@@ -19,7 +19,6 @@
   backdrop-filter:blur(10px);
   direction:rtl;
 }
-.score-live-timer + #teams{margin-top:54px!important}
 .score-live-timer button{
   border:1px solid rgba(255,255,255,.13);
   background:rgba(255,255,255,.08);
@@ -71,31 +70,61 @@
 .score-live-timer.score-timer-finished{animation:scoreTimerPulse .3s ease 3}
 @keyframes scoreTimerPulse{50%{transform:translateX(-50%) scale(1.04);box-shadow:0 0 0 4px rgba(248,113,113,.24)}}
 
-.card.score-card-professional{
-  position:relative;
-  overflow:visible!important;
-  width:max-content!important;
-  min-width:0!important;
-  max-width:calc(100vw - 16px)!important;
+#teams.score-final-column{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:100vh!important;
+  margin:0 auto!important;
+  padding:50vh 12px 56px!important;
+  box-sizing:border-box!important;
+  column-count:auto!important;
+  grid-template-columns:none!important;
+}
+#teams.score-final-column > .card.score-card-professional,
+body.projection-mode #teams.score-final-column > .card.score-card-professional{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  width:240px!important;
+  min-width:240px!important;
+  max-width:calc(100vw - 24px)!important;
   min-height:0!important;
   height:auto!important;
+  margin:0!important;
+  padding:12px 14px 14px!important;
   box-sizing:border-box!important;
-  margin-inline:auto!important;
-  padding:10px 12px 11px!important;
+  overflow:visible!important;
+  transform:none!important;
+  inset:auto!important;
 }
-.card.score-card-professional[data-score-compact="1"]{
-  align-self:start;
+#teams.score-final-column > .card.score-card-professional > h1,
+#teams.score-final-column > .card.score-card-professional > h2,
+#teams.score-final-column > .card.score-card-professional > h3,
+#teams.score-final-column > .card.score-card-professional > h4{
+  width:100%!important;
+  margin:0 0 2px!important;
+  text-align:center!important;
+  font-size:16px!important;
+  line-height:1.15!important;
 }
 .score-board-row{
   display:grid!important;
-  grid-template-columns:46px auto 46px;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  width:max-content;
-  max-width:100%;
-  margin:4px auto 5px;
-  direction:ltr;
+  grid-template-columns:46px minmax(48px,max-content) 46px;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:2px auto 3px!important;
+  direction:ltr!important;
 }
 .score-board-row > button{
   width:46px!important;
@@ -108,16 +137,16 @@
   display:grid!important;
   place-items:center!important;
   font:900 28px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
-  box-shadow:0 6px 16px rgba(0,0,0,.2)!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.22)!important;
 }
 .score-board-value{
   width:max-content!important;
   min-width:48px!important;
   max-width:none!important;
   margin:0!important;
-  padding:0 1px!important;
+  padding:0!important;
   text-align:center!important;
-  font-size:clamp(46px,10vw,76px)!important;
+  font-size:58px!important;
   font-weight:900!important;
   line-height:.95!important;
   letter-spacing:-2px!important;
@@ -126,18 +155,18 @@
   white-space:nowrap!important;
 }
 .score-card-mega{
-  display:flex;
-  justify-content:center;
-  width:max-content;
-  max-width:100%;
-  margin:0 auto;
+  display:flex!important;
+  justify-content:center!important;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:0 auto!important;
 }
 .score-card-mega > button{
   width:auto!important;
   min-width:104px!important;
-  min-height:32px!important;
+  min-height:34px!important;
   margin:0!important;
-  padding:5px 12px!important;
+  padding:6px 13px!important;
   border-radius:999px!important;
   font-size:12px!important;
   line-height:1!important;
@@ -145,26 +174,24 @@
 }
 .score-card-menu-toggle{
   position:absolute!important;
-  top:5px!important;
-  left:5px!important;
+  top:6px!important;
+  left:6px!important;
   z-index:82!important;
-  width:27px!important;
-  min-width:27px!important;
-  height:27px!important;
-  min-height:27px!important;
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
   margin:0!important;
   padding:0!important;
   border:1px solid rgba(255,255,255,.14)!important;
   border-radius:9px!important;
-  background:rgba(3,8,18,.44)!important;
+  background:rgba(3,8,18,.5)!important;
   color:#fff!important;
   font:900 18px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
   box-shadow:none!important;
   backdrop-filter:blur(6px);
 }
-.score-card-action-original{
-  display:none!important;
-}
+.score-card-action-original{display:none!important}
 .score-card-menu{
   position:fixed;
   top:50%;
@@ -189,37 +216,43 @@
 .score-card-menu > button{
   width:100%!important;
   min-width:0!important;
-  min-height:38px!important;
+  min-height:40px!important;
   margin:0!important;
   padding:8px 11px!important;
   border-radius:9px!important;
-  font-size:12px!important;
+  font-size:13px!important;
   line-height:1!important;
   white-space:nowrap!important;
 }
 
 @media (max-width:700px){
   .score-live-timer{top:max(4px,env(safe-area-inset-top));gap:3px;padding:4px 5px}
-  .score-live-timer + #teams{margin-top:48px!important}
   .score-live-timer button{min-height:30px;padding:4px 6px;font-size:11px}
   .score-timer-display{min-width:68px;font-size:20px!important}
   .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
-  .card.score-card-professional{padding:8px 10px 9px!important}
+  #teams.score-final-column{gap:10px!important;padding-top:50vh!important;padding-inline:8px!important}
+  #teams.score-final-column > .card.score-card-professional,
+  body.projection-mode #teams.score-final-column > .card.score-card-professional{
+    width:228px!important;
+    min-width:228px!important;
+    max-width:calc(100vw - 16px)!important;
+    padding:10px 12px 12px!important;
+    gap:6px!important;
+  }
   .score-board-row{
-    grid-template-columns:42px auto 42px;
-    gap:1px;
-    margin-top:2px;
+    grid-template-columns:44px minmax(46px,max-content) 44px;
+    gap:3px;
   }
   .score-board-row > button{
-    width:42px!important;
-    min-width:42px!important;
-    height:42px!important;
-    min-height:42px!important;
+    width:44px!important;
+    min-width:44px!important;
+    height:44px!important;
+    min-height:44px!important;
     border-radius:13px!important;
-    font-size:26px!important;
+    font-size:27px!important;
   }
-  .score-board-value{min-width:42px!important;font-size:clamp(42px,15vw,66px)!important}
-  .score-card-mega > button{min-width:98px!important;min-height:30px!important;font-size:11px!important}
-  .score-card-menu-toggle{top:4px!important;left:4px!important;width:25px!important;min-width:25px!important;height:25px!important;min-height:25px!important}
+  .score-board-value{min-width:46px!important;font-size:54px!important}
+  .score-card-mega > button{min-width:100px!important;min-height:32px!important;font-size:11px!important}
+  .score-card-menu-toggle{top:5px!important;left:5px!important;width:27px!important;min-width:27px!important;height:27px!important;min-height:27px!important}
   .score-card-menu{width:min(228px,calc(100vw - 24px));padding:8px}
 }
