@@ -162,6 +162,9 @@
   box-shadow:none!important;
   backdrop-filter:blur(6px);
 }
+.score-card-action-original{
+  display:none!important;
+}
 .score-card-menu{
   position:fixed;
   top:50%;
