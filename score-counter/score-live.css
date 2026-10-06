@@ -91,7 +91,7 @@
   grid-template-columns:46px minmax(74px,max-content) 46px;
   align-items:center;
   justify-content:center;
-  gap:9px;
+  gap:6px;
   width:max-content;
   max-width:100%;
   margin:4px auto 5px;
@@ -113,7 +113,7 @@
 .score-board-value{
   min-width:74px;
   margin:0!important;
-  padding:0 5px!important;
+  padding:0 3px!important;
   text-align:center!important;
   font-size:clamp(46px,10vw,76px)!important;
   font-weight:900!important;
@@ -161,28 +161,33 @@
   backdrop-filter:blur(6px);
 }
 .score-card-menu{
-  position:absolute;
-  top:36px;
-  left:5px;
-  z-index:84;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  z-index:220;
   display:grid;
-  gap:5px;
-  min-width:132px;
-  padding:6px;
+  gap:6px;
+  width:min(240px,calc(100vw - 32px));
+  max-height:min(70vh,420px);
+  overflow:auto;
+  box-sizing:border-box;
+  padding:9px;
   border:1px solid rgba(255,255,255,.16);
-  border-radius:12px;
-  background:rgba(6,10,20,.96);
-  box-shadow:0 12px 30px rgba(0,0,0,.4);
-  backdrop-filter:blur(10px);
+  border-radius:14px;
+  background:rgba(6,10,20,.97);
+  box-shadow:0 18px 48px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px);
+  direction:rtl;
 }
 .score-card-menu[hidden]{display:none!important}
 .score-card-menu > button{
   width:100%!important;
   min-width:0!important;
-  min-height:34px!important;
+  min-height:38px!important;
   margin:0!important;
-  padding:7px 10px!important;
-  border-radius:8px!important;
+  padding:8px 11px!important;
+  border-radius:9px!important;
   font-size:12px!important;
   line-height:1!important;
   white-space:nowrap!important;
@@ -197,7 +202,7 @@
   .card.score-card-professional{padding:8px 10px 9px!important}
   .score-board-row{
     grid-template-columns:42px minmax(66px,max-content) 42px;
-    gap:7px;
+    gap:4px;
     margin-top:2px;
   }
   .score-board-row > button{
@@ -211,5 +216,5 @@
   .score-board-value{min-width:66px;font-size:clamp(42px,15vw,66px)!important}
   .score-card-mega > button{min-width:98px!important;min-height:30px!important;font-size:11px!important}
   .score-card-menu-toggle{top:4px!important;left:4px!important;width:25px!important;min-width:25px!important;height:25px!important;min-height:25px!important}
-  .score-card-menu{top:33px;left:4px}
+  .score-card-menu{width:min(228px,calc(100vw - 24px));padding:8px}
 }
