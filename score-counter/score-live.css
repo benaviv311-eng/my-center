@@ -1,0 +1,110 @@
+.score-live-timer{
+  position:sticky;
+  top:6px;
+  z-index:78;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  width:max-content;
+  max-width:calc(100vw - 18px);
+  margin:6px auto 10px;
+  padding:5px 7px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:14px;
+  background:rgba(7,12,22,.82);
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  backdrop-filter:blur(10px);
+  direction:rtl;
+}
+.score-live-timer button{
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border-radius:9px;
+  min-height:32px;
+  padding:5px 8px;
+  font:800 12px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  cursor:pointer;
+}
+.score-live-timer button:active{transform:translateY(1px)}
+.score-timer-display{
+  min-width:76px;
+  padding-inline:8px!important;
+  font-size:22px!important;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.4px;
+  direction:ltr;
+}
+.score-timer-play,.score-timer-reset{min-width:34px;padding-inline:7px!important;font-size:16px!important}
+.score-timer-mode{white-space:nowrap}
+.score-timer-edit{
+  position:absolute;
+  top:calc(100% + 5px);
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:6px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:11px;
+  background:rgba(7,12,22,.96);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  direction:ltr;
+}
+.score-timer-edit[hidden]{display:none!important}
+.score-timer-edit input{
+  width:52px;
+  min-height:32px;
+  box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  text-align:center;
+  font:800 15px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+.score-live-timer.score-timer-finished{animation:scoreTimerPulse .3s ease 3}
+@keyframes scoreTimerPulse{50%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(248,113,113,.24)}}
+.score-rotation-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  width:max-content;
+  max-width:100%;
+  margin:5px auto 0;
+  padding:2px 4px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;
+  background:rgba(3,8,18,.42);
+  color:#e5e7eb;
+  font:700 10px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  white-space:nowrap;
+  direction:rtl;
+}
+.score-rotation-chip button{
+  width:24px!important;
+  min-width:24px!important;
+  height:24px!important;
+  min-height:24px!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.08)!important;
+  color:#fff!important;
+  font:900 17px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
+  box-shadow:none!important;
+}
+.score-rotation-label{padding:0 2px}
+.score-rotation-label b{font-size:11px}
+@media (max-width:700px){
+  .score-live-timer{top:4px;gap:3px;padding:4px 5px;margin-bottom:7px}
+  .score-live-timer button{min-height:30px;padding:4px 6px;font-size:11px}
+  .score-timer-display{min-width:68px;font-size:20px!important}
+  .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
+  .score-rotation-chip{margin-top:4px;font-size:9px}
+  .score-rotation-chip button{width:22px!important;min-width:22px!important;height:22px!important;min-height:22px!important}
+}
