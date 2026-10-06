@@ -42,12 +42,12 @@ jobs:
           assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
           assert(css.includes('gap:4px'),'score controls must be close and easy to use');
 
-          assert(ui.includes('function numericLeafInside(candidate)'),'score finder must extract the numeric leaf from legacy score wrappers');
-          assert(ui.includes('const leaf=numericLeafInside(found);'),'score finder must prefer the bare number over the legacy score box');
+          assert(css.includes('.score-board-row > button{\n  position:static!important;'),'minus and plus must stay in the score row');
+          assert(css.includes('.score-board-value{\n  position:static!important;'),'score value must sit normally between minus and plus');
           assert(css.includes('background:transparent!important'),'score value must not keep the legacy rectangle background');
           assert(css.includes('border:0!important'),'score value must not keep a legacy border');
           assert(css.includes('box-shadow:none!important'),'score value must not keep a legacy shadow');
-          assert(css.includes('position:static!important'),'score value must sit normally between minus and plus');
+          assert(css.includes('.score-board-value > *{'),'nested legacy score content must also be visually stripped');
 
           assert(!index.includes('score-resize.css'),'resize CSS must no longer be loaded');
           assert(!index.includes('score-resize.js'),'resize JS must no longer be loaded');
