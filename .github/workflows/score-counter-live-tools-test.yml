@@ -21,13 +21,16 @@ jobs:
           payload=''.join(open(f'team-score/t{i}.txt',encoding='utf-8').read().strip() for i in range(1,5))
           html=gzip.decompress(base64.b64decode(payload)).decode('utf-8','replace')
           print('legacy html chars:',len(html))
-          needles=['score-value','team-score','score-number','points-value','class="score"','data-score']
+          needles=['class="score"','score-btn','dataset.delta','closest(\'.score\')','classList.contains(\'score\')','addEventListener(\'change\'','addEventListener(\'input\'']
           for needle in needles:
-              pos=html.find(needle)
-              if pos>=0:
-                  lo=max(0,pos-350); hi=min(len(html),pos+900)
-                  print(f'--- legacy snippet for {needle} ---')
+              start=0
+              for n in range(3):
+                  pos=html.find(needle,start)
+                  if pos<0: break
+                  lo=max(0,pos-450); hi=min(len(html),pos+1300)
+                  print(f'--- legacy snippet for {needle} #{n+1} ---')
                   print(re.sub(r'\s+',' ',html[lo:hi]))
+                  start=pos+len(needle)
           PY
       - name: Verify timer and final unified score card layout
         shell: bash
