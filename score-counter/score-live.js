@@ -218,13 +218,7 @@
     menu.hidden=true;
     menu._scoreOwner=card;
 
-    const source=document.createElement('div');
-    source.className='score-card-action-source';
-    source.hidden=true;
-    card.appendChild(source);
-
     actions.forEach(original=>{
-      const oldParent=original.parentElement;
       const proxy=original.cloneNode(true);
       proxy.removeAttribute('id');
       proxy.classList.add('score-card-menu-proxy');
@@ -232,9 +226,10 @@
         e.preventDefault();
         original.click();
       });
-      source.appendChild(original);
+      original.classList.add('score-card-action-original');
+      original.setAttribute('aria-hidden','true');
+      original.tabIndex=-1;
       menu.appendChild(proxy);
-      removeEmptyContainer(oldParent,card);
     });
 
     const setOpen=open=>{
