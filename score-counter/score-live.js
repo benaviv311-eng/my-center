@@ -192,6 +192,18 @@
     }
   }
 
+  function cleanExplanatoryCopy(card){
+    const protectedSelector='button,input,.score-board-row,.score-card-mega,.score-card-menu,.score-card-menu-toggle,.score-size-menu,.score-resize-handle';
+    card.querySelectorAll('.hint,.help,.helper,.description,.score-hint,[data-help]').forEach(el=>{
+      if(!el.closest(protectedSelector)) el.remove();
+    });
+    card.querySelectorAll('small,p,span,div').forEach(el=>{
+      if(el===card || el.children.length || el.closest(protectedSelector)) return;
+      if(core.isExplanatoryCopy(el.textContent||'')) el.remove();
+    });
+    card.setAttribute('data-score-compact','1');
+  }
+
   function buildMenu(card,actions){
     if(card.querySelector('.score-card-menu-toggle')) return;
     const toggle=document.createElement('button');
@@ -237,6 +249,7 @@
 
   function professionalizeCard(card){
     if(card.getAttribute('data-score-professional')==='1') return;
+    cleanExplanatoryCopy(card);
 
     const buttons=Array.from(card.querySelectorAll('button')).filter(button=>
       !button.closest('.score-resize-handle,.score-size-menu,.score-card-menu')
@@ -275,6 +288,7 @@
     const secondary=buttons.filter(button=>button!==plus && button!==minus && button!==mega && isSecondaryAction(button));
     if(secondary.length) buildMenu(card,secondary);
 
+    cleanExplanatoryCopy(card);
     card.classList.add('score-card-professional');
     card.setAttribute('data-score-professional','1');
   }
