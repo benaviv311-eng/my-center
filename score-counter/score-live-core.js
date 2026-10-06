@@ -34,5 +34,12 @@
     return /(לחיצה|לחצו|הקש|הקישו|כדי\s+(?:ל|ש)|לעריכה|לשינוי|לשנות|גררו|גרירה|לחיצה\s+ארוכה|tap\s+to|click\s+to|press\s+to|drag\s+to)/iu.test(text);
   }
 
-  return {formatClock,nextRotation,clockMs,isExplanatoryCopy};
+  function isScoreDeltaLabel(value,delta){
+    const text=String(value||'').replace(/\s+/g,'').trim();
+    if(delta===1) return /^\+(?:1)?$/u.test(text);
+    if(delta===-1) return /^[-−–](?:1)?$/u.test(text);
+    return false;
+  }
+
+  return {formatClock,nextRotation,clockMs,isExplanatoryCopy,isScoreDeltaLabel};
 });
