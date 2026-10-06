@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify cards stay in one centered column
+      - name: Verify cards stay in one centered column near the top
         shell: bash
         run: |
           node <<'NODE'
@@ -28,6 +28,9 @@ jobs:
           assert(css.includes('flex-direction:column!important'),'cards must form one vertical column');
           assert(css.includes('align-items:center!important'),'cards must stay horizontally centered');
           assert(css.includes('transform:none!important'),'old drag transforms must not affect the final layout');
-          assert(css.includes('padding:50vh 12px 56px!important'),'column must begin around the middle of the image');
+          assert(css.includes('padding:108px 12px 56px!important'),'desktop column must sit just below the top header');
+          assert(css.includes('padding-top:100px!important'),'mobile column must sit just below the top header');
+          assert(!css.includes('padding:50vh 12px 56px!important'),'old mid-screen desktop offset must be removed');
+          assert(!css.includes('padding-top:50vh!important'),'old mid-screen mobile offset must be removed');
           NODE
           node --check score-counter/score-live.js
