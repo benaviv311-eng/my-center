@@ -13,25 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect legacy score markup
-        shell: bash
-        run: |
-          python <<'PY'
-          import base64, gzip, re
-          payload=''.join(open(f'team-score/t{i}.txt',encoding='utf-8').read().strip() for i in range(1,5))
-          html=gzip.decompress(base64.b64decode(payload)).decode('utf-8','replace')
-          print('legacy html chars:',len(html))
-          needles=['class="score"','score-btn','dataset.delta','closest(\'.score\')','classList.contains(\'score\')','addEventListener(\'change\'','addEventListener(\'input\'']
-          for needle in needles:
-              start=0
-              for n in range(3):
-                  pos=html.find(needle,start)
-                  if pos<0: break
-                  lo=max(0,pos-450); hi=min(len(html),pos+1300)
-                  print(f'--- legacy snippet for {needle} #{n+1} ---')
-                  print(re.sub(r'\s+',' ',html[lo:hi]))
-                  start=pos+len(needle)
-          PY
       - name: Verify timer and final unified score card layout
         shell: bash
         run: |
@@ -61,12 +42,14 @@ jobs:
           assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
           assert(css.includes('gap:4px'),'score controls must be close and easy to use');
 
-          assert(ui.includes("scoreDisplay.className='score-board-value'"),'score must use a new clean display node');
-          assert(ui.includes("score.classList.add('score-board-source')"),'legacy score node must be retained only as a hidden data source');
-          assert(ui.includes("row.appendChild(scoreDisplay)"),'clean score display must occupy the middle score cell');
-          assert(ui.includes("new MutationObserver(syncScoreDisplay)"),'clean display must follow legacy score mutations');
-          assert(!ui.includes("score.classList.add('score-board-value')"),'legacy score markup must never be reused as the visible center value');
+          assert(ui.includes("const scoreDisplay=document.createElement('input')"),'visible score must be a fresh input, not the legacy input');
+          assert(ui.includes("scoreDisplay.className='score-board-value'"),'fresh score input needs the clean score class');
+          assert(ui.includes("score.classList.add('score-board-source')"),'legacy score input must be retained only as a hidden data source');
+          assert(ui.includes("row.appendChild(scoreDisplay)"),'fresh score input must occupy the middle score cell');
+          assert(ui.includes("score.dispatchEvent(new Event('blur'))"),'manual edits must flow through the legacy score blur handler');
+          assert(!ui.includes("score.classList.add('score-board-value')"),'legacy score input must never be reused as the visible center value');
           assert(css.includes('.score-board-source-host{'),'legacy score source needs a zero-size hidden host');
+          assert(css.includes('--score-digits'),'visible score width must be constrained by its digit count');
           assert(css.includes('.score-board-value{\n  position:static!important;'),'clean score value must sit normally between minus and plus');
           assert(css.includes('background:transparent!important'),'score value must not keep the legacy rectangle background');
           assert(css.includes('border:0!important'),'score value must not keep a legacy border');
