@@ -67,44 +67,132 @@
 }
 .score-live-timer.score-timer-finished{animation:scoreTimerPulse .3s ease 3}
 @keyframes scoreTimerPulse{50%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(248,113,113,.24)}}
-.score-rotation-chip{
-  display:inline-flex;
+
+.card.score-card-professional{
+  position:relative;
+  overflow:visible!important;
+}
+.score-board-row{
+  display:grid!important;
+  grid-template-columns:46px minmax(74px,max-content) 46px;
   align-items:center;
   justify-content:center;
-  gap:3px;
+  gap:9px;
   width:max-content;
   max-width:100%;
-  margin:5px auto 0;
-  padding:2px 4px;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:999px;
-  background:rgba(3,8,18,.42);
-  color:#e5e7eb;
-  font:700 10px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
-  white-space:nowrap;
-  direction:rtl;
+  margin:8px auto 5px;
+  direction:ltr;
 }
-.score-rotation-chip button{
-  width:24px!important;
-  min-width:24px!important;
-  height:24px!important;
-  min-height:24px!important;
-  padding:0!important;
+.score-board-row > button{
+  width:46px!important;
+  min-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
   margin:0!important;
-  border:0!important;
-  border-radius:999px!important;
-  background:rgba(255,255,255,.08)!important;
-  color:#fff!important;
-  font:900 17px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
-  box-shadow:none!important;
+  padding:0!important;
+  border-radius:14px!important;
+  display:grid!important;
+  place-items:center!important;
+  font:900 28px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.2)!important;
 }
-.score-rotation-label{padding:0 2px}
-.score-rotation-label b{font-size:11px}
+.score-board-value{
+  min-width:74px;
+  margin:0!important;
+  padding:0 5px!important;
+  text-align:center!important;
+  font-size:clamp(46px,10vw,76px)!important;
+  font-weight:900!important;
+  line-height:.95!important;
+  letter-spacing:-2px!important;
+  font-variant-numeric:tabular-nums!important;
+  direction:ltr!important;
+  white-space:nowrap!important;
+}
+.score-card-mega{
+  display:flex;
+  justify-content:center;
+  width:100%;
+  margin:0 auto 3px;
+}
+.score-card-mega > button{
+  width:auto!important;
+  min-width:118px!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:6px 14px!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+  line-height:1!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.18)!important;
+}
+.score-card-menu-toggle{
+  position:absolute!important;
+  top:7px!important;
+  left:7px!important;
+  z-index:82!important;
+  width:30px!important;
+  min-width:30px!important;
+  height:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:10px!important;
+  background:rgba(3,8,18,.44)!important;
+  color:#fff!important;
+  font:900 20px/1 system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(6px);
+}
+.score-card-menu{
+  position:absolute;
+  top:41px;
+  left:7px;
+  z-index:84;
+  display:grid;
+  gap:5px;
+  min-width:132px;
+  padding:6px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(6,10,20,.96);
+  box-shadow:0 12px 30px rgba(0,0,0,.4);
+  backdrop-filter:blur(10px);
+}
+.score-card-menu[hidden]{display:none!important}
+.score-card-menu > button{
+  width:100%!important;
+  min-width:0!important;
+  min-height:34px!important;
+  margin:0!important;
+  padding:7px 10px!important;
+  border-radius:8px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+}
+
 @media (max-width:700px){
   .score-live-timer{top:4px;gap:3px;padding:4px 5px;margin-bottom:7px}
   .score-live-timer button{min-height:30px;padding:4px 6px;font-size:11px}
   .score-timer-display{min-width:68px;font-size:20px!important}
   .score-timer-mode{max-width:72px;overflow:hidden;text-overflow:ellipsis}
-  .score-rotation-chip{margin-top:4px;font-size:9px}
-  .score-rotation-chip button{width:22px!important;min-width:22px!important;height:22px!important;min-height:22px!important}
+  .score-board-row{
+    grid-template-columns:42px minmax(66px,max-content) 42px;
+    gap:7px;
+    margin-top:6px;
+  }
+  .score-board-row > button{
+    width:42px!important;
+    min-width:42px!important;
+    height:42px!important;
+    min-height:42px!important;
+    border-radius:13px!important;
+    font-size:26px!important;
+  }
+  .score-board-value{min-width:66px;font-size:clamp(42px,15vw,66px)!important}
+  .score-card-mega > button{min-width:108px!important;min-height:32px!important;font-size:12px!important}
+  .score-card-menu-toggle{top:6px!important;left:6px!important;width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important}
+  .score-card-menu{top:38px;left:6px}
 }
