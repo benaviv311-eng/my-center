@@ -218,9 +218,22 @@
     menu.hidden=true;
     menu._scoreOwner=card;
 
-    actions.forEach(button=>{
-      const oldParent=button.parentElement;
-      menu.appendChild(button);
+    const source=document.createElement('div');
+    source.className='score-card-action-source';
+    source.hidden=true;
+    card.appendChild(source);
+
+    actions.forEach(original=>{
+      const oldParent=original.parentElement;
+      const proxy=original.cloneNode(true);
+      proxy.removeAttribute('id');
+      proxy.classList.add('score-card-menu-proxy');
+      proxy.addEventListener('click',e=>{
+        e.preventDefault();
+        original.click();
+      });
+      source.appendChild(original);
+      menu.appendChild(proxy);
       removeEmptyContainer(oldParent,card);
     });
 
