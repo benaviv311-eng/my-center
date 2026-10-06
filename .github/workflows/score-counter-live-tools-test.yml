@@ -47,7 +47,8 @@ jobs:
           assert(css.includes('background:transparent!important'),'score value must not keep the legacy rectangle background');
           assert(css.includes('border:0!important'),'score value must not keep a legacy border');
           assert(css.includes('box-shadow:none!important'),'score value must not keep a legacy shadow');
-          assert(css.includes('.score-board-value > *{'),'nested legacy score content must also be visually stripped');
+          assert(css.includes('.score-board-value *{'),'every nested score descendant must be neutralized so the number cannot escape the center cell');
+          assert(!css.includes('.score-board-value > *{'),'direct-child-only reset is insufficient for deeply nested legacy score markup');
 
           assert(!index.includes('score-resize.css'),'resize CSS must no longer be loaded');
           assert(!index.includes('score-resize.js'),'resize JS must no longer be loaded');
