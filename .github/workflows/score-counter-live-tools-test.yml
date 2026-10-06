@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify timer and professional score card layout
+      - name: Verify timer and compact professional score card layout
         shell: bash
         run: |
           node <<'NODE'
@@ -23,6 +23,10 @@ jobs:
           assert.equal(core.formatClock(0),'00:00');
           assert.equal(core.formatClock(61000),'01:01');
           assert.equal(core.formatClock(3599000),'59:59');
+          assert.equal(core.isExplanatoryCopy('לחיצה על המספר לעריכה'),true);
+          assert.equal(core.isExplanatoryCopy('הקש על הניקוד כדי לשנות'),true);
+          assert.equal(core.isExplanatoryCopy('קבוצה א'),false);
+          assert.equal(core.isExplanatoryCopy('12'),false);
 
           const ui=fs.readFileSync('score-counter/score-live.js','utf8');
           const css=fs.readFileSync('score-counter/score-live.css','utf8');
@@ -35,7 +39,9 @@ jobs:
             'score-board-value',
             'score-card-mega',
             'score-card-menu-toggle',
-            'score-card-menu'
+            'score-card-menu',
+            'cleanExplanatoryCopy',
+            'data-score-compact'
           ]){
             assert(ui.includes(marker),`missing UI marker ${marker}`);
           }
@@ -46,11 +52,14 @@ jobs:
             '.score-board-value',
             '.score-card-mega',
             '.score-card-menu-toggle',
-            '.score-card-menu'
+            '.score-card-menu',
+            'width:max-content!important',
+            'min-width:0!important'
           ]){
             assert(css.includes(marker),`missing CSS marker ${marker}`);
           }
 
+          assert(css.includes('position:fixed'),'timer must be fixed at the top of the screen');
           assert(!ui.includes('score-rotation-chip'),'rotation UI must be removed');
           assert(!css.includes('.score-rotation-chip'),'rotation CSS must be removed');
           assert(index.includes('score-live-core.js'),'loader missing score-live-core.js');
