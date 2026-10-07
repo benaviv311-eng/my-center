@@ -90,7 +90,7 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   position:relative!important;
   display:flex!important;
   flex-direction:column!important;
-  align-items:center!important;
+  align-items:stretch!important;
   justify-content:flex-start!important;
   gap:7px!important;
   width:240px!important;
@@ -104,6 +104,8 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   overflow:visible!important;
   transform:none!important;
   inset:auto!important;
+  direction:rtl!important;
+  text-align:right!important;
 }
 #teams.score-final-column > .card.score-card-professional > h1,
 #teams.score-final-column > .card.score-card-professional > h2,
@@ -111,7 +113,7 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
 #teams.score-final-column > .card.score-card-professional > h4{
   width:100%!important;
   margin:0 0 2px!important;
-  text-align:center!important;
+  text-align:right!important;
   font-size:16px!important;
   line-height:1.15!important;
 }
