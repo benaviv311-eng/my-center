@@ -6,16 +6,41 @@
   const TIMER_MIN_SCALE=0.65;
   const TIMER_MAX_SCALE=2.2;
   const EDGE=8;
+  const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
 
   function restoreLayoutChoice(){
     teams.classList.remove('score-final-column');
   }
 
-  restoreLayoutChoice();
-  const layoutObserver=new MutationObserver(()=>requestAnimationFrame(restoreLayoutChoice));
-  layoutObserver.observe(teams,{childList:true});
+  function markRankOutside(){
+    teams.querySelectorAll(':scope > .card.score-card-professional').forEach(card=>{
+      if(card.querySelector('.score-rank-outside')) return;
+      const candidates=Array.from(card.querySelectorAll('div,span,p,small,strong,b')).filter(el=>{
+        const text=cleanText(el);
+        if(!/^מקום\s*\d+$/u.test(text)) return false;
+        return !Array.from(el.children).some(child=>/^מקום\s*\d+$/u.test(cleanText(child)));
+      });
+      if(!candidates.length) return;
+      candidates.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);
+      let target=candidates[0];
+      while(target.parentElement && target.parentElement!==card){
+        const parent=target.parentElement;
+        if(cleanText(parent)!==cleanText(target)) break;
+        if(parent.querySelector('.score-board-row,.score-card-mega,.score-card-menu-toggle')) break;
+        target=parent;
+      }
+      target.classList.add('score-rank-outside');
+    });
+  }
 
-  const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
+  function refreshCardChrome(){
+    restoreLayoutChoice();
+    markRankOutside();
+  }
+
+  refreshCardChrome();
+  const layoutObserver=new MutationObserver(()=>requestAnimationFrame(refreshCardChrome));
+  layoutObserver.observe(teams,{childList:true});
 
   function smallestMatch(needle){
     const candidates=Array.from(document.querySelectorAll('h1,h2,h3,h4,p,span,strong,b,div')).filter(el=>{
