@@ -12,13 +12,17 @@ body.projection-mode #teams > .card.score-card-professional{
   max-width:calc(100vw - 24px)!important;
   min-height:0!important;
   height:auto!important;
-  margin:0!important;
+  margin:0 auto!important;
   padding:12px 14px 14px!important;
   box-sizing:border-box!important;
   overflow:visible!important;
   inset:auto!important;
   direction:rtl!important;
   text-align:right!important;
+}
+#teams.score-final-column > .card.score-card-professional,
+body.projection-mode #teams.score-final-column > .card.score-card-professional{
+  margin:0 auto!important;
 }
 #teams > .card.score-card-professional > h1,
 #teams > .card.score-card-professional > h2,
