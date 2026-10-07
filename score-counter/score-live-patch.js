@@ -12,8 +12,8 @@
   }
 
   restoreLayoutChoice();
-  const layoutObserver=new MutationObserver(()=>restoreLayoutChoice());
-  layoutObserver.observe(teams,{attributes:true,attributeFilter:['class'],childList:true});
+  const layoutObserver=new MutationObserver(()=>requestAnimationFrame(restoreLayoutChoice));
+  layoutObserver.observe(teams,{childList:true});
 
   const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
 
