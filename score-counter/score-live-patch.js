@@ -88,28 +88,23 @@
     const saved=readTimerLayout();
     const state=saved || {x:initialRect.left,y:initialRect.top,scale:1};
 
-    const moveHandle=document.createElement('button');
-    moveHandle.type='button';
-    moveHandle.className='score-timer-move-handle';
-    moveHandle.setAttribute('aria-label','גרירת הטיימר');
-    moveHandle.setAttribute('title','גרור כדי להזיז את הטיימר');
-    moveHandle.textContent='⠿';
+    const moveZone=document.createElement('div');
+    moveZone.className='score-timer-move-zone';
+    moveZone.setAttribute('aria-hidden','true');
 
-    const resizeHandle=document.createElement('button');
-    resizeHandle.type='button';
-    resizeHandle.className='score-timer-resize-handle';
-    resizeHandle.setAttribute('aria-label','שינוי גודל הטיימר');
-    resizeHandle.setAttribute('title','גרור כדי להגדיל או להקטין את הטיימר');
-    resizeHandle.textContent='↘';
+    const resizeZone=document.createElement('div');
+    resizeZone.className='score-timer-resize-zone';
+    resizeZone.setAttribute('aria-hidden','true');
 
-    bar.prepend(moveHandle);
-    bar.appendChild(resizeHandle);
+    bar.appendChild(moveZone);
+    bar.appendChild(resizeZone);
     applyTimerLayout(bar,state,false);
 
     let dragPointer=null;
     let dragStartX=0,dragStartY=0,dragBaseX=0,dragBaseY=0;
-    moveHandle.addEventListener('pointerdown',e=>{
+    bar.addEventListener('pointerdown',e=>{
       if(e.button!==undefined && e.button!==0) return;
+      if(e.target.closest && e.target.closest('button,input,.score-timer-edit,.score-timer-resize-zone')) return;
       e.preventDefault();
       e.stopPropagation();
       dragPointer=e.pointerId;
@@ -117,10 +112,10 @@
       dragStartY=e.clientY;
       dragBaseX=state.x;
       dragBaseY=state.y;
-      try{moveHandle.setPointerCapture(dragPointer);}catch{}
+      try{bar.setPointerCapture(dragPointer);}catch{}
       bar.classList.add('score-timer-moving');
     });
-    moveHandle.addEventListener('pointermove',e=>{
+    bar.addEventListener('pointermove',e=>{
       if(e.pointerId!==dragPointer) return;
       e.preventDefault();
       state.x=dragBaseX+(e.clientX-dragStartX);
@@ -129,17 +124,17 @@
     });
     const finishMove=e=>{
       if(dragPointer===null || (e && e.pointerId!==dragPointer)) return;
-      try{moveHandle.releasePointerCapture(dragPointer);}catch{}
+      try{bar.releasePointerCapture(dragPointer);}catch{}
       dragPointer=null;
       bar.classList.remove('score-timer-moving');
       applyTimerLayout(bar,state,true);
     };
-    moveHandle.addEventListener('pointerup',finishMove);
-    moveHandle.addEventListener('pointercancel',finishMove);
+    bar.addEventListener('pointerup',finishMove);
+    bar.addEventListener('pointercancel',finishMove);
 
     let resizePointer=null;
     let resizeStartX=0,resizeStartY=0,resizeBaseScale=1;
-    resizeHandle.addEventListener('pointerdown',e=>{
+    resizeZone.addEventListener('pointerdown',e=>{
       if(e.button!==undefined && e.button!==0) return;
       e.preventDefault();
       e.stopPropagation();
@@ -147,10 +142,10 @@
       resizeStartX=e.clientX;
       resizeStartY=e.clientY;
       resizeBaseScale=state.scale;
-      try{resizeHandle.setPointerCapture(resizePointer);}catch{}
+      try{resizeZone.setPointerCapture(resizePointer);}catch{}
       bar.classList.add('score-timer-resizing');
     });
-    resizeHandle.addEventListener('pointermove',e=>{
+    resizeZone.addEventListener('pointermove',e=>{
       if(e.pointerId!==resizePointer) return;
       e.preventDefault();
       const delta=Math.max(e.clientX-resizeStartX,e.clientY-resizeStartY);
@@ -159,13 +154,13 @@
     });
     const finishResize=e=>{
       if(resizePointer===null || (e && e.pointerId!==resizePointer)) return;
-      try{resizeHandle.releasePointerCapture(resizePointer);}catch{}
+      try{resizeZone.releasePointerCapture(resizePointer);}catch{}
       resizePointer=null;
       bar.classList.remove('score-timer-resizing');
       applyTimerLayout(bar,state,true);
     };
-    resizeHandle.addEventListener('pointerup',finishResize);
-    resizeHandle.addEventListener('pointercancel',finishResize);
+    resizeZone.addEventListener('pointerup',finishResize);
+    resizeZone.addEventListener('pointercancel',finishResize);
 
     window.addEventListener('resize',()=>applyTimerLayout(bar,state,true));
   }
