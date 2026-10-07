@@ -13,7 +13,7 @@ body.projection-mode #teams > .card.score-card-professional{
   min-height:0!important;
   height:auto!important;
   margin:0 auto!important;
-  padding:12px 14px 14px!important;
+  padding:12px 14px 8px!important;
   box-sizing:border-box!important;
   overflow:visible!important;
   inset:auto!important;
@@ -33,6 +33,17 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   text-align:right!important;
   font-size:16px!important;
   line-height:1.15!important;
+}
+
+/* Ranking badge sits below the gray card and no longer increases its height. */
+.score-rank-outside{
+  position:absolute!important;
+  top:calc(100% + 12px)!important;
+  left:12px!important;
+  right:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+  z-index:6!important;
 }
 
 /* The score box follows the rendered value instead of staying at a fixed width. */
@@ -102,8 +113,12 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   body.projection-mode #teams > .card.score-card-professional{
     width:228px!important;
     max-width:calc(100vw - 16px)!important;
-    padding:10px 12px 12px!important;
+    padding:10px 12px 8px!important;
     gap:6px!important;
+  }
+  .score-rank-outside{
+    top:calc(100% + 10px)!important;
+    left:10px!important;
   }
   .score-timer-move-zone{top:-9px;height:16px;left:8px;right:8px}
   .score-timer-resize-zone{right:-11px;bottom:-11px;width:30px;height:30px}
