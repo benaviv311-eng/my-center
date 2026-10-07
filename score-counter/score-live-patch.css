@@ -1,0 +1,92 @@
+/* Restore the app's own column/grid controls while keeping the professional card treatment. */
+#teams > .card.score-card-professional,
+body.projection-mode #teams > .card.score-card-professional{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  width:240px!important;
+  min-width:0!important;
+  max-width:calc(100vw - 24px)!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:12px 14px 14px!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+  inset:auto!important;
+  direction:rtl!important;
+  text-align:right!important;
+}
+#teams > .card.score-card-professional > h1,
+#teams > .card.score-card-professional > h2,
+#teams > .card.score-card-professional > h3,
+#teams > .card.score-card-professional > h4{
+  width:100%!important;
+  margin:0 0 2px!important;
+  text-align:right!important;
+  font-size:16px!important;
+  line-height:1.15!important;
+}
+
+/* The score box follows the rendered value instead of staying at a fixed width. */
+.score-board-value{
+  width:var(--score-width,48px)!important;
+  max-width:none!important;
+  transition:width .12s ease;
+}
+
+/* Free timer layout: position + scale are persisted by score-live-patch.js. */
+.score-live-timer[data-free-layout="1"]{
+  left:var(--timer-x,50%)!important;
+  top:var(--timer-y,8px)!important;
+  transform:scale(var(--timer-scale,1))!important;
+  transform-origin:top left!important;
+  max-width:none!important;
+  touch-action:none;
+}
+.score-live-timer[data-free-layout="1"].score-timer-finished{
+  animation:none!important;
+  box-shadow:0 0 0 4px rgba(248,113,113,.24),0 8px 24px rgba(0,0,0,.28)!important;
+}
+.score-timer-move-handle,
+.score-timer-resize-handle{
+  display:grid!important;
+  place-items:center!important;
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  padding:0!important;
+  border-radius:8px!important;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+}
+.score-timer-move-handle{cursor:grab!important;font-size:18px!important;letter-spacing:-2px}
+.score-timer-move-handle:active{cursor:grabbing!important}
+.score-timer-resize-handle{cursor:nwse-resize!important;font-size:14px!important}
+.score-live-timer.score-timer-moving,
+.score-live-timer.score-timer-resizing{
+  outline:2px solid rgba(147,197,253,.9);
+  outline-offset:2px;
+}
+
+@media (max-width:700px){
+  #teams > .card.score-card-professional,
+  body.projection-mode #teams > .card.score-card-professional{
+    width:228px!important;
+    max-width:calc(100vw - 16px)!important;
+    padding:10px 12px 12px!important;
+    gap:6px!important;
+  }
+  .score-timer-move-handle,
+  .score-timer-resize-handle{
+    width:30px!important;
+    min-width:30px!important;
+    height:30px!important;
+    min-height:30px!important;
+  }
+}
