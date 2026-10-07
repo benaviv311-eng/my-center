@@ -12,7 +12,11 @@ const index = read('index.html');
 
 assert(!/score-final-column/.test(js.replace(/remove\(['"]score-final-column['"]\)/g, '')), 'patch must not force the legacy one-column class');
 assert(/classList\.remove\(['"]score-final-column['"]\)/.test(js), 'patch must remove the forced one-column class');
+assert(/MutationObserver\(\(\)=>requestAnimationFrame\(restoreLayoutChoice\)\)/.test(js), 'layout restore must run once after DOM child changes');
+assert(/layoutObserver\.observe\(teams,\{childList:true\}\)/.test(js), 'layout observer must watch child changes only');
+assert(!/attributeFilter:\['class'\]/.test(js), 'layout observer must not watch class mutations and fight the legacy script');
 assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box width must respond to the rendered score digits');
+assert(/margin:0 auto!important/.test(css), 'score cards must stay centered inside their layout column/image area');
 assert(/bar\.addEventListener\(['"]pointerdown['"]/.test(js), 'timer shell must be draggable without a visible move icon');
 assert(!/⠿/.test(js), 'timer must not render the move icon');
 assert(!/↘/.test(js), 'timer must not render the resize icon');
@@ -24,8 +28,8 @@ assert(!/timerObserver/.test(js) && !/scoreObserver/.test(js), 'patch must not r
 assert(!/MutationObserver/.test(leader), 'leader banner must not use a whole-page mutation observer');
 assert(/document\.addEventListener\(['"]click['"]/.test(leader), 'leader banner may refresh only after direct interactions');
 assert(/position','fixed'/.test(leader) && /top','0px'/.test(leader), 'leader banner must stay pinned to the top');
-assert(/score-live-patch\.css\?v=4/.test(index), 'index must load the current patch stylesheet');
-assert(/score-live-patch\.js\?v=4/.test(index), 'index must load the current patch script');
+assert(/score-live-patch\.css\?v=5/.test(index), 'index must load the current patch stylesheet');
+assert(/score-live-patch\.js\?v=5/.test(index), 'index must load the current patch script');
 assert(/score-leader-top\.js\?v=2/.test(index), 'index must load the lightweight leader script');
-assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=4'), 'timer/layout patch must load after score-live.js');
+assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=5'), 'timer/layout patch must load after score-live.js');
 console.log('score-live regression checks passed');
