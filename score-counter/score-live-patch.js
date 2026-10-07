@@ -15,6 +15,21 @@
   const layoutObserver=new MutationObserver(()=>restoreLayoutChoice());
   layoutObserver.observe(teams,{attributes:true,attributeFilter:['class'],childList:true});
 
+  function nudgeHeaderLeft(){
+    const mobile=window.matchMedia('(max-width:700px)').matches;
+    const wanted=new Set(['TeamScore','ספירת נקודות לקבוצות']);
+    document.querySelectorAll('h1,h2,h3,h4,p,span,div').forEach(el=>{
+      if(el.childElementCount!==0) return;
+      const text=(el.textContent||'').trim();
+      if(!wanted.has(text)) return;
+      if(mobile) el.style.setProperty('transform','translateX(-24px)','important');
+      else el.style.removeProperty('transform');
+    });
+  }
+
+  nudgeHeaderLeft();
+  window.addEventListener('resize',nudgeHeaderLeft);
+
   function scoreText(value){
     const text=String(value ?? '0').trim();
     return text || '0';
@@ -166,6 +181,9 @@
   }
 
   bindTimer();
-  const timerObserver=new MutationObserver(bindTimer);
+  const timerObserver=new MutationObserver(()=>{
+    bindTimer();
+    nudgeHeaderLeft();
+  });
   timerObserver.observe(document.body,{childList:true,subtree:true});
 })();
