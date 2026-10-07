@@ -1,5 +1,6 @@
 (function(){
   const MOBILE_QUERY='(max-width:700px)';
+  let banner=null;
   let scheduled=false;
 
   const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
@@ -19,6 +20,7 @@
   }
 
   function restoreBanner(el){
+    if(!el) return;
     const original=el.dataset.scoreLeaderOriginalStyle;
     if(original) el.setAttribute('style',original);
     else el.removeAttribute('style');
@@ -28,16 +30,17 @@
     delete el.dataset.scoreLeaderWidth;
   }
 
-  function pinLeaderBannerTop(){
+  function pinLeaderBannerTop(force){
     const mobile=window.matchMedia(MOBILE_QUERY).matches;
-    const already=document.querySelector('[data-score-leader-ceiling="1"]');
     if(!mobile){
-      if(already) restoreBanner(already);
+      if(banner && banner.isConnected) restoreBanner(banner);
+      banner=null;
       return;
     }
 
-    const banner=already||findLeaderBanner();
+    if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
+    if(!force && banner.dataset.scoreLeaderCeiling==='1') return;
 
     if(banner.dataset.scoreLeaderCeiling!=='1'){
       const rect=banner.getBoundingClientRect();
@@ -59,17 +62,18 @@
     banner.style.setProperty('z-index','180','important');
   }
 
-  function schedulePin(){
+  function schedulePin(force){
     if(scheduled) return;
     scheduled=true;
     requestAnimationFrame(()=>{
       scheduled=false;
-      pinLeaderBannerTop();
+      pinLeaderBannerTop(!!force);
     });
   }
 
-  pinLeaderBannerTop();
-  window.addEventListener('resize',schedulePin);
-  const observer=new MutationObserver(schedulePin);
-  observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  pinLeaderBannerTop(true);
+  window.addEventListener('resize',()=>schedulePin(true));
+  document.addEventListener('click',()=>schedulePin(false),true);
+  document.addEventListener('change',()=>schedulePin(false),true);
+  document.addEventListener('input',()=>schedulePin(false),true);
 })();

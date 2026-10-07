@@ -15,20 +15,30 @@
   const layoutObserver=new MutationObserver(()=>restoreLayoutChoice());
   layoutObserver.observe(teams,{attributes:true,attributeFilter:['class'],childList:true});
 
-  function nudgeHeaderLeft(){
-    const mobile=window.matchMedia('(max-width:700px)').matches;
-    const wanted=new Set(['TeamScore','ספירת נקודות לקבוצות']);
-    document.querySelectorAll('h1,h2,h3,h4,p,span,div').forEach(el=>{
-      if(el.childElementCount!==0) return;
-      const text=(el.textContent||'').trim();
-      if(!wanted.has(text)) return;
-      if(mobile) el.style.setProperty('transform','translateX(-24px)','important');
-      else el.style.removeProperty('transform');
+  const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
+
+  function smallestMatch(needle){
+    const candidates=Array.from(document.querySelectorAll('h1,h2,h3,h4,p,span,strong,b,div')).filter(el=>{
+      if(el===document.body || el===document.documentElement) return false;
+      return cleanText(el).includes(needle);
     });
+    candidates.sort((a,b)=>{
+      const childDelta=a.querySelectorAll('*').length-b.querySelectorAll('*').length;
+      if(childDelta) return childDelta;
+      return cleanText(a).length-cleanText(b).length;
+    });
+    return candidates[0]||null;
   }
 
-  nudgeHeaderLeft();
-  window.addEventListener('resize',nudgeHeaderLeft);
+  function markHeaderOffset(){
+    const title=smallestMatch('TeamScore');
+    const subtitle=smallestMatch('ספירת נקודות לקבוצות');
+    if(title) title.classList.add('score-header-shift-left');
+    if(subtitle) subtitle.classList.add('score-header-shift-left');
+  }
+
+  markHeaderOffset();
+  requestAnimationFrame(markHeaderOffset);
 
   function scoreText(value){
     const text=String(value ?? '0').trim();
@@ -54,8 +64,6 @@
     if(e.target && e.target.matches && e.target.matches('.score-board-value')) syncScoreBoxWidths();
   },true);
   document.addEventListener('click',()=>requestAnimationFrame(syncScoreBoxWidths),true);
-  const scoreObserver=new MutationObserver(()=>requestAnimationFrame(syncScoreBoxWidths));
-  scoreObserver.observe(teams,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['value']});
 
   function readTimerLayout(){
     try{
@@ -177,13 +185,11 @@
     resizeZone.addEventListener('pointerup',finishResize);
     resizeZone.addEventListener('pointercancel',finishResize);
 
-    window.addEventListener('resize',()=>applyTimerLayout(bar,state,true));
+    window.addEventListener('resize',()=>{
+      markHeaderOffset();
+      applyTimerLayout(bar,state,true);
+    });
   }
 
   bindTimer();
-  const timerObserver=new MutationObserver(()=>{
-    bindTimer();
-    nudgeHeaderLeft();
-  });
-  timerObserver.observe(document.body,{childList:true,subtree:true});
 })();

@@ -90,6 +90,10 @@ body.projection-mode #teams > .card.score-card-professional{
 }
 
 @media (max-width:700px){
+  .score-header-shift-left{
+    position:relative!important;
+    left:-24px!important;
+  }
   #teams > .card.score-card-professional,
   body.projection-mode #teams > .card.score-card-professional{
     width:228px!important;
