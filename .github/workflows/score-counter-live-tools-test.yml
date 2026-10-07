@@ -44,6 +44,19 @@ jobs:
           assert(css.includes('grid-template-columns:46px minmax(48px,max-content) 46px;'),'score controls must stay tight around the score');
           assert(css.includes('gap:4px'),'score controls must be close and easy to use');
 
+          const cardStart='body.projection-mode #teams.score-final-column > .card.score-card-professional{';
+          const cardIndex=css.indexOf(cardStart);
+          assert(cardIndex>=0,'missing professional score card rule');
+          const cardRule=css.slice(cardIndex,css.indexOf('\n}',cardIndex)+2);
+          assert(cardRule.includes('align-items:stretch!important'),'card content must stretch so text can align to the right edge');
+          assert(cardRule.includes('direction:rtl!important'),'all score card text must flow right-to-left');
+          assert(cardRule.includes('text-align:right!important'),'all score card text must align right');
+          const headingStart='#teams.score-final-column > .card.score-card-professional > h1,';
+          const headingIndex=css.indexOf(headingStart);
+          assert(headingIndex>=0,'missing score card heading rule');
+          const headingRule=css.slice(headingIndex,css.indexOf('\n}',headingIndex)+2);
+          assert(headingRule.includes('text-align:right!important'),'team name must sit at the top right');
+
           assert(ui.includes("const scoreDisplay=document.createElement('input')"),'visible score must be a fresh input, not the legacy input');
           assert(ui.includes("scoreDisplay.className='score-board-value'"),'fresh score input needs the clean score class');
           assert(ui.includes("score.classList.add('score-board-source')"),'legacy score input must be retained only as a hidden data source');
