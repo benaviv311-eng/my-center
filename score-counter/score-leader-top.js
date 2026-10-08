@@ -21,6 +21,19 @@
     return candidates[0]||null;
   }
 
+  function findLeaderVisualTop(el){
+    const candidates=Array.from(el.querySelectorAll('*')).filter(node=>{
+      const text=cleanText(node);
+      if(!/(מובילה|נקודות)/u.test(text)) return false;
+      return !Array.from(node.children).some(child=>/(מובילה|נקודות)/u.test(cleanText(child)));
+    });
+    const rects=candidates
+      .map(node=>node.getBoundingClientRect())
+      .filter(rect=>rect.width>0 && rect.height>0 && Number.isFinite(rect.top));
+    if(!rects.length) return el.getBoundingClientRect().top;
+    return Math.min(...rects.map(rect=>rect.top));
+  }
+
   function restoreBanner(el){
     if(!el) return;
     const original=el.dataset.scoreLeaderOriginalStyle;
@@ -39,6 +52,7 @@
     delete el.dataset.scoreLeaderOriginalStyle;
     delete el.dataset.scoreLeaderLeft;
     delete el.dataset.scoreLeaderWidth;
+    delete el.dataset.scoreLeaderVisualOffset;
     originalParent=null;
     originalNextSibling=null;
   }
@@ -53,7 +67,6 @@
 
     if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
-    if(!force && banner.dataset.scoreLeaderCeiling==='1') return;
 
     if(banner.dataset.scoreLeaderCeiling!=='1'){
       const rect=banner.getBoundingClientRect();
@@ -79,6 +92,12 @@
     banner.style.setProperty('margin-top','0','important');
     banner.style.setProperty('transform','none','important');
     banner.style.setProperty('z-index','180','important');
+
+    const bannerTop=banner.getBoundingClientRect().top;
+    const visualTop=findLeaderVisualTop(banner);
+    const visualOffset=Math.max(0,Math.round(visualTop-bannerTop));
+    banner.dataset.scoreLeaderVisualOffset=String(visualOffset);
+    banner.style.setProperty('top',(-visualOffset)+'px','important');
   }
 
   function schedulePin(force){
@@ -91,6 +110,7 @@
   }
 
   pinLeaderBannerTop(true);
+  requestAnimationFrame(()=>pinLeaderBannerTop(true));
   window.addEventListener('resize',()=>schedulePin(true));
   document.addEventListener('click',()=>schedulePin(false),true);
   document.addEventListener('change',()=>schedulePin(false),true);
