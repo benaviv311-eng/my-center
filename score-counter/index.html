@@ -42,7 +42,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=7"><\/script>';
-  const leaderJs='<script src="score-leader-top.js?v=3"><\/script>';
+  const leaderJs='<script src="score-leader-top.js?v=4"><\/script>';
 
   html=html.replace("</head>",sharpCss+liveCss+patchCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+leaderJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
