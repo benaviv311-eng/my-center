@@ -34,10 +34,11 @@ assert(/score-header-shift-left/.test(js) && /\.score-header-shift-left/.test(cs
 assert(!/timerObserver/.test(js) && !/scoreObserver/.test(js), 'patch must not run whole-page observers after interactions');
 assert(!/MutationObserver/.test(leader), 'leader banner must not use a whole-page mutation observer');
 assert(/document\.body\.appendChild\(banner\)/.test(leader), 'leader banner must be portaled directly under body so top zero is viewport-relative');
-assert(/position','fixed'/.test(leader) && /top','0px'/.test(leader), 'leader banner must stay pinned to the viewport ceiling');
-assert(/transform','none'/.test(leader) && /margin-top','0'/.test(leader), 'leader banner must not retain offsets that push it below the ceiling');
+assert(/findLeaderVisualTop/.test(leader), 'leader script must measure the actual visible leader text rather than only the wrapper');
+assert(/visualOffset/.test(leader) && /-visualOffset/.test(leader), 'leader wrapper must compensate for its internal top gap');
+assert(/scoreLeaderVisualOffset/.test(leader), 'measured leader visual offset must be recorded for regression/debugging');
 assert(/score-live-patch\.css\?v=7/.test(index), 'index must load the current patch stylesheet');
 assert(/score-live-patch\.js\?v=7/.test(index), 'index must load the current patch script');
-assert(/score-leader-top\.js\?v=3/.test(index), 'index must load the viewport-pinned leader script');
+assert(/score-leader-top\.js\?v=4/.test(index), 'index must load the visible-content-pinned leader script');
 assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=7'), 'timer/layout patch must load after score-live.js');
 console.log('score-live regression checks passed');
