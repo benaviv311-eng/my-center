@@ -33,9 +33,40 @@
     });
   }
 
+  function markTeamNameTop(){
+    teams.querySelectorAll(':scope > .card.score-card-professional').forEach(card=>{
+      if(card.querySelector('.score-team-name-top')) return;
+
+      let target=card.querySelector('.team-name,.team-title,[data-team-name],[data-role="team-name"],h1,h2,h3,h4');
+      if(target && target.closest('.score-board-row,.score-card-mega,.score-card-menu,.score-rank-outside')) target=null;
+
+      if(!target){
+        const candidates=Array.from(card.querySelectorAll('div,span,p,strong,b')).filter(el=>{
+          if(el.closest('.score-board-row,.score-card-mega,.score-card-menu,.score-card-menu-toggle,.score-rank-outside,.score-board-source-host')) return false;
+          if(el.querySelector('button,input')) return false;
+          const text=cleanText(el);
+          if(!text || text.length>60) return false;
+          if(/^מקום\s*\d+$/u.test(text)) return false;
+          if(/^[+\-]?\d+$/u.test(text)) return false;
+          if(/מגה/u.test(text)) return false;
+          return /\p{L}/u.test(text);
+        });
+        candidates.sort((a,b)=>{
+          const childDelta=a.querySelectorAll('*').length-b.querySelectorAll('*').length;
+          if(childDelta) return childDelta;
+          return cleanText(a).length-cleanText(b).length;
+        });
+        target=candidates[0]||null;
+      }
+
+      if(target) target.classList.add('score-team-name-top');
+    });
+  }
+
   function refreshCardChrome(){
     restoreLayoutChoice();
     markRankOutside();
+    markTeamNameTop();
   }
 
   refreshCardChrome();
