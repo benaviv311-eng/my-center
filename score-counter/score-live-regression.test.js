@@ -33,10 +33,11 @@ assert(/smallestMatch/.test(js) && /TeamScore/.test(js) && /ספירת נקוד�
 assert(/score-header-shift-left/.test(js) && /\.score-header-shift-left/.test(css) && /left:-24px/.test(css), 'mobile header text must visibly move 24px left');
 assert(!/timerObserver/.test(js) && !/scoreObserver/.test(js), 'patch must not run whole-page observers after interactions');
 assert(!/MutationObserver/.test(leader), 'leader banner must not use a whole-page mutation observer');
-assert(/document\.addEventListener\(['"]click['"]/.test(leader), 'leader banner may refresh only after direct interactions');
-assert(/position','fixed'/.test(leader) && /top','0px'/.test(leader), 'leader banner must stay pinned to the top');
+assert(/document\.body\.appendChild\(banner\)/.test(leader), 'leader banner must be portaled directly under body so top zero is viewport-relative');
+assert(/position','fixed'/.test(leader) && /top','0px'/.test(leader), 'leader banner must stay pinned to the viewport ceiling');
+assert(/transform','none'/.test(leader) && /margin-top','0'/.test(leader), 'leader banner must not retain offsets that push it below the ceiling');
 assert(/score-live-patch\.css\?v=7/.test(index), 'index must load the current patch stylesheet');
 assert(/score-live-patch\.js\?v=7/.test(index), 'index must load the current patch script');
-assert(/score-leader-top\.js\?v=2/.test(index), 'index must load the lightweight leader script');
+assert(/score-leader-top\.js\?v=3/.test(index), 'index must load the viewport-pinned leader script');
 assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=7'), 'timer/layout patch must load after score-live.js');
 console.log('score-live regression checks passed');
