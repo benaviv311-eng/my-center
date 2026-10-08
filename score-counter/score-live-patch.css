@@ -11,9 +11,14 @@ body.projection-mode #teams > .card.score-card-professional{
   min-width:0!important;
   max-width:calc(100vw - 24px)!important;
   min-height:0!important;
-  height:auto!important;
+  min-block-size:0!important;
+  height:max-content!important;
+  block-size:max-content!important;
+  max-height:none!important;
+  aspect-ratio:auto!important;
+  flex:0 0 auto!important;
   margin:0 auto!important;
-  padding:12px 14px 8px!important;
+  padding:34px 14px 6px!important;
   box-sizing:border-box!important;
   overflow:visible!important;
   inset:auto!important;
@@ -29,10 +34,29 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
 #teams > .card.score-card-professional > h3,
 #teams > .card.score-card-professional > h4{
   width:100%!important;
-  margin:0 0 2px!important;
+  margin:0!important;
   text-align:right!important;
   font-size:16px!important;
   line-height:1.15!important;
+}
+
+/* Team name is pinned to the card ceiling on the right. */
+.score-team-name-top{
+  position:absolute!important;
+  top:7px!important;
+  right:12px!important;
+  left:auto!important;
+  bottom:auto!important;
+  z-index:8!important;
+  width:auto!important;
+  max-width:calc(100% - 58px)!important;
+  margin:0!important;
+  padding:0!important;
+  text-align:right!important;
+  line-height:1.1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
 }
 
 /* Ranking badge sits below the gray card and no longer increases its height. */
@@ -44,6 +68,11 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   bottom:auto!important;
   margin:0!important;
   z-index:6!important;
+}
+
+/* Keep mega as the visual bottom edge of the card. */
+.score-card-mega{
+  margin-bottom:0!important;
 }
 
 /* The score box follows the rendered value instead of staying at a fixed width. */
@@ -113,8 +142,13 @@ body.projection-mode #teams.score-final-column > .card.score-card-professional{
   body.projection-mode #teams > .card.score-card-professional{
     width:228px!important;
     max-width:calc(100vw - 16px)!important;
-    padding:10px 12px 8px!important;
+    padding:32px 12px 6px!important;
     gap:6px!important;
+  }
+  .score-team-name-top{
+    top:6px!important;
+    right:10px!important;
+    max-width:calc(100% - 54px)!important;
   }
   .score-rank-outside{
     top:calc(100% + 10px)!important;
