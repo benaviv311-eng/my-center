@@ -18,8 +18,12 @@ assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box wi
 assert(/margin:0 auto!important/.test(css), 'score cards must stay centered inside their layout column/image area');
 assert(/markRankOutside/.test(js) && /score-rank-outside/.test(js), 'rank badge must be detected and moved outside the gray card flow');
 assert(/\.score-rank-outside/.test(css) && /position:absolute!important/.test(css) && /top:calc\(100% \+ 12px\)/.test(css), 'rank badge must render below the gray card');
-assert(/padding:12px 14px 8px!important/.test(css), 'desktop gray card must end shortly after the mega button');
-assert(/padding:10px 12px 8px!important/.test(css), 'mobile gray card must end shortly after the mega button');
+assert(/markTeamNameTop/.test(js) && /score-team-name-top/.test(js), 'team name must be marked for top-right placement');
+assert(/\.score-team-name-top/.test(css) && /top:7px!important/.test(css) && /right:12px!important/.test(css), 'team name must sit against the card ceiling on the right');
+assert(/aspect-ratio:auto!important/.test(css), 'professional score cards must not keep a square aspect ratio');
+assert(/height:max-content!important/.test(css), 'gray score card height must collapse to its content');
+assert(/padding:34px 14px 6px!important/.test(css), 'desktop gray card must reserve only a small header strip and end after mega');
+assert(/padding:32px 12px 6px!important/.test(css), 'mobile gray card must reserve only a small header strip and end after mega');
 assert(/bar\.addEventListener\(['"]pointerdown['"]/.test(js), 'timer shell must be draggable without a visible move icon');
 assert(!/⠿/.test(js), 'timer must not render the move icon');
 assert(!/↘/.test(js), 'timer must not render the resize icon');
@@ -31,8 +35,8 @@ assert(!/timerObserver/.test(js) && !/scoreObserver/.test(js), 'patch must not r
 assert(!/MutationObserver/.test(leader), 'leader banner must not use a whole-page mutation observer');
 assert(/document\.addEventListener\(['"]click['"]/.test(leader), 'leader banner may refresh only after direct interactions');
 assert(/position','fixed'/.test(leader) && /top','0px'/.test(leader), 'leader banner must stay pinned to the top');
-assert(/score-live-patch\.css\?v=6/.test(index), 'index must load the current patch stylesheet');
-assert(/score-live-patch\.js\?v=6/.test(index), 'index must load the current patch script');
+assert(/score-live-patch\.css\?v=7/.test(index), 'index must load the current patch stylesheet');
+assert(/score-live-patch\.js\?v=7/.test(index), 'index must load the current patch script');
 assert(/score-leader-top\.js\?v=2/.test(index), 'index must load the lightweight leader script');
-assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=6'), 'timer/layout patch must load after score-live.js');
+assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=7'), 'timer/layout patch must load after score-live.js');
 console.log('score-live regression checks passed');
