@@ -527,17 +527,18 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 window.__crazyFamilyRetainedApi={
- getSnapshot(){return {player:{lives:player.lives,stamina:player.stamina,shield:player.shield,inventory:player.inventory.map(i=>({...i}))},dad:{singing:dad.singing,state:dadHouseState},dizziness:dizzyCharge,scene:player.scene};},
+ getSnapshot(){return {player:{lives:player.lives,stamina:player.stamina,shield:player.shield,inventory:player.inventory.map(i=>({...i}))},dad:{singing:dad.singing,state:dadHouseState},dizziness:dizzyCharge,controlsReversed:performance.now()<dizzyUntil,scene:player.scene};},
  setWorldPose(pose){window.__crazyFamilyWorldPose=pose;return true;},
  collectItem(id){const p=(items.ground||[]).find(i=>i.id===id);if(!p||p.taken||player.inventory.length>=player.capacity)return false;p.taken=true;player.inventory.push({id:p.id,name:p.name,icon:p.icon});player.selected=player.inventory.length-1;renderInv();return true;},
  useItem(id){const idx=player.inventory.findIndex(i=>i.id===id);if(idx<0)return false;player.selected=idx;useSelectedItem();return true;},
  damagePlayer(amount=1,source='movie-set'){player.lives=Math.max(0,player.lives-Math.max(1,Math.round(amount)));player.invulnerableUntil=performance.now()+650;renderLives();return {lives:player.lives,source};},
  setDadWorldDistance(distance){window.__crazyFamilyDadWorldDistance=distance;return distance;},
- setDadSpatial(state){const g=Math.max(0,Math.min(1,Number(state?.gain)??1));dadVoiceClips.forEach(a=>a.volume=Math.min(1,.96*g));dadPreClips.forEach(a=>a.volume=Math.min(1,.92*g));dadHouseAudioClips.forEach(a=>a.volume=Math.min(1,.92*g));return g;},
+ setDadSpatial(state){const raw=Number(state?.gain),g=Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):1;dadVoiceClips.forEach(a=>a.volume=Math.min(1,.96*g));dadPreClips.forEach(a=>a.volume=Math.min(1,.92*g));dadHouseAudioClips.forEach(a=>a.volume=Math.min(1,.92*g));return g;},
  startDadSong(){if(dadSongPlaying())return true;startDadSongClip();return true;},
  dadSongIsPlaying(){return dadSongPlaying();},
  playDadPreForMovieSet(index){playDadPre(Math.max(0,Math.min(dadPreClips.length-1,index|0)));return true;},
  triggerDadHouseState(state){if(!['pant','yawn','sneeze'].includes(state))return false;setDadHouseState(state,0,performance.now());return true;},
+ applyDadSongExposure(distance,dt){const now=performance.now(),d=Number(distance),step=Number(dt)||0;if(!dadSongPlaying()){dizzyCharge=Math.max(0,dizzyCharge-24*step);return {shield:player.shield,dizziness:dizzyCharge,controlsReversed:now<dizzyUntil};}if(Number.isFinite(d)&&d<2.1){if(player.shield>0){player.shield=Math.max(0,player.shield-28*step);dizzyCharge=Math.max(0,dizzyCharge-22*step)}else{dizzyCharge=Math.min(100,dizzyCharge+32*step);if(dizzyCharge>=100&&now>=dizzyUntil){dizzyUntil=now+5200;dizzyCharge=25;requestLibiEvent('dizzy',{allowSongOverlap:true,delay:80})}}}else dizzyCharge=Math.max(0,dizzyCharge-24*step);return {shield:player.shield,dizziness:dizzyCharge,controlsReversed:now<dizzyUntil};},
  tickRetainedSystems(dt){if(Number.isFinite(dt)&&dt>0)updateHouseObjects(Math.min(.05,dt));renderLives();staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';}
 };
 if(__crazyFamilyLegacyMode){
