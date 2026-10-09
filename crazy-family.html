@@ -18,6 +18,11 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 .controls{display:flex;justify-content:space-between;gap:14px;align-items:end;margin-top:11px}.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:5px;direction:ltr}.cbtn{border:2px solid #453940;background:linear-gradient(#fff,#f2e9dc);border-radius:17px;font-size:24px;font-weight:900;box-shadow:0 5px 0 #c6b49d;touch-action:none}.cbtn.pressed{transform:translateY(4px);box-shadow:0 1px 0 #c6b49d}.up{grid-column:2}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}.actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:390px}.abtn{width:82px;height:82px;border-radius:50%;border:3px solid #453940;font-weight:900;background:linear-gradient(#ffe487,#efc45a);box-shadow:0 6px 0 #b38f3e;touch-action:none}.abtn.blue{background:linear-gradient(#b5e7ff,#7fc3e7);box-shadow:0 6px 0 #5e90ab}.abtn.pressed{transform:translateY(5px);box-shadow:none}.abtn.skill{width:62px;height:62px;font-size:11px;background:linear-gradient(#d9f3ff,#9dd9f4);box-shadow:0 5px 0 #6b9db5}.abtn.skill.guard{background:linear-gradient(#e6dcff,#bca5ef);box-shadow:0 5px 0 #8168b6}
 @media(max-width:820px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.worldbar{flex-wrap:wrap}.meters{width:100%}.meterbox{flex:1}.dpad{grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px)}.abtn{width:70px;height:70px;font-size:12px}}
 </style>
+
+<style>
+.movie-set-root{position:absolute;inset:0;z-index:3;background:#201b1d;overflow:hidden}.movie-set-root[hidden]{display:none!important}.movie-set-canvas{width:100%;height:100%;display:block;aspect-ratio:auto}.movie-set-unsupported{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:28px;background:linear-gradient(145deg,#3b3035,#1f1a1d);color:#fff;font-weight:800;line-height:1.6}.legacy-mode .movie-set-root{display:none!important}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
 </head>
 <body>
 <main class="game-shell">
@@ -36,6 +41,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
   <div class="layout">
     <div>
       <section class="stage">
+        <div id="movieSetRoot" class="movie-set-root" aria-live="polite"></div>
         <canvas id="game" width="960" height="600"></canvas>
         <div class="toast" id="toast"></div>
       </section>
@@ -67,6 +73,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
 <script>
 (()=>{
+const __crazyFamilyLegacyMode=new URLSearchParams(location.search).get('legacy')==='1';
 const c=document.getElementById('game'),ctx=c.getContext('2d'),W=960,H=600,keys={};
 const toast=document.getElementById('toast'),livesEl=document.getElementById('lives'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield'),dizzyMeterEl=document.getElementById('dizzyMeter');
 const sceneTitle=document.getElementById('sceneTitle'),roomTitle=document.getElementById('roomTitle'),inventoryEl=document.getElementById('inventory'),floorsEl=document.getElementById('floors');
@@ -519,6 +526,16 @@ function draw(){if(player.scene==='ground'){drawStage1DepthScene();return}const 
 function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++){const it=player.inventory[i],d=document.createElement('div');d.className='slot '+(!it?'empty ':'')+(i===player.selected?'selected':'');d.innerHTML=it?itemInventoryArt(it)+'<span>'+it.name+'</span><small style="font-size:10px;color:#756a74">'+((it.id==='headphones'||it.id==='radio')?'בחר ולחץ חפץ':'')+'</small><button></button>':'<span class="ico">＋</span><span>כיס '+(i+1)+'</span><button></button>';d.querySelector('button').onclick=()=>{player.selected=i;renderInv()};inventoryEl.appendChild(d)}}
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
+window.__crazyFamilyRetainedApi={
+ getSnapshot(){return {player:{lives:player.lives,stamina:player.stamina,shield:player.shield,inventory:player.inventory.map(i=>({...i}))},dad:{singing:dad.singing,state:dadHouseState},dizziness:dizzyCharge,scene:player.scene};},
+ setWorldPose(pose){window.__crazyFamilyWorldPose=pose;return true;},
+ collectItem(id){const p=(items.ground||[]).find(i=>i.id===id);if(!p||p.taken||player.inventory.length>=player.capacity)return false;p.taken=true;player.inventory.push({id:p.id,name:p.name,icon:p.icon});player.selected=player.inventory.length-1;renderInv();return true;},
+ useItem(id){const idx=player.inventory.findIndex(i=>i.id===id);if(idx<0)return false;player.selected=idx;useSelectedItem();return true;},
+ damagePlayer(amount=1,source='movie-set'){player.lives=Math.max(0,player.lives-Math.max(1,Math.round(amount)));player.invulnerableUntil=performance.now()+650;renderLives();return {lives:player.lives,source};},
+ setDadWorldDistance(distance){window.__crazyFamilyDadWorldDistance=distance;return distance;},
+ tickRetainedSystems(dt){if(Number.isFinite(dt)&&dt>0)updateHouseObjects(Math.min(.05,dt));renderLives();staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';}
+};
+if(__crazyFamilyLegacyMode){
 addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();const k=e.key.toLowerCase();if(k==='c'&&!e.repeat&&handleCrouchPress()){keys[e.key]=false;keys[k]=false;return}keys[e.key]=true;keys[k]=true;if(e.key===' '&&!e.repeat)triggerJump();if(k==='d'&&!e.repeat)toggleHang();if(e.key==='Enter'||k==='e')transition();if(k==='q')useSelectedItem();if(['1','2','3'].includes(e.key)&&+e.key<=player.capacity){player.selected=+e.key-1;renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
@@ -532,7 +549,22 @@ document.getElementById('itemUse').onclick=useSelectedItem;
 document.getElementById('musicToggle').onclick=toggleBgMusic;
 document.getElementById('audioTest').onclick=()=>{primeDadVoice();dadClipIndex=0;playDadClip(0);msg('🔊 קול אבא 2')};
 renderInv();renderFloors();requestAnimationFrame(loop);
+}else{renderInv();renderFloors();}
+
 })();
+</script>
+
+<!-- Movie-set runtime is default. Explicit rollback only: ?legacy=1 -->
+<script type="module">
+import { shouldUseLegacy, bootCrazyFamily, renderUnsupported } from './crazy-family/bootstrap.js';
+import { createLegacyAdapter } from './crazy-family/legacy-adapter.js';
+const movieSetRoot=document.getElementById('movieSetRoot');
+if(shouldUseLegacy(location.search)){document.body.classList.add('legacy-mode');movieSetRoot.hidden=true;}else{
+ document.body.classList.add('movie-set-mode');
+ const legacyCanvas=document.getElementById('game');if(legacyCanvas)legacyCanvas.hidden=true;
+ const legacyAdapter=createLegacyAdapter(window);
+ bootCrazyFamily({root:movieSetRoot,legacyAdapter}).catch(error=>renderUnsupported(movieSetRoot,error));
+}
 </script>
 </body>
 </html>
