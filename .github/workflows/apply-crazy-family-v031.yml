@@ -20,6 +20,11 @@ jobs:
         run: |
           git fetch origin main
           git rebase origin/main || true
+      - name: Normalize pre-labelled title
+        run: |
+          if grep -q 'שלב 1: מפגש אבא · v0.31' crazy-family.html && ! grep -q 'STAGE1_SIDE_SCROLL_V031' crazy-family.html; then
+            sed -i 's/שלב 1: מפגש אבא · v0.31/שלב 1: מפגש אבא · v0.30/' crazy-family.html
+          fi
       - name: Apply grounded side-scroll patch
         run: python scripts/apply-crazy-family-v031-grounded.py
       - name: Run v0.30 regression checks
