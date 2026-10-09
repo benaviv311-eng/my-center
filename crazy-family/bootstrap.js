@@ -29,6 +29,7 @@ export async function bootCrazyFamily({ root, legacyAdapter }) {
   }
   const { createCrazyFamilyGame } = await import('./game.js');
   const game = await createCrazyFamilyGame({ root, legacyAdapter });
+  globalThis.__crazyFamilyMovieSetGame = game;
   game.start?.();
   return game;
 }
