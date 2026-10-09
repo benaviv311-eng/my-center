@@ -29,6 +29,10 @@ assert(/--score-image-width/.test(containJs) && /--score-image-shift/.test(conta
 assert(/#teams\.score-two-column-fit\.score-image-contained/.test(containCss), 'containment CSS must only affect two-column mode');
 assert(/translateX\(var\(--score-image-shift/.test(containCss), 'contained two-column grid must align itself to the visible image center');
 assert(/\.score-board-row/.test(containCss) && /grid-template-columns/.test(containCss), 'contained mobile cards must compact score controls to fit the image');
+assert(/body\.projection-mode #teams \.score-board-row/.test(css), 'projection mode must explicitly restore the score row layout');
+assert(/body\.projection-mode #teams \.score-board-row[\s\S]*grid-template-columns:46px minmax\(48px,max-content\) 46px!important/.test(css), 'projection mode must keep minus, score and plus in one horizontal grid row');
+assert(/body\.projection-mode #teams \.score-board-row > button/.test(css), 'projection mode must reset score buttons inside the row');
+assert(/body\.projection-mode #teams \.score-board-value/.test(css), 'projection mode must reset the score value inside the row');
 assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box width must respond to the rendered score digits');
 assert(/margin:0 auto!important/.test(css), 'score cards must stay centered inside their layout column/image area');
 assert(/markRankOutside/.test(js) && /score-rank-outside/.test(js), 'rank badge must be detected and moved outside the gray card flow');
@@ -52,7 +56,7 @@ assert(/document\.body\.appendChild\(banner\)/.test(leader), 'leader banner must
 assert(/findLeaderVisualTop/.test(leader), 'leader script must measure the actual visible leader text rather than only the wrapper');
 assert(/visualOffset/.test(leader) && /-visualOffset/.test(leader), 'leader wrapper must compensate for its internal top gap');
 assert(/scoreLeaderVisualOffset/.test(leader), 'measured leader visual offset must be recorded for regression/debugging');
-assert(/score-live-patch\.css\?v=8/.test(index), 'index must load the current patch stylesheet');
+assert(/score-live-patch\.css\?v=9/.test(index), 'index must load the current patch stylesheet');
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must load the current patch script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
