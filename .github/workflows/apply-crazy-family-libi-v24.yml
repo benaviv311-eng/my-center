@@ -1,0 +1,45 @@
+name: Apply Crazy Family Libi v0.24
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-libi-v24.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: RED - verify the new visual test fails before patch
+        shell: bash
+        run: |
+          if node tests/crazy-family-libi-visual.test.js; then
+            echo 'Expected pre-patch test to fail, but it passed.'
+            exit 1
+          else
+            echo 'RED confirmed: Libi v0.24 renderer is not present yet.'
+          fi
+
+      - name: Apply focused Libi visual patch
+        run: python .github/scripts/patch_crazy_family_libi_v24.py
+
+      - name: GREEN - verify Libi visual states
+        run: node tests/crazy-family-libi-visual.test.js
+
+      - name: Commit site update
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crazy-family.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat: upgrade Libi character visuals to v0.24'
+          git push
