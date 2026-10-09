@@ -22,6 +22,7 @@ body.projection-mode #teams > .card.score-card-professional{
   box-sizing:border-box!important;
   overflow:visible!important;
   inset:auto!important;
+  transform:none!important;
   direction:rtl!important;
   text-align:right!important;
 }
