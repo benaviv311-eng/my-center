@@ -4,7 +4,7 @@
 
 **Goal:** Build the standalone SeasonDesign shell with Google sign-in, PWA behavior, saved groups, and separate skill levels per group.
 
-**Architecture:** `season-design/` is an isolated Next.js application. Supabase provides authentication and PostgreSQL persistence. A small IndexedDB read-cache keeps previously viewed safe summaries available when connectivity is weak. The first shipped slice lets a coach sign in, create a group, and maintain the group's skill profile on desktop or mobile.
+**Architecture:** `season-design/` is an isolated Next.js application. Supabase provides authentication and PostgreSQL persistence. A server-side invitation allowlist gates version 1 access, while database ownership policies isolate coach data. A small IndexedDB read-cache keeps previously viewed safe summaries available when connectivity is weak.
 
 **Tech Stack:** Next.js, TypeScript, Supabase/PostgreSQL, Supabase Auth, Vitest, Testing Library, Playwright, Serwist PWA, IndexedDB, Vercel.
 
@@ -15,7 +15,8 @@
 - Runtime must not depend on the existing `my-center` application.
 - Version 1 is private/invite-only but supports multiple coaches in the data model.
 - Google sign-in is the authentication method.
-- Database policies enforce ownership of private coach data.
+- Version 1 invitation access is configured by server-only `SEASON_DESIGN_ALLOWED_EMAILS`; no values are committed.
+- Database policies enforce ownership of private coach data and require an active profile.
 - The five skill levels are `beginner`, `basic`, `intermediate`, `advanced`, `competitive`.
 - Approved level and future system-recommended level remain separate fields.
 - Previously loaded safe summaries may be shown offline; offline writes never report success until confirmed by the server.
@@ -23,7 +24,7 @@
 ## Review Focus
 
 - A coach cannot access another coach's private group data.
-- Missing authentication produces a login flow rather than a broken protected page.
+- A Google-authenticated but uninvited email cannot enter the protected app or create private data.
 - New groups render all canonical skills even before levels are explicitly saved.
 - Previously viewed group information remains readable during weak connectivity without exposing stale data as current.
 - Empty names and invalid player counts are rejected consistently.
@@ -39,14 +40,14 @@
 - Create: `season-design/vitest.config.ts`
 - Create: `season-design/playwright.config.ts`
 - Create: `season-design/app/layout.tsx`
-- Create: `season-design/app/page.tsx`
+- Create: `season-design/app/(app)/page.tsx`
 - Create: `season-design/app/globals.css`
 - Create: `season-design/public/manifest.webmanifest`
 - Create: `season-design/app/offline/page.tsx`
 - Test: `season-design/tests/app-shell.test.tsx`
 
 **Interfaces:**
-- Produces npm scripts `dev`, `build`, `lint`, `test`, `test:e2e` and an installable RTL application shell.
+- Produces npm scripts `dev`, `build`, `lint`, `test`, `test:e2e` and an installable RTL application shell. `app/(app)/page.tsx` is the root Home route and is intentionally a placeholder until the dashboard plan fills it in.
 
 - [ ] **Step 1: Write the failing shell test** for product name, RTL direction, and standalone navigation.
 - [ ] **Step 2: Run `npm test -- tests/app-shell.test.tsx`**; expected FAIL.
@@ -55,12 +56,13 @@
 - [ ] **Step 5: Run `npm test && npm run build`**; expected PASS.
 - [ ] **Step 6: Commit** `feat: scaffold SeasonDesign foundation`.
 
-### Task 2: Authentication and protected app layout
+### Task 2: Authentication, invitation gate, and protected app layout
 
 **Files:**
 - Create: `season-design/lib/supabase/browser.ts`
 - Create: `season-design/lib/supabase/server.ts`
 - Create: `season-design/lib/auth/current-user.ts`
+- Create: `season-design/lib/auth/invitation.ts`
 - Create: `season-design/middleware.ts`
 - Create: `season-design/app/login/page.tsx`
 - Create: `season-design/app/auth/callback/route.ts`
@@ -69,12 +71,14 @@
 - Test: `season-design/tests/auth-routing.test.ts`
 
 **Interfaces:**
-- Produces `getCurrentUser(): Promise<{ id: string; email: string } | null>` and a protected `(app)` route group.
+- Produces `getCurrentUser(): Promise<{ id: string; email: string } | null>`.
+- Produces `isInvitedEmail(email: string): boolean`, reading only `SEASON_DESIGN_ALLOWED_EMAILS` on the server.
+- Produces a protected `(app)` route group.
 
-- [ ] **Step 1: Write failing tests** for unauthenticated redirect, authenticated access, and callback failure.
+- [ ] **Step 1: Write failing tests** for unauthenticated redirect, invited authenticated access, uninvited rejection, and callback failure.
 - [ ] **Step 2: Run the auth test**; expected FAIL.
-- [ ] **Step 3: Implement Supabase browser/server clients and `getCurrentUser()`**.
-- [ ] **Step 4: Implement Google login/callback and private-access check**.
+- [ ] **Step 3: Implement Supabase browser/server clients, `getCurrentUser()`, and normalized case-insensitive invitation matching**.
+- [ ] **Step 4: Implement Google login/callback**; after successful invited login, upsert an active profile for the authenticated user id.
 - [ ] **Step 5: Run tests**; expected PASS.
 - [ ] **Step 6: Commit** `feat: add SeasonDesign sign in`.
 
@@ -89,12 +93,13 @@
 
 **Interfaces:**
 - Produces tables `profiles`, `groups`, `skills`, `group_skill_levels`, `skill_level_history`.
+- `profiles.access_status` is `active|disabled`; private-data policies require `active` and matching owner id.
 - Produces types `SkillLevel`, `Group`, `GroupSkillLevel`.
 
-- [ ] **Step 1: Write failing database tests** for ownership and canonical skill visibility.
+- [ ] **Step 1: Write failing database tests** for active-profile ownership, disabled-profile rejection, cross-owner rejection, and canonical skill visibility.
 - [ ] **Step 2: Run `supabase test db`**; expected FAIL.
 - [ ] **Step 3: Create migration** with the five exact levels and canonical skills: forearm pass, overhead setting, serve, attack, block, defense, reception, coverage, transitions.
-- [ ] **Step 4: Add ownership policies** for group and group-skill records.
+- [ ] **Step 4: Add ownership/access policies** for group and group-skill records.
 - [ ] **Step 5: Run `supabase test db`**; expected PASS.
 - [ ] **Step 6: Commit** `feat: add group skill data model`.
 
@@ -164,7 +169,7 @@
 **Interfaces:**
 - Produces a documented, deployable foundation for all later plans.
 
-- [ ] **Step 1: Add acceptance coverage** for sign-in, group creation, ownership isolation, offline shell fallback, and cached group read fallback.
+- [ ] **Step 1: Add acceptance coverage** for invited sign-in, uninvited rejection, group creation, ownership isolation, offline shell fallback, and cached group read fallback.
 - [ ] **Step 2: Run `npm run lint && npm test && npm run test:e2e && npm run build`**; all expected PASS.
-- [ ] **Step 3: Document local/deployment configuration** without storing credentials in the repository.
+- [ ] **Step 3: Document local/deployment configuration** without storing credentials or allowlist values in the repository.
 - [ ] **Step 4: Commit** `test: verify SeasonDesign foundation`.
