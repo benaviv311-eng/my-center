@@ -43,6 +43,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const layoutCss='<link rel="stylesheet" href="score-layout-menu.css?v=2">';
   const surfaceCss='<link rel="stylesheet" href="score-card-surface.css?v=2&rev=3">';
   const audioCss='<link rel="stylesheet" href="score-audio.css?v=4">';
+  const gameSuiteCss='<link rel="stylesheet" href="score-game-suite.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
@@ -55,8 +56,9 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const leaderOrderJs='<script src="score-leader-order.js?v=1"><\/script>';
   const audioJs='<script src="score-audio.js?v=5"><\/script>';
   const habaitaJs='<script src="score-habaita-refrain.js?v=1"><\/script>';
+  const gameSuiteJs='<script src="score-game-suite.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
