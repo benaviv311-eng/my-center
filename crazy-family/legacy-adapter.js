@@ -13,6 +13,11 @@ export function createLegacyAdapter(windowRef = globalThis.window) {
     useItem: retained.useItem?.bind(retained) || (() => false),
     damagePlayer: retained.damagePlayer?.bind(retained) || noop,
     setDadWorldDistance: retained.setDadWorldDistance?.bind(retained) || noop,
+    setDadSpatial: retained.setDadSpatial?.bind(retained) || noop,
+    startDadSong: retained.startDadSong?.bind(retained) || (() => false),
+    dadSongIsPlaying: retained.dadSongIsPlaying?.bind(retained) || (() => false),
+    playDadPre: retained.playDadPreForMovieSet?.bind(retained) || (() => false),
+    triggerDadHouseState: retained.triggerDadHouseState?.bind(retained) || (() => false),
     tickRetainedSystems: retained.tickRetainedSystems?.bind(retained) || noop,
   };
 }
