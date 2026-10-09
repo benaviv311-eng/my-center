@@ -1,0 +1,18 @@
+name: Crazy Family v0.32 RED
+
+on:
+  push:
+    paths:
+      - 'scripts/test-crazy-family-v032-ground-contact.py'
+      - '.github/workflows/test-crazy-family-v032-red.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  red:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Expect planted-feet test to fail before implementation
+        run: python scripts/test-crazy-family-v032-ground-contact.py
