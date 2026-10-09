@@ -33,7 +33,7 @@
     try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ctx=new AC(),o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=freq;g.gain.value=.04;o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+duration);o.onended=()=>ctx.close()}catch(_){ }
   }
   function speak(text,{force=false}={}){
-    if(!text||prefs.commentary==='off') return;
+    if(!text||(prefs.commentary==='off'&&!force)) return;
     if(!speechVoice){beep(740,.09);return}
     try{
       window.speechSynthesis.cancel();
@@ -111,9 +111,9 @@
   function createTimerShell(){
     if(document.querySelector('.score-v2-timer'))return;
     document.body.classList.add('score-v2-ready');
-    const shell=document.createElement('section');shell.className='score-v2-timer';shell.innerHTML=`
-      <div class="score-v2-timer-head"><button data-v2="games" title="Games">🎮</button><button data-v2="timer-settings" title="Timer settings">⏱</button><strong class="score-v2-mode-label">STOPWATCH</strong><span class="score-v2-spacer"></span><button data-v2="lock" title="Lock">🔓</button><button data-v2="minimize" title="Minimize">—</button></div>
-      <div class="score-v2-timer-body"><div class="score-v2-phase"></div><button class="score-v2-display" data-v2="court">00:00</button><div class="score-v2-round"></div><div class="score-v2-timer-actions"><button data-v2="minus10">−10s</button><button class="score-v2-primary" data-v2="play">▶</button><button data-v2="plus10">+10s</button><button data-v2="plus30">+30s</button><button data-v2="plus60">+1m</button><button data-v2="reset">↺</button><button data-v2="lap">LAP</button><button data-v2="skip">SKIP</button></div></div><div class="score-v2-resize-handle" aria-hidden="true"></div>`;
+    const shell=document.createElement('section');shell.className='score-v2-timer';shell.innerHTML='\
+      <div class="score-v2-timer-head"><button data-v2="games" title="Games">🎮</button><button data-v2="timer-settings" title="Timer settings">⏱</button><strong class="score-v2-mode-label">STOPWATCH</strong><span class="score-v2-spacer"></span><button data-v2="lock" title="Lock">🔓</button><button data-v2="minimize" title="Minimize">—</button></div>\
+      <div class="score-v2-timer-body"><div class="score-v2-phase"></div><button class="score-v2-display" data-v2="court">00:00</button><div class="score-v2-round"></div><div class="score-v2-timer-actions"><button data-v2="minus10">−10s</button><button class="score-v2-primary" data-v2="play">▶</button><button data-v2="plus10">+10s</button><button data-v2="plus30">+30s</button><button data-v2="plus60">+1m</button><button data-v2="reset">↺</button><button data-v2="lap">LAP</button><button data-v2="skip">SKIP</button></div></div><div class="score-v2-resize-handle" aria-hidden="true"></div>';
     document.body.appendChild(shell);timerShell=shell;
     shell.addEventListener('click',e=>{const a=e.target.closest('[data-v2]')?.dataset.v2;if(!a)return;if(a==='games')openDrawer('games');if(a==='timer-settings')openDrawer('timer');if(a==='play')toggleStart();if(a==='reset')timerAction({type:'RESET'});if(a==='minus10')timerAction({type:'ADJUST_TIME',deltaMs:-10000});if(a==='plus10')timerAction({type:'ADJUST_TIME',deltaMs:10000});if(a==='plus30')timerAction({type:'ADJUST_TIME',deltaMs:30000});if(a==='plus60')timerAction({type:'ADJUST_TIME',deltaMs:60000});if(a==='lap')timerAction({type:'LAP'});if(a==='skip')timerAction({type:'SKIP'});if(a==='lock'){layout.locked=!layout.locked;saveLayout();renderTimer()}if(a==='minimize'){layout.minimized=!layout.minimized;saveLayout();renderTimer()}if(a==='court')document.body.classList.toggle('score-v2-court');});
     shell.querySelector('.score-v2-display').addEventListener('dblclick',()=>document.body.classList.toggle('score-v2-court'));
@@ -174,7 +174,7 @@
   function smartAnnouncement(prev,g){if(!g.lastEvent)return'';if(g.mode==='pressure'||prefs.commentary==='full')return scoreline(g);if(g.lastEvent.type==='regroup')return'Halftime. New teams';if(g.finished&&g.winnerId){const w=g.teams.find(t=>t.id===g.winnerId);return`${w?.name||''} wins`}const scores=g.teams.map(t=>t.score);if(scores.length===2&&scores[0]===scores[1])return'Tied';return Games.announcementFor(g);}
   function gameApplyScore(i,delta){if(!activeGame)return;const prev=activeGame;activeGame=Games.applyScore(activeGame,i,delta);saveGame();renderGameHud();const line=smartAnnouncement(prev,activeGame);if(line)speak(line,{force:activeGame.mode==='pressure'});if(activeGame.finished)finishGame()}
   function gameBadPoint(i,category='other'){if(!activeGame)return;activeGame=Games.applyBadPoint(activeGame,i,category);saveGame();renderGameHud();const line=Games.announcementFor(activeGame);if(line)speak(line,{force:true});if(activeGame.finished)finishGame()}
-  function finishGame(){if(!activeGame)return;const winner=activeGame.winnerId?activeGame.teams.find(t=>t.id===activeGame.winnerId):null;history.push({at:Date.now(),name:activeGame.definition?.name||activeGame.mode,summary:winner?`Winner: ${winner.name} · ${scoreline(activeGame)}`:scoreline(activeGame),state:activeGame});saveHistory();if(winner)speak(`${winner.name}. Wins.`,{force:true});renderGameHud()}
+  function finishGame(){if(!activeGame||activeGame._historySaved)return;activeGame._historySaved=true;saveGame();const winner=activeGame.winnerId?activeGame.teams.find(t=>t.id===activeGame.winnerId):null;history.push({at:Date.now(),name:activeGame.definition?.name||activeGame.mode,summary:winner?`Winner: ${winner.name} · ${scoreline(activeGame)}`:scoreline(activeGame),state:activeGame});saveHistory();if(winner)speak(`${winner.name}. Wins.`,{force:true});renderGameHud()}
   function stopGame(){activeGame=null;saveGame();if(gameHud)gameHud.remove();gameHud=null}
 
   function renderGameHud(){
