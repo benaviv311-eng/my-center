@@ -61,6 +61,8 @@ assert(/LIVE_REFRAIN_MAX_MS\s*=\s*28000/.test(js),'live arena refrains must not 
 assert(/liveRefrainTimer/.test(js),'live arena must track its refrain schedule');
 assert(/scheduleLiveRefrain/.test(js),'live arena must schedule terrace refrains between calls');
 assert(/liveModeOn[^\n]*scheduleLiveRefrain|scheduleLiveRefrain\(\)/.test(js),'live mode must actually activate refrain scheduling');
+assert(/הביתה! הביתה! הביתה!/.test(js),'live arena must include the approved habaita terrace refrain');
+assert(/audio\/anthems\/habaita-refrain\.mp3/.test(js),'habaita refrain must use its own permanent local recording');
 assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
 assert(/score-audio\.js\?v=5/.test(index),'index must load the louder rhythmic live-arena behavior');
 
