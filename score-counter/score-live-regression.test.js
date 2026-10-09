@@ -14,12 +14,14 @@ assert(!/score-final-column/.test(js.replace(/remove\(['"]score-final-column['"]
 assert(/classList\.remove\(['"]score-final-column['"]\)/.test(js), 'patch must remove the forced one-column class');
 assert(/layoutObserver\.observe\(teams,\{childList:true\}\)/.test(js), 'layout observer must watch child changes only');
 assert(!/attributeFilter:\['class'\]/.test(js), 'layout observer must not watch class mutations and fight the legacy script');
-assert(/syncTwoColumnFit/.test(js) && /score-two-column-fit/.test(js), 'two-column layout must be detected from rendered card geometry');
+assert(/syncTwoColumnFit/.test(js) && /score-two-column-fit/.test(js), 'two-column layout must be detected from rendered card geometry or computed layout');
 assert(/querySelector\(['"]#sharpBg img\.active['"]\)/.test(js), 'two-column layout must measure the visible active image, not the full-screen sharpBg wrapper');
+assert(/visibleImageRect/.test(js), 'two-column layout must measure the painted image content when object-fit contain is used');
 assert(/--score-two-column-left/.test(js), 'two-column mode must record the visible image left edge');
 assert(/--score-two-column-width/.test(js), 'two-column mode must measure the visible image width');
+assert(/--score-two-column-shift/.test(js), 'two-column mode must calculate the horizontal shift to the visible image center');
 assert(/#teams\.score-two-column-fit/.test(css) && /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(css), 'two-column mode must use two contained equal tracks');
-assert(/left:var\(--score-two-column-left/.test(css), 'two-column grid must be positioned from the visible image left edge');
+assert(/translateX\(var\(--score-two-column-shift/.test(css), 'two-column grid must be shifted onto the visible image instead of centered on the viewport');
 assert(/#teams\.score-two-column-fit > \.card\.score-card-professional/.test(css) && /width:100%!important/.test(css), 'two-column cards must fit their own grid tracks instead of keeping the fixed card width');
 assert(/#teams\.score-two-column-fit \.score-board-row/.test(css), 'two-column mode must compact the score controls so they fit narrow cards');
 assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box width must respond to the rendered score digits');
