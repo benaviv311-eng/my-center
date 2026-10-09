@@ -1,0 +1,16 @@
+name: Crazy Family v0.30 RED
+
+on:
+  push:
+    paths:
+      - 'scripts/test-crazy-family-v030.py'
+      - '.github/workflows/test-crazy-family-v030-red.yml'
+  workflow_dispatch:
+
+jobs:
+  red:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify test is RED before implementation
+        run: python scripts/test-crazy-family-v030.py
