@@ -1,0 +1,26 @@
+/* Tighten the visible card to the Mega button plus roughly one centimeter. */
+#teams > .card.score-card-professional,
+body.projection-mode #teams > .card.score-card-professional{
+  height:var(--score-card-tight-height,max-content)!important;
+  block-size:var(--score-card-tight-height,max-content)!important;
+  min-height:0!important;
+  min-block-size:0!important;
+  padding-bottom:0!important;
+  overflow:visible!important;
+}
+
+#teams > .card.score-card-professional .score-card-mega,
+body.projection-mode #teams > .card.score-card-professional .score-card-mega{
+  margin-bottom:0!important;
+  padding-bottom:0!important;
+}
+
+/* Blue team: very light transparent blue so the background photo stays visible. */
+#teams > .card.score-card-professional.score-card-tint-blue,
+body.projection-mode #teams > .card.score-card-professional.score-card-tint-blue{
+  background:rgba(219,234,254,0.16)!important;
+  border-color:rgba(219,234,254,0.28)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.16)!important;
+  backdrop-filter:blur(2px) saturate(1.05)!important;
+  -webkit-backdrop-filter:blur(2px) saturate(1.05)!important;
+}
