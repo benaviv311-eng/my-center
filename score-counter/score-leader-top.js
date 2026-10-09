@@ -1,6 +1,5 @@
 (function(){
   const LEADER_TOP_PX=4;
-  const teams=document.getElementById('teams');
   let banner=null;
   let scheduled=false;
   let originalParent=null;
@@ -12,14 +11,36 @@
     return /מובילה/.test(text) && /נקודות/.test(text);
   };
 
-  function findLeaderBanner(){
-    const candidates=Array.from(document.querySelectorAll('div,section,aside,header')).filter(el=>{
+  function findLeaderBanners(){
+    return Array.from(document.querySelectorAll('div,section,aside,header')).filter(el=>{
       if(el===document.body || el===document.documentElement) return false;
       if(!matchesLeader(el)) return false;
       return !Array.from(el.children).some(child=>matchesLeader(child));
     });
-    candidates.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);
+  }
+
+  function findLeaderBanner(){
+    const candidates=findLeaderBanners().filter(el=>el.dataset.scoreLeaderDuplicate!=='1');
+    candidates.sort((a,b)=>{
+      const topDelta=a.getBoundingClientRect().top-b.getBoundingClientRect().top;
+      if(Math.abs(topDelta)>1) return topDelta;
+      return a.querySelectorAll('*').length-b.querySelectorAll('*').length;
+    });
     return candidates[0]||null;
+  }
+
+  function hideDuplicateLeaderBanners(){
+    findLeaderBanners().forEach(el=>{
+      if(el===banner){
+        if(el.dataset.scoreLeaderDuplicate==='1'){
+          el.style.removeProperty('display');
+          delete el.dataset.scoreLeaderDuplicate;
+        }
+        return;
+      }
+      el.dataset.scoreLeaderDuplicate='1';
+      el.style.setProperty('display','none','important');
+    });
   }
 
   function findLeaderVisualTop(el){
@@ -49,33 +70,6 @@
     return window.innerWidth/2;
   }
 
-  function renderedAsTwoColumns(){
-    if(!teams) return false;
-    if(teams.classList.contains('score-two-column-fit')) return true;
-
-    const style=getComputedStyle(teams);
-    const columns=(style.gridTemplateColumns||'').trim();
-    if(columns && columns!=='none'){
-      const tracks=columns.split(/\s+/).filter(Boolean);
-      if(tracks.length===2) return true;
-    }
-    const count=parseInt(style.columnCount,10);
-    if(count===2) return true;
-
-    const cards=Array.from(teams.querySelectorAll(':scope > .card.score-card-professional')).filter(card=>{
-      const rect=card.getBoundingClientRect();
-      return rect.width>0 && rect.height>0;
-    });
-    if(cards.length<2) return false;
-    const rects=cards.map(card=>card.getBoundingClientRect());
-    const firstTop=Math.min(...rects.map(rect=>rect.top));
-    return rects.filter(rect=>Math.abs(rect.top-firstTop)<=8).length===2;
-  }
-
-  function isDoubleProjection(){
-    return document.body.classList.contains('projection-mode') && renderedAsTwoColumns();
-  }
-
   function restoreBanner(el){
     if(!el) return;
     const original=el.dataset.scoreLeaderOriginalStyle;
@@ -103,10 +97,7 @@
     if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
 
-    if(isDoubleProjection()){
-      banner.style.setProperty('display','none','important');
-      return;
-    }
+    hideDuplicateLeaderBanners();
     banner.style.removeProperty('display');
 
     if(banner.dataset.scoreLeaderCeiling!=='1'){
@@ -136,6 +127,8 @@
     const visualOffset=Math.max(0,Math.round(visualTop-bannerTop));
     banner.dataset.scoreLeaderVisualOffset=String(visualOffset);
     banner.style.setProperty('top',(LEADER_TOP_PX-visualOffset)+'px','important');
+
+    hideDuplicateLeaderBanners();
   }
 
   function schedulePin(force){
@@ -150,6 +143,8 @@
 
   pinLeaderBannerTop(true);
   requestAnimationFrame(()=>pinLeaderBannerTop(true));
+  setTimeout(()=>schedulePin(true),200);
+  setTimeout(()=>schedulePin(true),800);
   window.addEventListener('resize',()=>schedulePin(true));
   document.addEventListener('click',()=>schedulePin(false),true);
   document.addEventListener('change',()=>schedulePin(false),true);
