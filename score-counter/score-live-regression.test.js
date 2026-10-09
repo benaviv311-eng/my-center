@@ -59,7 +59,7 @@ assert(/tightenCardsToMega/.test(surfaceJs) && /CARD_MEGA_BOTTOM_GAP_PX\s*=\s*6/
 assert(/--score-card-tight-height/.test(surfaceJs) && /--score-card-tight-height/.test(surfaceCss), 'measured tight card height must drive the rendered card height');
 assert(/markTeamColorCards/.test(surfaceJs) && /--score-team-rgb/.test(surfaceJs), 'every team card must derive its tint from the team color');
 assert(/score-card-team-tint/.test(surfaceJs) && /\.score-card-team-tint/.test(surfaceCss), 'team tint class must apply to all detected team colors');
-assert(/rgba\(var\(--score-team-rgb\),\s*0\.1[0-9]\)/.test(surfaceCss), 'team card tint must remain very light and translucent');
+assert(/linear-gradient\(180deg,rgba\(var\(--score-team-light-rgb\),0\.34\),rgba\(var\(--score-team-light-rgb\),0\.24\)\)/.test(surfaceCss), 'team card tint must preserve the current strengthened translucent gradient');
 assert(/backdrop-filter:blur/.test(surfaceCss), 'translucent team card must preserve visible background imagery');
 assert(!/score-card-tint-blue/.test(surfaceCss), 'surface styling must no longer be blue-only');
 assert(/surfaceLayoutObserver/.test(surfaceJs) && /attributeFilter:\s*\['data-score-layout-mode'\]/.test(surfaceJs), 'surface refresh must react directly to layout mode changes');
