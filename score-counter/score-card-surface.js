@@ -66,10 +66,11 @@
       .sort((a,b)=>colorStrength(b)-colorStrength(a));
     if(pseudoColors.length) return pseudoColors[0];
 
+    const computedCard=getComputedStyle(card);
     const cardStyle=bestColorFromStyle({
       backgroundColor:'transparent',
       backgroundImage:'none',
-      borderTopColor:getComputedStyle(card).borderTopColor,
+      borderTopColor:computedCard.borderTopColor,
       borderRightColor:'transparent',
       borderBottomColor:'transparent',
       borderLeftColor:'transparent',
@@ -159,10 +160,21 @@
   function scheduleRefresh(){
     if(frame) cancelAnimationFrame(frame);
     frame=requestAnimationFrame(()=>{
-      frame=0;
-      refreshCardSurface();
+      frame=requestAnimationFrame(()=>{
+        frame=0;
+        refreshCardSurface();
+      });
     });
   }
+
+  const surfaceLayoutObserver=new MutationObserver(()=>scheduleRefresh());
+  surfaceLayoutObserver.observe(teams,{attributes:true,attributeFilter:['data-score-layout-mode']});
+
+  const surfaceProjectionObserver=new MutationObserver(()=>scheduleRefresh());
+  surfaceProjectionObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+
+  const surfaceCardsObserver=new MutationObserver(()=>scheduleRefresh());
+  surfaceCardsObserver.observe(teams,{childList:true});
 
   refreshCardSurface();
   requestAnimationFrame(refreshCardSurface);
@@ -173,4 +185,5 @@
   document.addEventListener('click',scheduleRefresh,true);
   document.addEventListener('change',scheduleRefresh,true);
   document.addEventListener('input',scheduleRefresh,true);
+  document.addEventListener('scorecards:autoarrange',scheduleRefresh);
 })();
