@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# RED/GREEN contract for the full Stage 1 visual upgrade.
 s = Path('crazy-family.html').read_text(encoding='utf-8')
 required = [
     'DAD_SPRITE_RENDERER_V028',
