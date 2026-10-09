@@ -1,0 +1,8 @@
+TeamScore arena audio library
+
+chants: 16 recorded variants
+anthems: 4 terrace chant beds
+noise: 3 continuous arena beds
+pressure: combines all three layers for 15 seconds
+
+All audio assets in this directory are served locally by the TeamScore site.
