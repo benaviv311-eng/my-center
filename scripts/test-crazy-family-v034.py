@@ -1,9 +1,14 @@
 from pathlib import Path
+import re
 
 html = Path('crazy-family.html').read_text(encoding='utf-8')
+match = re.search(r'· v0\.(\d+)', html)
+current_minor = int(match.group(1)) if match else -1
 
 checks = {
-    'version': 'v0.34' in html,
+    # v0.34 introduced the cinematic depth-diorama feature; later display versions
+    # must keep the feature without being forced to keep the old version label.
+    'version_at_least_v034': current_minor >= 34,
     'marker': 'CINEMATIC_HOME_DIORAMA_V034' in html,
     'depth_bounds': 'STAGE1_DEPTH_FAR=350' in html and 'STAGE1_DEPTH_NEAR=535' in html,
     'depth_scale': 'function stage1DepthScale' in html,
@@ -18,4 +23,4 @@ checks = {
 failed = [name for name, ok in checks.items() if not ok]
 if failed:
     raise SystemExit('FAIL: ' + ', '.join(failed))
-print('PASS: crazy-family v0.34 cinematic home diorama')
+print(f'PASS: crazy-family v0.34 cinematic home diorama retained in display version v0.{current_minor}')
