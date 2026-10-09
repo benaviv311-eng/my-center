@@ -3,38 +3,36 @@
   left:14px;
   bottom:14px;
   z-index:2147482600;
-  width:min(330px,calc(100vw - 28px));
+  width:min(360px,calc(100vw - 28px));
   direction:rtl;
   color:#fff;
   font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
-  filter:drop-shadow(0 10px 28px rgba(0,0,0,.32));
+  filter:drop-shadow(0 12px 30px rgba(0,0,0,.38));
 }
-.score-audio-panel button,
-.score-audio-panel input{font:inherit}
+.score-audio-panel button,.score-audio-panel input{font:inherit}
 .score-audio-main{
-  width:auto;
-  min-width:112px;
+  min-width:116px;
   border:1px solid rgba(255,255,255,.28);
   border-radius:16px;
-  padding:10px 14px;
-  background:rgba(13,18,28,.86);
+  padding:10px 15px;
+  background:rgba(10,15,25,.9);
   color:#fff;
-  font-weight:900;
+  font-weight:950;
   cursor:pointer;
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
 }
-.score-audio-panel:not(.is-collapsed) .score-audio-main{
-  border-radius:16px 16px 8px 8px;
-}
+.score-audio-panel:not(.is-collapsed) .score-audio-main{border-radius:16px 16px 8px 8px}
 .score-audio-body{
   margin-top:7px;
-  padding:12px;
+  padding:11px;
+  max-height:min(78vh,650px);
+  overflow:auto;
   border:1px solid rgba(255,255,255,.2);
-  border-radius:14px;
-  background:rgba(8,12,20,.88);
-  backdrop-filter:blur(16px) saturate(1.15);
-  -webkit-backdrop-filter:blur(16px) saturate(1.15);
+  border-radius:15px;
+  background:rgba(7,11,19,.92);
+  backdrop-filter:blur(18px) saturate(1.18);
+  -webkit-backdrop-filter:blur(18px) saturate(1.18);
 }
 .score-audio-status{
   margin:0 0 9px;
@@ -61,32 +59,12 @@
   border-color:rgba(255,94,94,.42);
   background:rgba(171,33,33,.2);
 }
-.score-audio-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-}
-.score-audio-mode,
-.score-audio-chants button{
-  border:1px solid rgba(255,255,255,.18);
-  border-radius:12px;
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  padding:9px 10px;
-  font-weight:800;
-  cursor:pointer;
-}
-.score-audio-mode.is-on{
-  background:rgba(42,190,116,.24);
-  border-color:rgba(92,255,165,.58);
-}
 .score-audio-pressure{
   width:100%;
-  margin-top:9px;
-  border:1px solid rgba(255,178,178,.55);
+  border:1px solid rgba(255,178,178,.58);
   border-radius:14px;
   padding:13px 12px;
-  background:linear-gradient(180deg,rgba(197,32,32,.96),rgba(125,12,12,.96));
+  background:linear-gradient(180deg,rgba(211,38,38,.98),rgba(125,12,12,.98));
   color:#fff;
   font-size:16px;
   font-weight:1000;
@@ -94,52 +72,119 @@
   cursor:pointer;
   box-shadow:0 0 0 0 rgba(255,67,67,.35);
 }
-.score-audio-pressure.is-on{
-  animation:score-audio-pressure-pulse .7s ease-in-out infinite alternate;
-}
+.score-audio-pressure.is-on{animation:score-audio-pressure-pulse .7s ease-in-out infinite alternate}
 @keyframes score-audio-pressure-pulse{
   from{transform:scale(1);box-shadow:0 0 0 0 rgba(255,67,67,.28)}
-  to{transform:scale(1.025);box-shadow:0 0 0 8px rgba(255,67,67,0)}
+  to{transform:scale(1.022);box-shadow:0 0 0 8px rgba(255,67,67,0)}
 }
-.score-audio-label{
-  margin:12px 2px 7px;
-  font-size:12px;
+.score-audio-layer{
+  margin-top:9px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:13px;
+  background:rgba(255,255,255,.055);
+}
+.score-audio-layer-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.score-audio-layer-head strong{
+  font-size:14px;
+  font-weight:1000;
+}
+.score-audio-toggle{
+  min-width:58px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  padding:6px 10px;
+  background:rgba(255,255,255,.07);
+  color:#dbe4ef;
+  font-size:11px;
+  font-weight:950;
+  cursor:pointer;
+}
+.score-audio-toggle.is-on{
+  color:#c9ffe0;
+  border-color:rgba(80,255,157,.48);
+  background:rgba(33,168,91,.22);
+}
+.score-audio-layer-volume,.score-audio-master{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:9px;
+  margin-top:8px;
+  font-size:11px;
+  font-weight:850;
+  color:#cbd5e1;
+}
+.score-audio-layer-volume input,.score-audio-master input{
+  width:100%;
+  margin:0;
+  accent-color:#fff;
+}
+.score-audio-current{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  min-width:0;
+  color:#b9c6d6;
+  font-size:11px;
+  font-weight:750;
+}
+.score-audio-current b{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#fff;
+}
+.score-audio-cycle{
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;
+  padding:5px 8px;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:11px;
   font-weight:900;
-  opacity:.78;
+  cursor:pointer;
 }
 .score-audio-chants{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:7px;
+  margin-top:9px;
 }
-.score-audio-chants button:active,
-.score-audio-mode:active,
-.score-audio-main:active,
-.score-audio-pressure:active{
-  transform:translateY(1px);
-}
-.score-audio-volume{
-  display:grid;
-  grid-template-columns:auto 1fr;
-  align-items:center;
-  gap:10px;
-  margin-top:12px;
-  font-size:12px;
+.score-audio-chants button{
+  min-height:38px;
+  border:1px solid rgba(255,255,255,.17);
+  border-radius:11px;
+  padding:8px 7px;
+  background:rgba(255,255,255,.075);
+  color:#fff;
   font-weight:900;
+  cursor:pointer;
 }
-.score-audio-volume input{
-  width:100%;
-  accent-color:#fff;
+.score-audio-chants button:hover,.score-audio-cycle:hover,.score-audio-toggle:hover{background:rgba(255,255,255,.13)}
+.score-audio-master{
+  margin:11px 2px 1px;
+  padding-top:9px;
+  border-top:1px solid rgba(255,255,255,.1);
 }
+.score-audio-panel button:active{transform:translateY(1px)}
 @media (max-width:700px){
   .score-audio-panel{
     left:10px;
     bottom:10px;
-    width:min(310px,calc(100vw - 20px));
+    width:min(334px,calc(100vw - 20px));
   }
-  .score-audio-body{padding:10px}
-  .score-audio-chants button,
-  .score-audio-mode{padding:8px 7px;font-size:13px}
+  .score-audio-body{padding:9px;max-height:72vh}
+  .score-audio-layer{padding:9px}
+  .score-audio-chants button{font-size:12px;padding:7px 5px}
 }
 @media (prefers-reduced-motion:reduce){
   .score-audio-pressure.is-on{animation:none}
