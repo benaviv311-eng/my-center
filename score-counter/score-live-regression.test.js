@@ -66,7 +66,7 @@ assert(/#sharpBg img\.active/.test(leader), 'leader must center against the acti
 assert(/isDoubleProjection/.test(leader) && /projection-mode/.test(leader) && /score-two-column-fit/.test(leader), 'leader must detect double projection mode');
 assert(/display','none'/.test(leader), 'leader must be hidden in double projection mode');
 assert(/translateX\(-50%\)/.test(leader), 'normal leader must center from its own midpoint rather than stale saved width');
-assert(/score-live-patch\.css\?v=9/.test(index), 'index must load the current patch stylesheet');
+assert(/score-live-patch\.css\?v=10/.test(index), 'index must load the current projection-card patch stylesheet');
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must load the current patch script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
