@@ -4,6 +4,15 @@ function material(color, roughness = 0.72) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness: 0.02 });
 }
 
+function rememberBase(mesh){
+  mesh.userData.movieSetBase={
+    position:mesh.position.clone(),
+    rotation:mesh.rotation.clone(),
+    scale:mesh.scale.clone(),
+  };
+  return mesh;
+}
+
 function createBoxMesh(def) {
   const geometry = new THREE.BoxGeometry(def.width, def.height, def.depth);
   const mesh = new THREE.Mesh(geometry, material(def.color ?? 0x9b765f));
@@ -12,7 +21,7 @@ function createBoxMesh(def) {
   mesh.position.set(def.x, def.y, def.z);
   mesh.castShadow = def.id !== 'floor' && def.id !== 'rug';
   mesh.receiveShadow = true;
-  return mesh;
+  return rememberBase(mesh);
 }
 
 function createRug(def) {
@@ -22,7 +31,7 @@ function createRug(def) {
   mesh.userData.semanticId = def.id;
   mesh.position.set(def.x, 0.02, def.z);
   mesh.receiveShadow = true;
-  return mesh;
+  return rememberBase(mesh);
 }
 
 function addWalls(scene) {
@@ -113,6 +122,7 @@ export function createLivingRoomScene({ canvas, world }) {
       floor.userData.semanticId = def.id;
       floor.position.set(def.x, -0.04, def.z);
       floor.receiveShadow = true;
+      rememberBase(floor);
       scene.add(floor);
       objectsById.set(def.id, floor);
       continue;
@@ -143,6 +153,7 @@ export function createLivingRoomScene({ canvas, world }) {
   headphonesGroup.position.set(-4.15, 1.02, 0.1);
   headphonesGroup.rotation.y = -0.35;
   headphonesGroup.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  rememberBase(headphonesGroup);
   scene.add(headphonesGroup);
   objectsById.set('headphones', headphonesGroup);
 
@@ -172,9 +183,10 @@ export function createLivingRoomScene({ canvas, world }) {
     return true;
   }
 
-  function applyCameraPose(pose) {
+  function applyCameraPose(pose, shake = 0, now = 0) {
     if (!pose) return camera;
-    camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+    const sx=Math.sin(now*.041)*shake*.08,sy=Math.cos(now*.053)*shake*.055,sz=Math.sin(now*.067+.8)*shake*.07;
+    camera.position.set(pose.position.x+sx, pose.position.y+sy, pose.position.z+sz);
     camera.fov = pose.fov;
     camera.updateProjectionMatrix();
     camera.lookAt(pose.target.x, pose.target.y, pose.target.z);
@@ -186,6 +198,17 @@ export function createLivingRoomScene({ canvas, world }) {
     for (const id of faded) if (!next.has(id)) setObjectOpacity(id, 1);
     for (const id of next) setObjectOpacity(id, 0.75);
     faded = next;
+  }
+
+  function applyReactiveTransforms(controller){
+    if(!controller?.transforms)return;
+    for(const [id,t] of Object.entries(controller.transforms)){
+      const object=objectsById.get(id);if(!object)continue;
+      const base=object.userData.movieSetBase;if(!base)continue;
+      object.position.set(base.position.x+(t.x||0),base.position.y+(t.y||0),base.position.z+(t.z||0));
+      object.rotation.set(base.rotation.x+(t.rotX||0),base.rotation.y+(t.rotY||0),base.rotation.z+(t.rotZ||0));
+      object.scale.set(base.scale.x,base.scale.y*(t.scaleY??1),base.scale.z);
+    }
   }
 
   return {
@@ -201,6 +224,7 @@ export function createLivingRoomScene({ canvas, world }) {
     setObjectOpacity,
     applyCameraPose,
     setOccluders,
+    applyReactiveTransforms,
     dispose() {
       for (const id of faded) setObjectOpacity(id, 1);
       scene.traverse(object => {
