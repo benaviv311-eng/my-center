@@ -432,7 +432,7 @@ const libiReactionBank={
  headphones:[{i:36,w:4},{i:37,w:3},{i:38,w:3}]
 };
 let libiRecentVoices=[];
-const libiEncounterMemory={songCount:0,currentSong:-1,lastSong:-1,lastSongEndedAt:0,lastSongStartedAt:0,wrongWaySince:0,lastConfusedAt:0,chaseSince:0,lastMissAt:0};
+const libiEncounterMemory={songCount:0,currentSong:-1,lastSong:-1,lastSongEndedAt:0,lastSongStartedAt:0,heardSongs:[],wrongWaySince:0,lastConfusedAt:0,chaseSince:0,lastMissAt:0};
 let libiVoiceAudio=null,libiReactionToken=0,nextLibiReactionAt=0,libiLastDist=Infinity,libiSongInterruptAt=0,libiIdleReactionAt=0,libiDangerLatched=false,libiEscapeLatched=false,libiWasSongPlaying=false;
 function libiVoicePlaying(){return !!(libiVoiceAudio&&!libiVoiceAudio.paused&&!libiVoiceAudio.ended)}
 function pickWeightedLibi(event){
@@ -455,7 +455,7 @@ function requestLibiEvent(event,{allowSongOverlap=false,delay=0}={}){
  const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;const blockedBySong=dadSongPlaying()&&!allowSongOverlap;if(!dadPrePlaying()&&!blockedBySong&&!libiVoicePlaying()){playLibiClip(index,allowSongOverlap);return}if(performance.now()-started<3000)setTimeout(attempt,140)};
  setTimeout(attempt,delay);return true
 }
-function resetLibiEncounterMemory(){libiEncounterMemory.songCount=0;libiEncounterMemory.currentSong=-1;libiEncounterMemory.lastSong=-1;libiEncounterMemory.lastSongEndedAt=0;libiEncounterMemory.lastSongStartedAt=0;libiEncounterMemory.wrongWaySince=0;libiEncounterMemory.lastConfusedAt=0;libiEncounterMemory.chaseSince=0;libiEncounterMemory.lastMissAt=0;libiRecentVoices=[]}
+function resetLibiEncounterMemory(){libiEncounterMemory.songCount=0;libiEncounterMemory.currentSong=-1;libiEncounterMemory.lastSong=-1;libiEncounterMemory.lastSongEndedAt=0;libiEncounterMemory.lastSongStartedAt=0;libiEncounterMemory.heardSongs=[];libiEncounterMemory.wrongWaySince=0;libiEncounterMemory.lastConfusedAt=0;libiEncounterMemory.chaseSince=0;libiEncounterMemory.lastMissAt=0;libiRecentVoices=[]}
 function updateLibiReactionEngine(now,dist,songPlaying){
  if(player.scene!==dad.scene||!Number.isFinite(dist)){
   if(Number.isFinite(libiLastDist))resetLibiEncounterMemory();libiLastDist=Infinity;libiWasSongPlaying=false;libiDangerLatched=false;libiEscapeLatched=false;libiSongInterruptAt=0;libiIdleReactionAt=0;return
@@ -465,14 +465,14 @@ function updateLibiReactionEngine(now,dist,songPlaying){
  if(libiLastDist>=300&&dist<300&&!songPlaying)requestLibiEvent('call',{delay:380});
  if(libiLastDist>=210&&dist<210&&!songPlaying)requestLibiEvent('songWarning',{delay:300});
  if(songPlaying&&!libiWasSongPlaying){
-  const current=dadSongIndex,same=current>=0&&current===libiEncounterMemory.lastSong,again=!!libiEncounterMemory.lastSongEndedAt&&now-libiEncounterMemory.lastSongEndedAt<12000;
-  libiEncounterMemory.songCount++;libiEncounterMemory.currentSong=current;libiEncounterMemory.lastSongStartedAt=now;
+  const current=dadSongIndex,same=current>=0&&libiEncounterMemory.heardSongs.includes(current),again=!!libiEncounterMemory.lastSongEndedAt&&now-libiEncounterMemory.lastSongEndedAt<12000;
+  libiEncounterMemory.songCount++;libiEncounterMemory.currentSong=current;libiEncounterMemory.lastSongStartedAt=now;if(current>=0&&!same)libiEncounterMemory.heardSongs.push(current);
   requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:900});libiSongInterruptAt=now+7000+Math.random()*4000;
  }
  if(!songPlaying&&libiWasSongPlaying){libiEncounterMemory.lastSong=libiEncounterMemory.currentSong;libiEncounterMemory.currentSong=-1;libiEncounterMemory.lastSongEndedAt=now;libiSongInterruptAt=0;libiEncounterMemory.chaseSince=0}
  if(songPlaying&&dist<300&&libiSongInterruptAt&&now>=libiSongInterruptAt){requestLibiEvent(dist<150?'chase':'songOngoing',{allowSongOverlap:true});libiSongInterruptAt=now+7000+Math.random()*4000}
  if(songPlaying&&dist<190){if(!libiEncounterMemory.chaseSince)libiEncounterMemory.chaseSince=now;if(now-libiEncounterMemory.chaseSince>1800){if(requestLibiEvent('chase',{allowSongOverlap:true,delay:80}))libiEncounterMemory.chaseSince=now+5000}}else libiEncounterMemory.chaseSince=0;
- if(dist<80&&!libiDangerLatched){libiEscapeLatched=true;if(requestLibiEvent('danger',{allowSongOverlap:songPlaying,delay:60}))libiDangerLatched=true}
+ if(dist<80&&!libiDangerLatched){libiEscapeLatched=true;libiDangerLatched=true;requestLibiEvent('danger',{allowSongOverlap:songPlaying,delay:60})}
  if(libiDangerLatched&&dist>130){requestLibiEvent('missed',{allowSongOverlap:songPlaying,delay:80});libiDangerLatched=false;libiEncounterMemory.lastMissAt=now}
  if(libiEscapeLatched&&dist>210&&now-libiEncounterMemory.lastMissAt>1200){if(requestLibiEvent('escaped',{allowSongOverlap:songPlaying,delay:120}))libiEscapeLatched=false}
  const dadGoingWrongWay=!songPlaying&&dist>260&&Math.hypot(dad.targetX-player.x,dad.targetY-player.y)>dist+90;
