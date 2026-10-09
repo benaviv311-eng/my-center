@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#160f0a">
+  <title>מורשת ראיישין — המשחק</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="game-app" aria-label="מורשת ראיישין — גרסת משחק 0.1">
+    <section class="game-frame" data-game-aspect="16:9" aria-label="Inazuma Dojo gameplay preview">
+      <img
+        id="gameplayShot"
+        class="gameplay-shot"
+        src="./assets/gameplay/gameplay-hud-v1.png"
+        alt="ראיקה בדוג'ו אינאזומה בתצוגת משחק מגוף שלישי"
+        draggable="false"
+      >
+
+      <div class="hud-contract" aria-label="HUD v0.1">
+        <span class="sr-only">Health</span>
+        <span class="sr-only">Raihatsu</span>
+        <span class="sr-only">Objective</span>
+        <span class="sr-only">Jump</span>
+        <span class="sr-only">Dodge</span>
+        <span class="sr-only">Interact</span>
+        <span class="sr-only">minimap</span>
+      </div>
+
+      <div id="loadError" class="load-error" role="alert" hidden>
+        לא ניתן לטעון את מסך המשחק המאושר.
+      </div>
+    </section>
+  </main>
+  <script src="./game.js"></script>
+</body>
+</html>
