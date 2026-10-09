@@ -12,6 +12,9 @@ on:
       - 'score-counter/score-image-contain.js'
       - 'score-counter/score-image-contain.css'
       - 'score-counter/score-leader-top.js'
+      - 'score-counter/score-layout-menu.js'
+      - 'score-counter/score-layout-menu.css'
+      - 'score-counter/score-layout-menu-regression.test.js'
       - 'score-counter/score-live-regression.test.js'
       - '.github/workflows/score-counter-live-tools-test.yml'
 jobs:
@@ -91,5 +94,7 @@ jobs:
           assert(index.includes('score-live.css'),'loader missing score-live.css');
           NODE
           node score-counter/score-live-regression.test.js
+          node score-counter/score-layout-menu-regression.test.js
           node --check score-counter/score-live-core.js
           node --check score-counter/score-live.js
+          node --check score-counter/score-layout-menu.js
