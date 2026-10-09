@@ -4,9 +4,9 @@
 
 **Goal:** Build the standalone SeasonDesign shell with Google sign-in, PWA behavior, saved groups, and separate skill levels per group.
 
-**Architecture:** `season-design/` is an isolated Next.js application. Supabase provides authentication and PostgreSQL persistence. The first shipped slice lets a coach sign in, create a group, and maintain the group's skill profile on desktop or mobile.
+**Architecture:** `season-design/` is an isolated Next.js application. Supabase provides authentication and PostgreSQL persistence. A small IndexedDB read-cache keeps previously viewed safe summaries available when connectivity is weak. The first shipped slice lets a coach sign in, create a group, and maintain the group's skill profile on desktop or mobile.
 
-**Tech Stack:** Next.js, TypeScript, Supabase/PostgreSQL, Supabase Auth, Vitest, Testing Library, Playwright, Serwist PWA, Vercel.
+**Tech Stack:** Next.js, TypeScript, Supabase/PostgreSQL, Supabase Auth, Vitest, Testing Library, Playwright, Serwist PWA, IndexedDB, Vercel.
 
 **Spec:** `season-design/docs/superpowers/specs/2026-10-09-seasondesign-design.md`
 
@@ -18,13 +18,14 @@
 - Database policies enforce ownership of private coach data.
 - The five skill levels are `beginner`, `basic`, `intermediate`, `advanced`, `competitive`.
 - Approved level and future system-recommended level remain separate fields.
+- Previously loaded safe summaries may be shown offline; offline writes never report success until confirmed by the server.
 
 ## Review Focus
 
 - A coach cannot access another coach's private group data.
 - Missing authentication produces a login flow rather than a broken protected page.
 - New groups render all canonical skills even before levels are explicitly saved.
-- Weak connectivity does not crash the installed app shell.
+- Previously viewed group information remains readable during weak connectivity without exposing stale data as current.
 - Empty names and invalid player counts are rejected consistently.
 
 ---
@@ -135,7 +136,26 @@
 - [ ] **Step 5: Run `npm test && npm run test:e2e && npm run build`**; expected PASS.
 - [ ] **Step 6: Commit** `feat: add saved group profiles`.
 
-### Task 6: Foundation acceptance
+### Task 6: Offline read snapshot contract
+
+**Files:**
+- Create: `season-design/lib/offline/read-cache.ts`
+- Create: `season-design/features/groups/offline-group-snapshot.tsx`
+- Test: `season-design/lib/offline/read-cache.test.ts`
+- Test: `season-design/e2e/groups-offline.spec.ts`
+
+**Interfaces:**
+- Produces `putOfflineSnapshot<T>(key,value,updatedAt): Promise<void>` and `getOfflineSnapshot<T>(key): Promise<{ value:T; updatedAt:string } | null>`.
+- Group screens cache successful safe read models; later plans reuse the same contract for saved-practice/program summaries.
+
+- [ ] **Step 1: Write failing cache tests** for put/get, missing key, replacement, and per-user key namespace.
+- [ ] **Step 2: Write failing E2E test** that loads a group, loses network, reopens the viewed group summary, and sees an explicit offline/stale indicator.
+- [ ] **Step 3: Implement IndexedDB read-cache wrapper and group fallback component**.
+- [ ] **Step 4: Ensure mutations remain disabled/failed clearly while offline** rather than queued as successful writes.
+- [ ] **Step 5: Run tests**; expected PASS.
+- [ ] **Step 6: Commit** `feat: cache safe offline read snapshots`.
+
+### Task 7: Foundation acceptance
 
 **Files:**
 - Create: `season-design/README.md`
@@ -144,7 +164,7 @@
 **Interfaces:**
 - Produces a documented, deployable foundation for all later plans.
 
-- [ ] **Step 1: Add acceptance coverage** for sign-in, group creation, ownership isolation, and offline shell fallback.
+- [ ] **Step 1: Add acceptance coverage** for sign-in, group creation, ownership isolation, offline shell fallback, and cached group read fallback.
 - [ ] **Step 2: Run `npm run lint && npm test && npm run test:e2e && npm run build`**; all expected PASS.
 - [ ] **Step 3: Document local/deployment configuration** without storing credentials in the repository.
 - [ ] **Step 4: Commit** `test: verify SeasonDesign foundation`.
