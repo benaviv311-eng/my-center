@@ -44,6 +44,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const surfaceCss='<link rel="stylesheet" href="score-card-surface.css?v=2&rev=3">';
   const gamesCss='<link rel="stylesheet" href="score-games.css?v=1">';
   const toolsCss='<link rel="stylesheet" href="score-tools-v2.css?v=1">';
+  const advancedCss='<link rel="stylesheet" href="score-advanced-ui-v2.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
@@ -56,10 +57,12 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const timerV2Js='<script src="score-timer-v2-core.js?v=1"><\/script>';
   const gamesCoreJs='<script src="score-games-core.js?v=1"><\/script>';
   const gamesRulesJs='<script src="score-games-rules-v2.js?v=1"><\/script>';
+  const customRulesJs='<script src="score-custom-rules-v2.js?v=1"><\/script>';
   const gamesUiJs='<script src="score-games-ui.js?v=2"><\/script>';
+  const advancedUiJs='<script src="score-advanced-ui-v2.js?v=1"><\/script>';
   const toolsJs='<script src="score-tools-v2.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+gamesCss+toolsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+lowerJs+surfaceJs+timerV2Js+gamesCoreJs+gamesRulesJs+gamesUiJs+toolsJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+gamesCss+toolsCss+advancedCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+lowerJs+surfaceJs+timerV2Js+gamesCoreJs+gamesRulesJs+customRulesJs+gamesUiJs+advancedUiJs+toolsJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
