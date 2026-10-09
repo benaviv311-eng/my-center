@@ -50,7 +50,7 @@ try {
   await page.waitForTimeout(110);
   const airborneY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(airborneY > 0.08, `jump did not raise world Y: ${airborneY}`);
-  await page.waitForTimeout(1100);
+  await page.waitForFunction(() => Math.abs(window.__crazyFamilyMovieSetGame.player.position.y) < 0.02, null, { timeout: 4000 });
   const landedY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(Math.abs(landedY) < 0.02, `Libi did not return to room floor: ${landedY}`);
 
