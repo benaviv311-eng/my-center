@@ -24,11 +24,14 @@ jobs:
         run: |
           node --check score-counter/score-timer-v2-core.js
           node --check score-counter/score-games-core.js
+          node --check score-counter/score-games-rules-v2.js
           node --check score-counter/score-games-ui.js
       - name: Timer V2 core tests
         run: node score-counter/score-timer-v2-core.test.js
       - name: Game engine tests
         run: node score-counter/score-games-core.test.js
+      - name: Advanced game rules tests
+        run: node score-counter/score-games-rules-v2.test.js
       - name: V2 UI contract tests
         run: node score-counter/score-games-ui.contract.test.js
       - name: V2 index integration tests
