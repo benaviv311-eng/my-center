@@ -59,7 +59,7 @@ assert(/tightenCardsToMega/.test(surfaceJs) && /CARD_MEGA_BOTTOM_GAP_PX\s*=\s*6/
 assert(/--score-card-tight-height/.test(surfaceJs) && /--score-card-tight-height/.test(surfaceCss), 'measured tight card height must drive the rendered card height');
 assert(/markTeamColorCards/.test(surfaceJs) && /--score-team-rgb/.test(surfaceJs), 'every team card must derive its tint from the team color');
 assert(/score-card-team-tint/.test(surfaceJs) && /\.score-card-team-tint/.test(surfaceCss), 'team tint class must apply to all detected team colors');
-assert(/rgba\(var\(--score-team-rgb\),\s*0\.1[0-9]\)/.test(surfaceCss), 'team card tint must remain very light and translucent');
+assert(/rgba\(var\(--score-team-light-rgb\),0\.34\)/.test(surfaceCss) && /rgba\(var\(--score-team-light-rgb\),0\.24\)/.test(surfaceCss), 'team card tint must remain light and translucent');
 assert(/backdrop-filter:blur/.test(surfaceCss), 'translucent team card must preserve visible background imagery');
 assert(!/score-card-tint-blue/.test(surfaceCss), 'surface styling must no longer be blue-only');
 assert(/surfaceLayoutObserver/.test(surfaceJs) && /attributeFilter:\s*\['data-score-layout-mode'\]/.test(surfaceJs), 'surface refresh must react directly to layout mode changes');
@@ -93,10 +93,10 @@ assert(/score-live-patch\.css\?v=10/.test(index), 'index must preserve the curre
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must preserve the current base patch script');
 assert(/score-card-surface\.css\?v=2/.test(index), 'index must load the current team-color surface stylesheet');
 assert(/score-card-surface\.js\?v=3/.test(index), 'index must load the all-layout surface refresh script');
-assert(/score-layout-lower\.js\?v=1/.test(index), 'index must load the 75-percent lower layout script');
+assert(/score-layout-lower\.js\?v=2/.test(index), 'index must load the current 75-percent lower layout script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
 assert(/score-leader-top\.js\?v=9/.test(index), 'index must load the single-top-leader version');
-assert(index.indexOf('score-layout-menu.js?v=1') < index.indexOf('score-layout-lower.js?v=1'), 'lower layout positioning must load after the layout controller');
+assert(index.indexOf('score-layout-menu.js?v=1') < index.indexOf('score-layout-lower.js?v=2'), 'lower layout positioning must load after the layout controller');
 assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-card-surface.js?v=3'), 'surface behavior must load after the base score patch');
 console.log('score-live regression checks passed');
