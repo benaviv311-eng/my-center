@@ -142,7 +142,6 @@
 **Files:**
 - Create: `season-design/features/programs/create-practice.ts`
 - Modify: `season-design/features/programs/repository.ts`
-- Modify: `season-design/app/(app)/programs/[programId]/page.tsx`
 - Test: `season-design/features/programs/create-practice.test.ts`
 
 **Interfaces:**
@@ -152,9 +151,8 @@
 - [ ] **Step 1: Write failing tests** for correct prefill, current group context, level delta, completed session refusal, and linking a saved practice.
 - [ ] **Step 2: Run tests**; expected FAIL.
 - [ ] **Step 3: Implement prefill conversion and link action** using the existing generator contract rather than a second program-specific generator.
-- [ ] **Step 4: Add `Create this practice` action** to the program timeline.
-- [ ] **Step 5: Run tests**; expected PASS.
-- [ ] **Step 6: Commit** `feat: generate practices from program sessions`.
+- [ ] **Step 4: Run tests**; expected PASS.
+- [ ] **Step 5: Commit** `feat: generate practices from program sessions`.
 
 ### Task 7: Free-text feedback summary and coaching observations
 
@@ -183,7 +181,7 @@
 - Create: `season-design/features/programs/program-timeline.tsx`
 - Create: `season-design/features/progress/history-metrics.ts`
 - Modify: `season-design/app/(app)/groups/[groupId]/page.tsx`
-- Create: `season-design/app/(app)/page.tsx`
+- Modify: `season-design/app/(app)/page.tsx`
 - Test: `season-design/features/progress/history-metrics.test.ts`
 - Test: `season-design/e2e/program-adaptation.spec.ts`
 
@@ -192,10 +190,10 @@
 - Produces active-program timeline, adaptation approval UI, group history/balance, and dashboard actions.
 
 - [ ] **Step 1: Write failing history tests** proving technical/game-based/regular/advanced counts are independent of topic counts and focus priority counts.
-- [ ] **Step 2: Write failing E2E scenario**: create 8-session program, generate a planned session, close practices with weak reception feedback, receive a reception-weight/difficulty proposal, approve it, and verify only future sessions change.
+- [ ] **Step 2: Write failing E2E scenario**: create 8-session program, use `Create this practice` to prefill/generate a planned session, close practices with weak reception feedback, receive a reception-weight/difficulty proposal, approve it, and verify only future sessions change.
 - [ ] **Step 3: Run tests**; expected FAIL.
-- [ ] **Step 4: Implement Programs screens and approval controls**.
+- [ ] **Step 4: Implement Programs screens/timeline**, including `Create this practice` using Task 6, and approval controls.
 - [ ] **Step 5: Extend Group screen** with recent work, topic/focus balance, style balance, current skill recommendations, and 2–4 observations.
-- [ ] **Step 6: Implement Home dashboard** for next session, pending feedback, recent groups, and active programs; cache safe practice/program summaries with the foundation offline read-cache and label stale offline views.
+- [ ] **Step 6: Replace the Home placeholder** with dashboard content for next session, pending feedback, recent groups, and active programs; cache safe practice/program summaries with the foundation offline read-cache and label stale offline views.
 - [ ] **Step 7: Run `npm run lint && npm test && npm run test:e2e && npm run build`**; expected PASS.
 - [ ] **Step 8: Commit** `feat: ship adaptive season planning workflow`.
