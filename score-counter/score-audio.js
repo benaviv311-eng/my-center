@@ -1,6 +1,11 @@
 (function(){
   const PRESSURE_DURATION_MS=15000;
   const PRESSURE_CHANT_GAP_MS=2400;
+  const LIVE_CHANT_MIN_MS=8000;
+  const LIVE_CHANT_MAX_MS=25000;
+  const LIVE_NOISE_MIN_MS=40000;
+  const LIVE_NOISE_MAX_MS=90000;
+  const NOISE_CROSSFADE_MS=1400;
 
   const ARENA_ASSETS={
     chants:{
@@ -49,6 +54,7 @@
   };
 
   let masterVolume=0.90;
+  let liveIntensity=0.56;
   let ctx=null;
   let masterGain=null;
   let chantGain=null;
@@ -65,24 +71,55 @@
   let pressureChantTimer=0;
   let pressureSnapshot=null;
   let lastPressureChant=-1;
+  let liveModeOn=false;
+  let liveChantTimer=0;
+  let liveNoiseTimer=0;
+  let liveSnapshot=null;
+  let lastLiveChant=-1;
   let unlockedOnce=false;
   let panel=null;
   let body=null;
   let statusEl=null;
   let pressureButton=null;
+  let liveButton=null;
   let masterInput=null;
+  let intensityInput=null;
+  let intensityValueEl=null;
+  let nowPlayingEl=null;
+  let eqEl=null;
 
+  const nowPlaying={chant:'',anthem:'',noise:''};
   const bufferCache=new Map();
   const lastVariantByChant=new Map();
   const activeChantSources=new Set();
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
 
   function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
+  function percent(value){ return Math.round(value*100); }
+  function randomDelay(min,max){ return Math.round(min+Math.random()*Math.max(0,max-min)); }
 
   function setStatus(text,state){
     if(!statusEl) return;
     statusEl.textContent=text;
     statusEl.dataset.state=state||'idle';
+  }
+
+  function syncNowPlaying(){
+    if(!panel) return;
+    const pieces=[];
+    if(layerState.noise.enabled&&nowPlaying.noise) pieces.push('🏟️ '+nowPlaying.noise);
+    if(layerState.anthems.enabled&&nowPlaying.anthem) pieces.push('🥁 '+nowPlaying.anthem);
+    if(layerState.chants.enabled&&nowPlaying.chant) pieces.push('📣 '+nowPlaying.chant);
+    if(nowPlayingEl) nowPlayingEl.textContent=pieces.length?pieces.join('  •  '):'ממתין לסאונד…';
+    if(eqEl){
+      const active=!!(pressureOn||liveModeOn||anthemSource||noiseSource||activeChantSources.size);
+      eqEl.classList.toggle('is-active',active);
+    }
+  }
+
+  function setNowPlaying(kind,label){
+    if(Object.prototype.hasOwnProperty.call(nowPlaying,kind)) nowPlaying[kind]=label||'';
+    syncNowPlaying();
   }
 
   function safeGain(param,value){
@@ -130,7 +167,9 @@
       unlockedOnce=true;
       warmAssets();
     }
-    setStatus(pressureOn?'🔥 מצב לחץ פעיל':'סאונד מוכן — שלוט בכל שכבה בנפרד','on');
+    if(pressureOn) setStatus('🔥 מצב לחץ פעיל','on');
+    else if(liveModeOn) setStatus('♾️ יציע חי פועל — הסאונד משתנה לבד','on');
+    else setStatus('סאונד מוכן — שלוט בכל שכבה בנפרד','on');
     return true;
   }
 
@@ -154,19 +193,30 @@
 
   function warmAssets(){
     const warm=[
-      ARENA_ASSETS.noise[0].src,
-      ARENA_ASSETS.anthems[0].src,
+      ...ARENA_ASSETS.noise.map(item=>item.src),
+      ...ARENA_ASSETS.anthems.map(item=>item.src),
       ...Object.values(ARENA_ASSETS.chants).map(list=>list[0])
     ];
     warm.forEach(src=>loadBuffer(src).catch(()=>{}));
   }
 
+  function stopRef(ref){
+    if(!ref) return;
+    try{ ref.source.onended=null; }catch(_){ }
+    try{ ref.source.stop(); }catch(_){ }
+  }
+
   function stopBuffer(refName){
     const ref=refName==='anthem'?anthemSource:noiseSource;
     if(!ref) return;
-    if(refName==='anthem') anthemSource=null; else noiseSource=null;
-    try{ ref.source.onended=null; }catch(_){ }
-    try{ ref.source.stop(); }catch(_){ }
+    if(refName==='anthem'){
+      anthemSource=null;
+      setNowPlaying('anthem','');
+    }else{
+      noiseSource=null;
+      setNowPlaying('noise','');
+    }
+    stopRef(ref);
   }
 
   function randomIndex(length,last,allowed){
@@ -179,6 +229,30 @@
       pick=pool[(pos+1)%pool.length];
     }
     return pick;
+  }
+
+  function liveAnthemPool(){
+    if(liveIntensity<0.34) return [0,1];
+    if(liveIntensity<0.72) return [0,1,2,3];
+    return [2,3,0];
+  }
+
+  function liveNoisePool(){
+    if(liveIntensity<0.34) return [0];
+    if(liveIntensity<0.72) return [0,1];
+    return [1,2];
+  }
+
+  function liveChantWindow(){
+    const min=LIVE_CHANT_MIN_MS+(1-liveIntensity)*7000;
+    const max=LIVE_CHANT_MAX_MS-liveIntensity*8000;
+    return [Math.round(min),Math.round(Math.max(min+2200,max))];
+  }
+
+  function liveNoiseWindow(){
+    const min=LIVE_NOISE_MIN_MS+(1-liveIntensity)*25000;
+    const max=LIVE_NOISE_MAX_MS-liveIntensity*30000;
+    return [Math.round(min),Math.round(Math.max(min+7000,max))];
   }
 
   async function startAnthem(index,options){
@@ -196,11 +270,13 @@
       source.buffer=buffer;
       source.connect(anthemGain);
       anthemSource={source,index:safeIndex};
+      setNowPlaying('anthem',item.label);
       source.onended=()=>{
         if(!anthemSource || anthemSource.source!==source) return;
         anthemSource=null;
+        setNowPlaying('anthem','');
         if(!layerState.anthems.enabled || !ctx || ctx.state!=='running') return;
-        const allowed=pressureOn?[2,3]:null;
+        const allowed=pressureOn?[2,3]:(liveModeOn?liveAnthemPool():null);
         const next=randomIndex(ARENA_ASSETS.anthems.length,safeIndex,allowed);
         startAnthem(next,{force:pressureOn});
       };
@@ -225,10 +301,14 @@
       if(token!==noisePlayToken || (!layerState.noise.enabled&&!opts.force)) return false;
       stopBuffer('noise');
       const source=ctx.createBufferSource();
+      const trackGain=ctx.createGain();
       source.buffer=buffer;
       source.loop=true;
-      source.connect(noiseGain);
-      noiseSource={source,index:safeIndex};
+      trackGain.gain.value=1;
+      source.connect(trackGain);
+      trackGain.connect(noiseGain);
+      noiseSource={source,index:safeIndex,gain:trackGain};
+      setNowPlaying('noise',item.label);
       source.start(0,Math.max(0,Number(opts.offset)||0)%Math.max(0.01,buffer.duration));
       syncUI();
       return true;
@@ -238,11 +318,52 @@
     }
   }
 
+  async function crossfadeNoise(index){
+    if(!(await ensureAudio())) return false;
+    if(!layerState.noise.enabled) return false;
+    const safeIndex=((Number(index)||0)%ARENA_ASSETS.noise.length+ARENA_ASSETS.noise.length)%ARENA_ASSETS.noise.length;
+    if(noiseSource&&noiseSource.index===safeIndex) return true;
+    const token=++noisePlayToken;
+    const item=ARENA_ASSETS.noise[safeIndex];
+    try{
+      const buffer=await loadBuffer(item.src);
+      if(token!==noisePlayToken || !layerState.noise.enabled) return false;
+      const previous=noiseSource;
+      const source=ctx.createBufferSource();
+      const trackGain=ctx.createGain();
+      source.buffer=buffer;
+      source.loop=true;
+      source.connect(trackGain);
+      trackGain.connect(noiseGain);
+      const now=ctx.currentTime;
+      trackGain.gain.setValueAtTime(0.0001,now);
+      trackGain.gain.linearRampToValueAtTime(1,now+NOISE_CROSSFADE_MS/1000);
+      source.start(0,Math.random()*Math.max(0.01,buffer.duration));
+      noiseSource={source,index:safeIndex,gain:trackGain};
+      currentNoiseIndex=safeIndex;
+      setNowPlaying('noise',item.label);
+      if(previous){
+        try{
+          previous.gain.gain.cancelScheduledValues(now);
+          previous.gain.gain.setValueAtTime(Math.max(0.0001,previous.gain.gain.value||1),now);
+          previous.gain.gain.linearRampToValueAtTime(0.0001,now+NOISE_CROSSFADE_MS/1000);
+        }catch(_){ }
+        setTimeout(()=>stopRef(previous),NOISE_CROSSFADE_MS+120);
+      }
+      syncUI();
+      return true;
+    }catch(error){
+      if(token===noisePlayToken) setStatus('לא הצלחתי להחליף את רעש הקהל','error');
+      return false;
+    }
+  }
+
   function stopAllChants(){
     activeChantSources.forEach(source=>{
       try{ source.onended=null;source.stop(); }catch(_){ }
     });
     activeChantSources.clear();
+    setNowPlaying('chant','');
     applyMix();
   }
 
@@ -290,11 +411,8 @@
     const variants=ARENA_ASSETS.chants[label];
     if(!variants||!variants.length) return false;
     if(!layerState.chants.enabled){
-      if(opts.force){
-        layerState.chants.enabled=true;
-      }else{
-        await toggleLayer('chants',true);
-      }
+      if(opts.force) layerState.chants.enabled=true;
+      else await toggleLayer('chants',true);
     }
     if(!(await ensureAudio({confirm:!opts.automatic}))) return false;
     const last=lastVariantByChant.get(label);
@@ -307,8 +425,10 @@
       source.buffer=buffer;
       source.connect(chantGain);
       activeChantSources.add(source);
+      setNowPlaying('chant',label);
       source.onended=()=>{
         activeChantSources.delete(source);
+        if(!activeChantSources.size&&nowPlaying.chant===label) setNowPlaying('chant','');
         applyMix();
       };
       applyMix();
@@ -323,28 +443,47 @@
   async function cycleAnthem(){
     if(!layerState.anthems.enabled) await toggleLayer('anthems',true);
     if(!layerState.anthems.enabled) return;
-    const next=randomIndex(ARENA_ASSETS.anthems.length,currentAnthemIndex,pressureOn?[2,3]:null);
+    const allowed=pressureOn?[2,3]:(liveModeOn?liveAnthemPool():null);
+    const next=randomIndex(ARENA_ASSETS.anthems.length,currentAnthemIndex,allowed);
     await startAnthem(next,{force:pressureOn});
   }
 
   async function cycleNoise(){
     if(!layerState.noise.enabled) await toggleLayer('noise',true);
     if(!layerState.noise.enabled) return;
-    const next=randomIndex(ARENA_ASSETS.noise.length,currentNoiseIndex,pressureOn?[1,2]:[0,1]);
-    await startNoise(next,{force:pressureOn});
+    const allowed=pressureOn?[1,2]:(liveModeOn?liveNoisePool():[0,1]);
+    const next=randomIndex(ARENA_ASSETS.noise.length,currentNoiseIndex,allowed);
+    if(liveModeOn&&!pressureOn) await crossfadeNoise(next);
+    else await startNoise(next,{force:pressureOn});
+  }
+
+  function snapshotMix(){
+    return {
+      chants:layerState.chants.enabled,
+      anthems:layerState.anthems.enabled,
+      noise:layerState.noise.enabled,
+      anthemIndex:currentAnthemIndex,
+      noiseIndex:currentNoiseIndex
+    };
+  }
+
+  async function applySnapshot(snapshot){
+    if(!snapshot) return;
+    layerState.chants.enabled=snapshot.chants;
+    layerState.anthems.enabled=snapshot.anthems;
+    layerState.noise.enabled=snapshot.noise;
+    if(!snapshot.chants) stopAllChants();
+    if(snapshot.anthems) await startAnthem(snapshot.anthemIndex,{force:true});
+    else { ++anthemPlayToken;stopBuffer('anthem'); }
+    if(snapshot.noise) await startNoise(snapshot.noiseIndex,{force:true});
+    else { ++noisePlayToken;stopBuffer('noise'); }
+    applyMix();
+    syncUI();
   }
 
   async function pressureMix(enabled){
     if(enabled){
-      if(!pressureSnapshot){
-        pressureSnapshot={
-          chants:layerState.chants.enabled,
-          anthems:layerState.anthems.enabled,
-          noise:layerState.noise.enabled,
-          anthemIndex:currentAnthemIndex,
-          noiseIndex:currentNoiseIndex
-        };
-      }
+      if(!pressureSnapshot) pressureSnapshot=snapshotMix();
       layerState.chants.enabled=true;
       layerState.anthems.enabled=true;
       layerState.noise.enabled=true;
@@ -357,28 +496,10 @@
       syncUI();
       return;
     }
-
     const snapshot=pressureSnapshot;
     pressureSnapshot=null;
-    if(!snapshot){ applyMix();syncUI();return; }
-    layerState.chants.enabled=snapshot.chants;
-    layerState.anthems.enabled=snapshot.anthems;
-    layerState.noise.enabled=snapshot.noise;
-    if(!snapshot.chants) stopAllChants();
-    if(snapshot.anthems){
-      await startAnthem(snapshot.anthemIndex,{force:true});
-    }else{
-      ++anthemPlayToken;
-      stopBuffer('anthem');
-    }
-    if(snapshot.noise){
-      await startNoise(snapshot.noiseIndex,{force:true});
-    }else{
-      ++noisePlayToken;
-      stopBuffer('noise');
-    }
-    applyMix();
-    syncUI();
+    if(snapshot) await applySnapshot(snapshot);
+    else { applyMix();syncUI(); }
   }
 
   function nextPressureChant(){
@@ -386,6 +507,97 @@
     const index=randomIndex(labels.length,lastPressureChant);
     lastPressureChant=index;
     return labels[index];
+  }
+
+  function nextLiveChant(){
+    const labels=Object.keys(ARENA_ASSETS.chants);
+    const index=randomIndex(labels.length,lastLiveChant);
+    lastLiveChant=index;
+    return labels[index];
+  }
+
+  function pauseLiveSchedules(){
+    clearTimeout(liveChantTimer);
+    clearTimeout(liveNoiseTimer);
+    liveChantTimer=0;
+    liveNoiseTimer=0;
+  }
+
+  function scheduleLiveChant(){
+    clearTimeout(liveChantTimer);
+    if(!liveModeOn||pressureOn) return;
+    const windowMs=liveChantWindow();
+    liveChantTimer=setTimeout(async()=>{
+      if(liveModeOn&&!pressureOn&&layerState.chants.enabled){
+        await playChant(nextLiveChant(),{automatic:true});
+      }
+      scheduleLiveChant();
+    },randomDelay(windowMs[0],windowMs[1]));
+  }
+
+  function scheduleLiveNoiseShift(){
+    clearTimeout(liveNoiseTimer);
+    if(!liveModeOn||pressureOn) return;
+    const windowMs=liveNoiseWindow();
+    liveNoiseTimer=setTimeout(async()=>{
+      if(liveModeOn&&!pressureOn&&layerState.noise.enabled){
+        const next=randomIndex(ARENA_ASSETS.noise.length,currentNoiseIndex,liveNoisePool());
+        await crossfadeNoise(next);
+      }
+      scheduleLiveNoiseShift();
+    },randomDelay(windowMs[0],windowMs[1]));
+  }
+
+  async function startLiveMode(){
+    if(liveModeOn) return true;
+    if(pressureOn){
+      setStatus('🔥 מצב לחץ פעיל — אפשר להפעיל יציע חי מיד אחריו','on');
+      return false;
+    }
+    if(!(await ensureAudio({confirm:true}))) return false;
+    liveSnapshot=snapshotMix();
+    liveModeOn=true;
+    layerState.chants.enabled=true;
+    layerState.anthems.enabled=true;
+    layerState.noise.enabled=true;
+    const anthemIndex=randomIndex(ARENA_ASSETS.anthems.length,currentAnthemIndex,liveAnthemPool());
+    const noiseIndex=randomIndex(ARENA_ASSETS.noise.length,currentNoiseIndex,liveNoisePool());
+    await Promise.all([
+      startAnthem(anthemIndex),
+      startNoise(noiseIndex)
+    ]);
+    scheduleLiveChant();
+    scheduleLiveNoiseShift();
+    applyMix();
+    setStatus('♾️ יציע חי פועל — הסאונד משתנה לבד','on');
+    syncUI();
+    return true;
+  }
+
+  async function stopLiveMode(){
+    if(!liveModeOn&&!liveSnapshot) return;
+    liveModeOn=false;
+    pauseLiveSchedules();
+    const snapshot=liveSnapshot;
+    liveSnapshot=null;
+    if(pressureOn){
+      if(snapshot) pressureSnapshot=snapshot;
+      setStatus('♾️ יציע חי נעצר — מצב לחץ ימשיך עד הסיום','on');
+      syncUI();
+      return;
+    }
+    await applySnapshot(snapshot);
+    setStatus('יציע חי נעצר — חזרנו למיקס הקודם','on');
+    syncUI();
+  }
+
+  async function setLiveIntensity(value){
+    liveIntensity=clamp(Number(value)||0,0,1);
+    if(liveModeOn&&!pressureOn){
+      scheduleLiveChant();
+      scheduleLiveNoiseShift();
+    }
+    syncUI();
   }
 
   async function stopPressure(){
@@ -396,13 +608,20 @@
     pressureTimer=0;
     pressureChantTimer=0;
     await pressureMix(false);
-    setStatus('מצב לחץ הסתיים — חזרנו למיקס הקודם','on');
+    if(liveModeOn){
+      scheduleLiveChant();
+      scheduleLiveNoiseShift();
+      setStatus('♾️ יציע חי חזר לפעולה','on');
+    }else{
+      setStatus('מצב לחץ הסתיים — חזרנו למיקס הקודם','on');
+    }
     syncUI();
   }
 
   async function startPressure(){
     if(!(await ensureAudio({confirm:true}))) return false;
     if(pressureOn) await stopPressure();
+    if(liveModeOn) pauseLiveSchedules();
     pressureOn=true;
     await pressureMix(true);
     setStatus('🔥 לחץ פעיל — כל שלוש השכבות עובדות','on');
@@ -422,8 +641,6 @@
     syncUI();
   }
 
-  function percent(value){ return Math.round(value*100); }
-
   function syncUI(){
     if(!panel) return;
     Object.keys(layerState).forEach(layer=>{
@@ -433,7 +650,7 @@
       if(toggle){
         toggle.classList.toggle('is-on',state.enabled);
         toggle.setAttribute('aria-pressed',String(state.enabled));
-        toggle.textContent=state.enabled?'פועל':'כבוי';
+        toggle.textContent=state.enabled?'ON':'OFF';
       }
       if(input) input.value=String(percent(state.volume));
     });
@@ -446,14 +663,22 @@
       pressureButton.setAttribute('aria-pressed',String(pressureOn));
       pressureButton.textContent=pressureOn?'🔥 לחץ פעיל':'🔥 לחץ · 15 שניות';
     }
+    if(liveButton){
+      liveButton.classList.toggle('is-on',liveModeOn);
+      liveButton.setAttribute('aria-pressed',String(liveModeOn));
+      liveButton.innerHTML=liveModeOn?'<span>■</span> עצור יציע חי':'<span>♾️</span> הפעל יציע חי';
+    }
     if(masterInput) masterInput.value=String(percent(masterVolume));
+    if(intensityInput) intensityInput.value=String(percent(liveIntensity));
+    if(intensityValueEl) intensityValueEl.textContent=percent(liveIntensity)+'%';
+    syncNowPlaying();
   }
 
   function layerMarkup(layer,icon,title,extra){
     return `<section class="score-audio-layer" data-layer="${layer}">
       <div class="score-audio-layer-head">
         <strong>${icon} ${title}</strong>
-        <button type="button" class="score-audio-toggle" data-layer-toggle="${layer}" aria-pressed="false">כבוי</button>
+        <button type="button" class="score-audio-toggle" data-layer-toggle="${layer}" aria-pressed="false">OFF</button>
       </div>
       <label class="score-audio-layer-volume">עוצמה
         <input type="range" min="0" max="100" step="1" data-layer-volume="${layer}" aria-label="עוצמת ${title}">
@@ -474,15 +699,30 @@
 
     panel=document.createElement('section');
     panel.className='score-audio-panel is-collapsed';
-    panel.setAttribute('aria-label','בקרת סאונד וקהל');
+    panel.setAttribute('aria-label','קונסולת סאונד וקהל');
     panel.innerHTML=`
-      <button type="button" class="score-audio-main" aria-expanded="false">🔊 סאונד</button>
+      <button type="button" class="score-audio-main" aria-expanded="false">🔊 ARENA SOUND</button>
       <div class="score-audio-body" hidden>
-        <div class="score-audio-status" data-state="idle">פתח שכבה או הפעל לחץ</div>
-        <button type="button" class="score-audio-pressure" aria-pressed="false">🔥 לחץ · 15 שניות</button>
-        ${layerMarkup('noise','🏟️','רעש',noiseExtra)}
+        <div class="score-audio-console-head">
+          <div>
+            <b>ARENA SOUND</b>
+            <span class="score-audio-live-badge">LIVE</span>
+          </div>
+          <div class="score-audio-eq" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+        <div class="score-audio-now-playing"><span>עכשיו מתנגן</span><b data-now-playing>ממתין לסאונד…</b></div>
+        <div class="score-audio-status" data-state="idle">בחר שכבה או הפעל יציע חי</div>
+        <button type="button" class="score-audio-live" aria-pressed="false"><span>♾️</span> הפעל יציע חי</button>
+        <label class="score-audio-intensity">
+          <span><b>רגוע</b><strong>עוצמת האווירה <em data-live-intensity-value>56%</em></strong><b>מטורף</b></span>
+          <input type="range" min="0" max="100" value="56" step="1" data-live-intensity aria-label="עוצמת האווירה">
+        </label>
+        ${layerMarkup('chants','🎤','קריאות',chantsExtra)}
         ${layerMarkup('anthems','🥁','המנונים',anthemExtra)}
-        ${layerMarkup('chants','📣','קריאות',chantsExtra)}
+        ${layerMarkup('noise','🏟️','רעש קהל',noiseExtra)}
+        <button type="button" class="score-audio-pressure" aria-pressed="false">🔥 לחץ · 15 שניות</button>
         <label class="score-audio-master">עוצמה כללית
           <input type="range" min="0" max="100" value="90" step="1" aria-label="עוצמה כללית">
         </label>
@@ -493,7 +733,12 @@
     body=panel.querySelector('.score-audio-body');
     statusEl=panel.querySelector('.score-audio-status');
     pressureButton=panel.querySelector('.score-audio-pressure');
+    liveButton=panel.querySelector('.score-audio-live');
     masterInput=panel.querySelector('.score-audio-master input');
+    intensityInput=panel.querySelector('[data-live-intensity]');
+    intensityValueEl=panel.querySelector('[data-live-intensity-value]');
+    nowPlayingEl=panel.querySelector('[data-now-playing]');
+    eqEl=panel.querySelector('.score-audio-eq');
 
     main.addEventListener('click',async()=>{
       const collapsed=panel.classList.toggle('is-collapsed');
@@ -513,7 +758,9 @@
     });
     panel.querySelector('[data-cycle="anthems"]').addEventListener('click',cycleAnthem);
     panel.querySelector('[data-cycle="noise"]').addEventListener('click',cycleNoise);
+    liveButton.addEventListener('click',()=>liveModeOn?stopLiveMode():startLiveMode());
     pressureButton.addEventListener('click',()=>pressureOn?stopPressure():startPressure());
+    intensityInput.addEventListener('input',()=>setLiveIntensity(Number(intensityInput.value)/100));
     masterInput.addEventListener('input',()=>setMasterVolume(Number(masterInput.value)/100));
     syncUI();
   }
