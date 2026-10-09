@@ -1,4 +1,4 @@
-/* Tighten the visible card to the Mega button plus roughly one centimeter. */
+/* Tighten the visible card to the Mega button plus only a tiny visual gap. */
 #teams > .card.score-card-professional,
 body.projection-mode #teams > .card.score-card-professional{
   height:var(--score-card-tight-height,max-content)!important;
@@ -15,12 +15,12 @@ body.projection-mode #teams > .card.score-card-professional .score-card-mega{
   padding-bottom:0!important;
 }
 
-/* Blue team: very light transparent blue so the background photo stays visible. */
-#teams > .card.score-card-professional.score-card-tint-blue,
-body.projection-mode #teams > .card.score-card-professional.score-card-tint-blue{
-  background:rgba(219,234,254,0.16)!important;
-  border-color:rgba(219,234,254,0.28)!important;
-  box-shadow:0 8px 24px rgba(0,0,0,0.16)!important;
-  backdrop-filter:blur(2px) saturate(1.05)!important;
-  -webkit-backdrop-filter:blur(2px) saturate(1.05)!important;
+/* Every team card inherits its own color while remaining translucent enough to show the photo. */
+#teams > .card.score-card-professional.score-card-team-tint,
+body.projection-mode #teams > .card.score-card-professional.score-card-team-tint{
+  background:rgba(var(--score-team-rgb),0.18)!important;
+  border-color:rgba(var(--score-team-rgb),0.32)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.14)!important;
+  backdrop-filter:blur(2px) saturate(1.08)!important;
+  -webkit-backdrop-filter:blur(2px) saturate(1.08)!important;
 }
