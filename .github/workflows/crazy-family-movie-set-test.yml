@@ -1,0 +1,30 @@
+name: Crazy Family Movie Set Tests
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-playable-movie-set
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  movie-set:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Movie-set static contract
+        run: python scripts/test-crazy-family-movie-set.py
+      - name: Movie-set node tests
+        run: node --test tests/crazy-family/*.test.mjs
+      - name: Existing Crazy Family regressions
+        run: |
+          python scripts/test-crazy-family-v028.py
+          python scripts/test-crazy-family-v030.py
+          python scripts/test-crazy-family-v031.py
+          python scripts/test-crazy-family-v032-ground-contact.py
+          python scripts/test-crazy-family-v034.py
