@@ -31,6 +31,12 @@
       lab.statuses['elimination']={name:'Elimination / Survival',status:'working',detail:'Per-team lives, elimination, one-time Redemption and last-team-survives winner are connected.'};
       lab.statuses['tournament']={name:'Tournament',status:'working',detail:'Round Robin schedule, active-match lock, Next Match announcements, manual match winner, standings and point differential tiebreak are connected.'};
     }
+    if(window.TeamScoreFlexibleGames){
+      lab.statuses['custom-game']={name:'Custom Game Builder',status:'working',detail:'Name, target, time, rounds, Win by 2, Bonus, Penalty, streak target, tie rule and Saved custom games are connected.'};
+      lab.statuses['player-tracking']={name:'Player Tracking',status:'working',detail:'Per-team player lists, Serve / Reception / Attack / Block / Error counters, impact score and Player of the Game are connected.'};
+      lab.statuses['multi-team']={name:'Multi-Team',status:'working',detail:'All visible teams participate, live ranking updates from the main scoreboard and first team to the configured target wins.'};
+      lab.statuses['individual-challenge']={name:'Individual Challenge',status:'working',detail:'Named players, Success / Error, configurable target, finish time and Personal record history are connected.'};
+    }
     return true;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(sync,0),{once:true});else setTimeout(sync,0);
