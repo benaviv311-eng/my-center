@@ -47,6 +47,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const testLabCss='<link rel="stylesheet" href="score-test-lab.css?v=1">';
   const timeCenterCss='<link rel="stylesheet" href="score-time-center.css?v=1">';
   const pressureCss='<link rel="stylesheet" href="score-pressure-game.css?v=1">';
+  const timedRoundsCss='<link rel="stylesheet" href="score-timed-rounds.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
@@ -64,9 +65,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const timeCenterGuardJs='<script src="score-time-center-guard.js?v=1"><\/script>';
   const timeCenterJs='<script src="score-time-center.js?v=1"><\/script>';
   const pressureJs='<script src="score-pressure-game.js?v=1"><\/script>';
+  const timedRoundsJs='<script src="score-timed-rounds.js?v=1"><\/script>';
   const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+testLabLiveStatusJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
