@@ -6,6 +6,7 @@ const root=__dirname;
 const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const jsPath=path.join(root,'score-audio.js');
 const cssPath=path.join(root,'score-audio.css');
+const habaitaPath=path.join(root,'score-habaita-refrain.js');
 
 assert(fs.existsSync(jsPath),'arena audio behavior must exist');
 assert(fs.existsSync(cssPath),'arena audio controls stylesheet must exist');
@@ -60,10 +61,19 @@ assert(/LIVE_REFRAIN_MIN_MS\s*=\s*12000/.test(js),'live arena must bring refrain
 assert(/LIVE_REFRAIN_MAX_MS\s*=\s*28000/.test(js),'live arena refrains must not disappear for too long');
 assert(/liveRefrainTimer/.test(js),'live arena must track its refrain schedule');
 assert(/scheduleLiveRefrain/.test(js),'live arena must schedule terrace refrains between calls');
-assert(/liveModeOn[^\n]*scheduleLiveRefrain|scheduleLiveRefrain\(\)/.test(js),'live mode must actually activate refrain scheduling');
-assert(/הביתה! הביתה! הביתה!/.test(js),'live arena must include the approved habaita terrace refrain');
-assert(/audio\/anthems\/habaita-refrain\.mp3/.test(js),'habaita refrain must use its own permanent local recording');
-assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
-assert(/score-audio\.js\?v=6/.test(index),'index must load the habaita terrace refrain behavior');
 
-console.log('score arena rhythmic chants and refrains checks passed');
+assert(fs.existsSync(habaitaPath),'approved habaita refrain module must exist');
+const habaita=fs.readFileSync(habaitaPath,'utf8');
+assert(/HABAITA_LABEL\s*=\s*['"]הביתה! הביתה! הביתה!['"]/.test(habaita),'habaita refrain must use the approved words');
+assert(/playHabaitaRefrain/.test(habaita),'habaita refrain must have a dedicated playback routine');
+assert(/scheduleHabaitaRefrain/.test(habaita),'habaita refrain must enter live arena automatically');
+assert(/tachzeru-deep\.mp3/.test(habaita) && /tachzeru-young\.mp3/.test(habaita) && /tachzeru-sharp\.mp3/.test(habaita),'habaita refrain must build a crowd from multiple permanent local voices');
+assert(/source\.start\([^;]*offset[^;]*duration/.test(habaita),'habaita refrain must isolate the final word from the local recordings');
+assert(/playKick/.test(habaita) && /playClap/.test(habaita),'habaita refrain must include terrace drum and clap rhythm');
+assert(/MutationObserver/.test(habaita),'habaita refrain must follow live-mode and pressure state changes');
+assert(!/_jwt=/.test(habaita),'habaita refrain must not depend on expiring signed audio URLs');
+assert(/score-habaita-refrain\.js\?v=1/.test(index),'index must load the durable habaita refrain module');
+assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
+assert(/score-audio\.js\?v=5/.test(index),'index must keep loading the rhythmic live-arena engine');
+
+console.log('score arena rhythmic chants and habaita refrain checks passed');
