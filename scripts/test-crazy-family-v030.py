@@ -27,12 +27,19 @@ for token in required:
 # Libi's approved visual stays untouched by this house pass.
 assert "const LIBI_SPRITE_URL='assets/libi-sprites-v025.png'" in html
 
-# Movement must actually use the house surface model, not just draw decorations.
+# Movement must actually use the house surface model, either directly in move()
+# (v0.30) or through the grounded stage-1 kinematics helper (v0.31+).
 move_start = html.index('function move(')
 move_end = html.index('function collect(', move_start)
 move_body = html[move_start:move_end]
-assert 'houseSurfaceFactor' in move_body, 'movement is not affected by house surfaces'
-assert 'resolveHouseInteraction' in move_body, 'movement does not resolve furniture interactions'
+if 'updateStage1Kinematics' in move_body:
+    kin_start = html.index('function updateStage1Kinematics(')
+    kin_end = html.index('function drawGroundShadow(', kin_start)
+    movement_body = html[kin_start:kin_end]
+else:
+    movement_body = move_body
+assert 'houseSurfaceFactor' in movement_body, 'movement is not affected by house surfaces'
+assert 'resolveHouseInteraction' in movement_body, 'movement does not resolve furniture interactions'
 
 # The runtime loop must update responsive objects and Dad's house-specific behavior.
 update_start = html.index('function update(dt)')
