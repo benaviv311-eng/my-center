@@ -26,6 +26,7 @@ jobs:
           node --check score-counter/score-games-core.js
           node --check score-counter/score-games-rules-v2.js
           node --check score-counter/score-games-ui.js
+          node --check score-counter/score-tools-v2.js
       - name: Timer V2 core tests
         run: node score-counter/score-timer-v2-core.test.js
       - name: Game engine tests
@@ -34,6 +35,8 @@ jobs:
         run: node score-counter/score-games-rules-v2.test.js
       - name: V2 UI contract tests
         run: node score-counter/score-games-ui.contract.test.js
+      - name: Field tools contract tests
+        run: node score-counter/score-tools-v2.contract.test.js
       - name: V2 index integration tests
         run: node score-counter/score-v2-index.contract.test.js
       - name: Existing score regression tests
