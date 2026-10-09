@@ -32,6 +32,25 @@ function pushOutside(from, to, collider, radius) {
   return choices[0].value;
 }
 
+function segmentBoxFraction(start, end, collider, padding = 0.1) {
+  const minX = collider.x - collider.width / 2 - padding;
+  const maxX = collider.x + collider.width / 2 + padding;
+  const minZ = collider.z - collider.depth / 2 - padding;
+  const maxZ = collider.z + collider.depth / 2 + padding;
+  const dx = end.x - start.x;
+  const dz = end.z - start.z;
+  let tMin = 0;
+  let tMax = 1;
+  for (const [p, q] of [[-dx, start.x - minX], [dx, maxX - start.x], [-dz, start.z - minZ], [dz, maxZ - start.z]]) {
+    if (Math.abs(p) < 1e-9) { if (q < 0) return null; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > tMax) return null; if (r > tMin) tMin = r; }
+    else { if (r < tMin) return null; if (r < tMax) tMax = r; }
+  }
+  if (tMin <= 0.03 || tMin >= 1) return null;
+  return tMin;
+}
+
 export function createLivingRoomWorld() {
   const objects = [
     box('floor', 0, 0, 12, 9.2, 0.08, { kind: 'floor', material: 'wood' }),
@@ -43,7 +62,7 @@ export function createLivingRoomWorld() {
     box('side-table', -5.05, 0.38, 0.85, 0.75, 0.68, { kind: 'furniture', color: 0x8b5a42, occluder: true, cameraBlocker: true }),
     box('lamp', -5.05, 0.25, 0.45, 0.45, 1.75, { kind: 'dressing', color: 0xe6c172 }),
     box('cushion-a', -3.9, 0.42, 0.66, 0.2, 0.48, { kind: 'dressing', color: 0xe7b18f, reactive: true }),
-    box('cushion-b', -2.8, 0.42, 0.62, 0.2, 0.42, { kind: 'dressing', color: 0x86b5ad, reactive: true }),
+    box('cushion-b', -2.8, 0.42, 0.62, 0.2, 0.48, { kind: 'dressing', color: 0x86b5ad, reactive: true }),
     box('toy-blocks', 2.7, 1.85, 0.8, 0.65, 0.32, { kind: 'dressing', color: 0x6ba6b8, reactive: true }),
   ];
 
@@ -88,6 +107,23 @@ export function createLivingRoomWorld() {
       };
       for (const collider of colliders) resolved = pushOutside(from, resolved, collider, radius);
       return resolved;
+    },
+    traceCameraSegment(start, end, blockers = cameraBlockers) {
+      let best = null;
+      for (const blocker of blockers) {
+        const fraction = segmentBoxFraction(start, end, blocker, 0.12);
+        if (fraction == null || (best && fraction >= best.fraction)) continue;
+        best = {
+          id: blocker.id,
+          fraction,
+          point: {
+            x: start.x + (end.x - start.x) * fraction,
+            y: start.y + (end.y - start.y) * fraction,
+            z: start.z + (end.z - start.z) * fraction,
+          },
+        };
+      }
+      return best;
     },
     setInteractableEnabled(id, enabled) {
       const item = interactables.find(i => i.id === id);
