@@ -1,0 +1,37 @@
+name: Score Timer Games V2 Tests
+
+on:
+  push:
+    branches:
+      - feature/score-timer-games-v2
+  pull_request:
+    paths:
+      - 'score-counter/**'
+      - '.github/workflows/score-timer-games-v2-test.yml'
+
+jobs:
+  score-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check score-counter/score-timer-v2-core.js
+          node --check score-counter/score-games-core.js
+          node --check score-counter/score-games-ui.js
+      - name: Timer V2 core tests
+        run: node score-counter/score-timer-v2-core.test.js
+      - name: Game engine tests
+        run: node score-counter/score-games-core.test.js
+      - name: V2 UI contract tests
+        run: node score-counter/score-games-ui.contract.test.js
+      - name: V2 index integration tests
+        run: node score-counter/score-v2-index.contract.test.js
+      - name: Existing score regression tests
+        run: node score-counter/score-live-regression.test.js
