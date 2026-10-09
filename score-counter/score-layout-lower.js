@@ -2,7 +2,7 @@
   const teams=document.getElementById('teams');
   if(!teams) return;
 
-  const FIRST_ROW_IMAGE_OFFSET_PX=135;
+  const FIRST_ROW_VIEWPORT_OFFSET_PX=135;
   const MIN_REMAINING_HEIGHT=72;
   let frame=0;
 
@@ -47,6 +47,15 @@
     return {left:0,top:0,right:window.innerWidth,bottom:window.innerHeight,width:window.innerWidth,height:window.innerHeight};
   }
 
+  function stageRect(){
+    const stage=document.getElementById('sharpBg');
+    if(stage){
+      const rect=stage.getBoundingClientRect();
+      if(rect.width>0 && rect.height>0) return rect;
+    }
+    return {left:0,top:0,right:window.innerWidth,bottom:window.innerHeight,width:window.innerWidth,height:window.innerHeight};
+  }
+
   function managedLayoutActive(){
     return teams.classList.contains('score-layout-managed') || teams.classList.contains('score-layout-free');
   }
@@ -59,15 +68,18 @@
     if(!managedLayoutActive()) return;
 
     const image=imageRect();
-    const target=image.top + FIRST_ROW_IMAGE_OFFSET_PX;
-    const maxTop=Math.max(image.top,image.bottom-MIN_REMAINING_HEIGHT);
-    const top=Math.round(Math.min(Math.max(image.top,target),maxTop));
-    const height=Math.max(MIN_REMAINING_HEIGHT,Math.round(image.bottom-top));
+    const stage=stageRect();
+    const target=FIRST_ROW_VIEWPORT_OFFSET_PX;
+    const minimumTop=Math.max(stage.top,target);
+    const maxTop=Math.max(stage.top,stage.bottom-MIN_REMAINING_HEIGHT);
+    const top=Math.round(Math.min(minimumTop,maxTop));
+    const height=Math.max(MIN_REMAINING_HEIGHT,Math.round(stage.bottom-top));
 
     teams.style.setProperty('--score-layout-top',top+'px');
     teams.style.setProperty('--score-layout-height',height+'px');
-    teams.dataset.scoreLayoutStartSource='image-offset';
-    teams.dataset.scoreLayoutImageOffset=String(FIRST_ROW_IMAGE_OFFSET_PX);
+    teams.dataset.scoreLayoutStartSource='viewport-offset';
+    teams.dataset.scoreLayoutViewportOffset=String(FIRST_ROW_VIEWPORT_OFFSET_PX);
+    teams.dataset.scoreLayoutImageTop=String(Math.round(image.top));
     teams.dataset.scoreLayoutProjection=projectionModeActive()?'1':'0';
   }
 
