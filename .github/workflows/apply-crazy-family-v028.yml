@@ -1,0 +1,53 @@
+name: Apply Crazy Family v0.28 visual upgrade
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-v028.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download permanent visual assets
+        env:
+          DAD_URL: 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/c24cd24c-548f-422f-b452-1b785f0c47e7.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZmVjM2Y3MzRiYmJhNjg3MSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcyNDQ2OH0.xmvRqRdmn8FVFrHW8Oa6sPaxPTEiniKgf7gAR7bLxbg'
+          ITEMS_URL: 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/9e99ca89-27e7-4806-a689-78ee55b5c2a5.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjEzMmRmOWM0OGZlNTkzMCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcyNDU3Mn0.nNpxgf9SaiHvAbuVZ1zfgFG3iT8NSUY-0vE_OQfeH8A'
+          BALL_URL: 'https://d2jqrm6oza8nb6.cloudfront.net/datasets/ac71ef90-1e2b-4ebd-a149-88362ca5a424.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYTczN2QxZjdhZDQ3ZWI4NSIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcyMjEwM30.Ylo6vhGmi4fzb0TTOZ1Ji6XfQEpfBtoaLED_KcC4OWM'
+        run: |
+          mkdir -p assets/crazy-family
+          curl -fL --retry 3 "$DAD_URL" -o assets/crazy-family/dad-sprites-v028.png
+          curl -fL --retry 3 "$ITEMS_URL" -o assets/crazy-family/collectibles-v028.png
+          curl -fL --retry 3 "$BALL_URL" -o assets/crazy-family/ball-v028.png
+          file assets/crazy-family/dad-sprites-v028.png | grep -q 'PNG image data'
+          file assets/crazy-family/collectibles-v028.png | grep -q 'PNG image data'
+          file assets/crazy-family/ball-v028.png | grep -q 'PNG image data'
+      - name: Apply Dad and collectible art
+        run: python scripts/apply-crazy-family-v028-art.py
+      - name: Apply sound visual renderer
+        run: python scripts/apply-crazy-family-v028-sound.py
+      - name: GREEN visual tests
+        run: |
+          python scripts/test-crazy-family-v028.py
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('crazy-family.html').read_text(encoding='utf-8')
+          js=s.split('<script>',1)[1].split('</script>',1)[0]
+          Path('/tmp/crazy-family-v028.js').write_text(js,encoding='utf-8')
+          PY
+          node --check /tmp/crazy-family-v028.js
+          test "$(stat -c%s assets/crazy-family/dad-sprites-v028.png)" -gt 50000
+          test "$(stat -c%s assets/crazy-family/collectibles-v028.png)" -gt 50000
+          test "$(stat -c%s assets/crazy-family/ball-v028.png)" -gt 50000
+      - name: Commit and publish
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crazy-family.html assets/crazy-family/dad-sprites-v028.png assets/crazy-family/collectibles-v028.png assets/crazy-family/ball-v028.png
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat: render Dad collectibles and sound effects v0.28'
+          git push
