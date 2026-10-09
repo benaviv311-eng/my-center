@@ -61,7 +61,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 
     <aside class="side">
       <div class="side-card"><h3>איפה ליבי?</h3><div class="floors" id="floors"></div></div>
-      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות. לפני השיר הוא גם מדבר בשלושה שלבים: מרחוק, כשהוא מתקרב, ורגע לפני שהוא מתחיל לשיר. כשהיא רחוקה ממנו הוא ממשיך לדבר לעיתים קרובות כדי לשמור על תחושת לחץ, ועובר בסבב אקראי על כל 9 המשפטים בלי לחזור מיד על אותו משפט. ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.<br><strong>מערכת יכולות:</strong> מאגר ההתקפות של אבא וההגנות של ליבי בנוי במנוע, אבל עדיין לא שייכנו סט התקפות לשלב הראשון.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
+      <div class="side-card"><h3>העולם כרגע</h3><div class="hint">חצר, מרתף, קומת קרקע, קומה ראשונה, קומה שנייה וגג מחוברים לעולם אחד. אין משימות כרגע — פשוט חוקרים, אוספים ומגלים.<br><br><strong>אבא כבר בבית:</strong> כשהוא שר קרוב לליבי, מד הסחרחורת עולה. כדי להשתמש באוזניות: אסוף אותן, בחר אותן בתיק ולחץ <strong>חפץ ✦</strong> (או Q).<br><strong>קול:</strong> קול אבא 2 נבחר ונשמר כקול הקבוע. לאבא יש עכשיו 10 שירים קוליים קצרים בלי כלי נגינה, עם מקצבים והגשות שונות. לפני השיר הוא גם מדבר בשלושה שלבים: מרחוק, כשהוא מתקרב, ורגע לפני שהוא מתחיל לשיר. כשהיא רחוקה ממנו הוא ממשיך לדבר לעיתים קרובות כדי לשמור על תחושת לחץ, ועובר בסבב אקראי על כל 9 המשפטים בלי לחזור מיד על אותו משפט. ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.<br><strong>מערכת יכולות:</strong> כל 10 ההתקפות של אבא פעילות: גל נמוך, גל גבוה, גל אמצע, תו קופץ, תו רודף, גל רחב, קרן קול, טבעת קול, הד חוזר ובום של פזמון. כל פגיעה מורידה חיים.<br><strong>מוזיקת רקע:</strong> מוזיקת המשחק נחלשת אוטומטית כשהאבא מתחיל לשיר.</div></div>
     </aside>
   </div>
 </main>
@@ -108,66 +108,76 @@ const worldOrder=['yard','basement','ground','floor1','floor2','roof'];
 const player={scene:'ground',x:820,y:500,r:15,speed:175,stamina:100,shield:0,maxLives:3,lives:3,invulnerableUntil:0,jumpStartedAt:0,jumpUntil:0,jumpCooldownUntil:0,crouching:false,crouchingTouch:false,rollStartedAt:0,rollUntil:0,rollCooldownUntil:0,rollDX:0,rollDY:1,hanging:false,hangAnchor:null,vaultStartedAt:0,vaultUntil:0,vaultCooldownUntil:0,vaultStartX:0,vaultStartY:0,vaultEndX:0,vaultEndY:0,inventory:[],capacity:3,selected:0,dir:'down',moving:false};
 const dad={scene:'ground',x:320,y:180,r:18,speed:70,targetX:320,targetY:180,targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};
 
-// Ability bank only. Stage 1 has not been configured yet.
+// Stage 1 — Dad's approved attack set. Every successful hit removes one life.
 const dadAbilityCatalog={
- wave:{id:'wave',name:'גל קול',cooldown:1850,kind:'ring',speed:180,maxRadius:350,thickness:16,height:'low'},
- burst:{id:'burst',name:'פרץ גלים',cooldown:2600,kind:'burst',speed:245,height:'mid'},
- wideWave:{id:'wideWave',name:'גל רחב',cooldown:3000,kind:'ring',speed:105,maxRadius:390,thickness:46,height:'low'},
- beam:{id:'beam',name:'קרן קול',cooldown:2700,kind:'beam',width:30,warning:380,duration:900,height:'high'},
- ring:{id:'ring',name:'טבעת קול',cooldown:3000,kind:'ring',speed:230,maxRadius:430,thickness:20,height:'low'},
- echo:{id:'echo',name:'הד חוזר',cooldown:3600,kind:'echo',speed:175,maxRadius:340,thickness:18,height:'mid'},
- bouncingNote:{id:'bouncingNote',name:'תו קופץ',cooldown:2800,kind:'projectile',speed:195,bounce:true,height:'mid'},
- homingNote:{id:'homingNote',name:'תו רודף',cooldown:3800,kind:'projectile',speed:125,homing:true,height:'mid'},
- chorusBoom:{id:'chorusBoom',name:'בום של פזמון',cooldown:4300,kind:'boom',warning:720,radius:140,height:'mid'},
- surpriseShout:{id:'surpriseShout',name:'צעקת הפתעה',cooldown:3300,kind:'beam',width:52,warning:180,duration:650,height:'high'},
+ lowWave:{id:'lowWave',name:'גל נמוך',cooldown:2100,kind:'wave',speed:230,width:220,thickness:22,warning:420,maxDistance:650,height:'low'},
+ highWave:{id:'highWave',name:'גל גבוה',cooldown:2200,kind:'wave',speed:235,width:220,thickness:22,warning:440,maxDistance:650,height:'high'},
+ midWave:{id:'midWave',name:'גל אמצע',cooldown:2050,kind:'wave',speed:265,width:200,thickness:20,warning:300,maxDistance:680,height:'mid'},
+ bouncingNote:{id:'bouncingNote',name:'תו קופץ',cooldown:2700,kind:'projectile',speed:205,bounce:true,height:'space'},
+ homingNote:{id:'homingNote',name:'תו רודף',cooldown:3400,kind:'projectile',speed:132,homing:true,height:'space'},
+ wideWave:{id:'wideWave',name:'גל רחב',cooldown:3300,kind:'wave',speed:155,width:500,thickness:42,warning:600,maxDistance:690,height:'area'},
+ beam:{id:'beam',name:'קרן קול',cooldown:3000,kind:'beam',width:34,warning:520,duration:720,height:'area'},
+ ring:{id:'ring',name:'טבעת קול',cooldown:3200,kind:'ring',speed:225,maxRadius:445,thickness:22,height:'area'},
+ echo:{id:'echo',name:'הד חוזר',cooldown:3900,kind:'echo',speed:185,maxRadius:360,thickness:20,height:'area'},
+ chorusBoom:{id:'chorusBoom',name:'בום של פזמון',cooldown:4800,kind:'boom',warning:900,radius:190,height:'area'},
  chaseSong:{id:'chaseSong',name:'רדיפה תוך כדי שירה',cooldown:0,kind:'movement'},
  contact:{id:'contact',name:'מגע באבא',cooldown:0,kind:'contact'}
 };
+const dadStage1AbilityIds=['lowWave','highWave','midWave','bouncingNote','homingNote','wideWave','beam','ring','echo','chorusBoom'];
 const libiDefenseCatalog={jump:{id:'jump',name:'קפיצה'},crouch:{id:'crouch',name:'התכופפות'},roll:{id:'roll',name:'גלגול'},hang:{id:'hang',name:'היתלות'}};
-let activeDadAbilities=new Set();
-let dadAttacks=[],dadAbilityReady={};
-function configureDadAbilities(ids=[]){activeDadAbilities=new Set(ids.filter(id=>dadAbilityCatalog[id]));dadAbilityReady={};dadAttacks=[]}
+let activeDadAbilities=new Set(),dadAttacks=[],dadAbilityReady={},dadAbilityBag=[],lastDadAbility='',dadNextAttackAt=0;
+function configureDadAbilities(ids=[]){activeDadAbilities=new Set(ids.filter(id=>dadAbilityCatalog[id]));dadAbilityReady={};dadAttacks=[];dadAbilityBag=[];lastDadAbility='';dadNextAttackAt=performance.now()+1100}
+function refillDadAbilityBag(){dadAbilityBag=dadStage1AbilityIds.filter(id=>activeDadAbilities.has(id));for(let i=dadAbilityBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dadAbilityBag[i],dadAbilityBag[j]]=[dadAbilityBag[j],dadAbilityBag[i]]}if(dadAbilityBag.length>1&&dadAbilityBag[dadAbilityBag.length-1]===lastDadAbility)[dadAbilityBag[0],dadAbilityBag[dadAbilityBag.length-1]]=[dadAbilityBag[dadAbilityBag.length-1],dadAbilityBag[0]]}
+function chooseDadStage1Ability(){if(!dadAbilityBag.length)refillDadAbilityBag();const id=dadAbilityBag.pop()||'lowWave';lastDadAbility=id;return id}
 function renderLives(){if(livesEl)livesEl.textContent='❤️'.repeat(player.lives)+'🖤'.repeat(Math.max(0,player.maxLives-player.lives))}
 function damageLibi(amount=1,source='פגיעה'){
  const now=performance.now();if(player.lives<=0||now<player.invulnerableUntil)return false;
- player.hanging=false;player.hangAnchor=null;player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1700;
+ player.hanging=false;player.hangAnchor=null;player.lives=Math.max(0,player.lives-amount);player.invulnerableUntil=now+1450;
  const dx=player.x-dad.x,dy=player.y-dad.y,d=Math.hypot(dx,dy)||1;player.x=clamp(player.x+dx/d*42,28,932);player.y=clamp(player.y+dy/d*42,28,572);
  renderLives();msg(player.lives?('💔 '+source+' — נשארו '+player.lives+' לבבות'):'💔 לליבי נגמרו הלבבות — עדיין לא הגדרנו מה קורה מכאן');return true
 }
 function healLibi(amount=1){const before=player.lives;player.lives=Math.min(player.maxLives,player.lives+amount);renderLives();return player.lives>before}
 function triggerJump(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.jumpCooldownUntil||now<player.rollUntil||now<player.vaultUntil)return false;if(triggerVault())return true;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;return true}
-function triggerRoll(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.rollCooldownUntil||player.crouching||now<player.jumpUntil)return false;const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},v=dirs[player.dir]||[0,1];player.rollDX=v[0];player.rollDY=v[1];player.rollStartedAt=now;player.rollUntil=now+360;player.rollCooldownUntil=now+900;return true}
+function triggerRoll(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.rollCooldownUntil||player.crouching||now<player.jumpUntil||now<player.vaultUntil)return false;const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},v=dirs[player.dir]||[0,1];player.rollDX=v[0];player.rollDY=v[1];player.rollStartedAt=now;player.rollUntil=now+360;player.rollCooldownUntil=now+900;return true}
 function aimedAngle(){return Math.atan2(player.y-dad.y,player.x-dad.x)}
-function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'mid',born:performance.now(),life:5200,hit:false})}
+function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',name:opts.name||'תו של אבא',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'space',born:performance.now(),life:5200,hit:false})}
 function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scene!==dad.scene)return false;const now=performance.now(),a=aimedAngle();
- if(id==='burst'){[-.22,0,.22].forEach(o=>addNote(a+o,def.speed));return true}
- if(id==='bouncingNote'){addNote(a,def.speed,{bounce:true});return true}
- if(id==='homingNote'){addNote(a,def.speed,{homing:true});return true}
- if(def.kind==='ring'||def.kind==='echo'){dadAttacks.push({type:def.kind,scene:dad.scene,x:dad.x,y:dad.y,radius:10,speed:def.speed,maxRadius:def.maxRadius,thickness:def.thickness,height:def.height,born:now,hit:false});return true}
- if(def.kind==='beam'){dadAttacks.push({type:'beam',scene:dad.scene,x:dad.x,y:dad.y,angle:a,length:560,width:def.width,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+def.duration,hit:false});return true}
- if(def.kind==='boom'){dadAttacks.push({type:'boom',scene:dad.scene,x:dad.x,y:dad.y,radius:def.radius,height:def.height,warningUntil:now+def.warning,deadAt:now+def.warning+360,hit:false});return true}
- return false}
-function attackDefended(a){const now=performance.now();return (a.height==='low'&&now<player.jumpUntil)||(a.height==='high'&&player.crouching)||(a.height==='mid'&&now<player.rollUntil)}
+ if(id==='bouncingNote'){addNote(a,def.speed,{bounce:true,name:def.name});return true}
+ if(id==='homingNote'){addNote(a,def.speed,{homing:true,name:def.name});return true}
+ if(def.kind==='wave'){dadAttacks.push({type:'wave',name:def.name,scene:dad.scene,originX:dad.x,originY:dad.y,x:dad.x,y:dad.y,angle:a,distance:0,speed:def.speed,width:def.width,thickness:def.thickness,maxDistance:def.maxDistance,height:def.height,warningUntil:now+def.warning,born:now,hit:false});return true}
+ if(def.kind==='ring'||def.kind==='echo'){dadAttacks.push({type:def.kind,name:def.name,scene:dad.scene,x:dad.x,y:dad.y,radius:10,speed:def.speed,maxRadius:def.maxRadius,thickness:def.thickness,height:'area',born:now,hit:false});return true}
+ if(def.kind==='beam'){dadAttacks.push({type:'beam',name:def.name,scene:dad.scene,x:dad.x,y:dad.y,angle:a,length:620,width:def.width,height:'area',warningUntil:now+def.warning,deadAt:now+def.warning+def.duration,hit:false});return true}
+ if(def.kind==='boom'){dadAttacks.push({type:'boom',name:def.name,scene:dad.scene,x:dad.x,y:dad.y,radius:def.radius,height:'area',warningUntil:now+def.warning,deadAt:now+def.warning+360,hit:false});return true}
+ return false
+}
+function attackDefended(a){const now=performance.now();if(a.type!=='wave')return false;return (a.height==='low'&&now<player.jumpUntil)||(a.height==='high'&&player.crouching)||(a.height==='mid'&&now<player.rollUntil)}
+function waveHits(a){const dx=Math.cos(a.angle),dy=Math.sin(a.angle),px=player.x-a.x,py=player.y-a.y,along=px*dx+py*dy,side=-px*dy+py*dx;return Math.abs(along)<=a.thickness/2+player.r&&Math.abs(side)<=a.width/2+player.r}
 function beamHits(a){const px=player.x-a.x,py=player.y-a.y,dx=Math.cos(a.angle),dy=Math.sin(a.angle),t=Math.max(0,Math.min(a.length,px*dx+py*dy)),cx=a.x+dx*t,cy=a.y+dy*t;return Math.hypot(player.x-cx,player.y-cy)<=a.width/2+player.r}
 function updateDadAttackSystem(dt){const now=performance.now();
  if(player.scene===dad.scene&&activeDadAbilities.has('contact')&&now>=player.rollUntil&&Math.hypot(player.x-dad.x,player.y-dad.y)<=player.r+dad.r+4)damageLibi(1,'נגיעה באבא');
  if(player.scene===dad.scene&&activeDadAbilities.has('chaseSong')&&dadSongPlaying()){dad.targetX=player.x;dad.targetY=player.y}
- if(player.scene===dad.scene&&dadSongPlaying()){for(const id of activeDadAbilities){const def=dadAbilityCatalog[id];if(!def||def.kind==='contact'||def.kind==='movement')continue;if(now>=(dadAbilityReady[id]||0)){spawnDadAttack(id);dadAbilityReady[id]=now+def.cooldown}}}
+ if(player.scene===dad.scene&&dadSongPlaying()){
+  if(!dadNextAttackAt)dadNextAttackAt=now+900;
+  if(now>=dadNextAttackAt){let attempts=0,id='';do{id=chooseDadStage1Ability();attempts++}while(attempts<dadStage1AbilityIds.length&&now<(dadAbilityReady[id]||0));const def=dadAbilityCatalog[id];if(def&&now>=(dadAbilityReady[id]||0)&&spawnDadAttack(id)){dadAbilityReady[id]=now+def.cooldown;dadNextAttackAt=now+1050+Math.random()*650}else dadNextAttackAt=now+450}
+ }else dadNextAttackAt=now+900;
  for(const a of dadAttacks){if(a.scene!==player.scene)continue;
-  if(a.type==='ring'||a.type==='echo'){a.radius+=a.speed*dt;if(a.type==='echo'&&a.speed>0&&a.radius>=a.maxRadius)a.speed=-Math.abs(a.speed);if((a.type==='ring'&&a.radius>a.maxRadius)||(a.type==='echo'&&a.radius<=0))a.dead=true;const d=Math.hypot(player.x-a.x,player.y-a.y);if(!a.hit&&Math.abs(d-a.radius)<=a.thickness/2+player.r&&!attackDefended(a)){a.hit=damageLibi(1,a.type==='echo'?'ההד החוזר של אבא':'גל הקול של אבא')}}
-  else if(a.type==='note'){if(a.homing){const ang=Math.atan2(player.y-a.y,player.x-a.x),sp=Math.hypot(a.vx,a.vy);a.vx=a.vx*.93+Math.cos(ang)*sp*.07;a.vy=a.vy*.93+Math.sin(ang)*sp*.07}a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.bounce){if(a.x<20||a.x>940)a.vx*=-1;if(a.y<20||a.y>580)a.vy*=-1}if(now-a.born>a.life||a.x<-60||a.x>1020||a.y<-60||a.y>660)a.dead=true;if(!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=player.r+a.r&&!attackDefended(a)){a.hit=damageLibi(1,a.homing?'התו הרודף של אבא':'תו הקול של אבא');a.dead=true}}
-  else if(a.type==='beam'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&beamHits(a)&&!attackDefended(a))a.hit=damageLibi(1,'קרן הקול של אבא')}
-  else if(a.type==='boom'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=a.radius+player.r&&!attackDefended(a))a.hit=damageLibi(1,'בום הפזמון של אבא')}
+  if(a.type==='wave'){if(now>=a.warningUntil){a.distance+=a.speed*dt;a.x=a.originX+Math.cos(a.angle)*a.distance;a.y=a.originY+Math.sin(a.angle)*a.distance;if(a.distance>a.maxDistance)a.dead=true;if(!a.hit&&waveHits(a)&&!attackDefended(a)){a.hit=damageLibi(1,a.name||'התקפה של אבא')}}}
+  else if(a.type==='ring'||a.type==='echo'){a.radius+=a.speed*dt;if(a.type==='echo'&&a.speed>0&&a.radius>=a.maxRadius)a.speed=-Math.abs(a.speed);if((a.type==='ring'&&a.radius>a.maxRadius)||(a.type==='echo'&&a.radius<=0))a.dead=true;const d=Math.hypot(player.x-a.x,player.y-a.y);if(!a.hit&&Math.abs(d-a.radius)<=a.thickness/2+player.r){a.hit=damageLibi(1,a.name||'התקפה של אבא')}}
+  else if(a.type==='note'){if(a.homing){const ang=Math.atan2(player.y-a.y,player.x-a.x),sp=Math.hypot(a.vx,a.vy);a.vx=a.vx*.93+Math.cos(ang)*sp*.07;a.vy=a.vy*.93+Math.sin(ang)*sp*.07}a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.bounce){if(a.x<20||a.x>940)a.vx*=-1;if(a.y<20||a.y>580)a.vy*=-1;a.x=clamp(a.x,20,940);a.y=clamp(a.y,20,580)}if(now-a.born>a.life||a.x<-60||a.x>1020||a.y<-60||a.y>660)a.dead=true;if(!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=player.r+a.r){a.hit=damageLibi(1,a.name||'התקפה של אבא');a.dead=true}}
+  else if(a.type==='beam'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&beamHits(a))a.hit=damageLibi(1,a.name||'התקפה של אבא')}
+  else if(a.type==='boom'){if(now>=a.deadAt)a.dead=true;else if(now>=a.warningUntil&&!a.hit&&Math.hypot(player.x-a.x,player.y-a.y)<=a.radius+player.r)a.hit=damageLibi(1,a.name||'התקפה של אבא')}
  }
  dadAttacks=dadAttacks.filter(a=>!a.dead)
 }
 function drawDadAttacks(){const now=performance.now();ctx.save();ctx.lineCap='round';
  for(const a of dadAttacks){if(a.scene!==player.scene)continue;ctx.strokeStyle='rgba(155,73,206,.86)';ctx.fillStyle='rgba(188,117,232,.22)';
-  if(a.type==='ring'||a.type==='echo'){ctx.lineWidth=a.thickness;ctx.setLineDash(a.type==='echo'?[12,9]:[]);ctx.beginPath();ctx.arc(a.x,a.y,Math.max(1,a.radius),0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
-  else if(a.type==='note'){ctx.font='30px Arial';ctx.textAlign='center';ctx.fillStyle='#8e49bd';ctx.fillText('♪',a.x,a.y+10)}
+  if(a.type==='wave'){const dx=Math.cos(a.angle),dy=Math.sin(a.angle),px=-dy,py=dx,warning=now<a.warningUntil,cx=warning?a.originX:a.x,cy=warning?a.originY:a.y,half=a.width/2;ctx.globalAlpha=warning?.34:.9;ctx.lineWidth=warning?5:a.thickness;ctx.beginPath();ctx.moveTo(cx+px*half,cy+py*half);ctx.lineTo(cx-px*half,cy-py*half);ctx.stroke();if(warning){ctx.setLineDash([9,8]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.originX,a.originY);ctx.lineTo(a.originX+dx*a.maxDistance,a.originY+dy*a.maxDistance);ctx.stroke();ctx.setLineDash([])}ctx.globalAlpha=1}
+  else if(a.type==='ring'||a.type==='echo'){ctx.lineWidth=a.thickness;ctx.setLineDash(a.type==='echo'?[12,9]:[]);ctx.beginPath();ctx.arc(a.x,a.y,Math.max(1,a.radius),0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+  else if(a.type==='note'){const lift=a.bounce?Math.abs(Math.sin((now-a.born)/135))*18:0;ctx.font='30px Arial';ctx.textAlign='center';ctx.fillStyle='#8e49bd';ctx.fillText('♪',a.x,a.y+10-lift)}
   else if(a.type==='beam'){const warning=now<a.warningUntil;ctx.globalAlpha=warning?.34:.9;ctx.lineWidth=warning?5:a.width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x+Math.cos(a.angle)*a.length,a.y+Math.sin(a.angle)*a.length);ctx.stroke();ctx.globalAlpha=1}
   else if(a.type==='boom'){ctx.globalAlpha=now<a.warningUntil?.25:.65;ctx.lineWidth=now<a.warningUntil?5:24;ctx.beginPath();ctx.arc(a.x,a.y,a.radius,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
  }ctx.restore()}
+configureDadAbilities(dadStage1AbilityIds);activeDadAbilities.add('chaseSong');activeDadAbilities.add('contact');
 
 const dadSongs=[
  ['אֲבַטִּיחַ הָלַךְ לַשִּׂיחַ','מֶלּוֹן הָלַךְ לִישׁוֹן'],
