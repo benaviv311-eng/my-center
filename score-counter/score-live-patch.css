@@ -236,3 +236,89 @@ body.projection-mode #teams.score-two-column-fit > .card.score-card-professional
   .score-timer-move-zone{top:-9px;height:16px;left:8px;right:8px}
   .score-timer-resize-zone{right:-11px;bottom:-11px;width:30px;height:30px}
 }
+
+/* Projection mode: lock the score controls into one horizontal row. */
+body.projection-mode #teams .score-board-row{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(48px,max-content) 46px!important;
+  grid-template-rows:58px!important;
+  align-items:center!important;
+  justify-items:center!important;
+  justify-content:center!important;
+  width:max-content!important;
+  max-width:100%!important;
+  min-width:0!important;
+  height:auto!important;
+  min-height:58px!important;
+  margin:2px auto 3px!important;
+  padding:0!important;
+  gap:4px!important;
+  direction:ltr!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+}
+body.projection-mode #teams .score-board-row > button{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  margin:0!important;
+  padding:0!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:46px!important;
+  min-height:46px!important;
+  max-height:46px!important;
+  align-self:center!important;
+  justify-self:center!important;
+}
+body.projection-mode #teams .score-board-minus{
+  grid-column:1!important;
+  grid-row:1!important;
+  order:0!important;
+}
+body.projection-mode #teams .score-board-value{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  grid-column:2!important;
+  grid-row:1!important;
+  order:0!important;
+  align-self:center!important;
+  justify-self:center!important;
+  min-width:48px!important;
+  height:58px!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.projection-mode #teams .score-board-plus{
+  grid-column:3!important;
+  grid-row:1!important;
+  order:0!important;
+}
+
+@media (max-width:700px){
+  body.projection-mode #teams .score-board-row{
+    grid-template-columns:38px minmax(40px,max-content) 38px!important;
+    grid-template-rows:46px!important;
+    min-height:46px!important;
+    gap:2px!important;
+  }
+  body.projection-mode #teams .score-board-row > button{
+    width:38px!important;
+    min-width:38px!important;
+    max-width:38px!important;
+    height:40px!important;
+    min-height:40px!important;
+    max-height:40px!important;
+  }
+  body.projection-mode #teams .score-board-value{
+    min-width:40px!important;
+    max-width:58px!important;
+    height:46px!important;
+    font-size:46px!important;
+  }
+}
