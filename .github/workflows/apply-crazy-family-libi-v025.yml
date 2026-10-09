@@ -1,0 +1,55 @@
+name: Apply Crazy Family Libi v0.25
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-libi-v025.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: RED - verify sprite renderer is not present before patch
+        shell: bash
+        run: |
+          if node tests/crazy-family-libi-sprite-v025.test.js; then
+            echo 'Expected pre-patch test to fail, but it passed.'
+            exit 1
+          else
+            echo 'RED confirmed: Libi v0.25 sprite renderer is not present yet.'
+          fi
+
+      - name: Save permanent Libi sprite asset in the site repo
+        shell: bash
+        env:
+          SPRITE_URL: "https://d2jqrm6oza8nb6.cloudfront.net/datasets/12ade51f-3dc9-4308-906a-d89c14b0a9c2.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYmM1YzU1YjJiYjUyYTVmOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY3ODI1OH0.4a_tBDm-OsmCKzHIEjRYw6Y4JJoaQ1f_SJGWLYZFzjI"
+        run: |
+          mkdir -p assets
+          curl -fL --retry 3 "$SPRITE_URL" -o assets/libi-sprites-v025.png
+          test "$(stat -c%s assets/libi-sprites-v025.png)" -gt 50000
+          file assets/libi-sprites-v025.png | grep -q 'PNG image data'
+
+      - name: Apply sprite renderer patch
+        run: python .github/scripts/patch_crazy_family_libi_v025.py
+
+      - name: GREEN - verify high-quality sprite states
+        run: node tests/crazy-family-libi-sprite-v025.test.js
+
+      - name: Commit site update
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crazy-family.html assets/libi-sprites-v025.png
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat: use high-quality Libi sprite sheet in game'
+          git push
