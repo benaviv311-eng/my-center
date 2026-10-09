@@ -1,5 +1,6 @@
 (function(){
   const MOBILE_QUERY='(max-width:700px)';
+  const LEADER_RAISE_PX=14;
   let banner=null;
   let scheduled=false;
   let originalParent=null;
@@ -97,7 +98,7 @@
     const visualTop=findLeaderVisualTop(banner);
     const visualOffset=Math.max(0,Math.round(visualTop-bannerTop));
     banner.dataset.scoreLeaderVisualOffset=String(visualOffset);
-    banner.style.setProperty('top',(-visualOffset)+'px','important');
+    banner.style.setProperty('top',(-visualOffset-LEADER_RAISE_PX)+'px','important');
   }
 
   function schedulePin(force){
