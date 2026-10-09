@@ -33,7 +33,11 @@ assert(/body\.projection-mode #teams \.score-board-row/.test(css), 'projection m
 assert(/body\.projection-mode #teams \.score-board-row[\s\S]*grid-template-columns:46px minmax\(48px,max-content\) 46px!important/.test(css), 'projection mode must keep minus, score and plus in one horizontal grid row');
 assert(/body\.projection-mode #teams \.score-board-row > button/.test(css), 'projection mode must reset score buttons inside the row');
 assert(/body\.projection-mode #teams \.score-board-value/.test(css), 'projection mode must reset the score value inside the row');
-assert(/body\.projection-mode #teams > \.card\.score-card-professional[\s\S]*?transform:none!important/.test(css), 'projection mode must neutralize the legacy card scale transform');
+const projectionCardStart='body.projection-mode #teams > .card.score-card-professional{';
+const projectionCardIndex=css.indexOf(projectionCardStart);
+assert(projectionCardIndex>=0, 'projection mode must have an explicit professional-card override');
+const projectionCardRule=css.slice(projectionCardIndex, css.indexOf('\n}', projectionCardIndex)+2);
+assert(projectionCardRule.includes('transform:none!important'), 'projection mode must neutralize the legacy card scale transform');
 assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box width must respond to the rendered score digits');
 assert(/margin:0 auto!important/.test(css), 'score cards must stay centered inside their layout column/image area');
 assert(/markRankOutside/.test(js) && /score-rank-outside/.test(js), 'rank badge must be detected and moved outside the gray card flow');
