@@ -1,0 +1,17 @@
+const fs=require('fs');
+const path=require('path');
+const read=n=>fs.readFileSync(path.join(__dirname,n),'utf8');
+const js=read('score-time-center.js');
+const css=read('score-time-center.css');
+const index=read('index.html');
+const required=['Stopwatch','Timer','Intervals','Overtime','Lap','Split','Auto Lap','Start delay','Work','Rest','Rounds','Presets','Fullscreen','Clear laps'];
+for(const token of required) if(!js.includes(token)) throw new Error('missing '+token);
+if(!/Date\.now\(\)/.test(js)) throw new Error('timer must use wall clock');
+if(!/wakeLock/.test(js)) throw new Error('wake lock missing');
+if(!/visibilitychange/.test(js)) throw new Error('background resume handling missing');
+if(!/data-tmode/.test(js)) throw new Error('mode controls missing');
+if(!/data-overtime/.test(js)) throw new Error('overtime controls missing');
+if(!/data-start-delay/.test(js)) throw new Error('pre-start control missing');
+if(!/score-time-center\.css\?v=1/.test(index)||!/score-time-center\.js\?v=1/.test(index)) throw new Error('index does not load time center');
+if(!/score-time-center-panel/.test(css)) throw new Error('panel styles missing');
+console.log('score-time-center regression checks passed');
