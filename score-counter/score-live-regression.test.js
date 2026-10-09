@@ -66,9 +66,9 @@ assert(/surfaceLayoutObserver/.test(surfaceJs) && /attributeFilter:\s*\['data-sc
 assert(/surfaceProjectionObserver/.test(surfaceJs) && /surfaceProjectionObserver\.observe\(document\.body,\{attributes:true,attributeFilter:\['class'\]\}\)/.test(surfaceJs), 'surface refresh must react directly to projection mode changes');
 assert(fs.existsSync(lowerJsPath), 'image-relative layout positioning script must exist');
 const lowerJs = read('score-layout-lower.js');
-assert(/FIRST_ROW_IMAGE_OFFSET_PX\s*=\s*82/.test(lowerJs), 'first score row must start about 82px from the visible image top');
-assert(!/findHeaderBottom/.test(lowerJs), 'first-row positioning must no longer depend on the TeamScore header bottom');
-assert(!/measureCardGap/.test(lowerJs), 'first-row positioning must no longer reserve a full card-height spacer');
+assert(/FIRST_ROW_IMAGE_OFFSET_PX\s*=\s*135/.test(lowerJs), 'first score row must align around 135px from the visible image top');
+assert(!/findHeaderBottom/.test(lowerJs), 'first-row positioning must not depend on the TeamScore header bottom');
+assert(!/measureCardGap/.test(lowerJs), 'first-row positioning must not reserve a full card-height spacer');
 assert(/image\.top\s*\+\s*FIRST_ROW_IMAGE_OFFSET_PX/.test(lowerJs), 'first-row top must derive from the visible image top plus the requested offset');
 assert(/score-layout-free/.test(lowerJs), 'image-relative positioning must also cover free layout mode');
 assert(/--score-layout-top/.test(lowerJs) && /--score-layout-height/.test(lowerJs), 'lower layout script must update both layout top and remaining height');
@@ -97,11 +97,11 @@ assert(/score-live-patch\.css\?v=10/.test(index), 'index must preserve the curre
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must preserve the current base patch script');
 assert(/score-card-surface\.css\?v=2/.test(index), 'index must load the current team-color surface stylesheet');
 assert(/score-card-surface\.js\?v=3/.test(index), 'index must load the all-layout surface refresh script');
-assert(/score-layout-lower\.js\?v=3/.test(index), 'index must load the image-offset lower layout script');
+assert(/score-layout-lower\.js\?v=4/.test(index), 'index must load the gray-rectangle-aligned lower layout script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
 assert(/score-leader-top\.js\?v=9/.test(index), 'index must load the single-top-leader version');
-assert(index.indexOf('score-layout-menu.js?v=1') < index.indexOf('score-layout-lower.js?v=3'), 'image-relative positioning must load after the layout controller');
-assert(index.indexOf('score-card-surface.js?v=3') < index.indexOf('score-layout-lower.js?v=3'), 'image-relative positioning must load after surface sizing');
+assert(index.indexOf('score-layout-menu.js?v=1') < index.indexOf('score-layout-lower.js?v=4'), 'image-relative positioning must load after the layout controller');
+assert(index.indexOf('score-card-surface.js?v=3') < index.indexOf('score-layout-lower.js?v=4'), 'image-relative positioning must load after surface sizing');
 assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-card-surface.js?v=3'), 'surface behavior must load after the base score patch');
 console.log('score-live regression checks passed');
