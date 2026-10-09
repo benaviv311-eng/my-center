@@ -24,6 +24,13 @@
       lab.statuses['countdown-target']={name:'Countdown Target',status:'working',detail:'Wall-clock countdown, score target, Target reached and Target failed outcomes are connected.'};
       lab.statuses['weighted-drill']={name:'Weighted Drill',status:'working',detail:'Per-team Perfect / Good / Playable / Error buttons use the configured weighted values and update the live score.'};
     }
+    if(window.TeamScoreCompetitionGames){
+      lab.statuses['random-challenge']={name:'Surprise Me',status:'working',detail:'Easy / Medium / Hard / Extreme now generate a real scenario and route into the matching game setup.'};
+      lab.statuses['team-battle']={name:'Team Battle',status:'working',detail:'Best-of battle rounds, per-round target, round reset and final battle winner are connected.'};
+      lab.statuses['king-rotation']={name:'King Rotation',status:'working',detail:'Winner stays, loser enters queue, waiting-team lock, next team, win streaks and optional Forced rotation are connected.'};
+      lab.statuses['elimination']={name:'Elimination / Survival',status:'working',detail:'Per-team lives, elimination, one-time Redemption and last-team-survives winner are connected.'};
+      lab.statuses['tournament']={name:'Tournament',status:'working',detail:'Round Robin schedule, active-match lock, Next Match announcements, manual match winner, standings and point differential tiebreak are connected.'};
+    }
     return true;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(sync,0),{once:true});else setTimeout(sync,0);
