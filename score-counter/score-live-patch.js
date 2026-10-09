@@ -7,9 +7,44 @@
   const TIMER_MAX_SCALE=2.2;
   const EDGE=8;
   const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
+  let twoColumnFitFrame=0;
 
   function restoreLayoutChoice(){
     teams.classList.remove('score-final-column');
+  }
+
+  function syncTwoColumnFit(){
+    teams.classList.remove('score-two-column-fit');
+    teams.style.removeProperty('--score-two-column-width');
+    void teams.offsetWidth;
+
+    const cards=Array.from(teams.querySelectorAll(':scope > .card.score-card-professional')).filter(card=>{
+      const rect=card.getBoundingClientRect();
+      return rect.width>0 && rect.height>0;
+    });
+    if(cards.length<2) return;
+
+    const rects=cards.map(card=>card.getBoundingClientRect());
+    const firstTop=Math.min(...rects.map(rect=>rect.top));
+    const firstRow=rects.filter(rect=>Math.abs(rect.top-firstTop)<=8);
+    if(firstRow.length!==2) return;
+
+    const frame=document.getElementById('sharpBg');
+    const frameRect=frame ? frame.getBoundingClientRect() : null;
+    const frameWidth=frameRect && frameRect.width>0 ? frameRect.width : window.innerWidth;
+    const available=Math.max(0,Math.floor(Math.min(window.innerWidth,frameWidth)-12));
+    if(available<=0) return;
+
+    teams.style.setProperty('--score-two-column-width',available+'px');
+    teams.classList.add('score-two-column-fit');
+  }
+
+  function scheduleTwoColumnFit(){
+    if(twoColumnFitFrame) cancelAnimationFrame(twoColumnFitFrame);
+    twoColumnFitFrame=requestAnimationFrame(()=>{
+      twoColumnFitFrame=0;
+      syncTwoColumnFit();
+    });
   }
 
   function markRankOutside(){
@@ -67,6 +102,7 @@
     restoreLayoutChoice();
     markRankOutside();
     markTeamNameTop();
+    scheduleTwoColumnFit();
   }
 
   refreshCardChrome();
@@ -119,7 +155,11 @@
   document.addEventListener('change',e=>{
     if(e.target && e.target.matches && e.target.matches('.score-board-value')) syncScoreBoxWidths();
   },true);
-  document.addEventListener('click',()=>requestAnimationFrame(syncScoreBoxWidths),true);
+  document.addEventListener('click',()=>requestAnimationFrame(()=>{
+    syncScoreBoxWidths();
+    scheduleTwoColumnFit();
+  }),true);
+  window.addEventListener('resize',scheduleTwoColumnFit);
 
   function readTimerLayout(){
     try{
