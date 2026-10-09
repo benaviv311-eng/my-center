@@ -1,0 +1,88 @@
+#teams.score-two-column-fit.score-image-contained{
+  width:var(--score-image-width)!important;
+  max-width:var(--score-image-width)!important;
+  transform:translateX(var(--score-image-shift,0px))!important;
+  transform-origin:top left!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+  padding-inline:2px!important;
+  column-gap:4px!important;
+  box-sizing:border-box!important;
+}
+
+#teams.score-two-column-fit.score-image-contained > .card.score-card-professional,
+body.projection-mode #teams.score-two-column-fit.score-image-contained > .card.score-card-professional{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  box-sizing:border-box!important;
+}
+
+@media (max-width:700px){
+  #teams.score-two-column-fit.score-image-contained{
+    column-gap:4px!important;
+    row-gap:8px!important;
+    padding-inline:1px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained > .card.score-card-professional,
+  body.projection-mode #teams.score-two-column-fit.score-image-contained > .card.score-card-professional{
+    padding:27px 2px 5px!important;
+    gap:4px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-board-row{
+    grid-template-columns:26px minmax(38px,max-content) 26px!important;
+    gap:1px!important;
+    width:max-content!important;
+    max-width:100%!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-board-row > button{
+    width:26px!important;
+    min-width:26px!important;
+    height:34px!important;
+    min-height:34px!important;
+    border-radius:10px!important;
+    font-size:20px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-board-value{
+    width:min(var(--score-width,38px),42px)!important;
+    min-width:38px!important;
+    max-width:42px!important;
+    height:40px!important;
+    font-size:30px!important;
+    letter-spacing:-1px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-card-mega > button{
+    min-width:74px!important;
+    max-width:100%!important;
+    min-height:29px!important;
+    padding:5px 7px!important;
+    font-size:9px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-card-menu-toggle{
+    top:4px!important;
+    left:4px!important;
+    width:23px!important;
+    min-width:23px!important;
+    height:23px!important;
+    min-height:23px!important;
+    font-size:15px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-team-name-top{
+    top:4px!important;
+    right:5px!important;
+    max-width:calc(100% - 34px)!important;
+    font-size:11px!important;
+  }
+
+  #teams.score-two-column-fit.score-image-contained .score-rank-outside{
+    left:4px!important;
+  }
+}
