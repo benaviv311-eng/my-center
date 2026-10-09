@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'scripts/apply-crazy-family-v031-grounded.py'
+      - 'scripts/test-crazy-family-v030.py'
       - '.github/workflows/apply-crazy-family-v031.yml'
 
 permissions:
