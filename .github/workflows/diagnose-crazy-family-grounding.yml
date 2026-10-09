@@ -1,0 +1,38 @@
+name: Diagnose Crazy Family Grounding
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-crazy-family-grounding.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect sprite alpha bounds
+        run: |
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          p=Path('assets/libi-sprites-v025.png')
+          im=Image.open(p).convert('RGBA')
+          print('sheet', im.size)
+          cols, rows = 5, 2
+          cw, ch = im.width//cols, im.height//rows
+          print('cell', cw, ch)
+          for frame in range(cols*rows):
+              x0=(frame%cols)*cw; y0=(frame//cols)*ch
+              cell=im.crop((x0,y0,x0+cw,y0+ch))
+              a=cell.getchannel('A')
+              bbox=a.getbbox()
+              if bbox:
+                  l,t,r,b=bbox
+                  print(f'frame {frame}: bbox={bbox} transparent_bottom={ch-b} transparent_top={t} opaque_height={b-t}')
+              else:
+                  print(f'frame {frame}: EMPTY')
+          PY
