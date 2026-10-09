@@ -60,9 +60,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const habaitaJs='<script src="score-habaita-refrain.js?v=1"><\/script>';
   const gameSuiteJs='<script src="score-game-suite.js?v=1"><\/script>';
   const testLabJs='<script src="score-test-lab.js?v=1"><\/script>';
+  const timeCenterGuardJs='<script src="score-time-center-guard.js?v=1"><\/script>';
   const timeCenterJs='<script src="score-time-center.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
