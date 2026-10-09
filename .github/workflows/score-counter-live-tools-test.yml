@@ -7,6 +7,12 @@ on:
       - 'score-counter/score-live-core.js'
       - 'score-counter/score-live.js'
       - 'score-counter/score-live.css'
+      - 'score-counter/score-live-patch.js'
+      - 'score-counter/score-live-patch.css'
+      - 'score-counter/score-image-contain.js'
+      - 'score-counter/score-image-contain.css'
+      - 'score-counter/score-leader-top.js'
+      - 'score-counter/score-live-regression.test.js'
       - '.github/workflows/score-counter-live-tools-test.yml'
 jobs:
   test:
@@ -84,5 +90,6 @@ jobs:
           assert(index.includes('score-live.js'),'loader missing score-live.js');
           assert(index.includes('score-live.css'),'loader missing score-live.css');
           NODE
+          node score-counter/score-live-regression.test.js
           node --check score-counter/score-live-core.js
           node --check score-counter/score-live.js
