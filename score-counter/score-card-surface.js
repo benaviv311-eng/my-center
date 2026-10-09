@@ -3,6 +3,7 @@
   if(!teams) return;
 
   const CARD_MEGA_BOTTOM_GAP_PX=6;
+  const TINT_LIGHTEN=0.46;
   let frame=0;
 
   const cards=()=>Array.from(teams.querySelectorAll(':scope > .card.score-card-professional'));
@@ -31,35 +32,102 @@
     return chroma*3 + max + a*30;
   }
 
-  function teamColorFromButton(button){
-    if(!button) return null;
-    const style=getComputedStyle(button);
-    const direct=rgbSamples(style.backgroundColor).filter(sample=>colorStrength(sample)>=0);
-    if(direct.length) return direct.sort((a,b)=>colorStrength(b)-colorStrength(a))[0];
-
-    const sample=[
+  function bestColorFromStyle(style,inlineText){
+    if(!style) return null;
+    const text=[
+      style.backgroundColor,
       style.backgroundImage,
       style.borderTopColor,
       style.borderRightColor,
+      style.borderBottomColor,
+      style.borderLeftColor,
+      style.outlineColor,
       style.boxShadow,
-      button.getAttribute('style')||''
+      inlineText||''
     ].join(' ');
-    const colors=rgbSamples(sample).filter(color=>colorStrength(color)>=0);
+    const colors=rgbSamples(text).filter(color=>colorStrength(color)>=0);
     if(!colors.length) return null;
     colors.sort((a,b)=>colorStrength(b)-colorStrength(a));
     return colors[0];
   }
 
+  function teamColorFromButton(button){
+    if(!button) return null;
+    return bestColorFromStyle(getComputedStyle(button),button.getAttribute('style')||'');
+  }
+
+  function findTeamStripeColor(card){
+    const cardRect=card.getBoundingClientRect();
+    if(!(cardRect.width>0) || !(cardRect.height>0)) return null;
+
+    const pseudoColors=['::before','::after']
+      .map(pseudo=>bestColorFromStyle(getComputedStyle(card,pseudo),''))
+      .filter(Boolean)
+      .sort((a,b)=>colorStrength(b)-colorStrength(a));
+    if(pseudoColors.length) return pseudoColors[0];
+
+    const cardStyle=bestColorFromStyle({
+      backgroundColor:'transparent',
+      backgroundImage:'none',
+      borderTopColor:getComputedStyle(card).borderTopColor,
+      borderRightColor:'transparent',
+      borderBottomColor:'transparent',
+      borderLeftColor:'transparent',
+      outlineColor:'transparent',
+      boxShadow:'none'
+    },'');
+    if(cardStyle) return cardStyle;
+
+    let best=null;
+    let bestScore=-Infinity;
+    const ignored='.score-board-row,.score-card-mega,.score-card-menu,.score-card-menu-toggle,.score-rank-outside,.score-board-source-host';
+    Array.from(card.querySelectorAll('*')).forEach(el=>{
+      if(el.closest(ignored)) return;
+      const rect=el.getBoundingClientRect();
+      if(!(rect.width>0) || !(rect.height>0)) return;
+      if(rect.width<cardRect.width*0.5) return;
+      if(rect.height<2 || rect.height>20) return;
+      if(rect.top<cardRect.top-3 || rect.top>cardRect.top+72) return;
+      const color=bestColorFromStyle(getComputedStyle(el),el.getAttribute('style')||'');
+      if(!color) return;
+      const score=colorStrength(color)+(rect.width/cardRect.width)*120-Math.max(0,rect.top-cardRect.top)*0.6;
+      if(score>bestScore){
+        bestScore=score;
+        best=color;
+      }
+    });
+    return best;
+  }
+
+  function teamColorFromCard(card){
+    const plus=card.querySelector('.score-board-plus');
+    return teamColorFromButton(plus) || findTeamStripeColor(card);
+  }
+
+  function mixWithWhite(color,amount){
+    const mix=Math.max(0,Math.min(1,Number(amount)||0));
+    return {
+      r:Math.round(color.r+(255-color.r)*mix),
+      g:Math.round(color.g+(255-color.g)*mix),
+      b:Math.round(color.b+(255-color.b)*mix)
+    };
+  }
+
   function markTeamColorCards(){
     cards().forEach(card=>{
-      const plus=card.querySelector('.score-board-plus');
-      const color=teamColorFromButton(plus);
-      if(!color){
-        card.classList.remove('score-card-team-tint');
-        card.style.removeProperty('--score-team-rgb');
-        return;
-      }
-      card.style.setProperty('--score-team-rgb',`${color.r}, ${color.g}, ${color.b}`);
+      const color=teamColorFromCard(card);
+      if(!color) return;
+
+      const light=mixWithWhite(color,TINT_LIGHTEN);
+      const baseRgb=`${color.r}, ${color.g}, ${color.b}`;
+      const lightRgb=`${light.r}, ${light.g}, ${light.b}`;
+      const background=`linear-gradient(180deg, rgba(${lightRgb}, 0.34), rgba(${lightRgb}, 0.24))`;
+
+      card.style.setProperty('--score-team-rgb',baseRgb);
+      card.style.setProperty('--score-team-light-rgb',lightRgb);
+      card.style.setProperty('background',background,'important');
+      card.style.setProperty('border-color',`rgba(${lightRgb}, 0.48)`,'important');
+      card.style.setProperty('box-shadow','0 8px 24px rgba(0,0,0,0.12)','important');
       card.classList.add('score-card-team-tint');
     });
   }
@@ -98,8 +166,9 @@
 
   refreshCardSurface();
   requestAnimationFrame(refreshCardSurface);
-  setTimeout(scheduleRefresh,200);
-  setTimeout(scheduleRefresh,800);
+  setTimeout(scheduleRefresh,100);
+  setTimeout(scheduleRefresh,350);
+  setTimeout(scheduleRefresh,900);
   window.addEventListener('resize',scheduleRefresh,{passive:true});
   document.addEventListener('click',scheduleRefresh,true);
   document.addEventListener('change',scheduleRefresh,true);
