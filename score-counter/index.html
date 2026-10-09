@@ -41,14 +41,16 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const patchCss='<link rel="stylesheet" href="score-live-patch.css?v=10">';
   const containCss='<link rel="stylesheet" href="score-image-contain.css?v=1">';
   const layoutCss='<link rel="stylesheet" href="score-layout-menu.css?v=1">';
+  const surfaceCss='<link rel="stylesheet" href="score-card-surface.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
   const containJs='<script src="score-image-contain.js?v=1"><\/script>';
   const leaderJs='<script src="score-leader-top.js?v=9"><\/script>';
   const layoutJs='<script src="score-layout-menu.js?v=1"><\/script>';
+  const surfaceJs='<script src="score-card-surface.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+surfaceJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
