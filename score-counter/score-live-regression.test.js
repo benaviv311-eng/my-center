@@ -48,6 +48,11 @@ assert(/aspect-ratio:auto!important/.test(css), 'professional score cards must n
 assert(/height:max-content!important/.test(css), 'gray score card height must collapse to its content');
 assert(/padding:34px 14px 6px!important/.test(css), 'desktop gray card must reserve only a small header strip and end after mega');
 assert(/padding:32px 12px 6px!important/.test(css), 'mobile gray card must reserve only a small header strip and end after mega');
+assert(/tightenCardsToMega/.test(js) && /CARD_MEGA_BOTTOM_GAP_PX\s*=\s*38/.test(js), 'card height must be measured from mega with about one centimeter below it');
+assert(/--score-card-tight-height/.test(js) && /--score-card-tight-height/.test(css), 'measured tight card height must drive the rendered card height');
+assert(/markBlueTeamCards/.test(js) && /score-card-tint-blue/.test(js), 'blue teams must be detected and marked');
+assert(/\.score-card-tint-blue/.test(css) && /rgba\([^)]*,\s*0\.1[0-9]\)/.test(css), 'blue card tint must remain very light and translucent');
+assert(/backdrop-filter:blur/.test(css), 'translucent team card must preserve visible background imagery');
 assert(/bar\.addEventListener\(['"]pointerdown['"]/.test(js), 'timer shell must be draggable without a visible move icon');
 assert(!/⠿/.test(js), 'timer must not render the move icon');
 assert(!/↘/.test(js), 'timer must not render the resize icon');
@@ -67,11 +72,11 @@ assert(/findLeaderBanners/.test(leader) && /hideDuplicateLeaderBanners/.test(lea
 assert(/scoreLeaderDuplicate/.test(leader), 'duplicate leader blocks must be marked for reliable hiding/restoration');
 assert(!/isDoubleProjection/.test(leader), 'the single top leader must remain visible in double projection mode');
 assert(/translateX\(-50%\)/.test(leader), 'top leader must center from its own midpoint');
-assert(/score-live-patch\.css\?v=10/.test(index), 'index must load the current projection-card patch stylesheet');
-assert(/score-live-patch\.js\?v=8/.test(index), 'index must load the current patch script');
+assert(/score-live-patch\.css\?v=11/.test(index), 'index must load the current tight/tinted card stylesheet');
+assert(/score-live-patch\.js\?v=9/.test(index), 'index must load the current tight/tinted card script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
 assert(/score-leader-top\.js\?v=9/.test(index), 'index must load the single-top-leader version');
-assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=8'), 'timer/layout patch must load after score-live.js');
-assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-image-contain.js?v=1'), 'image containment must load after the base score patch');
+assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=9'), 'timer/layout patch must load after score-live.js');
+assert(index.indexOf('score-live-patch.js?v=9') < index.indexOf('score-image-contain.js?v=1'), 'image containment must load after the base score patch');
 console.log('score-live regression checks passed');
