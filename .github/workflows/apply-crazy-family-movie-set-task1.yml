@@ -18,7 +18,9 @@ jobs:
         with:
           fetch-depth: 0
       - name: Apply movie-set shell patch
-        run: python scripts/apply-crazy-family-movie-set-task1.py
+        run: |
+          python scripts/apply-crazy-family-movie-set-task1.py
+          python scripts/patch-crazy-family-movie-set-retained.py
       - name: Commit patch when needed
         run: |
           if git diff --quiet; then
