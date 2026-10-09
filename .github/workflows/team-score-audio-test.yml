@@ -1,0 +1,35 @@
+name: TeamScore arena audio tests
+
+on:
+  push:
+    paths:
+      - 'score-counter/score-audio.js'
+      - 'score-counter/score-audio.css'
+      - 'score-counter/score-audio.test.js'
+      - 'score-counter/index.html'
+      - 'score-counter/audio/**'
+      - '.github/workflows/team-score-audio-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify permanent arena audio assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(find score-counter/audio/chants -type f -name '*.mp3' -size +0c | wc -l)" -eq 16
+          test "$(find score-counter/audio/anthems -type f -name '*.mp3' -size +0c | wc -l)" -eq 4
+          test "$(find score-counter/audio/noise -type f -name '*.mp3' -size +0c | wc -l)" -eq 3
+      - name: Check audio JavaScript syntax
+        run: node --check score-counter/score-audio.js
+      - name: Run arena audio contract test
+        run: node score-counter/score-audio.test.js
+      - name: Run TeamScore regression checks
+        run: |
+          node score-counter/score-live-regression.test.js
+          node score-counter/score-layout-header-gap.test.js
