@@ -5,6 +5,7 @@ import { createLivingRoomScene } from './scene.js';
 import { createCharacterVisual, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from './characters.js';
 import { createCameraController, stepCamera, chooseOccluders } from './camera.js';
 import { resolveInteraction, executeInteraction } from './interaction.js';
+import { createDadController, stepDad } from './dad.js';
 
 function horizontalBasis(pose){
   const dx=pose.target.x-pose.position.x,dz=pose.target.z-pose.position.z;
@@ -35,8 +36,9 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
 
   const keys = Object.create(null);
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
-  const dadPosition = { x: 2.7, y: 0, z: -0.35 };
-  let cameraPose = stepCamera(cameraController,{player,dad:{position:dadPosition},world,mode:'explore',dt:1});
+  const dadController=createDadController({position:{x:2.7,y:0,z:-0.35}});
+  let dadFrame={position:{...dadController.position},velocity:{...dadController.velocity},facing:-1,state:'idle',cameraModeHint:'explore'};
+  let cameraPose = stepCamera(cameraController,{player,dad:dadFrame,world,mode:'explore',dt:1});
   let currentInteraction=null;
   sceneHandle.applyCameraPose(cameraPose);
 
@@ -98,23 +100,29 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     player = stepCharacter(player, intent, dt, world);
     if (Math.abs(player.velocity.x) > 0.05) facing = player.velocity.x < 0 ? -1 : 1;
 
+    const retained=legacyAdapter?.getSnapshot?.() || {};
+    dadFrame=stepDad(dadController,{player,world,retainedState:retained,dt,now});
+
     playerVisual.setPose({ position: player.position, facing, state: player.grounded ? 'ground' : 'jump' });
-    dadVisual.setPose({ position: dadPosition, facing: -1, state: 'idle' });
+    dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: dadFrame.state });
+    const dadMoving=Math.hypot(dadFrame.velocity.x,dadFrame.velocity.z)>.18;
+    if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
+    else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadVisual.setFrame(dadFrame.state==='sneeze'?6:0);
+    else dadVisual.setFrame(0);
 
     currentInteraction=resolveInteraction({player,interactables:world.interactables,maxDistance:1.15});
     if(currentInteraction){prompt.textContent=`✋ ${currentInteraction.label}`;prompt.hidden=false;}else{prompt.hidden=true;}
 
-    const retained=legacyAdapter?.getSnapshot?.() || {};
-    const dadDistance=Math.hypot(player.position.x-dadPosition.x,player.position.z-dadPosition.z);
-    const cameraMode=(retained.dad?.singing || dadDistance<2.9)?'chase':'explore';
-    cameraPose=stepCamera(cameraController,{player,dad:{position:dadPosition},world,mode:cameraMode,dt});
+    const dadDistance=Math.hypot(player.position.x-dadFrame.position.x,player.position.z-dadFrame.position.z);
+    const cameraMode=(retained.dad?.singing || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
+    cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt});
     const camera=sceneHandle.applyCameraPose(cameraPose);
     const occluders=chooseOccluders({camera:cameraPose.position,target:cameraPose.target,occluders:world.occluders});
     sceneHandle.setOccluders(occluders);
     playerVisual.faceCamera(camera.position);
     dadVisual.faceCamera(camera.position);
 
-    legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadPosition });
+    legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadFrame.position, dadState:dadFrame.state });
     legacyAdapter?.setDadWorldDistance?.(dadDistance);
     legacyAdapter?.tickRetainedSystems?.(dt);
     sceneHandle.render(camera);
@@ -126,6 +134,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     world,
     scene: sceneHandle,
     cameraController,
+    dadController,
     get player() { return player; },
     start() {
       if (running) return;
