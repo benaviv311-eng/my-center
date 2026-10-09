@@ -41,11 +41,13 @@
 
 **Interfaces:**
 - Produces tables `drafts`, `draft_frames`, `draft_objects`.
+- `drafts` stores title, objective, status, drill type, primary/secondary skill, level, player count, duration, equipment, explanation, coaching cues, variations, and optional parent draft/exercise references.
+- `draft_frames` stores position/order plus a short frame explanation.
 - `DraftObjectType`: `player|coach|ball|cone|hoop|bench|target|text|arrow|zone`.
 - Shared object geometry: normalized `x`, `y`, optional `width`, `height`, `rotation`, plus `locked`.
 - Arrow metadata distinguishes `player-movement|ball-path|generic` and `solid|dashed`.
 
-- [ ] **Step 1: Write failing database/type tests** for ownership, ordered frames, normalized-coordinate bounds, state values, and supported object types.
+- [ ] **Step 1: Write failing database/type tests** for ownership, metadata round-trip, ordered frames/explanations, normalized-coordinate bounds, state values, and supported object types.
 - [ ] **Step 2: Run `supabase test db` and type tests**; expected FAIL.
 - [ ] **Step 3: Implement migration, policies, and Zod/domain types**.
 - [ ] **Step 4: Run tests**; expected PASS.
@@ -61,9 +63,9 @@
 
 **Interfaces:**
 - Produces `draftReducer(state, action): DraftEditorState`.
-- Actions include add/update/delete/duplicate object; lock; multi-select; add-before/add-after/duplicate/delete/reorder frame; undo; redo; flip court.
+- Actions include add/update/delete/duplicate object; lock; multi-select; add-before/add-after/duplicate/delete/reorder frame; update frame explanation; undo; redo; flip court.
 
-- [ ] **Step 1: Write failing reducer tests** for each object action and frame-copy semantics.
+- [ ] **Step 1: Write failing reducer tests** for each object action, frame-copy semantics, and independent frame explanation.
 - [ ] **Step 2: Add failing history tests** for undo, redo, edit-after-undo clearing redo, and locked-object movement rejection.
 - [ ] **Step 3: Run reducer tests**; expected FAIL.
 - [ ] **Step 4: Implement immutable reducer/history** with one history entry per user-visible edit.
@@ -124,7 +126,7 @@
 
 - [ ] **Step 1: Write failing tests** for save/reload, template state, duplicate independence, parent variation link, and publication to personal library.
 - [ ] **Step 2: Run tests**; expected FAIL.
-- [ ] **Step 3: Implement transactional save** for draft, ordered frames, and objects.
+- [ ] **Step 3: Implement transactional save** for draft metadata, ordered frames, and objects.
 - [ ] **Step 4: Implement publish/variation** creating a new personal exercise/current version without modifying source draft/exercise.
 - [ ] **Step 5: Run tests**; expected PASS.
 - [ ] **Step 6: Commit** `feat: persist and publish Coach Draft exercises`.
@@ -142,7 +144,7 @@
 **Interfaces:**
 - Produces step-by-step presentation mode; PNG export of current frame; print-friendly full-draft view for browser PDF; actions `Open in Coach Draft` and `Add to Practice`.
 
-- [ ] **Step 1: Write failing E2E scenario** build 3 frames, save, reopen, enter presentation, move next/previous, publish, find item in Library, and add it to a practice.
+- [ ] **Step 1: Write failing E2E scenario** build 3 frames with explanations, save, reopen, enter presentation, move next/previous, publish, find item in Library, and add it to a practice.
 - [ ] **Step 2: Run E2E test**; expected FAIL.
 - [ ] **Step 3: Implement presentation mode** with no editing controls and concise frame explanation.
 - [ ] **Step 4: Implement export helpers** for current-frame PNG and print/PDF layout without mutating draft data.
