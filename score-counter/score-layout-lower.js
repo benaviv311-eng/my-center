@@ -2,12 +2,9 @@
   const teams=document.getElementById('teams');
   if(!teams) return;
 
-  const HEADER_GAP_PX=8;
-  const FALLBACK_CARD_GAP_PX=140;
+  const FIRST_ROW_IMAGE_OFFSET_PX=82;
   const MIN_REMAINING_HEIGHT=72;
   let frame=0;
-
-  const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
 
   function visibleImageRect(img){
     const rect=img.getBoundingClientRect();
@@ -50,43 +47,6 @@
     return {left:0,top:0,right:window.innerWidth,bottom:window.innerHeight,width:window.innerWidth,height:window.innerHeight};
   }
 
-  function smallestVisibleMatch(needle){
-    const candidates=Array.from(document.querySelectorAll('h1,h2,h3,h4,p,span,strong,b,div')).filter(el=>{
-      if(el===document.body || el===document.documentElement) return false;
-      if(el.closest('#teams,.score-live-timer,.score-layout-menu')) return false;
-      if(!cleanText(el).includes(needle)) return false;
-      const rect=el.getBoundingClientRect();
-      const style=getComputedStyle(el);
-      return rect.width>0 && rect.height>0 && style.display!=='none' && style.visibility!=='hidden';
-    });
-    candidates.sort((a,b)=>{
-      const childDelta=a.querySelectorAll('*').length-b.querySelectorAll('*').length;
-      if(childDelta) return childDelta;
-      return cleanText(a).length-cleanText(b).length;
-    });
-    return candidates[0]||null;
-  }
-
-  function findHeaderBottom(){
-    const title=smallestVisibleMatch('TeamScore');
-    const subtitle=smallestVisibleMatch('ספירת נקודות לקבוצות');
-    const rects=[title,subtitle]
-      .filter(Boolean)
-      .map(el=>el.getBoundingClientRect())
-      .filter(rect=>rect.width>0 && rect.height>0 && Number.isFinite(rect.bottom));
-    if(!rects.length) return imageRect().top;
-    return Math.max(...rects.map(rect=>rect.bottom));
-  }
-
-  function measureCardGap(){
-    const heights=Array.from(teams.querySelectorAll(':scope > .card.score-card-professional'))
-      .map(card=>card.getBoundingClientRect())
-      .filter(rect=>rect.width>0 && rect.height>0)
-      .map(rect=>rect.height);
-    if(!heights.length) return FALLBACK_CARD_GAP_PX;
-    return Math.max(...heights);
-  }
-
   function managedLayoutActive(){
     return teams.classList.contains('score-layout-managed') || teams.classList.contains('score-layout-free');
   }
@@ -99,19 +59,15 @@
     if(!managedLayoutActive()) return;
 
     const image=imageRect();
-    const headerBottom=findHeaderBottom();
-    const cardGap=measureCardGap();
-    const target=headerBottom + cardGap + HEADER_GAP_PX;
-    const minimumTop=Math.max(image.top,target);
+    const target=image.top + FIRST_ROW_IMAGE_OFFSET_PX;
     const maxTop=Math.max(image.top,image.bottom-MIN_REMAINING_HEIGHT);
-    const top=Math.round(Math.min(minimumTop,maxTop));
+    const top=Math.round(Math.min(Math.max(image.top,target),maxTop));
     const height=Math.max(MIN_REMAINING_HEIGHT,Math.round(image.bottom-top));
 
     teams.style.setProperty('--score-layout-top',top+'px');
     teams.style.setProperty('--score-layout-height',height+'px');
-    teams.dataset.scoreLayoutStartSource='header-plus-card';
-    teams.dataset.scoreLayoutHeaderBottom=String(Math.round(headerBottom));
-    teams.dataset.scoreLayoutCardGap=String(Math.round(cardGap));
+    teams.dataset.scoreLayoutStartSource='image-offset';
+    teams.dataset.scoreLayoutImageOffset=String(FIRST_ROW_IMAGE_OFFSET_PX);
     teams.dataset.scoreLayoutProjection=projectionModeActive()?'1':'0';
   }
 
@@ -139,6 +95,7 @@
   document.addEventListener('click',scheduleLowerLayoutStart,true);
   document.addEventListener('change',scheduleLowerLayoutStart,true);
   document.addEventListener('scorecards:autoarrange',scheduleLowerLayoutStart);
+  document.addEventListener('scorecards:reordered',scheduleLowerLayoutStart);
 
   applyLowerLayoutStart();
   requestAnimationFrame(scheduleLowerLayoutStart);
