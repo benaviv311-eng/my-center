@@ -49,6 +49,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const pressureCss='<link rel="stylesheet" href="score-pressure-game.css?v=1">';
   const timedRoundsCss='<link rel="stylesheet" href="score-timed-rounds.css?v=1">';
   const fourTeamCss='<link rel="stylesheet" href="score-four-team-rotation.css?v=1">';
+  const spiegelCss='<link rel="stylesheet" href="score-spiegel.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
@@ -68,9 +69,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const pressureJs='<script src="score-pressure-game.js?v=1"><\/script>';
   const timedRoundsJs='<script src="score-timed-rounds.js?v=1"><\/script>';
   const fourTeamJs='<script src="score-four-team-rotation.js?v=1"><\/script>';
+  const spiegelJs='<script src="score-spiegel.js?v=1"><\/script>';
   const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=1"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+testLabLiveStatusJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
