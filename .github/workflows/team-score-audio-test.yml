@@ -6,6 +6,8 @@ on:
       - 'score-counter/score-audio.js'
       - 'score-counter/score-audio.css'
       - 'score-counter/score-audio.test.js'
+      - 'score-counter/score-live-regression.test.js'
+      - 'score-counter/score-layout-header-gap.test.js'
       - 'score-counter/index.html'
       - 'score-counter/audio/**'
       - '.github/workflows/team-score-audio-test.yml'
