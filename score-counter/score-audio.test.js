@@ -32,8 +32,24 @@ assert(/pressureMix/.test(js),'pressure mode must intensify the three layers tog
 assert(/audio\/chants\//.test(js),'chant layer must point at permanent local audio files');
 assert(/audio\/anthems\//.test(js),'anthem layer must point at permanent local audio files');
 assert(/audio\/noise\//.test(js),'noise layer must point at permanent local audio files');
-assert(/score-audio-layer/.test(css),'three layer controls must have dedicated styling');
-assert(/score-audio\.css\?v=3/.test(index),'index must load the three-layer arena audio styles');
-assert(/score-audio\.js\?v=3/.test(index),'index must load the three-layer arena audio behavior');
 
-console.log('score arena three-layer audio checks passed');
+assert(/LIVE_CHANT_MIN_MS\s*=\s*8000/.test(js),'live arena chants must use an 8 second minimum random gap');
+assert(/LIVE_CHANT_MAX_MS\s*=\s*25000/.test(js),'live arena chants must use a 25 second maximum random gap');
+assert(/LIVE_NOISE_MIN_MS\s*=\s*40000/.test(js),'live arena noise must stay natural for at least 40 seconds');
+assert(/LIVE_NOISE_MAX_MS\s*=\s*90000/.test(js),'live arena noise must shift by 90 seconds at the latest');
+assert(/startLiveMode/.test(js) && /stopLiveMode/.test(js),'panel must support an endless live arena mode');
+assert(/scheduleLiveChant/.test(js),'live arena must schedule chants repeatedly');
+assert(/scheduleLiveNoiseShift/.test(js),'live arena must schedule crowd-bed changes repeatedly');
+assert(/randomDelay/.test(js),'live arena timing must be randomized rather than fixed');
+assert(/lastLiveChant/.test(js),'live arena must avoid repeating the same chant immediately');
+assert(/crossfadeNoise/.test(js),'crowd-bed changes must crossfade instead of hard cutting');
+assert(/liveIntensity/.test(js),'live arena must expose a global atmosphere intensity');
+assert(/data-live-intensity/.test(js),'panel must render the atmosphere intensity slider');
+assert(/score-audio-live/.test(css),'endless live mode must have a dedicated visual control');
+assert(/score-audio-eq/.test(css),'audio console must show a live equalizer');
+assert(/score-audio-now-playing/.test(css),'audio console must show now-playing information');
+assert(/data-now-playing/.test(js),'audio console must render now-playing information');
+assert(/score-audio\.css\?v=4/.test(index),'index must load the live-arena audio styles');
+assert(/score-audio\.js\?v=4/.test(index),'index must load the live-arena audio behavior');
+
+console.log('score arena endless-live audio checks passed');
