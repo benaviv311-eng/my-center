@@ -8,16 +8,24 @@ if 'STAGE1_SIDE_SCROLL_V031' in s:
     print('v0.31 already applied')
     raise SystemExit(0)
 
+if 'שלב 1: מפגש אבא · v0.30' not in s:
+    raise SystemExit('v0.30 title anchor not found')
 s = s.replace('שלב 1: מפגש אבא · v0.30', 'שלב 1: מפגש אבא · v0.31', 1)
 
 # Keep approved art, change only movement/grounding architecture.
+old_player = "inventory:[],capacity:3,selected:0,dir:'down',moving:false};"
+if old_player not in s:
+    raise SystemExit('player state anchor not found')
 s = s.replace(
-    "inventory:[],capacity:3,selected:0,dir:'down',moving:false};",
+    old_player,
     "inventory:[],capacity:3,selected:0,dir:'down',moving:false,vx:0,z:0,vz:0,grounded:true,landSquashUntil:0};",
     1,
 )
+old_dad = "targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};"
+if old_dad not in s:
+    raise SystemExit('dad state anchor not found')
 s = s.replace(
-    "targetAt:0,singing:false,phrase:'לה לה לה!',phase:0};",
+    old_dad,
     "targetAt:0,singing:false,phrase:'לה לה לה!',phase:0,vx:0};",
     1,
 )
@@ -26,6 +34,7 @@ anchor = "let dadFacing=1;"
 insert = r'''
 
 // STAGE1_SIDE_SCROLL_V031 — grounded side-scrolling movement with weight and a real floor.
+// v0.30 house interactions remain underneath this grounded movement layer.
 const STAGE1_FLOOR_Y=500;
 const STAGE1_GRAVITY=-1850;
 const STAGE1_JUMP_SPEED=690;
@@ -48,28 +57,34 @@ if anchor not in s:
 s = s.replace(anchor, anchor + insert, 1)
 
 # Re-map ground floor interactions into one physical floor band.
-s = re.sub(
+s, n = re.subn(
     r"const houseZones=\[.*?\];\nconst houseFx=",
     """const houseZones=[\n {id:'rug',kind:'surface',x:30,y:438,w:270,h:92,speed:.88},\n {id:'sofa',kind:'softBlock',x:122,y:398,w:176,h:92},\n {id:'coffeeTable',kind:'underTable',x:335,y:440,w:132,h:72},\n {id:'toys',kind:'loose',x:474,y:452,w:98,h:70},\n {id:'doorway',kind:'transition',x:570,y:382,w:72,h:140},\n {id:'kitchenTile',kind:'surface',x:575,y:430,w:350,h:112,speed:1.025},\n {id:'diningTable',kind:'underTable',x:690,y:420,w:164,h:94},\n {id:'diningChairs',kind:'loose',x:648,y:410,w:230,h:128,speed:.93}\n];\nconst houseFx=""",
     s,
     count=1,
     flags=re.S,
 )
+if n != 1:
+    raise SystemExit('houseZones anchor not found')
 
-s = re.sub(
+s, n = re.subn(
     r"const houseToyPositions=\[.*?\];",
     "const houseToyPositions=[{x:495,y:486,r:9},{x:528,y:474,r:7},{x:554,y:492,r:8}];",
     s,
     count=1,
 )
+if n != 1:
+    raise SystemExit('houseToyPositions anchor not found')
 
 # Natural placement: pickups sit on/near furniture instead of floating in the room.
-s = re.sub(
+s, n = re.subn(
     r"const items=\{ground:\[.*?\],basement:",
     "const items={ground:[{x:410,y:463,id:'headphones',name:'אוזניות',icon:'🎧'},{x:610,y:458,id:'mirror',name:'מראה',icon:'🪞'},{x:844,y:462,id:'pan',name:'מחבת',icon:'🍳'}],basement:",
     s,
     count=1,
 )
+if n != 1:
+    raise SystemExit('ground items anchor not found')
 
 # Free 2D roaming becomes horizontal acceleration/braking on the actual floor.
 old_move = re.search(r"function move\(dx,dy,dt,sprint\)\{.*?\}\nfunction collect", s, re.S)
@@ -86,37 +101,43 @@ new_jump = """function triggerJump(){const now=performance.now();if(player.lives
 s = s[:m.start()] + new_jump + s[m.end():]
 
 # Dad patrol targets stay on the same floor instead of wandering vertically through the picture.
-s = re.sub(
+s, n = re.subn(
     r"function chooseDadTarget\(now\)\{.*?\}\nfunction updateDad",
     "function chooseDadTarget(now){if(now<dad.targetAt)return;dad.targetAt=now+1800+Math.random()*2500;const pts=[[110,STAGE1_FLOOR_Y],[275,STAGE1_FLOOR_Y],[455,STAGE1_FLOOR_Y],[625,STAGE1_FLOOR_Y],[790,STAGE1_FLOOR_Y],[900,STAGE1_FLOOR_Y]];const p=pts[Math.floor(Math.random()*pts.length)];dad.targetX=p[0];dad.targetY=p[1]}\nfunction updateDad",
     s,
     count=1,
     flags=re.S,
 )
+if n != 1:
+    raise SystemExit('chooseDadTarget anchor not found')
 
-# Replace Dad's direct x/y glide with horizontal inertia on the physical floor.
-old = "const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy);if(len>5){const px=dad.x,py=dad.y,nx=dad.x+vx/len*dad.speed*dt,ny=dad.y+vy/len*dad.speed*dt,pos=resolveDadHouseInteraction(px,py,nx,ny);dad.x=pos.x;dad.y=pos.y}dad.phase+=dt*(activeSong?8:3);"
-if old not in s:
-    # Fallback for a pre-v0.30 variant.
-    old = "const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy);if(len>5){dad.x+=vx/len*dad.speed*dt;dad.y+=vy/len*dad.speed*dt}dad.phase+=dt*(activeSong?8:3);"
-new = "const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy);if(dad.scene==='ground'){const desired=Math.abs(vx)>6?Math.sign(vx)*dad.speed*(activeSong?1.08:1):0;dad.vx=approachValue(dad.vx,desired,(desired?560:820)*dt);const px=dad.x,nx=clamp(dad.x+dad.vx*dt,28,932),pos=resolveDadHouseInteraction(px,STAGE1_FLOOR_Y,nx,STAGE1_FLOOR_Y);if(Math.abs(pos.x-nx)>.5)dad.vx*=.08;dad.x=pos.x;dad.y=STAGE1_FLOOR_Y}else if(len>5){dad.x+=vx/len*dad.speed*dt;dad.y+=vy/len*dad.speed*dt}dad.phase+=dt*(activeSong?8:3);"
-if old not in s:
-    raise SystemExit('dad movement block not found')
-s = s.replace(old, new, 1)
+# Dad keeps the v0.30 pant/yawn/sneeze pause logic, but movement itself becomes horizontal inertia.
+dad_motion = re.search(
+    r"const vx=dad\.targetX-dad\.x,vy=dad\.targetY-dad\.y,len=Math\.hypot\(vx,vy\),dadHousePaused=updateDadHouseBehavior\(dt,now,distToPlayer,len>5,activeSong\);if\(len>5&&!dadHousePaused\)\{.*?\}dad\.phase\+=dt\*\(activeSong\?8:dadHouseState==='idle'\?3:1\.8\);",
+    s,
+    re.S,
+)
+if not dad_motion:
+    raise SystemExit('current v0.30 dad movement block not found')
+new_dad_motion = "const vx=dad.targetX-dad.x,vy=dad.targetY-dad.y,len=Math.hypot(vx,vy),dadHousePaused=updateDadHouseBehavior(dt,now,distToPlayer,len>5,activeSong);if(dad.scene==='ground'){const desired=dadHousePaused?0:(Math.abs(vx)>6?Math.sign(vx)*dad.speed*(activeSong?1.08:1):0);dad.vx=approachValue(dad.vx,desired,(desired?560:820)*dt);const px=dad.x,nx=clamp(dad.x+dad.vx*dt,28,932),resolved=resolveDadHouseInteraction(px,STAGE1_FLOOR_Y,nx,STAGE1_FLOOR_Y);if(Math.abs(resolved.x-nx)>.5)dad.vx*=.08;dad.x=resolved.x;dad.y=STAGE1_FLOOR_Y}else if(len>5&&!dadHousePaused){const prevX=dad.x,prevY=dad.y,nx=dad.x+vx/len*dad.speed*dt,ny=dad.y+vy/len*dad.speed*dt,resolved=resolveDadHouseInteraction(prevX,prevY,nx,ny);dad.x=resolved.x;dad.y=resolved.y}dad.phase+=dt*(activeSong?8:dadHouseState==='idle'?3:1.8);"
+s = s[:dad_motion.start()] + new_dad_motion + s[dad_motion.end():]
 
 # Ground rolling is horizontal; vertical screen drift is removed.
-old_roll = "}else if(rolling){player.moving=true;player.x=clamp(player.x+player.rollDX*440*dt,28,932);player.y=clamp(player.y+player.rollDY*440*dt,28,572);walk+=dt*14}else{sprint="
-new_roll = "}else if(rolling){player.moving=true;if(player.scene==='ground'){player.vx=player.rollDX*440;const pos=resolveHouseInteraction(player.x,STAGE1_FLOOR_Y,clamp(player.x+player.vx*dt,28,932),STAGE1_FLOOR_Y);player.x=pos.x;player.y=STAGE1_FLOOR_Y;updateStage1VerticalPhysics(dt)}else{player.x=clamp(player.x+player.rollDX*440*dt,28,932);player.y=clamp(player.y+player.rollDY*440*dt,28,572)}walk+=dt*14}else{sprint="
-if old_roll in s:
-    s = s.replace(old_roll, new_roll, 1)
+roll = re.search(r"\}else if\(rolling\)\{player\.moving=true;.*?walk\+=dt\*14\}else\{sprint=", s, re.S)
+if not roll:
+    raise SystemExit('rolling branch not found')
+new_roll = "}else if(rolling){player.moving=true;if(player.scene==='ground'){const rollDir=player.rollDX||((player.dir==='left')?-1:1);player.vx=rollDir*440;const pos=resolveHouseInteraction(player.x,STAGE1_FLOOR_Y,clamp(player.x+player.vx*dt,28,932),STAGE1_FLOOR_Y);player.x=pos.x;player.y=STAGE1_FLOOR_Y;updateStage1VerticalPhysics(dt)}else{player.x=clamp(player.x+player.rollDX*440*dt,28,932);player.y=clamp(player.y+player.rollDY*440*dt,28,572)}walk+=dt*14}else{sprint="
+s = s[:roll.start()] + new_roll + s[roll.end():]
 
 # Ground room labels follow horizontal travel, matching the side-scrolling layout.
-s = re.sub(
+s, n = re.subn(
     r"function roomAt\(s,x,y\)\{.*?\}",
     "function roomAt(s,x,y){if(s==='ground'){if(x<450)return{name:'סלון'};if(x<640)return{name:'מעבר'};if(x<790)return{name:'פינת אוכל'};return{name:'מטבח'}}return scenes[s].rooms.find(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h)||scenes[s].rooms[0]}",
     s,
     count=1,
 )
+if n != 1:
+    raise SystemExit('roomAt anchor not found')
 
 # Grounded character rendering: body rises, shadow stays on floor, landing squashes briefly.
 m = re.search(r"function libi\(\)\{.*?\}\nfunction drawStage1Panorama", s, re.S)
@@ -143,19 +164,23 @@ function renderInv'''
 s = s[:m.start()] + new_draw + s[m.end():]
 
 # Dad art itself sits on the floor line on the ground scene.
+if "ctx.translate(dad.x,dad.y+bob);" not in s:
+    raise SystemExit('Dad render anchor not found')
 s = s.replace(
     "ctx.translate(dad.x,dad.y+bob);",
     "ctx.translate(dad.x,(dad.scene==='ground'?STAGE1_FLOOR_Y:dad.y)+bob);",
     1,
 )
 
-# Make ground startup immediately snap both characters to the floor.
-s = s.replace(
-    "let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null,dizzyCharge=0,dizzyUntil=0,noteClock=0;",
-    "let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null,dizzyCharge=0,dizzyUntil=0,noteClock=0;",
-    1,
-)
-# Insert after house constants are available later via first update; initial object y values still get corrected immediately.
+# Verify the patch changed the intended architecture while preserving approved Libi art.
+for token in [
+    'STAGE1_SIDE_SCROLL_V031',
+    "const LIBI_SPRITE_URL='assets/libi-sprites-v025.png'",
+    'updateStage1Kinematics',
+    'drawStage1Foreground()',
+]:
+    if token not in s:
+        raise SystemExit(f'post-patch verification failed: {token}')
 
 p.write_text(s, encoding='utf-8')
 print('Applied Crazy Family v0.31 grounded side-scroll movement')
