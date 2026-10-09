@@ -42,6 +42,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const spatialAudio=createSpatialAudioAdapter({retainedAudio:{setDadSpatial:(state)=>legacyAdapter?.setDadSpatial?.(state)}});
 
   const keys = Object.create(null);
+  let touchRun=false,touchCrouch=false;
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
   const dadController=createDadController({position:{x:2.7,y:0,z:-0.35}});
   let dadFrame={position:{...dadController.position},velocity:{...dadController.velocity},facing:-1,state:'idle',cameraModeHint:'explore'};
@@ -93,8 +94,34 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   };
   globalThis.addEventListener?.('keydown', onKeyDown);
   globalThis.addEventListener?.('keyup', onKeyUp);
+
+  const controlCleanups=[];
+  const bindHold=(button,onStart,onEnd)=>{
+    if(!button)return;
+    const down=(event)=>{event.preventDefault?.();button.classList.add('pressed');onStart();button.setPointerCapture?.(event.pointerId);};
+    const up=(event)=>{event.preventDefault?.();button.classList.remove('pressed');onEnd();};
+    button.addEventListener('pointerdown',down);button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);button.addEventListener('lostpointercapture',up);
+    controlCleanups.push(()=>{button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',up);button.removeEventListener('lostpointercapture',up);});
+  };
+  for(const button of doc.querySelectorAll('[data-key]')){
+    const key=button.dataset.key;
+    bindHold(button,()=>{keys[key]=true;},()=>{keys[key]=false;});
+  }
+  const runButton=doc.getElementById('run');
+  bindHold(runButton,()=>{touchRun=true;},()=>{touchRun=false;});
+  const jumpButton=doc.getElementById('jump');
+  const jumpClick=(event)=>{event.preventDefault?.();player=jumpCharacter(player,7.2);};
+  jumpButton?.addEventListener('click',jumpClick);controlCleanups.push(()=>jumpButton?.removeEventListener('click',jumpClick));
+  const crouchButton=doc.getElementById('crouch');
+  bindHold(crouchButton,()=>{touchCrouch=true;},()=>{touchCrouch=false;});
+  const itemButton=doc.getElementById('itemUse');
+  const itemClick=(event)=>{event.preventDefault?.();const snap=legacyAdapter?.getSnapshot?.()||{},inventory=snap.player?.inventory||[],selected=Number.isInteger(snap.player?.selected)?snap.player.selected:0,item=inventory[selected]||inventory[0];if(item)legacyAdapter?.useItem?.(item.id);};
+  itemButton?.addEventListener('click',itemClick);controlCleanups.push(()=>itemButton?.removeEventListener('click',itemClick));
   const actionButton=doc.getElementById('action');
-  actionButton?.addEventListener('click',performInteraction);
+  actionButton?.addEventListener('click',performInteraction);controlCleanups.push(()=>actionButton?.removeEventListener('click',performInteraction));
+  const hangButton=doc.getElementById('hang');
+  const hangClick=(event)=>{event.preventDefault?.();prompt.textContent='✋ היתלות זמינה כשיש נקודת אחיזה בסביבה';prompt.hidden=false;};
+  hangButton?.addEventListener('click',hangClick);controlCleanups.push(()=>hangButton?.removeEventListener('click',hangClick));
 
   let running = false;
   let raf = 0;
@@ -110,13 +137,17 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     const raw = keyboardIntent(keys);
     if(retainedBefore.controlsReversed){raw.x*=-1;raw.z*=-1;}
     const intent = cameraRelativeIntent(raw, basis.forward, basis.right);
-    const crouching=Boolean(keys.c||keys.C)&&player.grounded;
-    const moveIntent=crouching?{x:intent.x*.58,z:intent.z*.58}:intent;
+    const crouching=Boolean(keys.c||keys.C||touchCrouch)&&player.grounded;
+    const wantsSprint=Boolean(keys.Shift||keys.shift||touchRun)&&!crouching;
+    const sprinting=wantsSprint&&(retainedBefore.player?.stamina??100)>0&&Math.hypot(intent.x,intent.z)>.01;
+    const multiplier=(crouching?.58:(sprinting?1.58:1));
+    const moveIntent={x:intent.x*multiplier,z:intent.z*multiplier};
     player = stepCharacter(player, moveIntent, dt, world);
+    legacyAdapter?.updateStamina?.(sprinting,dt);
     if (Math.abs(player.velocity.x) > 0.05) facing = player.velocity.x < 0 ? -1 : 1;
 
     const playerSpeed=Math.hypot(player.velocity.x,player.velocity.z);
-    if(player.grounded&&playerSpeed>.55&&now-lastStepAt>(crouching?470:300)){
+    if(player.grounded&&playerSpeed>.55&&now-lastStepAt>(crouching?470:(sprinting?220:300))){
       const surface=world.surfaceAt(player.position.x,player.position.z);
       spatialAudio.playSurfaceCue(surface?.kind||'wood');
       lastStepAt=now;
@@ -157,7 +188,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     const stepped=[];
     for(const attack of activeAttacks){
       let next=stepWorldAttack(attack,dt,world);
-      if(!next.dead&&attackHitsPlayer(next,{position:player.position,radius:player.capsule.radius,height:crouching?.58:player.capsule.height,crouching})){
+      if(!next.dead&&attackHitsPlayer(next,{position:player.position,radius:player.capsule.radius,height:crouching ? .58 : player.capsule.height,crouching})){
         legacyAdapter?.damagePlayer?.(next.damage,next.name);
         next={...next,dead:true};
       }
@@ -172,7 +203,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     sceneHandle.applyReactiveTransforms(reactions);
 
     playerVisual.setPose({ position: player.position, facing, state: player.grounded ? (crouching?'crouch':'ground') : 'jump' });
-    playerVisual.setFrame(crouching?6:(player.grounded?(playerSpeed>.25?((Math.floor(now/160)%2)?1:2):0):5));
+    playerVisual.setFrame(crouching?6:(player.grounded?(playerSpeed>.25?((Math.floor(now/(sprinting?115:160))%2)?1:2):0):5));
     dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: songPlaying?'sing':dadFrame.state });
     if(songPlaying)dadVisual.setFrame((Math.floor(now/210)%2)?4:5);
     else if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
@@ -222,7 +253,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
       globalThis.removeEventListener?.('keydown', onKeyDown);
       globalThis.removeEventListener?.('keyup', onKeyUp);
       globalThis.removeEventListener?.('resize', syncSize);
-      actionButton?.removeEventListener('click',performInteraction);
+      for(const cleanup of controlCleanups)cleanup();
       attackVisuals.dispose();
       playerVisual.dispose();
       dadVisual.dispose();
