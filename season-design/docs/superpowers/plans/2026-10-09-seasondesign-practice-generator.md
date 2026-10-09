@@ -14,6 +14,7 @@
 
 - Practice durations offer 45, 60, 75, 90, and custom minutes.
 - Styles are `regular`, `technical`, `game-based`, `advanced`, `custom`.
+- `custom` style supplies four non-negative integer stage weights for isolated/fixed/complex/game-situation and they must total 100.
 - Topics are reception, serve, attack, coverage, transitions, block, defense, attack-to-defense transition.
 - A practice has 1–3 ordered focuses; focus 1 is primary, focus 2 secondary, focus 3 tertiary.
 - Warm-up modes are existing fixed, topic-based, warm-up game, generator chooses, and saved custom warm-up.
@@ -45,8 +46,9 @@
 - Produces tables `warmups`, `warmup_blocks`, `practices`, `practice_focuses`, `practice_blocks`, `practice_templates`.
 - `practice_blocks.exercise_snapshot` stores JSON content used at generation/save time.
 - Produces `PracticeRequest`, `PracticeDraft`, `PracticeBlock`, `PracticeStyle`, `SourcePolicy`, `DetailLevel`, `WarmupMode`.
+- `PracticeRequest.customStageWeights` is required only for `style='custom'` and has `isolated`, `fixed`, `complex`, `gameSituation` integers totaling 100.
 
-- [ ] **Step 1: Write failing database/type tests** for ownership, ordered focuses 1–3, valid enums, multiple named warm-ups, and immutable saved snapshot content.
+- [ ] **Step 1: Write failing database/type tests** for ownership, ordered focuses 1–3, valid enums, multiple named warm-ups, custom weight validation, and immutable saved snapshot content.
 - [ ] **Step 2: Run tests**; expected FAIL.
 - [ ] **Step 3: Implement migration and Zod/domain types**.
 - [ ] **Step 4: Run tests**; expected PASS.
@@ -63,10 +65,10 @@
 - Produces `allocatePractice(request: PracticeRequest): PracticeAllocation`.
 - Default warm-up allocation: `clamp(round(duration * 0.15), 8, 15)` minutes unless a saved/custom warm-up supplies an explicit duration.
 - Focus shares of non-warm-up time: one focus `100%`; two focuses `65/35`; three focuses `55/30/15`.
-- Stage profiles: regular `20/25/30/25`, technical `35/35/20/10`, game-based `5/15/35/45`, advanced `5/10/35/50` for isolated/fixed/complex/game-situation respectively; custom supplies its own profile.
+- Stage profiles: regular `20/25/30/25`, technical `35/35/20/10`, game-based `5/15/35/45`, advanced `5/10/35/50` for isolated/fixed/complex/game-situation respectively; custom uses the validated request weights.
 - Focus 2 may use isolated work only when needed and at most 15% of its allocation; focus 3 defaults to complex/game-situation only.
 
-- [ ] **Step 1: Write failing table-driven tests** for 45/60/75/90 minutes, 1/2/3 focuses, all four automatic styles, and an explicitly timed saved warm-up.
+- [ ] **Step 1: Write failing table-driven tests** for 45/60/75/90 minutes, 1/2/3 focuses, all four automatic styles, custom weights, and an explicitly timed saved warm-up.
 - [ ] **Step 2: Run allocator tests**; expected FAIL.
 - [ ] **Step 3: Implement integer-minute allocation with largest-remainder rounding** so totals always equal requested duration.
 - [ ] **Step 4: Run allocator tests**; expected PASS with exact totals.
@@ -123,7 +125,7 @@
 - Produces `validatePractice(draft, request): ValidationResult`.
 - Produces `generatePractice(request): Promise<GenerationResult>` where result is either `success` or an explicit `insufficient-library`/validation failure.
 
-- [ ] **Step 1: Write failing tests** for wrong total time, duplicate unintended blocks, focus-order violation, generated exercise under library-only, and insufficient library.
+- [ ] **Step 1: Write failing tests** for wrong total time, duplicate unintended blocks, focus-order violation, generated exercise under library-only, invalid custom weights, and insufficient library.
 - [ ] **Step 2: Run tests**; expected FAIL.
 - [ ] **Step 3: Implement orchestration: allocation → context → ranking → composition → validation**.
 - [ ] **Step 4: Do not silently relax hard constraints**; return a user-readable insufficiency result with suggested next action.
@@ -138,13 +140,15 @@
 - Create: `season-design/features/warmups/warmup-builder.tsx`
 - Create: `season-design/app/(app)/warmups/page.tsx`
 - Create: `season-design/app/(app)/warmups/new/page.tsx`
+- Modify: `season-design/app/(app)/library/page.tsx`
 - Test: `season-design/e2e/warmups.spec.ts`
 
 **Interfaces:**
 - Produces `createWarmup(input)`, `updateWarmup(id,input)`, `duplicateWarmup(id)`, `listWarmups()`.
 - A warm-up has a coach-owned name, ordered blocks, and total duration.
+- Saved warm-ups appear in the Library as their own content category and in the generator warm-up selector.
 
-- [ ] **Step 1: Write failing E2E test** creating two differently named fixed warm-ups and editing one without changing the other.
+- [ ] **Step 1: Write failing E2E test** creating two differently named fixed warm-ups, finding them in Library, and editing one without changing the other.
 - [ ] **Step 2: Run the test**; expected FAIL.
 - [ ] **Step 3: Implement warm-up repository/actions and ordered-block builder** using canonical/personal exercises or free-text blocks.
 - [ ] **Step 4: Verify a saved warm-up can be selected by the allocator and its explicit duration is honored**.
@@ -166,9 +170,9 @@
 - Block actions: replace, duration, explanation, delete, reorder, variation.
 - Produces `saveGeneratedExerciseToPersonalLibrary(blockId)` for explicit promotion of generated content to the coach's personal library.
 
-- [ ] **Step 1: Write failing E2E flow** selecting a saved group, 90 minutes, game-based, topic, two ordered focuses, a saved warm-up, detail level, and free text.
+- [ ] **Step 1: Write failing E2E flow** selecting a saved group, 90 minutes, game-based, topic, two ordered focuses, a saved warm-up, detail level, and free text; add a second case for custom style weights totaling 100.
 - [ ] **Step 2: Run E2E test**; expected FAIL.
-- [ ] **Step 3: Implement generator form and render selection rationales** with visible fact/inference distinction; short/normal/detailed affects default visible copy, while `show explanation` is always available.
+- [ ] **Step 3: Implement generator form** including custom-stage controls shown only for custom style, and render selection rationales with visible fact/inference distinction; short/normal/detailed affects default visible copy while `show explanation` is always available.
 - [ ] **Step 4: Implement block replacement** by reranking candidates for that block's existing role without changing unrelated blocks.
 - [ ] **Step 5: Implement save/duplicate/template using exercise snapshots** and explicit save-to-personal-library for generated blocks.
 - [ ] **Step 6: Run `npm run lint && npm test && npm run test:e2e && npm run build`**; expected PASS.
