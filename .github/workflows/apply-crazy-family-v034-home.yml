@@ -1,0 +1,41 @@
+name: Apply Crazy Family v0.34 Home Diorama
+
+on:
+  push:
+    paths:
+      - 'scripts/apply-crazy-family-v034-home.py'
+      - '.github/workflows/apply-crazy-family-v034-home.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply cinematic home patch
+        run: python3 scripts/apply-crazy-family-v034-home.py
+      - name: Verify v0.34 home requirements
+        run: python3 scripts/test-crazy-family-v034.py
+      - name: Verify JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('crazy-family.html').read_text(encoding='utf-8')
+          m=re.search(r'<script>(.*)</script>',h,re.S)
+          if not m: raise SystemExit('script block not found')
+          Path('/tmp/crazy-family.js').write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/crazy-family.js
+      - name: Commit game update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: add cinematic 2.5D home depth v0.34"
+          git pull --rebase origin main
+          git push origin main
