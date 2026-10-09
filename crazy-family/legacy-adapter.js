@@ -7,6 +7,7 @@ export function createLegacyAdapter(windowRef = globalThis.window) {
       player: { lives: 3, stamina: 100, shield: 0, inventory: [] },
       dad: { singing: false, state: 'idle' },
       dizziness: 0,
+      controlsReversed: false,
     })),
     setWorldPose: retained.setWorldPose?.bind(retained) || noop,
     collectItem: retained.collectItem?.bind(retained) || (() => false),
@@ -18,6 +19,7 @@ export function createLegacyAdapter(windowRef = globalThis.window) {
     dadSongIsPlaying: retained.dadSongIsPlaying?.bind(retained) || (() => false),
     playDadPre: retained.playDadPreForMovieSet?.bind(retained) || (() => false),
     triggerDadHouseState: retained.triggerDadHouseState?.bind(retained) || (() => false),
+    applyDadSongExposure: retained.applyDadSongExposure?.bind(retained) || (() => ({ controlsReversed: false })),
     tickRetainedSystems: retained.tickRetainedSystems?.bind(retained) || noop,
   };
 }
