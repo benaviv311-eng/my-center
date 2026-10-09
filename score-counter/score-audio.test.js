@@ -49,8 +49,19 @@ assert(/score-audio-live/.test(css),'endless live mode must have a dedicated vis
 assert(/score-audio-eq/.test(css),'audio console must show a live equalizer');
 assert(/score-audio-now-playing/.test(css),'audio console must show now-playing information');
 assert(/data-now-playing/.test(js),'audio console must render now-playing information');
-assert(/score-audio\.css\?v=4/.test(index),'index must load the live-arena audio styles');
-assert(/score-audio\.js\?v=4/.test(index),'index must load the live-arena audio behavior');
 
-// Keep this contract tied to the deployed v4 live-console behavior.
-console.log('score arena endless-live audio checks passed');
+assert(/RHYTHMIC_CHANT_MIN_REPEATS\s*=\s*2/.test(js),'live chants must repeat at least twice for a rhythmic terrace feel');
+assert(/RHYTHMIC_CHANT_MAX_REPEATS\s*=\s*4/.test(js),'live chants must support up to four rhythmic hits');
+assert(/playRhythmicChant/.test(js),'live mode must turn recorded calls into rhythmic chant patterns');
+assert(/CHANT_LIVE_BOOST\s*=\s*1\.28/.test(js),'live chants must receive a strong dedicated gain boost');
+assert(/CHANT_ANTHEM_DUCK\s*=\s*0\.22/.test(js),'anthem must duck hard while a chant cuts through');
+assert(/CHANT_NOISE_DUCK\s*=\s*0\.56/.test(js),'crowd bed must duck while a chant cuts through');
+assert(/LIVE_REFRAIN_MIN_MS\s*=\s*12000/.test(js),'live arena must bring refrains back regularly');
+assert(/LIVE_REFRAIN_MAX_MS\s*=\s*28000/.test(js),'live arena refrains must not disappear for too long');
+assert(/liveRefrainTimer/.test(js),'live arena must track its refrain schedule');
+assert(/scheduleLiveRefrain/.test(js),'live arena must schedule terrace refrains between calls');
+assert(/liveModeOn[^\n]*scheduleLiveRefrain|scheduleLiveRefrain\(\)/.test(js),'live mode must actually activate refrain scheduling');
+assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
+assert(/score-audio\.js\?v=5/.test(index),'index must load the louder rhythmic live-arena behavior');
+
+console.log('score arena rhythmic chants and refrains checks passed');
