@@ -54,9 +54,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const lowerJs='<script src="score-layout-lower.js?v=2"><\/script>';
   const timerV2Js='<script src="score-timer-v2-core.js?v=1"><\/script>';
   const gamesCoreJs='<script src="score-games-core.js?v=1"><\/script>';
+  const gamesRulesJs='<script src="score-games-rules-v2.js?v=1"><\/script>';
   const gamesUiJs='<script src="score-games-ui.js?v=2"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+gamesCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+lowerJs+surfaceJs+timerV2Js+gamesCoreJs+gamesUiJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+gamesCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+lowerJs+surfaceJs+timerV2Js+gamesCoreJs+gamesRulesJs+gamesUiJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
