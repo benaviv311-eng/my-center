@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.22</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.23</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -286,6 +286,7 @@ function useSelectedItem(){
  if(it.id==='headphones'){
    player.shield=Math.min(100,player.shield+70);
    msg('🎧 האוזניות מגינות מהשירים של אבא');
+   requestLibiEvent('headphones',{allowSongOverlap:dadSongPlaying(),delay:120});
    removeSelected();
  }else if(it.id==='radio'){
    player.shield=Math.min(100,player.shield+45);
@@ -384,29 +385,100 @@ const libiVoiceClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-09.mp3'),
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-10.mp3'),
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-11.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-12.mp3')
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-12.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-13.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-14.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-15.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-16.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-17.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-18.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-19.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-20.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-21.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-22.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-23.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-24.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-25.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-26.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-27.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-28.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-29.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-30.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-31.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-32.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-33.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-34.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-35.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-36.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-37.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-38.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-39.mp3')
 ];
 libiVoiceClips.forEach(a=>{a.preload='auto';a.volume=.98});
-const libiReactionGroups=[[0,1,2,3],[4,5,6,7],[8,9,10,11]];
-let libiVoiceAudio=null,lastLibiVoice=-1,libiReactionToken=0,nextLibiReactionAt=0,libiLastDist=Infinity,libiSongInterruptAt=0,libiIdleReactionAt=0,libiDangerLatched=false,libiEscapeLatched=false,libiWasSongPlaying=false;
+const rareConfusedIndex=30;
+const libiReactionBank={
+ call:[{i:0,w:3},{i:2,w:2},{i:3,w:3},{i:12,w:2},{i:13,w:2}],
+ songWarning:[{i:1,w:4},{i:14,w:3},{i:15,w:3},{i:16,w:2},{i:11,w:1}],
+ songStart:[{i:4,w:3},{i:2,w:3},{i:7,w:2},{i:17,w:2}],
+ songOngoing:[{i:18,w:3},{i:19,w:3},{i:4,w:2},{i:20,w:2},{i:16,w:1}],
+ chase:[{i:8,w:3},{i:21,w:3},{i:22,w:3},{i:9,w:1}],
+ danger:[{i:9,w:3},{i:10,w:3},{i:23,w:3},{i:24,w:2},{i:11,w:1}],
+ missed:[{i:25,w:4},{i:26,w:2},{i:6,w:1}],
+ confused:[{i:27,w:4},{i:28,w:3},{i:29,w:3},{i:rareConfusedIndex,w:.35}],
+ escaped:[{i:31,w:3},{i:32,w:3},{i:3,w:1}],
+ songAgain:[{i:6,w:4},{i:5,w:3},{i:33,w:4},{i:2,w:1}],
+ sameSong:[{i:7,w:4},{i:5,w:2},{i:34,w:5}],
+ dizzy:[{i:35,w:5},{i:9,w:1},{i:10,w:1}],
+ headphones:[{i:36,w:4},{i:37,w:3},{i:38,w:3}]
+};
+let libiRecentVoices=[];
+const libiEncounterMemory={songCount:0,currentSong:-1,lastSong:-1,lastSongEndedAt:0,lastSongStartedAt:0,wrongWaySince:0,lastConfusedAt:0,chaseSince:0,lastMissAt:0};
+let libiVoiceAudio=null,libiReactionToken=0,nextLibiReactionAt=0,libiLastDist=Infinity,libiSongInterruptAt=0,libiIdleReactionAt=0,libiDangerLatched=false,libiEscapeLatched=false,libiWasSongPlaying=false;
 function libiVoicePlaying(){return !!(libiVoiceAudio&&!libiVoiceAudio.paused&&!libiVoiceAudio.ended)}
-function pickLibiReaction(level){const pool=(libiReactionGroups[level]||libiReactionGroups[0]).filter(i=>i!==lastLibiVoice),list=pool.length?pool:(libiReactionGroups[level]||libiReactionGroups[0]);const i=list[Math.floor(Math.random()*list.length)];lastLibiVoice=i;return i}
-function playLibiClip(index,allowSongOverlap=false){if(index<0||index>=libiVoiceClips.length||libiVoicePlaying()||dadPrePlaying()||(!allowSongOverlap&&dadSongPlaying()))return false;const a=libiVoiceClips[index],songRef=allowSongOverlap&&dadSongPlaying()?dadSongAudio:null,oldSongVolume=songRef?songRef.volume:null;if(songRef)songRef.volume=.42;libiVoiceAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);a.onended=()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null;if(!dadPrePlaying()&&!dadSongPlaying())setBgDuck(false)};a.play().catch(()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null});return true}
-function requestLibiReaction(level,{allowSongOverlap=false,delay=0,forceIndex=null}={}){const now=performance.now();if(player.scene!==dad.scene||now<nextLibiReactionAt)return false;nextLibiReactionAt=now+4000+Math.random()*3000;const token=++libiReactionToken,index=forceIndex===null?pickLibiReaction(level):forceIndex,started=now;const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;const blockedBySong=dadSongPlaying()&&!allowSongOverlap;if(!dadPrePlaying()&&!blockedBySong&&!libiVoicePlaying()){playLibiClip(index,allowSongOverlap);return}if(performance.now()-started<2800)setTimeout(attempt,140)};setTimeout(attempt,delay);return true}
+function pickWeightedLibi(event){
+ const source=libiReactionBank[event]||libiReactionBank.call;
+ let pool=source.filter(x=>!libiRecentVoices.includes(x.i));if(!pool.length)pool=source.slice();
+ const total=pool.reduce((s,x)=>s+x.w,0);let r=Math.random()*total,chosen=pool[pool.length-1];
+ for(const x of pool){r-=x.w;if(r<=0){chosen=x;break}}
+ libiRecentVoices.push(chosen.i);if(libiRecentVoices.length>4)libiRecentVoices.shift();return chosen.i
+}
+function playLibiClip(index,allowSongOverlap=false){
+ if(index<0||index>=libiVoiceClips.length||libiVoicePlaying()||dadPrePlaying()||(!allowSongOverlap&&dadSongPlaying()))return false;
+ const a=libiVoiceClips[index],songRef=allowSongOverlap&&dadSongPlaying()?dadSongAudio:null,oldSongVolume=songRef?songRef.volume:null;
+ if(songRef)songRef.volume=.42;libiVoiceAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);
+ a.onended=()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null;if(!dadPrePlaying()&&!dadSongPlaying())setBgDuck(false)};
+ a.play().catch(()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null});return true
+}
+function requestLibiEvent(event,{allowSongOverlap=false,delay=0}={}){
+ const now=performance.now();if(player.scene!==dad.scene||now<nextLibiReactionAt)return false;
+ nextLibiReactionAt=now+4000+Math.random()*3000;const token=++libiReactionToken,index=pickWeightedLibi(event),started=now;
+ const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;const blockedBySong=dadSongPlaying()&&!allowSongOverlap;if(!dadPrePlaying()&&!blockedBySong&&!libiVoicePlaying()){playLibiClip(index,allowSongOverlap);return}if(performance.now()-started<3000)setTimeout(attempt,140)};
+ setTimeout(attempt,delay);return true
+}
+function resetLibiEncounterMemory(){libiEncounterMemory.songCount=0;libiEncounterMemory.currentSong=-1;libiEncounterMemory.lastSong=-1;libiEncounterMemory.lastSongEndedAt=0;libiEncounterMemory.lastSongStartedAt=0;libiEncounterMemory.wrongWaySince=0;libiEncounterMemory.lastConfusedAt=0;libiEncounterMemory.chaseSince=0;libiEncounterMemory.lastMissAt=0;libiRecentVoices=[]}
 function updateLibiReactionEngine(now,dist,songPlaying){
- if(player.scene!==dad.scene||!Number.isFinite(dist)){libiLastDist=Infinity;libiWasSongPlaying=false;libiDangerLatched=false;libiEscapeLatched=false;libiSongInterruptAt=0;libiIdleReactionAt=0;return}
- if(!libiIdleReactionAt)libiIdleReactionAt=now+9000+Math.random()*5000;
- if(libiLastDist>=430&&dist<430)requestLibiReaction(0,{delay:500});
- if(libiLastDist>=300&&dist<300)requestLibiReaction(1,{delay:420});
- if(libiLastDist>=210&&dist<210)requestLibiReaction(2,{delay:320});
- if(songPlaying&&!libiWasSongPlaying)libiSongInterruptAt=now+1200+Math.random()*900;
- if(songPlaying&&dist<300&&libiSongInterruptAt&&now>=libiSongInterruptAt){requestLibiReaction(dist<95?2:1,{allowSongOverlap:true});libiSongInterruptAt=now+7000+Math.random()*4000}
- if(!songPlaying)libiSongInterruptAt=0;
- if(dist<80&&!libiDangerLatched){libiEscapeLatched=true;if(requestLibiReaction(2,{allowSongOverlap:songPlaying,delay:80}))libiDangerLatched=true}
- if(dist>125)libiDangerLatched=false;
- if(libiEscapeLatched&&dist>190){if(requestLibiReaction(2,{allowSongOverlap:songPlaying,delay:100,forceIndex:8}))libiEscapeLatched=false}
- if(!songPlaying&&dist<380&&now>=libiIdleReactionAt){requestLibiReaction(dist<150?2:(dist<270?1:0),{delay:250});libiIdleReactionAt=now+9000+Math.random()*5000}else if(dist>=380){libiIdleReactionAt=now+9000+Math.random()*5000}
- libiLastDist=dist;libiWasSongPlaying=songPlaying;
+ if(player.scene!==dad.scene||!Number.isFinite(dist)){
+  if(Number.isFinite(libiLastDist))resetLibiEncounterMemory();libiLastDist=Infinity;libiWasSongPlaying=false;libiDangerLatched=false;libiEscapeLatched=false;libiSongInterruptAt=0;libiIdleReactionAt=0;return
+ }
+ if(!libiIdleReactionAt)libiIdleReactionAt=now+10000+Math.random()*5000;
+ if(libiLastDist>=430&&dist<430)requestLibiEvent('call',{delay:450});
+ if(libiLastDist>=300&&dist<300&&!songPlaying)requestLibiEvent('call',{delay:380});
+ if(libiLastDist>=210&&dist<210&&!songPlaying)requestLibiEvent('songWarning',{delay:300});
+ if(songPlaying&&!libiWasSongPlaying){
+  const current=dadSongIndex,same=current>=0&&current===libiEncounterMemory.lastSong,again=!!libiEncounterMemory.lastSongEndedAt&&now-libiEncounterMemory.lastSongEndedAt<12000;
+  libiEncounterMemory.songCount++;libiEncounterMemory.currentSong=current;libiEncounterMemory.lastSongStartedAt=now;
+  requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:900});libiSongInterruptAt=now+7000+Math.random()*4000;
+ }
+ if(!songPlaying&&libiWasSongPlaying){libiEncounterMemory.lastSong=libiEncounterMemory.currentSong;libiEncounterMemory.currentSong=-1;libiEncounterMemory.lastSongEndedAt=now;libiSongInterruptAt=0;libiEncounterMemory.chaseSince=0}
+ if(songPlaying&&dist<300&&libiSongInterruptAt&&now>=libiSongInterruptAt){requestLibiEvent(dist<150?'chase':'songOngoing',{allowSongOverlap:true});libiSongInterruptAt=now+7000+Math.random()*4000}
+ if(songPlaying&&dist<190){if(!libiEncounterMemory.chaseSince)libiEncounterMemory.chaseSince=now;if(now-libiEncounterMemory.chaseSince>1800){if(requestLibiEvent('chase',{allowSongOverlap:true,delay:80}))libiEncounterMemory.chaseSince=now+5000}}else libiEncounterMemory.chaseSince=0;
+ if(dist<80&&!libiDangerLatched){libiEscapeLatched=true;if(requestLibiEvent('danger',{allowSongOverlap:songPlaying,delay:60}))libiDangerLatched=true}
+ if(libiDangerLatched&&dist>130){requestLibiEvent('missed',{allowSongOverlap:songPlaying,delay:80});libiDangerLatched=false;libiEncounterMemory.lastMissAt=now}
+ if(libiEscapeLatched&&dist>210&&now-libiEncounterMemory.lastMissAt>1200){if(requestLibiEvent('escaped',{allowSongOverlap:songPlaying,delay:120}))libiEscapeLatched=false}
+ const dadGoingWrongWay=!songPlaying&&dist>260&&Math.hypot(dad.targetX-player.x,dad.targetY-player.y)>dist+90;
+ if(dadGoingWrongWay){if(!libiEncounterMemory.wrongWaySince)libiEncounterMemory.wrongWaySince=now;if(now-libiEncounterMemory.wrongWaySince>1700&&now-libiEncounterMemory.lastConfusedAt>12000){if(requestLibiEvent('confused',{delay:120})){libiEncounterMemory.lastConfusedAt=now;libiEncounterMemory.wrongWaySince=0}}}else libiEncounterMemory.wrongWaySince=0;
+ if(!songPlaying&&dist<380&&now>=libiIdleReactionAt){requestLibiEvent(dadEncounterStage>=3?'songWarning':'call',{delay:220});libiIdleReactionAt=now+10000+Math.random()*5000}else if(dist>=380)libiIdleReactionAt=now+10000+Math.random()*5000;
+ libiLastDist=dist;libiWasSongPlaying=songPlaying
 }
 function refillFarChatter(){
  farChatterBag=[...dadPreClips.keys()].filter(i=>i!==lastFarChatter);
@@ -511,7 +583,7 @@ function updateDad(dt){
    }else{
      dizzyCharge=Math.min(100,dizzyCharge+32*dt);
      if(dizzyCharge>=100&&now>=dizzyUntil){
-       dizzyUntil=now+5200;dizzyCharge=25;msg('😵‍💫 השיר של אבא סחרר את ליבי — המקשים התהפכו!');
+       dizzyUntil=now+5200;dizzyCharge=25;msg('😵‍💫 השיר של אבא סחרר את ליבי — המקשים התהפכו!');requestLibiEvent('dizzy',{allowSongOverlap:true,delay:80});
      }
    }
  }else{
