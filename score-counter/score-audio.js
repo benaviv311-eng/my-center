@@ -17,7 +17,8 @@
   let musicOn=false;
   let crowdOn=false;
   let pressureOn=false;
-  let volume=0.72;
+  let volume=0.82;
+  let unlockedOnce=false;
 
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
 
@@ -72,8 +73,28 @@
     crowdSource=source;
   }
 
-  function ensureAudio(){
-    if(!AudioCtx) return false;
+  function playUnlockTone(){
+    if(!ctx || !masterGain || ctx.state!=='running') return;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(880,ctx.currentTime);
+    gain.gain.setValueAtTime(0.001,ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.14,ctx.currentTime+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.12);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    osc.stop(ctx.currentTime+0.14);
+  }
+
+  async function ensureAudio(options){
+    const confirm=!!(options&&options.confirm);
+    if(!AudioCtx){
+      setStatus('הדפדפן לא תומך בסאונד','error');
+      return false;
+    }
+
     if(!ctx){
       ctx=new AudioCtx();
       masterGain=ctx.createGain();
@@ -90,12 +111,26 @@
       masterGain.connect(ctx.destination);
       createCrowd();
     }
-    if(ctx.state==='suspended') ctx.resume().catch(()=>{});
+
+    if(ctx.state==='suspended'){
+      try{ await ctx.resume(); }catch(_){ }
+    }
+
+    if(ctx.state!=='running'){
+      setStatus('לחץ שוב להפעלת סאונד','blocked');
+      return false;
+    }
+
+    if(confirm && !unlockedOnce){
+      unlockedOnce=true;
+      playUnlockTone();
+    }
+    setStatus('סאונד פעיל — בחר מוזיקה או קהל','on');
     return true;
   }
 
   function shortNoise(duration,frequency,gainValue,destination){
-    if(!ctx) return;
+    if(!ctx || ctx.state!=='running') return;
     const source=ctx.createBufferSource();
     const filter=ctx.createBiquadFilter();
     const gain=ctx.createGain();
@@ -113,7 +148,7 @@
   }
 
   function kick(){
-    if(!ctx) return;
+    if(!ctx || ctx.state!=='running') return;
     const osc=ctx.createOscillator();
     const gain=ctx.createGain();
     osc.type='sine';
@@ -128,7 +163,7 @@
   }
 
   function tone(frequency,duration,level){
-    if(!ctx) return;
+    if(!ctx || ctx.state!=='running') return;
     const osc=ctx.createOscillator();
     const gain=ctx.createGain();
     osc.type='square';
@@ -142,19 +177,20 @@
   }
 
   function musicStep(step){
-    if(!musicOn || !ctx) return;
+    if(!musicOn || !ctx || ctx.state!=='running') return;
     if(step%4===0 || step%4===2) kick();
     if(step%4===1 || step%4===3) shortNoise(0.07,1700,0.08,musicGain);
     const notes=[196,196,246.94,220,196,293.66,246.94,220];
     tone(notes[step%notes.length],0.11,step%2===0?0.035:0.024);
   }
 
-  function createMusic(){
-    if(!ensureAudio()) return;
-    if(musicTimer) return;
+  async function createMusic(){
+    if(!(await ensureAudio())) return false;
+    if(musicTimer) return true;
     let step=0;
     musicStep(step++);
     musicTimer=setInterval(()=>musicStep(step++),360);
+    return true;
   }
 
   function stopMusic(){
@@ -164,23 +200,33 @@
     }
   }
 
-  function setMusic(enabled){
+  async function setMusic(enabled){
     musicOn=!!enabled;
-    if(!ensureAudio()) return;
-    safeParam(musicGain.gain,musicOn?0.55:0,ctx.currentTime);
-    if(musicOn) createMusic(); else stopMusic();
+    if(!(await ensureAudio({confirm:true}))){
+      musicOn=false;
+      syncUI();
+      return false;
+    }
+    safeParam(musicGain.gain,musicOn?0.68:0,ctx.currentTime);
+    if(musicOn) await createMusic(); else stopMusic();
     syncUI();
+    return true;
   }
 
-  function setCrowd(enabled){
+  async function setCrowd(enabled){
     crowdOn=!!enabled;
-    if(!ensureAudio()) return;
-    safeParam(crowdGain.gain,crowdOn?0.34:0,ctx.currentTime);
+    if(!(await ensureAudio({confirm:true}))){
+      crowdOn=false;
+      syncUI();
+      return false;
+    }
+    safeParam(crowdGain.gain,crowdOn?0.48:0,ctx.currentTime);
     syncUI();
+    return true;
   }
 
   function whistle(){
-    if(!ctx) return;
+    if(!ctx || ctx.state!=='running') return;
     const osc=ctx.createOscillator();
     const gain=ctx.createGain();
     osc.type='sine';
@@ -197,7 +243,7 @@
   }
 
   function pressureBurst(){
-    if(!pressureOn || !ctx) return;
+    if(!pressureOn || !ctx || ctx.state!=='running') return;
     shortNoise(0.22,700,0.18,pressureGain);
     if(Math.random()>0.35) whistle();
   }
@@ -247,22 +293,23 @@
     syncUI();
   }
 
-  function startPressure(){
-    if(!ensureAudio()) return;
+  async function startPressure(){
+    if(!(await ensureAudio({confirm:true}))) return false;
     stopPressure();
     pressureOn=true;
-    safeParam(pressureGain.gain,0.66,ctx.currentTime);
+    safeParam(pressureGain.gain,0.78,ctx.currentTime);
     pressureBurst();
     setTimeout(automaticChant,260);
     pressureChantTimer=setInterval(automaticChant,PRESSURE_CHANT_GAP_MS);
     pressurePulseTimer=setInterval(pressureBurst,1100);
     pressureTimer=setTimeout(stopPressure,PRESSURE_DURATION_MS);
     syncUI();
+    return true;
   }
 
-  function setVolume(value){
+  async function setVolume(value){
     volume=Math.max(0,Math.min(1,Number(value)||0));
-    if(ensureAudio()) safeParam(masterGain.gain,volume,ctx.currentTime);
+    if(await ensureAudio()) safeParam(masterGain.gain,volume,ctx.currentTime);
     syncUI();
   }
 
@@ -272,6 +319,13 @@
   let crowdButton=null;
   let pressureButton=null;
   let volumeInput=null;
+  let statusEl=null;
+
+  function setStatus(text,state){
+    if(!statusEl) return;
+    statusEl.textContent=text;
+    statusEl.dataset.state=state||'idle';
+  }
 
   function syncUI(){
     if(!panel) return;
@@ -301,6 +355,7 @@
     panel.innerHTML=`
       <button type="button" class="score-audio-main" aria-expanded="false">🔊 סאונד</button>
       <div class="score-audio-body" hidden>
+        <div class="score-audio-status" data-state="idle">לחץ על סאונד להפעלה</div>
         <div class="score-audio-row score-audio-modes">
           <button type="button" class="score-audio-mode" data-audio-mode="music" aria-pressed="false">🎵 מוזיקה</button>
           <button type="button" class="score-audio-mode" data-audio-mode="crowd" aria-pressed="false">🏟️ קהל</button>
@@ -311,34 +366,48 @@
           ${CHANTS.map((chant,index)=>`<button type="button" data-chant="${index}">${chant}</button>`).join('')}
         </div>
         <label class="score-audio-volume">עוצמה
-          <input type="range" min="0" max="100" value="72" step="1" aria-label="עוצמת סאונד">
+          <input type="range" min="0" max="100" value="82" step="1" aria-label="עוצמת סאונד">
         </label>
       </div>`;
 
     document.body.appendChild(panel);
     const main=panel.querySelector('.score-audio-main');
     body=panel.querySelector('.score-audio-body');
+    statusEl=panel.querySelector('.score-audio-status');
     musicButton=panel.querySelector('[data-audio-mode="music"]');
     crowdButton=panel.querySelector('[data-audio-mode="crowd"]');
     pressureButton=panel.querySelector('.score-audio-pressure');
     volumeInput=panel.querySelector('.score-audio-volume input');
 
-    main.addEventListener('click',()=>{
-      ensureAudio();
+    main.addEventListener('click',async()=>{
       const collapsed=panel.classList.toggle('is-collapsed');
       body.hidden=collapsed;
       main.setAttribute('aria-expanded',String(!collapsed));
+      if(!collapsed) await ensureAudio({confirm:true});
     });
-    musicButton.addEventListener('click',()=>setMusic(!musicOn));
-    crowdButton.addEventListener('click',()=>setCrowd(!crowdOn));
-    pressureButton.addEventListener('click',()=>pressureOn?stopPressure():startPressure());
-    volumeInput.addEventListener('input',()=>setVolume(Number(volumeInput.value)/100));
+    musicButton.addEventListener('click',async()=>{ await setMusic(!musicOn); });
+    crowdButton.addEventListener('click',async()=>{ await setCrowd(!crowdOn); });
+    pressureButton.addEventListener('click',async()=>{
+      if(pressureOn) stopPressure(); else await startPressure();
+    });
+    volumeInput.addEventListener('input',async()=>{ await setVolume(Number(volumeInput.value)/100); });
     panel.querySelectorAll('[data-chant]').forEach(button=>{
-      button.addEventListener('click',()=>{
-        ensureAudio();
+      button.addEventListener('click',async()=>{
+        if(!(await ensureAudio({confirm:true}))) return;
         const index=Number(button.dataset.chant);
         speakChant(CHANTS[index]||CHANTS[0]);
+        const wasPressure=pressureOn;
+        if(!wasPressure){
+          pressureOn=true;
+          safeParam(pressureGain.gain,0.62,ctx.currentTime);
+        }
         pressureBurst();
+        if(!wasPressure){
+          setTimeout(()=>{
+            pressureOn=false;
+            if(ctx) safeParam(pressureGain.gain,0,ctx.currentTime);
+          },520);
+        }
       });
     });
     syncUI();
@@ -351,6 +420,7 @@
     chants:CHANTS.slice(),
     createMusic,
     createCrowd,
+    ensureAudio,
     setMusic,
     setCrowd,
     startPressure,
