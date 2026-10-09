@@ -48,7 +48,7 @@
   }
 
   function managedLayoutActive(){
-    return teams.classList.contains('score-layout-managed') || teams.classList.contains('score-layout-free');
+    return teams.classList.contains('score-layout-managed');
   }
 
   function projectionModeActive(){
