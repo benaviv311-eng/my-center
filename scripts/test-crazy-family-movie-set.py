@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Task 1 green checkpoint: modular runtime shell + explicit legacy rollback.
 root = Path('.')
 html = (root / 'crazy-family.html').read_text(encoding='utf-8')
 bootstrap = root / 'crazy-family' / 'bootstrap.js'
