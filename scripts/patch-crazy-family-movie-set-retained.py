@@ -19,4 +19,8 @@ html = html.replace(buggy_spatial, fixed_spatial)
 if 'controlsReversed:performance.now()<dizzyUntil' not in html:
     html = html.replace('dizziness:dizzyCharge,scene:player.scene', 'dizziness:dizzyCharge,controlsReversed:performance.now()<dizzyUntil,scene:player.scene')
 
+old_tick = "tickRetainedSystems(dt){if(Number.isFinite(dt)&&dt>0)updateHouseObjects(Math.min(.05,dt));renderLives();staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';}"
+new_tick = "tickRetainedSystems(dt){const now=performance.now();if(dadHouseState!=='idle'&&now>=dadHouseUntil){dadHouseState='idle';dadSneezeSecondWaveAt=0;}if(Number.isFinite(dt)&&dt>0)updateHouseObjects(Math.min(.05,dt));renderLives();staminaEl.style.width=player.stamina+'%';shieldEl.style.width=player.shield+'%';dizzyMeterEl.style.width=Math.min(100,dizzyCharge)+'%';}"
+html = html.replace(old_tick, new_tick)
+
 path.write_text(html, encoding='utf-8')
