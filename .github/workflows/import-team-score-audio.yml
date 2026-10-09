@@ -1,0 +1,66 @@
+name: Import TeamScore audio
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-team-score-audio.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download permanent TeamScore audio assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p score-counter/audio/chants score-counter/audio/anthems score-counter/audio/noise
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/b2bf8be4-3bb7-4102-a27c-d42775bdfaaf/TeamScore_Reshet_Long_Deep.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYTkzMDE0ODEyYmYwMTlmZSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY3ODA4MX0.BEXKXW--W3axc1xHL727AMNhH7FYAP2rnqBuATx1sGI' -o score-counter/audio/chants/reshet-deep.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/c711a6fd-5989-4fbe-9cad-02b2f0f4aa64/TeamScore_Reshet_Long_Raspy.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjdjMTg0YzVkOWJjNWZkMiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2MjY2MX0.U4G7qA31Cv5zSLhEnObBkBlzoZDx7VFOYINwOTxXsJs' -o score-counter/audio/chants/reshet-raspy.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/a0adcdcf-3db7-45d5-a367-342dc69d6637/TeamScore_Reshet_Sharp_Female.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiODNmOGNiNWUyZmZhMjY3ZCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcxMDY4Nn0.xU7qLqTLDhcDo4ls6QoTiDX-FSUymq6t7nI3OzV1_7s' -o score-counter/audio/chants/reshet-sharp.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/c5827158-6943-4e34-a052-28aab8162a3b/TeamScore_Reshet_Mid_Hype.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYjJiZDRiMDg5ZmI1MjUwMCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY1NTU2MH0.O4IlZLQnFtdRiO61aq7thiV0CUPYSPoATJDvoju7jYY' -o score-counter/audio/chants/reshet-hype.mp3
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/5908065c-e687-4d9e-b3e2-f8ede468d8b2/TeamScore_Hu_Lo_Yodea_Deep.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzVkMGExNWYyMWNkODQ2ZiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2NDM1MX0.ECVgYnOO8RnwHsbknE7qhI-ZV0Cye4MsWqa20wXHQkY' -o score-counter/audio/chants/hu-lo-yodea-deep.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/6aee7cd7-b1ee-42df-8e42-77f2fb6bda56/TeamScore_Hu_Lo_Yodea_Young.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzk3ZDg5YjNkNjgyNWQ0OSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY4NDc4N30.jFH9sQuhVaqJIu4Yxr1TnMzIbiNE182W6VZxHl9oxnY' -o score-counter/audio/chants/hu-lo-yodea-young.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/16035724-57ed-4ab7-a801-ff1df95aa4e1/TeamScore_Hu_Lo_Yodea_Husky.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjQxZWJjMjNiMWNjMzUwNSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2MTIxOX0.qIij68YHNCnowsNcUhLgVMy2l5IkOK5e-m3-2J0c1hE' -o score-counter/audio/chants/hu-lo-yodea-husky.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/e69db91d-6524-4319-9275-29351b4f9b91/TeamScore_Hu_Lo_Yodea_Sharp.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiZDc1ZGVhNjZiMzUyOTBmNCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY4NTA5NH0.lSxHd2x1oRkiF4o2t3RW0IEGxOEp6s14AnCUstRlhSo' -o score-counter/audio/chants/hu-lo-yodea-sharp.mp3
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/2406ec50-dc7c-4790-a407-2001875e2e33/TeamScore_Boo_Long_Deep.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYmZiNTEzMTY1MzM2M2E1ZCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2NTU1OH0.bx5Sm9QqWiugCzh5-rxFJ4V0cv8EakMm77FWzHL78WM' -o score-counter/audio/chants/boo-deep.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/b8ff5f2d-9144-4ef0-9f5d-ceb97f5a56ed/TeamScore_Boo_Raspy_Chant.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMjRlZTM3NTg1MmQzYjQ4ZiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY5MzkxMn0.Rtgr8keLQ-lPrTvLiCtZ4fS2NZv-V4wYY61XmZuhDdc' -o score-counter/audio/chants/boo-raspy.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/ff6c4382-c0ab-4606-8d63-704e01da1216/TeamScore_Boo_Young_Hype.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMDBmYzU3MmQwOWRlOTFjMCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcxMTc4OX0.A0Z-BH8JGnt7QNJfTky40JXelWg0YxdEsKVEJhtw0pM' -o score-counter/audio/chants/boo-young.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/3a264305-19e0-443a-9c06-d3c32b0fe53b/TeamScore_Boo_Sharp.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNmUyOTQ4NzNiMjBiNjgzNSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY5MzY4M30.zONEgJ6MirsL4sLCad6a-8KowS8b-BeZI4hY-eZiGNk' -o score-counter/audio/chants/boo-sharp.mp3
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/c5dfd49f-1da8-40fe-a10c-f0f463c2e1e7/TeamScore_Tachzeru_Habaita_Deep.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzY3MzkxODMwOGM3N2Y3MCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY3NTc3OX0.o9LTsu6vpOJdt5TscCj0xf0FojPu7BYxZw_HGpBqebE' -o score-counter/audio/chants/tachzeru-deep.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/1051e1eb-8a77-4c04-89b6-95d67e379175/TeamScore_Tachzeru_Habaita_Raspy_Double.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNWFjZGNmOGQ2NzgzZmUyMSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcwOTQ1M30.Mo3o_l4K6dOiT82vBvzsdYDmIzaI2drt_0bv6UOtsA0' -o score-counter/audio/chants/tachzeru-raspy-double.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/79f7061b-95f2-4ade-ba6c-a9056dffb569/TeamScore_Tachzeru_Habaita_Young_Hype.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNGE0YzRjNWU2Y2RlOTY1MiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY5ODI3MH0.3mER9Yv0Q5SSkaSEdYjisPoySQDN9NnLIdou_pgzGxs' -o score-counter/audio/chants/tachzeru-young.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/text_to_speech/bec1e232-29b4-48b0-84e1-104e5507cfb6/TeamScore_Tachzeru_Habaita_Sharp.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzE0ZDU2ZTZkOGNhNDVkMiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY4NDMyNn0.sYsteG8IiJOHQtJFQg4zUw66PJvc5yb0DdzO3bsn-do' -o score-counter/audio/chants/tachzeru-sharp.mp3
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/7b180c65-eeb6-498c-997c-e103c549e020/TeamScore_Anthem_Prototype_01.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzY3NTk3MjAzMThjZmUyZSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcyMTg4OH0.0fXe5KWEPtxsbF8beRCe-yn-kJgcPR1-EMOSkjsd_5I' -o score-counter/audio/anthems/anthem-01.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/b4929a2b-e595-4d40-95b6-3956a49a7b98/TeamScore_Anthem_02_Heavy_Slow.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzFmZWRhNmEzNjlkOTk3OSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTc0MDI2Nn0.b8a0k4lL2eyKHmmAnoYLpOtKuiRNLJF0dZPxd-VAuKs' -o score-counter/audio/anthems/anthem-02-heavy.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/9a1c2e02-9129-4538-a3cf-59981f3aa72c/TeamScore_Anthem_03_Fast_Aggressive.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiY2JhYjkzZWZlNzMwNWM1MiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2MjU3NX0.Rz2Rmxfkpa55TRmZ-4hyxNZugVqyVd4DraSV--FmtjY' -o score-counter/audio/anthems/anthem-03-fast.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/8c7f2600-c393-4f49-834c-7bb68c904ebf/TeamScore_Anthem_04_Crowd_Eruption.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYTE4NjIxN2M1OWU0YjgxNCIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY2Mjk3Mn0.8BS0Yvj_dH5uUhtPe7MXJPu7rVmnu_noNLrwuIyr_-8' -o score-counter/audio/anthems/anthem-04-eruption.mp3
+
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/84de4903-ccd7-45cd-bd13-bcf788eaa532/TeamScore_Noise_01_Arena_Base.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMDMwZTQ2ZTEwZWQyNGVlMSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcwODg5N30.c9-tMJpR6wW9qMnNFJnt-DZ3lDou2zrqof0sIyBxDRk' -o score-counter/audio/noise/arena-base.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/f89d853d-404e-4c9f-863e-b4257eaffaa3/TeamScore_Noise_02_Hostile_Crowd.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiN2RkMmUwYzc5Mzg4NTRlOSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcyNDEwM30.tR2ynAY8QVHrFSc78s_eFFXpiHi9z0kFqpsF8Im-Uc4' -o score-counter/audio/noise/hostile-crowd.mp3
+          curl -fL --retry 3 'https://dnznrvs05pmza.cloudfront.net/audio_sfx/e4c3210d-64ad-49fe-a19d-acb7f5769662/TeamScore_Noise_03_Pressure_Bed.mp3?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNzk0ZGY3Y2I2ODM5NGM3YSIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY3NzY0M30.dsgCmbYCfiUBN_vEVUFg9p-YRplBFaJ5M9IcTZzdySg' -o score-counter/audio/noise/pressure-bed.mp3
+
+          find score-counter/audio -type f -name '*.mp3' -size +0c | sort
+          test "$(find score-counter/audio -type f -name '*.mp3' -size +0c | wc -l)" -eq 23
+
+      - name: Commit audio assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add score-counter/audio
+          if git diff --cached --quiet; then
+            echo 'No audio changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Add permanent TeamScore arena audio assets'
+          git push
