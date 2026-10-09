@@ -72,8 +72,20 @@ assert(/source\.start\([^;]*offset[^;]*duration/.test(habaita),'habaita refrain 
 assert(/playKick/.test(habaita) && /playClap/.test(habaita),'habaita refrain must include terrace drum and clap rhythm');
 assert(/MutationObserver/.test(habaita),'habaita refrain must follow live-mode and pressure state changes');
 assert(!/_jwt=/.test(habaita),'habaita refrain must not depend on expiring signed audio URLs');
+
+assert(/USER_CROWD_CLIPS/.test(habaita),'approved user crowd clips must be bundled into the arena module');
+assert(/label:\s*['"]קדימה!['"]/.test(habaita),'user crowd clips must include קדימה');
+assert(/label:\s*['"]מי פה\? אנחנו!['"]/.test(habaita),'user crowd clips must include מי פה? אנחנו!');
+assert(/data:audio\/mpeg;base64,/.test(habaita),'approved user MP3 clips must be durable embedded audio assets');
+assert(/playUserCrowdClip/.test(habaita),'user crowd clips must have dedicated one-shot playback');
+assert(/scheduleUserCrowdClip/.test(habaita),'approved user crowd clips must be scheduled automatically in live arena mode');
+assert(/canAutoPlayUserCrowd/.test(habaita),'user crowd clips must only auto-play when live arena conditions allow it');
+assert(/chantsAreOn/.test(habaita),'user crowd clips must respect the chants layer toggle');
+assert(/data-user-crowd/.test(habaita),'both approved crowd clips must have manual buttons in the chants layer');
+assert(/lastUserCrowd/.test(habaita),'live arena must avoid immediately repeating the same approved crowd clip');
+
 assert(/score-habaita-refrain\.js\?v=1/.test(index),'index must load the durable habaita refrain module');
 assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
 assert(/score-audio\.js\?v=5/.test(index),'index must keep loading the rhythmic live-arena engine');
 
-console.log('score arena rhythmic chants and habaita refrain checks passed');
+console.log('score arena rhythmic chants, habaita refrain, and approved crowd clips checks passed');
