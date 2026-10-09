@@ -40,9 +40,25 @@
       "requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:900});",
       "requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:1100+Math.random()*700});");
 
+    patch('disable-dad-pre-audio',
+      "function playDadPre(index){if(index<0||index>=dadPreClips.length)return;stopDadPre();const a=dadPreClips[index];dadPreAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);nextFarChatterAt=performance.now()+1400+Math.random()*900;a.onended=()=>{if(dadPreAudio===a)dadPreAudio=null;if(!dadWasSinging)setBgDuck(false)};a.play().catch(()=>{if(dadPreAudio===a)dadPreAudio=null})}",
+      "function playDadPre(index){/* DAD_PRE_AUDIO_DISABLED_V038 */return false}");
+
+    patch('disable-dad-house-voice',
+      "function playDadHouseAudio(a,vol=.96){if(!a)return;try{a.pause();a.currentTime=0;a.volume=vol;a.play().catch(()=>{})}catch(e){}}",
+      "function playDadHouseAudio(a,vol=.96){/* DAD_HOUSE_VOICE_DISABLED_V038 */return false}");
+
+    patch('full-24-song-rotation',
+      "function refillDadSongs(){const tier=dadSongTier||DAD_SONG_TIERS[0];dadSongBag=tier.songs.filter(i=>i!==lastSongIndex);if(!dadSongBag.length)dadSongBag=[...tier.songs];for(let i=dadSongBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dadSongBag[i],dadSongBag[j]]=[dadSongBag[j],dadSongBag[i]]}}\nfunction nextDadSong(){dadSongTier=chooseDadSongTier();refillDadSongs();dadSongIndex=dadSongBag.pop();lastSongIndex=dadSongIndex;dadLineIndex=0;dad.phrase=dadSongs[dadSongIndex][0]}",
+      "function refillDadSongs(){/* DAD_FULL_24_SONG_ROTATION_V038 */dadSongBag=[...dadSongs.keys()].filter(i=>i!==lastSongIndex);if(!dadSongBag.length)dadSongBag=[...dadSongs.keys()];for(let i=dadSongBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[dadSongBag[i],dadSongBag[j]]=[dadSongBag[j],dadSongBag[i]]}}\nfunction nextDadSong(){if(!dadSongBag.length)refillDadSongs();dadSongIndex=dadSongBag.pop();lastSongIndex=dadSongIndex;dadSongTier=DAD_SONG_TIERS.find(t=>t.songs.includes(dadSongIndex))||DAD_SONG_TIERS[0];dadLineIndex=0;dad.phrase=dadSongs[dadSongIndex][0]}");
+
     patch('warning-respects-cadence',
       "if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle')",
       "if(distToPlayer<210&&dadEncounterStage<3&&dadSongCadenceReady(now)&&now-lastPreAt>900&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle')");
+
+    patch('song-start-short-delay',
+      "dadSongStartAt=now+3000",
+      "dadSongStartAt=now+350");
 
     patch('song-start-respects-cadence',
       "const readyToStart=!songPlaying&&distToPlayer<210&&dadEncounterStage>=3&&now>=dadSongStartAt&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle';",
@@ -54,7 +70,7 @@
 
     patch('live-hint',
       'ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.',
-      'ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק. ב־v0.38 אבא שר הרבה יותר: אחרי שיר, ניסיון השירה הבא נקבע ל־8–14 שניות עם מינימום 4 שניות. האפצ׳י כבוי זמנית כדי לתת יותר מקום לשירים.');
+      'ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק. ב־v0.38 אבא שר הרבה יותר: אחרי שיר, ניסיון השירה הבא נקבע ל־8–14 שניות עם מינימום 4 שניות. האפצ׳י כבוי זמנית. Hotfix: קטעי dad-pre וקולות הבית של אבא מושתקים; רק 24 שירי dad-song המקוריים משמשים כשירת אבא, וכל 24 השירים עוברים בסבב אקראי מלא לפני חזרה.');
 
     document.open();
     document.write(html);
