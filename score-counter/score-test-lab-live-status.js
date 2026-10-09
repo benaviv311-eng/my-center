@@ -13,6 +13,17 @@
       lab.statuses['timed-game']={name:'Timed Game',status:'working',detail:'Wall-clock game timer, pause/reset, finish by score and Golden Point on a tie are connected.'};
       lab.statuses['timed-overtime']={name:'Timed + Overtime',status:'working',detail:'Wall-clock timed game with +Overtime display and Golden Point on a tie is connected.'};
     }
+    if(window.TeamScoreTrainingGames){
+      lab.statuses['target-chase']={name:'Target Chase',status:'working',detail:'Timed setter turn, automatic chase target, active-team lock, same-time chase and Target reached/failed result are connected.'};
+      lab.statuses['streak-challenge']={name:'Streak Challenge',status:'working',detail:'Consecutive scoring, Streak broken, longest streak, one-side target and winner are connected.'};
+      lab.statuses['comeback-challenge']={name:'Comeback Challenge',status:'working',detail:'Configured starting deficit, tie/comeback callouts, target and Win by 2 finish are connected.'};
+      lab.statuses['sideout-challenge']={name:'Sideout Challenge',status:'working',detail:'Sideout Success/Fail, receiving/serving roles, count/streak/attempt-percentage/timed modes, role swap and success percentage are connected.'};
+      lab.statuses['serve-pressure']={name:'Serve Pressure',status:'working',detail:'Per-team attempts, In/Target/Ace/Error scoring, automatic team switch and Sudden Death Serve are connected.'};
+      lab.statuses['training-mode']={name:'Training Mode',status:'working',detail:'Per-team Success/Error tracking, percentage-ready counters and optional success target are connected.'};
+      lab.statuses['race-challenge']={name:'Race / Challenge',status:'working',detail:'Configurable success target and Target reached winner are connected.'};
+      lab.statuses['countdown-target']={name:'Countdown Target',status:'working',detail:'Wall-clock countdown, score target, Target reached and Target failed outcomes are connected.'};
+      lab.statuses['weighted-drill']={name:'Weighted Drill',status:'working',detail:'Per-team Perfect / Good / Playable / Error buttons use the configured weighted values and update the live score.'};
+    }
     return true;
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(sync,0),{once:true});else setTimeout(sync,0);
