@@ -22,8 +22,16 @@ assert(/speechSynthesis/.test(js),'manual and automatic chants must use browser 
 assert(/createMusic/.test(js),'audio layer must provide sports background music');
 assert(/createCrowd/.test(js),'audio layer must provide continuous crowd ambience');
 assert(/startPressure/.test(js),'audio layer must provide pressure mode');
+assert(/async function ensureAudio/.test(js),'audio activation must be asynchronous');
+assert(/await\s+ctx\.resume\(\)/.test(js),'audio activation must wait for AudioContext.resume()');
+assert(/ctx\.state\s*!==\s*['"]running['"]/.test(js),'audio activation must verify that the context is actually running');
+assert(/async function setMusic/.test(js) && /async function setCrowd/.test(js),'music and crowd controls must wait for audio activation');
+assert(/playUnlockTone/.test(js),'first audio activation must play a short confirmation tone');
+assert(/score-audio-status/.test(js) && /score-audio-status/.test(css),'audio panel must expose activation status instead of failing silently');
+assert(/לחץ שוב להפעלת סאונד/.test(js),'blocked audio must show a clear retry message');
+assert(/let volume=0\.82/.test(js),'default master volume must be raised for arena use');
 assert(/score-audio-pressure/.test(css),'pressure button must have a dedicated visual style');
-assert(/score-audio\.css\?v=1/.test(index),'index must load arena audio styles');
-assert(/score-audio\.js\?v=1/.test(index),'index must load arena audio behavior');
+assert(/score-audio\.css\?v=2/.test(index),'index must load the fixed arena audio styles');
+assert(/score-audio\.js\?v=2/.test(index),'index must load the fixed arena audio behavior');
 
-console.log('score arena audio checks passed');
+console.log('score arena audio unlock checks passed');
