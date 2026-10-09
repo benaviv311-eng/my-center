@@ -7,7 +7,7 @@ end=s.find('function draw(){', start)
 if start < 0 or end < 0:
     raise SystemExit('Could not locate Libi v0.24 renderer block')
 
-asset='https://d2jqrm6oza8nb6.cloudfront.net/datasets/12ade51f-3dc9-4308-906a-d89c14b0a9c2.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYmM1YzU1YjJiYjUyYTVmOCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTY3ODI1OH0.4a_tBDm-OsmCKzHIEjRYw6Y4JJoaQ1f_SJGWLYZFzjI'
+asset='assets/libi-sprites-v025.png'
 
 new_block=f'''// LIBI_SPRITE_RENDERER_V025 — real high-quality art asset, wired to gameplay states.
 const LIBI_SPRITE_URL='{asset}';
