@@ -1,0 +1,13 @@
+const fs=require('fs');
+const assert=require('assert');
+const js=fs.readFileSync(__dirname+'/score-tools-v2.js','utf8');
+const css=fs.readFileSync(__dirname+'/score-tools-v2.css','utf8');
+assert(/SpeechRecognition|webkitSpeechRecognition/.test(js),'voice commands must use speech recognition when supported');
+assert(/add 30 seconds/i.test(js)&&/next round/i.test(js),'voice commands must cover timer and round controls');
+assert(/score:v2:multi-timers/.test(js),'multi timers must persist');
+assert(/createTimerState/.test(js)&&/restoreTimer/.test(js),'multi timers must use timer V2 core');
+assert(/navigator\.share/.test(js)&&/navigator\.clipboard/.test(js),'summary must support share and copy');
+assert(/text\/csv/.test(js),'summary must support CSV export');
+assert(/statsSummary/.test(js),'advanced game stats must be surfaced');
+assert(/score-v2-tools-panel/.test(css),'tools panel must be styled');
+console.log('score-tools-v2 contract tests passed');
