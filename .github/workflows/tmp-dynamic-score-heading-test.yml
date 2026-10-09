@@ -1,0 +1,15 @@
+name: Temporary dynamic score heading TDD
+on:
+  push:
+    branches: ['fix/dynamic-score-heading-tdd']
+    paths:
+      - 'score-counter/score-leader-top.js'
+      - 'score-counter/score-leader-heading-regression.test.js'
+      - '.github/workflows/tmp-dynamic-score-heading-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run dynamic heading regression
+        run: node score-counter/score-leader-heading-regression.test.js
