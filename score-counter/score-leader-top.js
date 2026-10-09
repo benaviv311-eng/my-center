@@ -34,6 +34,20 @@
     return Math.min(...rects.map(rect=>rect.top));
   }
 
+  function findImageCenterX(){
+    const activeImage=document.querySelector('#sharpBg img.active');
+    if(activeImage){
+      const rect=activeImage.getBoundingClientRect();
+      if(rect.width>0 && Number.isFinite(rect.left)) return rect.left+(rect.width/2);
+    }
+    const stage=document.getElementById('sharpBg');
+    if(stage){
+      const rect=stage.getBoundingClientRect();
+      if(rect.width>0 && Number.isFinite(rect.left)) return rect.left+(rect.width/2);
+    }
+    return window.innerWidth/2;
+  }
+
   function restoreBanner(el){
     if(!el) return;
     const original=el.dataset.scoreLeaderOriginalStyle;
@@ -73,8 +87,9 @@
     }
 
     const width=Math.max(1,Number(banner.dataset.scoreLeaderWidth)||banner.getBoundingClientRect().width||1);
-    const savedLeft=Math.max(0,Number(banner.dataset.scoreLeaderLeft)||0);
-    const left=Math.min(savedLeft,Math.max(0,window.innerWidth-width));
+    const centerX=findImageCenterX();
+    const unclampedLeft=centerX-width/2;
+    const left=Math.max(0,Math.min(unclampedLeft,Math.max(0,window.innerWidth-width)));
 
     banner.style.setProperty('position','fixed','important');
     banner.style.setProperty('top','0px','important');
