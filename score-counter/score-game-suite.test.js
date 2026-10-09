@@ -1,0 +1,42 @@
+const fs=require('fs');
+const path=require('path');
+const root=__dirname;
+const read=n=>fs.readFileSync(path.join(root,n),'utf8');
+const js=read('score-game-suite.js');
+const css=read('score-game-suite.css');
+const index=read('index.html');
+const modes=[
+'free-score','first-to-x','win-by-2','timed-game','timed-overtime','best-of-sets','timed-rounds','pressure-game','target-chase','streak-challenge','comeback-challenge','sideout-challenge','serve-pressure','training-mode','race-challenge','random-challenge','team-battle','king-rotation','elimination','countdown-target','tournament','custom-game','four-team-rotation','spiegel','weighted-drill','player-tracking','multi-team','individual-challenge'
+];
+for(const id of modes) assertContains(js,id,`mode ${id}`);
+function assertContains(h,n,label){if(!h.includes(n))throw new Error(`missing ${label}`)}
+assertContains(js,"Coach",'Coach voice profile');
+assertContains(js,"Arena Announcer",'Arena voice profile');
+assertContains(js,"naturalVoice",'natural voice selector');
+assertContains(js,"speechSynthesis",'speech API');
+assertContains(js,"Ten', 'Nine', 'Eight",'English 10 second countdown');
+assertContains(js,"stopwatch",'stopwatch mode');
+assertContains(js,"timer",'timer mode');
+assertContains(js,"intervals",'interval mode');
+assertContains(js,"wakeLock",'wake lock support');
+assertContains(js,"performance.now",'monotonic timer helper');
+assertContains(js,"teamScoreSuite.session",'session persistence');
+assertContains(js,"TEAM_SCORE_SUITE_MODES",'public mode catalog');
+assertContains(js,"firstToTenTriggered",'four team rank-at-10 guard');
+assertContains(js,"rank 1 + rank 4",'four team canonical pairing note');
+assertContains(js,"badPoints",'Spiegel bad points');
+assertContains(js,"eliminationThreshold",'Spiegel threshold');
+assertContains(js,"undoStack",'undo support');
+assertContains(js,"redoStack",'redo support');
+assertContains(js,"timed-rounds",'timed rounds engine');
+assertContains(js,"pressure-game",'pressure engine');
+assertContains(js,"voiceAlias",'team pronunciation aliases');
+assertContains(js,"pointsPerMinute",'stats points/minute');
+assertContains(js,"mvpMoment",'MVP moment');
+assertContains(js,"exportCsv",'CSV export');
+assertContains(css,'.score-suite-launcher','launcher CSS');
+assertContains(css,'.score-suite-sheet','sheet CSS');
+assertContains(css,'.score-suite-court','court mode CSS');
+assertContains(index,'score-game-suite.css?v=1','suite CSS loader');
+assertContains(index,'score-game-suite.js?v=1','suite JS loader');
+console.log('score game suite regression checks passed');
