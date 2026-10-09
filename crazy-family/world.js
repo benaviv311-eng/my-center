@@ -125,6 +125,26 @@ export function createLivingRoomWorld() {
       }
       return best;
     },
+    traceAttackSegment(start, end, attack = {}) {
+      let best = null;
+      const radius = Number(attack.radius) || 0.1;
+      for (const collider of colliders) {
+        const attackY = Number(start.y) || 0;
+        if (attackY - radius > collider.height) continue;
+        const fraction = segmentBoxFraction(start, end, collider, radius * 0.75);
+        if (fraction == null || (best && fraction >= best.fraction)) continue;
+        best = {
+          id: collider.id,
+          fraction,
+          point: {
+            x: start.x + (end.x - start.x) * fraction,
+            y: start.y + (end.y - start.y) * fraction,
+            z: start.z + (end.z - start.z) * fraction,
+          },
+        };
+      }
+      return best;
+    },
     setInteractableEnabled(id, enabled) {
       const item = interactables.find(i => i.id === id);
       if (item) item.enabled = Boolean(enabled);
