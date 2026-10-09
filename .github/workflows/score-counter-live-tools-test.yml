@@ -14,6 +14,7 @@ on:
       - 'score-counter/score-leader-top.js'
       - 'score-counter/score-layout-menu.js'
       - 'score-counter/score-layout-menu.css'
+      - 'score-counter/score-layout-stability.js'
       - 'score-counter/score-layout-menu-regression.test.js'
       - 'score-counter/score-live-regression.test.js'
       - '.github/workflows/score-counter-live-tools-test.yml'
@@ -92,9 +93,11 @@ jobs:
           assert(index.includes('score-live-core.js'),'loader missing score-live-core.js');
           assert(index.includes('score-live.js'),'loader missing score-live.js');
           assert(index.includes('score-live.css'),'loader missing score-live.css');
+          assert(index.includes('score-layout-stability.js'),'loader missing score-layout-stability.js');
           NODE
           node score-counter/score-live-regression.test.js
           node score-counter/score-layout-menu-regression.test.js
           node --check score-counter/score-live-core.js
           node --check score-counter/score-live.js
           node --check score-counter/score-layout-menu.js
+          node --check score-counter/score-layout-stability.js
