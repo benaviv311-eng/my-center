@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.27</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.28</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -72,6 +72,7 @@ const c=document.getElementById('game'),ctx=c.getContext('2d'),W=960,H=600,keys=
 const toast=document.getElementById('toast'),livesEl=document.getElementById('lives'),staminaEl=document.getElementById('stamina'),shieldEl=document.getElementById('shield'),dizzyMeterEl=document.getElementById('dizzyMeter');
 const sceneTitle=document.getElementById('sceneTitle'),roomTitle=document.getElementById('roomTitle'),inventoryEl=document.getElementById('inventory'),floorsEl=document.getElementById('floors');
 let last=performance.now(),runTouch=false,msgTimer=0,walk=0,nearExit=null,dizzyCharge=0,dizzyUntil=0,noteClock=0;
+let lastCPressAt=0;const DOUBLE_C_WINDOW=300;
 
 const scenes={
  yard:{name:'חצר',floor:-1,bg:'#b8d69d',spawn:{x:760,y:470},rooms:[{name:'דשא',x:0,y:0,w:650,h:600},{name:'פינת משחקים',x:650,y:0,w:310,h:600}],exits:[{x:790,y:440,w:120,h:105,to:'ground',spawn:{x:820,y:500},label:'להיכנס לבית'}]},
@@ -139,6 +140,7 @@ function damageLibi(amount=1,source='פגיעה'){
 function healLibi(amount=1){const before=player.lives;player.lives=Math.min(player.maxLives,player.lives+amount);renderLives();return player.lives>before}
 function triggerJump(){const now=performance.now();if(player.lives<=0||player.hanging||keys.c||player.crouchingTouch||now<player.jumpCooldownUntil||now<player.rollUntil||now<player.vaultUntil)return false;if(triggerVault())return true;player.jumpStartedAt=now;player.jumpUntil=now+650;player.jumpCooldownUntil=now+780;return true}
 function triggerRoll(){const now=performance.now();if(player.lives<=0||player.hanging||now<player.rollCooldownUntil||player.crouching||now<player.jumpUntil||now<player.vaultUntil)return false;const dirs={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]},v=dirs[player.dir]||[0,1];player.rollDX=v[0];player.rollDY=v[1];player.rollStartedAt=now;player.rollUntil=now+360;player.rollCooldownUntil=now+900;return true}
+function handleCrouchPress(){const now=performance.now(),isDouble=now-lastCPressAt<=DOUBLE_C_WINDOW;lastCPressAt=isDouble?0:now;if(!isDouble)return false;keys.c=false;keys.C=false;player.crouching=false;player.crouchingTouch=false;return triggerRoll()}
 function aimedAngle(){return Math.atan2(player.y-dad.y,player.x-dad.x)}
 function addNote(angle,speed,opts={}){dadAttacks.push({type:'note',name:opts.name||'תו של אבא',scene:dad.scene,x:dad.x,y:dad.y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:15,bounce:!!opts.bounce,homing:!!opts.homing,height:'space',born:performance.now(),life:5200,hit:false})}
 function spawnDadAttack(id){const def=dadAbilityCatalog[id];if(!def||player.scene!==dad.scene)return false;const now=performance.now(),a=aimedAngle();
@@ -741,7 +743,7 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 
-addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true;keys[e.key.toLowerCase()]=true;if(e.key===' '&&!e.repeat)triggerJump();if(e.key.toLowerCase()==='x'&&!e.repeat)triggerRoll();if(e.key.toLowerCase()==='d'&&!e.repeat)toggleHang();if(e.key==='Enter'||e.key.toLowerCase()==='e')transition();if(e.key.toLowerCase()==='q')useSelectedItem();if(['1','2','3'].includes(e.key)&&+e.key<=player.capacity){player.selected=+e.key-1;renderInv()}},{passive:false});
+addEventListener('keydown',e=>{startBgMusic();if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();const k=e.key.toLowerCase();if(k==='c'&&!e.repeat&&handleCrouchPress()){keys[e.key]=false;keys[k]=false;return}keys[e.key]=true;keys[k]=true;if(e.key===' '&&!e.repeat)triggerJump();if(k==='x'&&!e.repeat)triggerRoll();if(k==='d'&&!e.repeat)toggleHang();if(e.key==='Enter'||k==='e')transition();if(k==='q')useSelectedItem();if(['1','2','3'].includes(e.key)&&+e.key<=player.capacity){player.selected=+e.key-1;renderInv()}},{passive:false});
 addEventListener('keyup',e=>{keys[e.key]=false;keys[e.key.toLowerCase()]=false});
 addEventListener('pointerdown',()=>{primeDadVoice();startBgMusic()},{once:true});
 document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key,on=e=>{e.preventDefault();keys[k]=true;b.classList.add('pressed')},off=e=>{e.preventDefault();keys[k]=false;b.classList.remove('pressed')};b.onpointerdown=on;b.onpointerup=off;b.onpointercancel=off;b.onpointerleave=off});
@@ -749,7 +751,7 @@ const run=document.getElementById('run');run.onpointerdown=e=>{e.preventDefault(
 document.getElementById('jump').onclick=triggerJump;
 document.getElementById('roll').onclick=triggerRoll;
 document.getElementById('hang').onclick=toggleHang;
-const crouchBtn=document.getElementById('crouch');crouchBtn.onpointerdown=e=>{e.preventDefault();player.crouchingTouch=true;crouchBtn.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>crouchBtn.addEventListener(ev,e=>{e.preventDefault();player.crouchingTouch=false;crouchBtn.classList.remove('pressed')}));
+const crouchBtn=document.getElementById('crouch');crouchBtn.onpointerdown=e=>{e.preventDefault();if(handleCrouchPress()){crouchBtn.classList.remove('pressed');return}player.crouchingTouch=true;crouchBtn.classList.add('pressed')};['pointerup','pointercancel','pointerleave'].forEach(ev=>crouchBtn.addEventListener(ev,e=>{e.preventDefault();player.crouchingTouch=false;crouchBtn.classList.remove('pressed')}));
 document.getElementById('action').onclick=transition;
 document.getElementById('itemUse').onclick=useSelectedItem;
 document.getElementById('musicToggle').onclick=toggleBgMusic;
