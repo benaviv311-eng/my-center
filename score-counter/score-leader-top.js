@@ -1,5 +1,6 @@
 (function(){
   const LEADER_TOP_PX=4;
+  const STATUS_RE=/(מובילה|תיקו בצמרת)/u;
   let banner=null;
   let scheduled=false;
   let originalParent=null;
@@ -8,7 +9,7 @@
   const cleanText=el=>(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();
   const matchesLeader=el=>{
     const text=cleanText(el);
-    return /מובילה/.test(text) && /נקודות/.test(text);
+    return STATUS_RE.test(text) && /נקודות/u.test(text);
   };
 
   function findLeaderBanners(){
@@ -29,6 +30,65 @@
     return candidates[0]||null;
   }
 
+  function smallestMatchingNode(root,pattern){
+    const candidates=Array.from(root.querySelectorAll('*')).filter(node=>{
+      const text=cleanText(node);
+      if(!pattern.test(text)) return false;
+      return !Array.from(node.children).some(child=>pattern.test(cleanText(child)));
+    });
+    candidates.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);
+    return candidates[0]||null;
+  }
+
+  function findLeaderTitleNode(root){
+    return smallestMatchingNode(root,STATUS_RE);
+  }
+
+  function findLeaderPointsNode(root){
+    return smallestMatchingNode(root,/נקודות/u);
+  }
+
+  function visibleScoreValues(){
+    return Array.from(document.querySelectorAll('#teams > .card .score-board-value'))
+      .filter(el=>{
+        const style=getComputedStyle(el);
+        return style.display!=='none' && style.visibility!=='hidden';
+      })
+      .map(el=>Number(el.value ?? el.textContent))
+      .filter(Number.isFinite);
+  }
+
+  function desiredLeaderHeading(){
+    const values=visibleScoreValues();
+    if(values.length>1){
+      const top=Math.max(...values);
+      const leaders=values.filter(value=>value===top).length;
+      if(leaders>1) return 'תיקו בצמרת 🤝';
+    }
+    return 'מובילה 🏆';
+  }
+
+  function syncLeaderDetailsFromSource(){
+    if(!banner) return;
+    const sources=findLeaderBanners().filter(el=>el!==banner);
+    if(!sources.length) return;
+    const fresh=sources.find(el=>el.dataset.scoreLeaderDuplicate!=='1') || sources[sources.length-1];
+    const sourcePoints=findLeaderPointsNode(fresh);
+    const targetPoints=findLeaderPointsNode(banner);
+    if(sourcePoints && targetPoints && cleanText(sourcePoints)!==cleanText(targetPoints)){
+      targetPoints.textContent=sourcePoints.textContent;
+    }
+  }
+
+  function updateLeaderHeading(){
+    if(!banner) return;
+    const title=findLeaderTitleNode(banner);
+    if(!title) return;
+    const heading=desiredLeaderHeading();
+    if(cleanText(title)!==heading) title.textContent=heading;
+    banner.dataset.scoreLeaderHeading=heading.startsWith('תיקו')?'tie':'leader';
+  }
+
   function hideDuplicateLeaderBanners(){
     findLeaderBanners().forEach(el=>{
       if(el===banner){
@@ -46,8 +106,11 @@
   function findLeaderVisualTop(el){
     const candidates=Array.from(el.querySelectorAll('*')).filter(node=>{
       const text=cleanText(node);
-      if(!/(מובילה|נקודות)/u.test(text)) return false;
-      return !Array.from(node.children).some(child=>/(מובילה|נקודות)/u.test(cleanText(child)));
+      if(!(STATUS_RE.test(text) || /נקודות/u.test(text))) return false;
+      return !Array.from(node.children).some(child=>{
+        const childText=cleanText(child);
+        return STATUS_RE.test(childText) || /נקודות/u.test(childText);
+      });
     });
     const rects=candidates
       .map(node=>node.getBoundingClientRect())
@@ -89,6 +152,7 @@
     delete el.dataset.scoreLeaderLeft;
     delete el.dataset.scoreLeaderWidth;
     delete el.dataset.scoreLeaderVisualOffset;
+    delete el.dataset.scoreLeaderHeading;
     originalParent=null;
     originalNextSibling=null;
   }
@@ -97,6 +161,8 @@
     if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
 
+    syncLeaderDetailsFromSource();
+    updateLeaderHeading();
     hideDuplicateLeaderBanners();
     banner.style.removeProperty('display');
 
@@ -128,6 +194,7 @@
     banner.dataset.scoreLeaderVisualOffset=String(visualOffset);
     banner.style.setProperty('top',(LEADER_TOP_PX-visualOffset)+'px','important');
 
+    updateLeaderHeading();
     hideDuplicateLeaderBanners();
   }
 
@@ -141,12 +208,17 @@
     });
   }
 
+  function scheduleAfterInteraction(){
+    schedulePin(false);
+    setTimeout(()=>schedulePin(false),100);
+  }
+
   pinLeaderBannerTop(true);
   requestAnimationFrame(()=>pinLeaderBannerTop(true));
   setTimeout(()=>schedulePin(true),200);
   setTimeout(()=>schedulePin(true),800);
   window.addEventListener('resize',()=>schedulePin(true));
-  document.addEventListener('click',()=>schedulePin(false),true);
-  document.addEventListener('change',()=>schedulePin(false),true);
-  document.addEventListener('input',()=>schedulePin(false),true);
+  document.addEventListener('click',scheduleAfterInteraction,true);
+  document.addEventListener('change',scheduleAfterInteraction,true);
+  document.addEventListener('input',scheduleAfterInteraction,true);
 })();
