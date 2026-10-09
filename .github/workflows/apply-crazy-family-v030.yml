@@ -1,0 +1,46 @@
+name: Apply Crazy Family v0.30 House
+
+on:
+  push:
+    paths:
+      - 'scripts/apply-crazy-family-v030-house.py'
+      - '.github/workflows/apply-crazy-family-v030.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply house interaction patch
+        run: python scripts/apply-crazy-family-v030-house.py
+      - name: Run v0.30 regression checks
+        run: python scripts/test-crazy-family-v030.py
+      - name: Check embedded JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('crazy-family.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', text, re.S)
+          if not scripts:
+              raise SystemExit('no embedded script found')
+          Path('/tmp/crazy-family.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/crazy-family.js
+      - name: Commit v0.30
+        run: |
+          if git diff --quiet -- crazy-family.html; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crazy-family.html
+          git commit -m 'feat: make stage 1 house interactive v0.30'
+          git push
