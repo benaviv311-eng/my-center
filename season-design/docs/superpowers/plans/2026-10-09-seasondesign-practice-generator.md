@@ -4,7 +4,7 @@
 
 **Goal:** Generate, explain, save, and edit coherent volleyball practices from structured inputs, group context, the synchronized library, and optional free-text intent.
 
-**Architecture:** A deterministic engine owns duration, eligibility, focus priority, stage distribution, repetition, and source policy. A server-side AI composer receives only the vetted context and ranked candidates to choose/sequence blocks and interpret free text. A final validator rejects invalid output before it can be saved.
+**Architecture:** A deterministic engine owns duration, eligibility, focus priority, stage distribution, repetition, and source policy. A server-side AI composer receives only vetted context and ranked candidates to choose/sequence blocks and interpret free text. A final validator rejects invalid output before it can be saved.
 
 **Tech Stack:** Next.js + TypeScript, Supabase/PostgreSQL, Zod, Vercel AI SDK with a server-side provider adapter, Vitest, Playwright.
 
@@ -16,9 +16,11 @@
 - Styles are `regular`, `technical`, `game-based`, `advanced`, `custom`.
 - Topics are reception, serve, attack, coverage, transitions, block, defense, attack-to-defense transition.
 - A practice has 1–3 ordered focuses; focus 1 is primary, focus 2 secondary, focus 3 tertiary.
+- Warm-up modes are existing fixed, topic-based, warm-up game, generator chooses, and saved custom warm-up.
+- Coaches can save multiple named custom warm-ups.
 - Source policies are `library-only`, `prefer-library` (default), `free-generation`.
-- Detail levels are `short`, `normal`, `detailed`.
-- AI-created exercises are visibly marked and never enter the canonical bank automatically.
+- Detail levels are `short`, `normal`, `detailed`; every block still offers an explicit explanation action.
+- AI-created exercises are visibly marked, never enter the canonical bank automatically, and may only enter the coach's personal library through an explicit save action.
 - Saved practices preserve exercise snapshots.
 
 ## Review Focus
@@ -44,7 +46,7 @@
 - `practice_blocks.exercise_snapshot` stores JSON content used at generation/save time.
 - Produces `PracticeRequest`, `PracticeDraft`, `PracticeBlock`, `PracticeStyle`, `SourcePolicy`, `DetailLevel`, `WarmupMode`.
 
-- [ ] **Step 1: Write failing database/type tests** for ownership, ordered focuses 1–3, valid enums, and immutable saved snapshot content.
+- [ ] **Step 1: Write failing database/type tests** for ownership, ordered focuses 1–3, valid enums, multiple named warm-ups, and immutable saved snapshot content.
 - [ ] **Step 2: Run tests**; expected FAIL.
 - [ ] **Step 3: Implement migration and Zod/domain types**.
 - [ ] **Step 4: Run tests**; expected PASS.
@@ -64,7 +66,7 @@
 - Stage profiles: regular `20/25/30/25`, technical `35/35/20/10`, game-based `5/15/35/45`, advanced `5/10/35/50` for isolated/fixed/complex/game-situation respectively; custom supplies its own profile.
 - Focus 2 may use isolated work only when needed and at most 15% of its allocation; focus 3 defaults to complex/game-situation only.
 
-- [ ] **Step 1: Write failing table-driven tests** for 45/60/75/90 minutes, 1/2/3 focuses, and all four automatic styles.
+- [ ] **Step 1: Write failing table-driven tests** for 45/60/75/90 minutes, 1/2/3 focuses, all four automatic styles, and an explicitly timed saved warm-up.
 - [ ] **Step 2: Run allocator tests**; expected FAIL.
 - [ ] **Step 3: Implement integer-minute allocation with largest-remainder rounding** so totals always equal requested duration.
 - [ ] **Step 4: Run allocator tests**; expected PASS with exact totals.
@@ -128,7 +130,28 @@
 - [ ] **Step 5: Run tests**; expected PASS.
 - [ ] **Step 6: Commit** `feat: validate and generate practices`.
 
-### Task 6: Create Practice UI and block-level editing
+### Task 6: Saved custom warm-up builder
+
+**Files:**
+- Create: `season-design/features/warmups/repository.ts`
+- Create: `season-design/features/warmups/actions.ts`
+- Create: `season-design/features/warmups/warmup-builder.tsx`
+- Create: `season-design/app/(app)/warmups/page.tsx`
+- Create: `season-design/app/(app)/warmups/new/page.tsx`
+- Test: `season-design/e2e/warmups.spec.ts`
+
+**Interfaces:**
+- Produces `createWarmup(input)`, `updateWarmup(id,input)`, `duplicateWarmup(id)`, `listWarmups()`.
+- A warm-up has a coach-owned name, ordered blocks, and total duration.
+
+- [ ] **Step 1: Write failing E2E test** creating two differently named fixed warm-ups and editing one without changing the other.
+- [ ] **Step 2: Run the test**; expected FAIL.
+- [ ] **Step 3: Implement warm-up repository/actions and ordered-block builder** using canonical/personal exercises or free-text blocks.
+- [ ] **Step 4: Verify a saved warm-up can be selected by the allocator and its explicit duration is honored**.
+- [ ] **Step 5: Run tests**; expected PASS.
+- [ ] **Step 6: Commit** `feat: add saved custom warmups`.
+
+### Task 7: Create Practice UI and block-level editing
 
 **Files:**
 - Create: `season-design/app/(app)/practices/new/page.tsx`
@@ -141,11 +164,12 @@
 **Interfaces:**
 - Produces structured form controls + free-text instruction, generated-practice editor, save/duplicate/template actions.
 - Block actions: replace, duration, explanation, delete, reorder, variation.
+- Produces `saveGeneratedExerciseToPersonalLibrary(blockId)` for explicit promotion of generated content to the coach's personal library.
 
-- [ ] **Step 1: Write failing E2E flow** selecting a saved group, 90 minutes, game-based, topic, two ordered focuses, warm-up mode, detail level, and free text.
+- [ ] **Step 1: Write failing E2E flow** selecting a saved group, 90 minutes, game-based, topic, two ordered focuses, a saved warm-up, detail level, and free text.
 - [ ] **Step 2: Run E2E test**; expected FAIL.
-- [ ] **Step 3: Implement generator form and render selection rationales** with visible fact/inference distinction.
+- [ ] **Step 3: Implement generator form and render selection rationales** with visible fact/inference distinction; short/normal/detailed affects default visible copy, while `show explanation` is always available.
 - [ ] **Step 4: Implement block replacement** by reranking candidates for that block's existing role without changing unrelated blocks.
-- [ ] **Step 5: Implement save/duplicate/template using exercise snapshots**.
+- [ ] **Step 5: Implement save/duplicate/template using exercise snapshots** and explicit save-to-personal-library for generated blocks.
 - [ ] **Step 6: Run `npm run lint && npm test && npm run test:e2e && npm run build`**; expected PASS.
 - [ ] **Step 7: Commit** `feat: ship practice generator workflow`.
