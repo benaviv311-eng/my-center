@@ -17,22 +17,38 @@ jobs:
         run: |
           python -m pip install --quiet pillow
           python - <<'PY'
-          from PIL import Image
+          from PIL import Image, ImageStat
           from pathlib import Path
-          p=Path('assets/libi-sprites-v025.png')
-          im=Image.open(p).convert('RGBA')
-          print('sheet', im.size)
-          cols, rows = 5, 2
-          cw, ch = im.width//cols, im.height//rows
-          print('cell', cw, ch)
-          for frame in range(cols*rows):
-              x0=(frame%cols)*cw; y0=(frame//cols)*ch
-              cell=im.crop((x0,y0,x0+cw,y0+ch))
-              a=cell.getchannel('A')
-              bbox=a.getbbox()
-              if bbox:
-                  l,t,r,b=bbox
-                  print(f'frame {frame}: bbox={bbox} transparent_bottom={ch-b} transparent_top={t} opaque_height={b-t}')
-              else:
-                  print(f'frame {frame}: EMPTY')
+
+          def inspect(path, cols, rows, label):
+              im=Image.open(path).convert('RGBA')
+              print(label, 'sheet', im.size)
+              cw, ch = im.width//cols, im.height//rows
+              print(label, 'cell', cw, ch)
+              for frame in range(cols*rows):
+                  x0=(frame%cols)*cw; y0=(frame//cols)*ch
+                  cell=im.crop((x0,y0,x0+cw,y0+ch))
+                  bbox=cell.getchannel('A').getbbox()
+                  if bbox:
+                      l,t,r,b=bbox
+                      print(f'{label} frame {frame}: bbox={bbox} transparent_bottom={ch-b} transparent_top={t} opaque_height={b-t}')
+                  else:
+                      print(f'{label} frame {frame}: EMPTY')
+
+          inspect('assets/libi-sprites-v025.png',5,2,'libi')
+          inspect('assets/crazy-family/dad-sprites-v028.png',5,2,'dad')
+
+          bg=Image.open('assets/crazy-family/stage1-home-v026.png').convert('RGB')
+          print('background', bg.size)
+          # Report average row-to-row luminance change to expose the strongest horizontal structure.
+          small=bg.resize((240,150))
+          lum=[]
+          for y in range(small.height):
+              row=small.crop((0,y,small.width,y+1)).convert('L')
+              lum.append(ImageStat.Stat(row).mean[0])
+          edges=[]
+          for y in range(1,len(lum)):
+              edges.append((abs(lum[y]-lum[y-1]),y,lum[y-1],lum[y]))
+          for d,y,a,b in sorted(edges, reverse=True)[:12]:
+              print(f'background horizontal-change y={y}/{small.height} canvasY={round(y/150*600,1)} delta={d:.2f} {a:.1f}->{b:.1f}')
           PY
