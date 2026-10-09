@@ -14,6 +14,6 @@ assert(/mixWithWhite/.test(js),'team tint must be lightened before rendering');
 assert(/setProperty\(['"]background['"][\s\S]*['"]important['"]\)/.test(js),'team background must be written inline with important priority');
 assert(/setProperty\(['"]border-color['"][\s\S]*['"]important['"]\)/.test(js),'team border tint must be written inline with important priority');
 assert(/score-card-team-tint/.test(css),'surface stylesheet must retain team tint support');
-assert(/score-card-surface\.css\?v=3/.test(index),'index must load surface CSS v3');
-assert(/score-card-surface\.js\?v=3/.test(index),'index must load surface JS v3');
+assert(/score-card-surface\.css\?v=2&rev=3/.test(index),'index must cache-bust surface CSS rev 3');
+assert(/score-card-surface\.js\?v=2&rev=3/.test(index),'index must cache-bust surface JS rev 3');
 console.log('score card color regression checks passed');
