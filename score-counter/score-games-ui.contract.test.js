@@ -14,4 +14,6 @@ assert(/score-v2-court/.test(css),'court mode must be styled');
 assert(/score-v2-resize-handle/.test(css),'timer must keep a resize handle');
 assert(/spiegel/i.test(js),'Spiegel must have a dedicated player UI');
 assert(/four-team/.test(js),'four-team mode must have dedicated status support');
+assert(/commentary==='off'&&\s*!force/.test(js),'forced countdown announcements must work even when game commentary is off');
+assert(/_historySaved/.test(js),'completed games must be stored only once');
 console.log('score-games-ui contract tests passed');
