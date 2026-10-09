@@ -527,11 +527,12 @@ function renderInv(){inventoryEl.innerHTML='';for(let i=0;i<player.capacity;i++)
 function renderFloors(){floorsEl.innerHTML='';worldOrder.forEach(id=>{const b=document.createElement('button');b.className='floorbtn '+(id===player.scene?'active':'locked');b.textContent=scenes[id].name;b.disabled=true;floorsEl.appendChild(b)})}
 function loop(t){const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}
 window.__crazyFamilyRetainedApi={
- getSnapshot(){return {player:{lives:player.lives,stamina:player.stamina,shield:player.shield,inventory:player.inventory.map(i=>({...i}))},dad:{singing:dad.singing||dadSongPlaying(),state:dadHouseState},dizziness:dizzyCharge,controlsReversed:performance.now()<dizzyUntil,scene:player.scene};},
+ getSnapshot(){return {player:{lives:player.lives,stamina:player.stamina,shield:player.shield,inventory:player.inventory.map(i=>({...i})),selected:player.selected},dad:{singing:dad.singing||dadSongPlaying(),state:dadHouseState},dizziness:dizzyCharge,controlsReversed:performance.now()<dizzyUntil,scene:player.scene};},
  setWorldPose(pose){window.__crazyFamilyWorldPose=pose;return true;},
  collectItem(id){const p=(items.ground||[]).find(i=>i.id===id);if(!p||p.taken||player.inventory.length>=player.capacity)return false;p.taken=true;player.inventory.push({id:p.id,name:p.name,icon:p.icon});player.selected=player.inventory.length-1;renderInv();return true;},
  useItem(id){const idx=player.inventory.findIndex(i=>i.id===id);if(idx<0)return false;player.selected=idx;useSelectedItem();return true;},
  damagePlayer(amount=1,source='movie-set'){const now=performance.now();if(now<player.invulnerableUntil)return {lives:player.lives,source,blocked:true};player.lives=Math.max(0,player.lives-Math.max(1,Math.round(amount)));player.invulnerableUntil=now+650;renderLives();return {lives:player.lives,source,blocked:false};},
+ updateStamina(sprinting,dt){const step=Math.max(0,Number(dt)||0);if(sprinting&&player.stamina>0)player.stamina=Math.max(0,player.stamina-34*step);else player.stamina=Math.min(100,player.stamina+20*step);return player.stamina;},
  setDadWorldDistance(distance){window.__crazyFamilyDadWorldDistance=distance;return distance;},
  setDadSpatial(state){const raw=Number(state?.gain),g=Number.isFinite(raw)?Math.max(0,Math.min(1,raw)):1;dadVoiceClips.forEach(a=>a.volume=Math.min(1,.96*g));dadPreClips.forEach(a=>a.volume=Math.min(1,.92*g));dadHouseAudioClips.forEach(a=>a.volume=Math.min(1,.92*g));return g;},
  startDadSong(){if(dadSongPlaying())return true;startDadSongClip();return true;},
