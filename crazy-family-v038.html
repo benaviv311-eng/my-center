@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>המשפחה המשגעת — v0.38</title>
+<style>body{margin:0;font-family:Arial,"Noto Sans Hebrew",sans-serif;background:#f7efe2;color:#2d2530;display:grid;place-items:center;min-height:100vh}.loading{font-weight:900;font-size:22px;padding:24px;text-align:center}.err{max-width:760px;white-space:pre-wrap;color:#8b1d2c}</style>
+</head>
+<body>
+<div class="loading" id="loader">טוען את המשחק של ליבי…</div>
+<script>
+(async()=>{
+  const fail=(msg)=>{const el=document.getElementById('loader');if(el){el.className='loading err';el.textContent='שגיאה בטעינת v0.38\n'+msg}throw new Error(msg)};
+  try{
+    const res=await fetch('crazy-family.html?base=v036',{cache:'no-store'});
+    if(!res.ok)fail('לא ניתן לטעון את גרסת הבסיס: '+res.status);
+    let html=await res.text();
+    const patch=(label,from,to)=>{
+      if(!html.includes(from))fail('Patch missing: '+label);
+      html=html.replace(from,to);
+    };
+
+    patch('version-label',
+      'עולם הבית · שלב 1: מפגש אבא · v0.36',
+      'עולם הבית · שלב 1: מפגש אבא · v0.38');
+
+    patch('dad-cadence-state',
+      "let dadWasSinging=false,dadClipIndex=-1,dadEncounterStage=0,dadSongStartAt=0,lastPreAt=0,dadPreAudio=null,nextFarChatterAt=0,dadSongAudio=null,farChatterBag=[],lastFarChatter=-1;",
+      "let dadWasSinging=false,dadClipIndex=-1,dadEncounterStage=0,dadSongStartAt=0,lastPreAt=0,dadPreAudio=null,nextFarChatterAt=0,dadSongAudio=null,farChatterBag=[],lastFarChatter=-1;\nconst DAD_SONG_INTERVAL_MIN=8000,DAD_SONG_INTERVAL_MAX=14000,DAD_SONG_MIN_GAP=4000;\nlet dadNextSongAt=0,dadLastSongEndedAt=0;\nfunction dadSongCadenceReady(now){return !dadLastSongEndedAt||(now>=dadNextSongAt&&now-dadLastSongEndedAt>=DAD_SONG_MIN_GAP)}\nfunction scheduleDadNextSong(now=performance.now()){dadLastSongEndedAt=now;dadNextSongAt=now+DAD_SONG_INTERVAL_MIN+Math.random()*(DAD_SONG_INTERVAL_MAX-DAD_SONG_INTERVAL_MIN);dadEncounterStage=Math.min(dadEncounterStage,2);dadSongStartAt=0}");
+
+    patch('song-end-schedules-next',
+      "a.onended=()=>{if(dadSongAudio===a){dadSongAudio=null;dadWasSinging=false;dad.singing=false;dadSongIndex=-1;dadLineIndex=0;dadNextLineAt=0;if(!dadPrePlaying())setBgDuck(false)}};",
+      "a.onended=()=>{if(dadSongAudio===a){scheduleDadNextSong(performance.now());dadSongAudio=null;dadWasSinging=false;dad.singing=false;dadSongIndex=-1;dadLineIndex=0;dadNextLineAt=0;if(!dadPrePlaying())setBgDuck(false)}};");
+
+    patch('song-again-memory',
+      "now-libiEncounterMemory.lastSongEndedAt<12000",
+      "now-libiEncounterMemory.lastSongEndedAt<20000");
+
+    patch('song-start-reaction-delay',
+      "requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:900});",
+      "requestLibiEvent(same?'sameSong':(again?'songAgain':'songStart'),{allowSongOverlap:true,delay:1100+Math.random()*700});");
+
+    patch('warning-respects-cadence',
+      "if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle')",
+      "if(distToPlayer<210&&dadEncounterStage<3&&dadSongCadenceReady(now)&&now-lastPreAt>900&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle')");
+
+    patch('song-start-respects-cadence',
+      "const readyToStart=!songPlaying&&distToPlayer<210&&dadEncounterStage>=3&&now>=dadSongStartAt&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle';",
+      "const readyToStart=!songPlaying&&distToPlayer<210&&dadEncounterStage>=3&&dadSongCadenceReady(now)&&now>=dadSongStartAt&&!dadPrePlaying()&&!libiVoicePlaying()&&dadHouseState==='idle';");
+
+    patch('disable-sneeze-v038',
+      "const dusty=pointInHouseZone(houseZone('rug'),dad.x,dad.y,32)||pointInHouseZone(houseZone('toys'),dad.x,dad.y,45);if(now>=dadNextSneezeAt){if(dusty){",
+      "const dusty=false;/* SNEEZE_DISABLED_V038 */if(false&&now>=dadNextSneezeAt){if(dusty){");
+
+    patch('live-hint',
+      'ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק.',
+      'ברגע ששיר התחיל הוא תמיד מתנגן עד הסוף, גם אם ליבי מתרחקת; רק השפעת הסחרחורת תלויה במרחק. ב־v0.38 אבא שר הרבה יותר: אחרי שיר, ניסיון השירה הבא נקבע ל־8–14 שניות עם מינימום 4 שניות. האפצ׳י כבוי זמנית כדי לתת יותר מקום לשירים.');
+
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(err){
+    if(!document.getElementById('loader'))document.body.innerHTML='<div class="loading err">שגיאה בטעינת המשחק</div>';
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
