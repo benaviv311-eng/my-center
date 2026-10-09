@@ -6,9 +6,8 @@ export function resolveInteraction({player,interactables=[],maxDistance=1}){
   for(const item of interactables){
     if(!item?.enabled) continue;
     const dx=(Number(item.x)||0)-p.x;
-    const dy=(Number(item.y)||0)-p.y;
     const dz=(Number(item.z)||0)-p.z;
-    const distance=Math.hypot(dx,dy,dz);
+    const distance=Math.hypot(dx,dz);
     const allowed=Math.min(maxDistance,Number(item.radius)||maxDistance);
     if(distance>allowed) continue;
     candidates.push({id:item.id,action:item.action,label:item.label,distance,priority:Number(item.priority)||0,source:item});
