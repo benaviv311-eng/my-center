@@ -1,6 +1,5 @@
 (function(){
-  const MOBILE_QUERY='(max-width:700px)';
-  const LEADER_RAISE_PX=14;
+  const LEADER_TOP_PX=4;
   let banner=null;
   let scheduled=false;
   let originalParent=null;
@@ -59,13 +58,6 @@
   }
 
   function pinLeaderBannerTop(force){
-    const mobile=window.matchMedia(MOBILE_QUERY).matches;
-    if(!mobile){
-      if(banner && banner.isConnected) restoreBanner(banner);
-      banner=null;
-      return;
-    }
-
     if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
 
@@ -98,7 +90,7 @@
     const visualTop=findLeaderVisualTop(banner);
     const visualOffset=Math.max(0,Math.round(visualTop-bannerTop));
     banner.dataset.scoreLeaderVisualOffset=String(visualOffset);
-    banner.style.setProperty('top',(-visualOffset-LEADER_RAISE_PX)+'px','important');
+    banner.style.setProperty('top',(LEADER_TOP_PX-visualOffset)+'px','important');
   }
 
   function schedulePin(force){
