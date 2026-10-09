@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.21</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.22</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -388,11 +388,26 @@ const libiVoiceClips=[
 ];
 libiVoiceClips.forEach(a=>{a.preload='auto';a.volume=.98});
 const libiReactionGroups=[[0,1,2,3],[4,5,6,7],[8,9,10,11]];
-let libiVoiceAudio=null,lastLibiVoice=-1,libiReactionToken=0;
+let libiVoiceAudio=null,lastLibiVoice=-1,libiReactionToken=0,nextLibiReactionAt=0,libiLastDist=Infinity,libiSongInterruptAt=0,libiIdleReactionAt=0,libiDangerLatched=false,libiEscapeLatched=false,libiWasSongPlaying=false;
 function libiVoicePlaying(){return !!(libiVoiceAudio&&!libiVoiceAudio.paused&&!libiVoiceAudio.ended)}
 function pickLibiReaction(level){const pool=(libiReactionGroups[level]||libiReactionGroups[0]).filter(i=>i!==lastLibiVoice),list=pool.length?pool:(libiReactionGroups[level]||libiReactionGroups[0]);const i=list[Math.floor(Math.random()*list.length)];lastLibiVoice=i;return i}
-function playLibiClip(index){if(index<0||index>=libiVoiceClips.length||libiVoicePlaying()||dadPrePlaying()||dadSongPlaying())return false;const a=libiVoiceClips[index];libiVoiceAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);a.onended=()=>{if(libiVoiceAudio===a)libiVoiceAudio=null;if(!dadPrePlaying()&&!dadSongPlaying())setBgDuck(false)};a.play().catch(()=>{if(libiVoiceAudio===a)libiVoiceAudio=null});return true}
-function queueLibiReaction(level){const token=++libiReactionToken,index=pickLibiReaction(level),started=performance.now();const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;if(!dadPrePlaying()&&!dadSongPlaying()&&!libiVoicePlaying()){playLibiClip(index);return}if(performance.now()-started<2600)setTimeout(attempt,140)};setTimeout(attempt,220)};
+function playLibiClip(index,allowSongOverlap=false){if(index<0||index>=libiVoiceClips.length||libiVoicePlaying()||dadPrePlaying()||(!allowSongOverlap&&dadSongPlaying()))return false;const a=libiVoiceClips[index],songRef=allowSongOverlap&&dadSongPlaying()?dadSongAudio:null,oldSongVolume=songRef?songRef.volume:null;if(songRef)songRef.volume=.42;libiVoiceAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);a.onended=()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null;if(!dadPrePlaying()&&!dadSongPlaying())setBgDuck(false)};a.play().catch(()=>{if(songRef&&oldSongVolume!==null)try{songRef.volume=oldSongVolume}catch(e){}if(libiVoiceAudio===a)libiVoiceAudio=null});return true}
+function requestLibiReaction(level,{allowSongOverlap=false,delay=0,forceIndex=null}={}){const now=performance.now();if(player.scene!==dad.scene||now<nextLibiReactionAt)return false;nextLibiReactionAt=now+4000+Math.random()*3000;const token=++libiReactionToken,index=forceIndex===null?pickLibiReaction(level):forceIndex,started=now;const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;const blockedBySong=dadSongPlaying()&&!allowSongOverlap;if(!dadPrePlaying()&&!blockedBySong&&!libiVoicePlaying()){playLibiClip(index,allowSongOverlap);return}if(performance.now()-started<2800)setTimeout(attempt,140)};setTimeout(attempt,delay);return true}
+function updateLibiReactionEngine(now,dist,songPlaying){
+ if(player.scene!==dad.scene||!Number.isFinite(dist)){libiLastDist=Infinity;libiWasSongPlaying=false;libiDangerLatched=false;libiEscapeLatched=false;libiSongInterruptAt=0;libiIdleReactionAt=0;return}
+ if(!libiIdleReactionAt)libiIdleReactionAt=now+9000+Math.random()*5000;
+ if(libiLastDist>=430&&dist<430)requestLibiReaction(0,{delay:500});
+ if(libiLastDist>=300&&dist<300)requestLibiReaction(1,{delay:420});
+ if(libiLastDist>=210&&dist<210)requestLibiReaction(2,{delay:320});
+ if(songPlaying&&!libiWasSongPlaying)libiSongInterruptAt=now+1200+Math.random()*900;
+ if(songPlaying&&dist<300&&libiSongInterruptAt&&now>=libiSongInterruptAt){requestLibiReaction(dist<95?2:1,{allowSongOverlap:true});libiSongInterruptAt=now+7000+Math.random()*4000}
+ if(!songPlaying)libiSongInterruptAt=0;
+ if(dist<80&&!libiDangerLatched){libiEscapeLatched=true;if(requestLibiReaction(2,{allowSongOverlap:songPlaying,delay:80}))libiDangerLatched=true}
+ if(dist>125)libiDangerLatched=false;
+ if(libiEscapeLatched&&dist>190){if(requestLibiReaction(2,{allowSongOverlap:songPlaying,delay:100,forceIndex:8}))libiEscapeLatched=false}
+ if(!songPlaying&&dist<380&&now>=libiIdleReactionAt){requestLibiReaction(dist<150?2:(dist<270?1:0),{delay:250});libiIdleReactionAt=now+9000+Math.random()*5000}else if(dist>=380){libiIdleReactionAt=now+9000+Math.random()*5000}
+ libiLastDist=dist;libiWasSongPlaying=songPlaying;
+}
 function refillFarChatter(){
  farChatterBag=[...dadPreClips.keys()].filter(i=>i!==lastFarChatter);
  for(let i=farChatterBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[farChatterBag[i],farChatterBag[j]]=[farChatterBag[j],farChatterBag[i]]}
@@ -466,24 +481,25 @@ function updateDad(dt){
  if(player.scene!==dad.scene){
    dad.singing=songPlaying;
    dizzyCharge=Math.max(0,dizzyCharge-35*dt);
-   dadEncounterStage=0;dadSongStartAt=0;nextFarChatterAt=0;stopDadPre();
+   dadEncounterStage=0;dadSongStartAt=0;nextFarChatterAt=0;stopDadPre();updateLibiReactionEngine(now,Infinity,false);
    return
  }
  chooseDadTarget(now);
  const distToPlayer=Math.hypot(player.x-dad.x,player.y-dad.y);
+ updateLibiReactionEngine(now,distToPlayer,songPlaying);
  if(distToPlayer>430&&!songPlaying){
    if(dadEncounterStage){dadEncounterStage=0;dadSongStartAt=0;stopDadPre()}
  }else if(!songPlaying){
-   if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800){playDadPre(Math.floor(Math.random()*3));queueLibiReaction(0);dadEncounterStage=1;lastPreAt=now}
-   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200&&!dadPrePlaying()){playDadPre(3+Math.floor(Math.random()*3));queueLibiReaction(1);dadEncounterStage=2;lastPreAt=now}
-   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()){playDadPre(6+Math.floor(Math.random()*3));queueLibiReaction(2);dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
+   if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800&&!libiVoicePlaying()){playDadPre(Math.floor(Math.random()*3));dadEncounterStage=1;lastPreAt=now}
+   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200&&!dadPrePlaying()&&!libiVoicePlaying()){playDadPre(3+Math.floor(Math.random()*3));dadEncounterStage=2;lastPreAt=now}
+   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()&&!libiVoicePlaying()){playDadPre(6+Math.floor(Math.random()*3));dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
    if(distToPlayer<300){dad.targetX=player.x;dad.targetY=player.y}
  }
- if(!songPlaying&&distToPlayer>300&&now>=nextFarChatterAt&&!dadPrePlaying()){
+ if(!songPlaying&&distToPlayer>300&&now>=nextFarChatterAt&&!dadPrePlaying()&&!libiVoicePlaying()){
    const farIndex=nextFarChatter();
    playDadPre(farIndex);lastPreAt=now;
  }
- const readyToStart=!songPlaying&&distToPlayer<210&&dadEncounterStage>=3&&now>=dadSongStartAt&&!dadPrePlaying();
+ const readyToStart=!songPlaying&&distToPlayer<210&&dadEncounterStage>=3&&now>=dadSongStartAt&&!dadPrePlaying()&&!libiVoicePlaying();
  if(readyToStart){startDadSongClip()}
  const activeSong=dadSongPlaying();
  dad.singing=activeSong;
