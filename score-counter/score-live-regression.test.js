@@ -14,6 +14,11 @@ assert(!/score-final-column/.test(js.replace(/remove\(['"]score-final-column['"]
 assert(/classList\.remove\(['"]score-final-column['"]\)/.test(js), 'patch must remove the forced one-column class');
 assert(/layoutObserver\.observe\(teams,\{childList:true\}\)/.test(js), 'layout observer must watch child changes only');
 assert(!/attributeFilter:\['class'\]/.test(js), 'layout observer must not watch class mutations and fight the legacy script');
+assert(/syncTwoColumnFit/.test(js) && /score-two-column-fit/.test(js), 'two-column layout must be detected from rendered card geometry');
+assert(/--score-two-column-width/.test(js), 'two-column mode must measure the visible image/frame width');
+assert(/#teams\.score-two-column-fit/.test(css) && /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(css), 'two-column mode must use two contained equal tracks');
+assert(/#teams\.score-two-column-fit > \.card\.score-card-professional/.test(css) && /width:100%!important/.test(css), 'two-column cards must fit their own grid tracks instead of keeping the fixed card width');
+assert(/#teams\.score-two-column-fit \.score-board-row/.test(css), 'two-column mode must compact the score controls so they fit narrow cards');
 assert(/--score-width/.test(css) && /syncScoreBoxWidths/.test(js), 'score box width must respond to the rendered score digits');
 assert(/margin:0 auto!important/.test(css), 'score cards must stay centered inside their layout column/image area');
 assert(/markRankOutside/.test(js) && /score-rank-outside/.test(js), 'rank badge must be detected and moved outside the gray card flow');
@@ -37,8 +42,8 @@ assert(/document\.body\.appendChild\(banner\)/.test(leader), 'leader banner must
 assert(/findLeaderVisualTop/.test(leader), 'leader script must measure the actual visible leader text rather than only the wrapper');
 assert(/visualOffset/.test(leader) && /-visualOffset/.test(leader), 'leader wrapper must compensate for its internal top gap');
 assert(/scoreLeaderVisualOffset/.test(leader), 'measured leader visual offset must be recorded for regression/debugging');
-assert(/score-live-patch\.css\?v=7/.test(index), 'index must load the current patch stylesheet');
-assert(/score-live-patch\.js\?v=7/.test(index), 'index must load the current patch script');
+assert(/score-live-patch\.css\?v=8/.test(index), 'index must load the current patch stylesheet');
+assert(/score-live-patch\.js\?v=8/.test(index), 'index must load the current patch script');
 assert(/score-leader-top\.js\?v=4/.test(index), 'index must load the visible-content-pinned leader script');
-assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=7'), 'timer/layout patch must load after score-live.js');
+assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=8'), 'timer/layout patch must load after score-live.js');
 console.log('score-live regression checks passed');
