@@ -2,7 +2,7 @@
   const teams=document.getElementById('teams');
   if(!teams) return;
 
-  const FIRST_ROW_IMAGE_OFFSET_PX=82;
+  const FIRST_ROW_IMAGE_OFFSET_PX=135;
   const MIN_REMAINING_HEIGHT=72;
   let frame=0;
 
