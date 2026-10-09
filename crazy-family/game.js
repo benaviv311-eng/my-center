@@ -9,6 +9,7 @@ import { createDadController, stepDad } from './dad.js';
 import { WORLD_ATTACK_DEFINITIONS, createWorldAttack, stepWorldAttack, attackHitsPlayer, dadForward } from './attacks.js';
 import { createAttackVisualSystem } from './attack-visuals.js';
 import { createSpatialAudioAdapter } from './audio.js';
+import { createReactivePropController, triggerRoomReaction, stepRoomReactions } from './reactive-props.js';
 
 function horizontalBasis(pose){
   const dx=pose.target.x-pose.position.x,dz=pose.target.z-pose.position.z;
@@ -36,6 +37,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const playerVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
   const dadVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
   const attackVisuals=createAttackVisualSystem(sceneHandle.scene);
+  const reactions=createReactivePropController(world);
   const cameraController = createCameraController();
   const spatialAudio=createSpatialAudioAdapter({retainedAudio:{setDadSpatial:(state)=>legacyAdapter?.setDadSpatial?.(state)}});
 
@@ -47,6 +49,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   let currentInteraction=null;
   let activeAttacks=[];
   let nextAttackAt=0,attackCursor=0,nearDadSince=0,nextPreAt=0,preIndex=0,wasSongPlaying=false;
+  let dadRunHeat=0,nextYawnAt=performance.now()+11000,nextSneezeAt=performance.now()+13500,lastDadState='idle',sneezeCount=0,lastStepAt=0;
   sceneHandle.applyCameraPose(cameraPose);
 
   const syncSize = () => {
@@ -61,8 +64,9 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const onContextAction=(action,id)=>{
     if(action==='push'&&id==='toy-ball'){
       const ball=sceneHandle.objectsById.get('toy-ball');
-      if(ball){const dx=ball.position.x-player.position.x,dz=ball.position.z-player.position.z,len=Math.hypot(dx,dz)||1;ball.position.x+=dx/len*.55;ball.position.z+=dz/len*.55;}
+      if(ball){const dx=ball.position.x-player.position.x,dz=ball.position.z-player.position.z;triggerRoomReaction(reactions,'toy-kick',{id:'toy-ball',direction:{x:dx,z:dz}});}
     }
+    if(action==='climb'&&id==='sofa')triggerRoomReaction(reactions,'sofa-compress');
     if(action==='open'&&id==='doorway'){
       prompt.textContent='המעבר לפינת האוכל מוכן לשלב הבא';prompt.hidden=false;
     }
@@ -111,10 +115,30 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     player = stepCharacter(player, moveIntent, dt, world);
     if (Math.abs(player.velocity.x) > 0.05) facing = player.velocity.x < 0 ? -1 : 1;
 
+    const playerSpeed=Math.hypot(player.velocity.x,player.velocity.z);
+    if(player.grounded&&playerSpeed>.55&&now-lastStepAt>(crouching?470:300)){
+      const surface=world.surfaceAt(player.position.x,player.position.z);
+      spatialAudio.playSurfaceCue(surface?.kind||'wood');
+      lastStepAt=now;
+    }
+
     dadFrame=stepDad(dadController,{player,world,retainedState:retainedBefore,dt,now});
     const dadDistance=Math.hypot(player.position.x-dadFrame.position.x,player.position.z-dadFrame.position.z);
 
     let songPlaying=Boolean(legacyAdapter?.dadSongIsPlaying?.()||retainedBefore.dad?.singing);
+    const dadMoving=Math.hypot(dadFrame.velocity.x,dadFrame.velocity.z)>.22;
+    if(!songPlaying&&retainedBefore.dad?.state==='idle'&&dadMoving&&dadDistance<4.5)dadRunHeat+=dt;else dadRunHeat=Math.max(0,dadRunHeat-dt*.55);
+    if(dadRunHeat>6.6&&retainedBefore.dad?.state==='idle'&&!songPlaying){legacyAdapter?.triggerDadHouseState?.('pant');dadRunHeat=0;}
+    if(now>=nextSneezeAt&&retainedBefore.dad?.state==='idle'&&!songPlaying){legacyAdapter?.triggerDadHouseState?.('sneeze');nextSneezeAt=now+14000+Math.random()*8000;}
+    if(now>=nextYawnAt&&retainedBefore.dad?.state==='idle'&&!songPlaying&&dadDistance>4.25){legacyAdapter?.triggerDadHouseState?.('yawn');nextYawnAt=now+15000+Math.random()*7000;}
+
+    const retainedState=retainedBefore.dad?.state||'idle';
+    if(retainedState!==lastDadState){
+      if(retainedState==='pant')triggerRoomReaction(reactions,'dad-pant-near-furniture',{nearId:Math.hypot(dadFrame.position.x+3.35,dadFrame.position.z-.55)<2.4?'sofa':null});
+      if(retainedState==='sneeze'){sneezeCount++;triggerRoomReaction(reactions,sneezeCount%4===0?'sneeze-mega':'sneeze-small');}
+      lastDadState=retainedState;
+    }
+
     if(!songPlaying&&dadDistance<4.2&&now>=nextPreAt){legacyAdapter?.playDadPre?.(preIndex++%9);nextPreAt=now+5200+Math.random()*2600;}
     if(!songPlaying&&dadDistance<2.75){
       if(!nearDadSince)nearDadSince=now;
@@ -144,11 +168,12 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
 
     const exposure=legacyAdapter?.applyDadSongExposure?.(dadDistance,dt)||{};
     spatialAudio.update({listener:player.position,dad:dadFrame.position,roomRelation:'same'});
+    stepRoomReactions(reactions,dt);
+    sceneHandle.applyReactiveTransforms(reactions);
 
     playerVisual.setPose({ position: player.position, facing, state: player.grounded ? (crouching?'crouch':'ground') : 'jump' });
-    playerVisual.setFrame(crouching?6:(player.grounded?(Math.hypot(player.velocity.x,player.velocity.z)>.25?((Math.floor(now/160)%2)?1:2):0):5));
+    playerVisual.setFrame(crouching?6:(player.grounded?(playerSpeed>.25?((Math.floor(now/160)%2)?1:2):0):5));
     dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: songPlaying?'sing':dadFrame.state });
-    const dadMoving=Math.hypot(dadFrame.velocity.x,dadFrame.velocity.z)>.18;
     if(songPlaying)dadVisual.setFrame((Math.floor(now/210)%2)?4:5);
     else if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
     else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadVisual.setFrame(dadFrame.state==='sneeze'?6:0);
@@ -160,7 +185,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;
     const cameraMode=(songPlaying || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
     cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt});
-    const camera=sceneHandle.applyCameraPose(cameraPose);
+    const camera=sceneHandle.applyCameraPose(cameraPose,reactions.cameraShake,now);
     const occluders=chooseOccluders({camera:cameraPose.position,target:cameraPose.target,occluders:world.occluders});
     sceneHandle.setOccluders(occluders);
     playerVisual.faceCamera(camera.position);
@@ -179,6 +204,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     scene: sceneHandle,
     cameraController,
     dadController,
+    reactions,
     get player() { return player; },
     get attacks(){return activeAttacks.map(a=>({...a,position:{...a.position}}));},
     start() {
