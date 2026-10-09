@@ -1,5 +1,6 @@
 (function(){
   const LEADER_TOP_PX=4;
+  const teams=document.getElementById('teams');
   let banner=null;
   let scheduled=false;
   let originalParent=null;
@@ -48,6 +49,33 @@
     return window.innerWidth/2;
   }
 
+  function renderedAsTwoColumns(){
+    if(!teams) return false;
+    if(teams.classList.contains('score-two-column-fit')) return true;
+
+    const style=getComputedStyle(teams);
+    const columns=(style.gridTemplateColumns||'').trim();
+    if(columns && columns!=='none'){
+      const tracks=columns.split(/\s+/).filter(Boolean);
+      if(tracks.length===2) return true;
+    }
+    const count=parseInt(style.columnCount,10);
+    if(count===2) return true;
+
+    const cards=Array.from(teams.querySelectorAll(':scope > .card.score-card-professional')).filter(card=>{
+      const rect=card.getBoundingClientRect();
+      return rect.width>0 && rect.height>0;
+    });
+    if(cards.length<2) return false;
+    const rects=cards.map(card=>card.getBoundingClientRect());
+    const firstTop=Math.min(...rects.map(rect=>rect.top));
+    return rects.filter(rect=>Math.abs(rect.top-firstTop)<=8).length===2;
+  }
+
+  function isDoubleProjection(){
+    return document.body.classList.contains('projection-mode') && renderedAsTwoColumns();
+  }
+
   function restoreBanner(el){
     if(!el) return;
     const original=el.dataset.scoreLeaderOriginalStyle;
@@ -75,6 +103,12 @@
     if(!banner || !banner.isConnected) banner=findLeaderBanner();
     if(!banner) return;
 
+    if(isDoubleProjection()){
+      banner.style.setProperty('display','none','important');
+      return;
+    }
+    banner.style.removeProperty('display');
+
     if(banner.dataset.scoreLeaderCeiling!=='1'){
       const rect=banner.getBoundingClientRect();
       banner.dataset.scoreLeaderOriginalStyle=banner.getAttribute('style')||'';
@@ -86,19 +120,15 @@
       document.body.appendChild(banner);
     }
 
-    const width=Math.max(1,Number(banner.dataset.scoreLeaderWidth)||banner.getBoundingClientRect().width||1);
     const centerX=findImageCenterX();
-    const unclampedLeft=centerX-width/2;
-    const left=Math.max(0,Math.min(unclampedLeft,Math.max(0,window.innerWidth-width)));
-
     banner.style.setProperty('position','fixed','important');
     banner.style.setProperty('top','0px','important');
-    banner.style.setProperty('left',Math.round(left)+'px','important');
+    banner.style.setProperty('left',Math.round(centerX)+'px','important');
     banner.style.setProperty('right','auto','important');
     banner.style.setProperty('bottom','auto','important');
     banner.style.setProperty('margin','0','important');
     banner.style.setProperty('margin-top','0','important');
-    banner.style.setProperty('transform','none','important');
+    banner.style.setProperty('transform','translateX(-50%)','important');
     banner.style.setProperty('z-index','180','important');
 
     const bannerTop=banner.getBoundingClientRect().top;
@@ -114,6 +144,7 @@
     requestAnimationFrame(()=>{
       scheduled=false;
       pinLeaderBannerTop(!!force);
+      requestAnimationFrame(()=>pinLeaderBannerTop(!!force));
     });
   }
 
