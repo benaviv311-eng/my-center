@@ -1,0 +1,52 @@
+name: Apply Crazy Family v0.32 Planted Feet
+
+on:
+  push:
+    paths:
+      - 'scripts/apply-crazy-family-v032-ground-contact.py'
+      - '.github/workflows/apply-crazy-family-v032.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebase onto latest main
+        run: |
+          git fetch origin main
+          git rebase origin/main || true
+      - name: Apply planted-feet ground contact
+        run: python scripts/apply-crazy-family-v032-ground-contact.py
+      - name: Run v0.30 regression checks
+        run: python scripts/test-crazy-family-v030.py
+      - name: Run v0.31 grounded movement checks
+        run: python scripts/test-crazy-family-v031.py
+      - name: Run v0.32 planted-feet checks
+        run: python scripts/test-crazy-family-v032-ground-contact.py
+      - name: Check embedded JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('crazy-family.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',s,re.S)
+          Path('/tmp/crazy-family-v032.js').write_text('\n'.join(scripts),encoding='utf-8')
+          PY
+          node --check /tmp/crazy-family-v032.js
+      - name: Commit v0.32
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: plant characters on stage 1 floor v0.32"
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 2
+          done
+          exit 1
