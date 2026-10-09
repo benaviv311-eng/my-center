@@ -36,6 +36,31 @@
   backdrop-filter:blur(16px) saturate(1.15);
   -webkit-backdrop-filter:blur(16px) saturate(1.15);
 }
+.score-audio-status{
+  margin:0 0 9px;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  font-size:12px;
+  font-weight:900;
+  text-align:center;
+}
+.score-audio-status[data-state="on"]{
+  color:#b8ffd8;
+  border-color:rgba(89,255,165,.34);
+  background:rgba(36,160,95,.16);
+}
+.score-audio-status[data-state="blocked"]{
+  color:#ffe29a;
+  border-color:rgba(255,195,68,.42);
+  background:rgba(182,117,0,.18);
+}
+.score-audio-status[data-state="error"]{
+  color:#ffc2c2;
+  border-color:rgba(255,94,94,.42);
+  background:rgba(171,33,33,.2);
+}
 .score-audio-row{
   display:grid;
   grid-template-columns:1fr 1fr;
