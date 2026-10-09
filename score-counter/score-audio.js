@@ -1,11 +1,22 @@
 (function(){
   const PRESSURE_DURATION_MS=15000;
-  const PRESSURE_CHANT_GAP_MS=2400;
+  const PRESSURE_CHANT_GAP_MS=3600;
   const LIVE_CHANT_MIN_MS=8000;
   const LIVE_CHANT_MAX_MS=25000;
   const LIVE_NOISE_MIN_MS=40000;
   const LIVE_NOISE_MAX_MS=90000;
+  const LIVE_REFRAIN_MIN_MS=12000;
+  const LIVE_REFRAIN_MAX_MS=28000;
+  const LIVE_REFRAIN_FIRST_MIN_MS=3500;
+  const LIVE_REFRAIN_FIRST_MAX_MS=8500;
   const NOISE_CROSSFADE_MS=1400;
+  const RHYTHMIC_CHANT_MIN_REPEATS=2;
+  const RHYTHMIC_CHANT_MAX_REPEATS=4;
+  const RHYTHMIC_CHANT_STEP_MIN_MS=520;
+  const RHYTHMIC_CHANT_STEP_MAX_MS=820;
+  const CHANT_LIVE_BOOST=1.28;
+  const CHANT_ANTHEM_DUCK=0.22;
+  const CHANT_NOISE_DUCK=0.56;
 
   const ARENA_ASSETS={
     chants:{
@@ -48,7 +59,7 @@
   };
 
   const layerState={
-    chants:{enabled:true,volume:0.94},
+    chants:{enabled:true,volume:0.98},
     anthems:{enabled:false,volume:0.70},
     noise:{enabled:false,volume:0.58}
   };
@@ -74,8 +85,10 @@
   let liveModeOn=false;
   let liveChantTimer=0;
   let liveNoiseTimer=0;
+  let liveRefrainTimer=0;
   let liveSnapshot=null;
   let lastLiveChant=-1;
+  let lastLiveAnthem=-1;
   let unlockedOnce=false;
   let panel=null;
   let body=null;
@@ -92,6 +105,7 @@
   const bufferCache=new Map();
   const lastVariantByChant=new Map();
   const activeChantSources=new Set();
+  const rhythmicChantTimers=new Set();
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
 
   function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
@@ -168,7 +182,7 @@
       warmAssets();
     }
     if(pressureOn) setStatus('🔥 מצב לחץ פעיל','on');
-    else if(liveModeOn) setStatus('♾️ יציע חי פועל — הסאונד משתנה לבד','on');
+    else if(liveModeOn) setStatus('♾️ יציע חי — קריאות קצביות ופזמונים','on');
     else setStatus('סאונד מוכן — שלוט בכל שכבה בנפרד','on');
     return true;
   }
@@ -195,7 +209,7 @@
     const warm=[
       ...ARENA_ASSETS.noise.map(item=>item.src),
       ...ARENA_ASSETS.anthems.map(item=>item.src),
-      ...Object.values(ARENA_ASSETS.chants).map(list=>list[0])
+      ...Object.values(ARENA_ASSETS.chants).flat()
     ];
     warm.forEach(src=>loadBuffer(src).catch(()=>{}));
   }
@@ -255,6 +269,12 @@
     return [Math.round(min),Math.round(Math.max(min+7000,max))];
   }
 
+  function liveRefrainWindow(){
+    const min=LIVE_REFRAIN_MIN_MS+(1-liveIntensity)*7000;
+    const max=LIVE_REFRAIN_MAX_MS-liveIntensity*6500;
+    return [Math.round(min),Math.round(Math.max(min+3500,max))];
+  }
+
   async function startAnthem(index,options){
     const opts=options||{};
     if(!(await ensureAudio())) return false;
@@ -276,15 +296,23 @@
         anthemSource=null;
         setNowPlaying('anthem','');
         if(!layerState.anthems.enabled || !ctx || ctx.state!=='running') return;
-        const allowed=pressureOn?[2,3]:(liveModeOn?liveAnthemPool():null);
-        const next=randomIndex(ARENA_ASSETS.anthems.length,safeIndex,allowed);
-        startAnthem(next,{force:pressureOn});
+        if(pressureOn){
+          const next=randomIndex(ARENA_ASSETS.anthems.length,safeIndex,[2,3]);
+          startAnthem(next,{force:true});
+          return;
+        }
+        if(liveModeOn){
+          scheduleLiveRefrain(false);
+          return;
+        }
+        const next=randomIndex(ARENA_ASSETS.anthems.length,safeIndex,null);
+        startAnthem(next);
       };
       source.start(0,Math.max(0,Number(opts.offset)||0)%Math.max(0.01,buffer.duration));
       syncUI();
       return true;
     }catch(error){
-      if(token===anthemPlayToken) setStatus('לא הצלחתי לטעון את ההמנון','error');
+      if(token===anthemPlayToken) setStatus('לא הצלחתי לטעון את פזמון היציע','error');
       return false;
     }
   }
@@ -358,7 +386,13 @@
     }
   }
 
+  function clearRhythmicChantTimers(){
+    rhythmicChantTimers.forEach(timer=>clearTimeout(timer));
+    rhythmicChantTimers.clear();
+  }
+
   function stopAllChants(){
+    clearRhythmicChantTimers();
     activeChantSources.forEach(source=>{
       try{ source.onended=null;source.stop(); }catch(_){ }
     });
@@ -369,12 +403,16 @@
 
   function applyMix(){
     if(!ctx||!masterGain) return;
-    const pressureBoost=pressureOn?1.0:0;
+    const chantActive=activeChantSources.size>0;
+    const chantBoost=pressureOn?1.34:(liveModeOn?CHANT_LIVE_BOOST:1.16);
     safeGain(masterGain.gain,masterVolume);
-    safeGain(chantGain.gain,layerState.chants.enabled?clamp(layerState.chants.volume*(pressureBoost?1.04:1),0,1):0);
-    const duck=activeChantSources.size?0.34:1;
-    safeGain(anthemGain.gain,layerState.anthems.enabled?clamp(layerState.anthems.volume*(pressureBoost?1.13:1)*duck,0,1):0);
-    safeGain(noiseGain.gain,layerState.noise.enabled?clamp(layerState.noise.volume*(pressureBoost?1.22:1),0,1):0);
+    safeGain(chantGain.gain,layerState.chants.enabled?clamp(layerState.chants.volume*chantBoost,0,1.38):0);
+    const anthemDuck=chantActive?CHANT_ANTHEM_DUCK:1;
+    const noiseDuck=chantActive?CHANT_NOISE_DUCK:1;
+    const pressureAnthemBoost=pressureOn?1.10:1;
+    const pressureNoiseBoost=pressureOn?1.18:1;
+    safeGain(anthemGain.gain,layerState.anthems.enabled?clamp(layerState.anthems.volume*pressureAnthemBoost*anthemDuck,0,1):0);
+    safeGain(noiseGain.gain,layerState.noise.enabled?clamp(layerState.noise.volume*pressureNoiseBoost*noiseDuck,0,1):0);
   }
 
   async function setLayerVolume(layer,value){
@@ -395,7 +433,15 @@
       return false;
     }
     if(layer==='anthems'){
-      if(enabled) await startAnthem(currentAnthemIndex); else { ++anthemPlayToken;stopBuffer('anthem'); }
+      clearTimeout(liveRefrainTimer);
+      liveRefrainTimer=0;
+      if(enabled){
+        if(liveModeOn&&!pressureOn) scheduleLiveRefrain(true);
+        else await startAnthem(currentAnthemIndex);
+      }else{
+        ++anthemPlayToken;
+        stopBuffer('anthem');
+      }
     }else if(layer==='noise'){
       if(enabled) await startNoise(currentNoiseIndex); else { ++noisePlayToken;stopBuffer('noise'); }
     }else if(layer==='chants'&&!enabled){
@@ -440,11 +486,37 @@
     }
   }
 
+  async function playRhythmicChant(label,options){
+    const opts=options||{};
+    const intensity=pressureOn?1:liveIntensity;
+    const minRepeats=Number.isFinite(opts.repeats)?opts.repeats:RHYTHMIC_CHANT_MIN_REPEATS;
+    const maxRepeats=Number.isFinite(opts.repeats)?opts.repeats:RHYTHMIC_CHANT_MAX_REPEATS;
+    const target=minRepeats+Math.round(intensity*Math.max(0,maxRepeats-minRepeats));
+    const repeats=clamp(target,RHYTHMIC_CHANT_MIN_REPEATS,RHYTHMIC_CHANT_MAX_REPEATS);
+    const stepMin=Math.max(430,RHYTHMIC_CHANT_STEP_MIN_MS-Math.round(intensity*90));
+    const stepMax=Math.max(stepMin+80,RHYTHMIC_CHANT_STEP_MAX_MS-Math.round(intensity*160));
+    const first=await playChant(label,opts);
+    if(!first) return false;
+    let elapsed=0;
+    for(let i=1;i<repeats;i++){
+      elapsed+=randomDelay(stepMin,stepMax);
+      const timer=setTimeout(()=>{
+        rhythmicChantTimers.delete(timer);
+        if(layerState.chants.enabled && (!opts.liveOnly||liveModeOn) && (!opts.pressureOnly||pressureOn)){
+          playChant(label,{automatic:true,force:opts.force});
+        }
+      },elapsed);
+      rhythmicChantTimers.add(timer);
+    }
+    return true;
+  }
+
   async function cycleAnthem(){
     if(!layerState.anthems.enabled) await toggleLayer('anthems',true);
     if(!layerState.anthems.enabled) return;
     const allowed=pressureOn?[2,3]:(liveModeOn?liveAnthemPool():null);
     const next=randomIndex(ARENA_ASSETS.anthems.length,currentAnthemIndex,allowed);
+    lastLiveAnthem=next;
     await startAnthem(next,{force:pressureOn});
   }
 
@@ -519,8 +591,11 @@
   function pauseLiveSchedules(){
     clearTimeout(liveChantTimer);
     clearTimeout(liveNoiseTimer);
+    clearTimeout(liveRefrainTimer);
     liveChantTimer=0;
     liveNoiseTimer=0;
+    liveRefrainTimer=0;
+    clearRhythmicChantTimers();
   }
 
   function scheduleLiveChant(){
@@ -529,7 +604,7 @@
     const windowMs=liveChantWindow();
     liveChantTimer=setTimeout(async()=>{
       if(liveModeOn&&!pressureOn&&layerState.chants.enabled){
-        await playChant(nextLiveChant(),{automatic:true});
+        await playRhythmicChant(nextLiveChant(),{automatic:true,liveOnly:true});
       }
       scheduleLiveChant();
     },randomDelay(windowMs[0],windowMs[1]));
@@ -548,6 +623,19 @@
     },randomDelay(windowMs[0],windowMs[1]));
   }
 
+  function scheduleLiveRefrain(first){
+    clearTimeout(liveRefrainTimer);
+    liveRefrainTimer=0;
+    if(!liveModeOn||pressureOn||!layerState.anthems.enabled) return;
+    const windowMs=first?[LIVE_REFRAIN_FIRST_MIN_MS,LIVE_REFRAIN_FIRST_MAX_MS]:liveRefrainWindow();
+    liveRefrainTimer=setTimeout(async()=>{
+      if(!liveModeOn||pressureOn||!layerState.anthems.enabled) return;
+      const next=randomIndex(ARENA_ASSETS.anthems.length,lastLiveAnthem,liveAnthemPool());
+      lastLiveAnthem=next;
+      await startAnthem(next,{liveRefrain:true});
+    },randomDelay(windowMs[0],windowMs[1]));
+  }
+
   async function startLiveMode(){
     if(liveModeOn) return true;
     if(pressureOn){
@@ -560,16 +648,15 @@
     layerState.chants.enabled=true;
     layerState.anthems.enabled=true;
     layerState.noise.enabled=true;
-    const anthemIndex=randomIndex(ARENA_ASSETS.anthems.length,currentAnthemIndex,liveAnthemPool());
+    ++anthemPlayToken;
+    stopBuffer('anthem');
     const noiseIndex=randomIndex(ARENA_ASSETS.noise.length,currentNoiseIndex,liveNoisePool());
-    await Promise.all([
-      startAnthem(anthemIndex),
-      startNoise(noiseIndex)
-    ]);
+    await startNoise(noiseIndex);
     scheduleLiveChant();
     scheduleLiveNoiseShift();
+    scheduleLiveRefrain(true);
     applyMix();
-    setStatus('♾️ יציע חי פועל — הסאונד משתנה לבד','on');
+    setStatus('♾️ יציע חי — רעש, קריאות קצביות ופזמוני יציע','on');
     syncUI();
     return true;
   }
@@ -596,7 +683,9 @@
     if(liveModeOn&&!pressureOn){
       scheduleLiveChant();
       scheduleLiveNoiseShift();
+      if(!anthemSource) scheduleLiveRefrain(false);
     }
+    applyMix();
     syncUI();
   }
 
@@ -607,11 +696,13 @@
     clearInterval(pressureChantTimer);
     pressureTimer=0;
     pressureChantTimer=0;
+    clearRhythmicChantTimers();
     await pressureMix(false);
     if(liveModeOn){
       scheduleLiveChant();
       scheduleLiveNoiseShift();
-      setStatus('♾️ יציע חי חזר לפעולה','on');
+      if(!anthemSource) scheduleLiveRefrain(false);
+      setStatus('♾️ יציע חי חזר — קריאות ופזמונים ממשיכים','on');
     }else{
       setStatus('מצב לחץ הסתיים — חזרנו למיקס הקודם','on');
     }
@@ -624,10 +715,10 @@
     if(liveModeOn) pauseLiveSchedules();
     pressureOn=true;
     await pressureMix(true);
-    setStatus('🔥 לחץ פעיל — כל שלוש השכבות עובדות','on');
-    setTimeout(()=>{ if(pressureOn) playChant(nextPressureChant(),{automatic:true,force:true}); },320);
+    setStatus('🔥 לחץ פעיל — קריאות חזקות וכל שלוש השכבות עובדות','on');
+    setTimeout(()=>{ if(pressureOn) playRhythmicChant(nextPressureChant(),{automatic:true,force:true,repeats:2,pressureOnly:true}); },320);
     pressureChantTimer=setInterval(()=>{
-      if(pressureOn) playChant(nextPressureChant(),{automatic:true,force:true});
+      if(pressureOn) playRhythmicChant(nextPressureChant(),{automatic:true,force:true,repeats:2,pressureOnly:true});
     },PRESSURE_CHANT_GAP_MS);
     pressureTimer=setTimeout(stopPressure,PRESSURE_DURATION_MS);
     syncUI();
@@ -719,8 +810,8 @@
           <span><b>רגוע</b><strong>עוצמת האווירה <em data-live-intensity-value>56%</em></strong><b>מטורף</b></span>
           <input type="range" min="0" max="100" value="56" step="1" data-live-intensity aria-label="עוצמת האווירה">
         </label>
-        ${layerMarkup('chants','🎤','קריאות',chantsExtra)}
-        ${layerMarkup('anthems','🥁','המנונים',anthemExtra)}
+        ${layerMarkup('chants','🎤','קריאות קצביות',chantsExtra)}
+        ${layerMarkup('anthems','🥁','פזמוני יציע',anthemExtra)}
         ${layerMarkup('noise','🏟️','רעש קהל',noiseExtra)}
         <button type="button" class="score-audio-pressure" aria-pressed="false">🔥 לחץ · 15 שניות</button>
         <label class="score-audio-master">עוצמה כללית
@@ -754,7 +845,7 @@
       input.addEventListener('input',()=>setLayerVolume(input.dataset.layerVolume,Number(input.value)/100));
     });
     panel.querySelectorAll('[data-chant]').forEach(button=>{
-      button.addEventListener('click',()=>playChant(button.dataset.chant));
+      button.addEventListener('click',()=>playRhythmicChant(button.dataset.chant,{automatic:false}));
     });
     panel.querySelector('[data-cycle="anthems"]').addEventListener('click',cycleAnthem);
     panel.querySelector('[data-cycle="noise"]').addEventListener('click',cycleNoise);
