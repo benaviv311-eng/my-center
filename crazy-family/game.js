@@ -3,6 +3,14 @@ import { createCharacterState, stepCharacter, jumpCharacter, LIBI_MOVEMENT_DEFAU
 import { createLivingRoomWorld } from './world.js';
 import { createLivingRoomScene } from './scene.js';
 import { createCharacterVisual, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from './characters.js';
+import { createCameraController, stepCamera, chooseOccluders } from './camera.js';
+
+function horizontalBasis(pose){
+  const dx=pose.target.x-pose.position.x,dz=pose.target.z-pose.position.z;
+  const length=Math.hypot(dx,dz)||1;
+  const forward={x:dx/length,z:dz/length};
+  return {forward,right:{x:-forward.z,z:forward.x}};
+}
 
 export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const doc = root.ownerDocument || document;
@@ -17,12 +25,13 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const sceneHandle = createLivingRoomScene({ canvas, world });
   const playerVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
   const dadVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
+  const cameraController = createCameraController();
 
   const keys = Object.create(null);
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
   const dadPosition = { x: 2.7, y: 0, z: -0.35 };
-  const cameraForward = { x: 0, z: -1 };
-  const cameraRight = { x: 1, z: 0 };
+  let cameraPose = stepCamera(cameraController,{player,dad:{position:dadPosition},world,mode:'explore',dt:1});
+  sceneHandle.applyCameraPose(cameraPose);
 
   const syncSize = () => {
     const rect = root.getBoundingClientRect?.() || { width: 960, height: 600 };
@@ -54,24 +63,28 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     if (!running) return;
     const dt = last ? Math.min(0.033, (now - last) / 1000) : 0;
     last = now;
+
+    const basis=horizontalBasis(cameraPose);
     const raw = keyboardIntent(keys);
-    const intent = cameraRelativeIntent(raw, cameraForward, cameraRight);
+    const intent = cameraRelativeIntent(raw, basis.forward, basis.right);
     player = stepCharacter(player, intent, dt, world);
     if (Math.abs(player.velocity.x) > 0.05) facing = player.velocity.x < 0 ? -1 : 1;
 
     playerVisual.setPose({ position: player.position, facing, state: player.grounded ? 'ground' : 'jump' });
     dadVisual.setPose({ position: dadPosition, facing: -1, state: 'idle' });
 
-    const camera = sceneHandle.camera;
-    camera.position.x += ((player.position.x * 0.24) - camera.position.x) * Math.min(1, dt * 4.2);
-    camera.position.y += (4.25 - camera.position.y) * Math.min(1, dt * 4.2);
-    camera.position.z += ((player.position.z + 7.2) - camera.position.z) * Math.min(1, dt * 4.2);
-    camera.lookAt(player.position.x, 0.82, player.position.z - 0.45);
+    const retained=legacyAdapter?.getSnapshot?.() || {};
+    const dadDistance=Math.hypot(player.position.x-dadPosition.x,player.position.z-dadPosition.z);
+    const cameraMode=(retained.dad?.singing || dadDistance<2.9)?'chase':'explore';
+    cameraPose=stepCamera(cameraController,{player,dad:{position:dadPosition},world,mode:cameraMode,dt});
+    const camera=sceneHandle.applyCameraPose(cameraPose);
+    const occluders=chooseOccluders({camera:cameraPose.position,target:cameraPose.target,occluders:world.occluders});
+    sceneHandle.setOccluders(occluders);
     playerVisual.faceCamera(camera.position);
     dadVisual.faceCamera(camera.position);
 
     legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadPosition });
-    legacyAdapter?.setDadWorldDistance?.(Math.hypot(player.position.x - dadPosition.x, player.position.z - dadPosition.z));
+    legacyAdapter?.setDadWorldDistance?.(dadDistance);
     legacyAdapter?.tickRetainedSystems?.(dt);
     sceneHandle.render(camera);
     raf = requestAnimationFrame(frame);
@@ -81,6 +94,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     canvas,
     world,
     scene: sceneHandle,
+    cameraController,
     get player() { return player; },
     start() {
       if (running) return;
