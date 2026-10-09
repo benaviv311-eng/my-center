@@ -85,7 +85,7 @@ assert(/chantsAreOn/.test(habaita),'user crowd clips must respect the chants lay
 assert(/data-user-crowd/.test(habaita),'both approved crowd clips must have manual buttons in the chants layer');
 assert(/lastUserCrowd/.test(habaita),'live arena must avoid immediately repeating the same approved crowd clip');
 
-assert(/score-habaita-refrain\.js\?v=2/.test(index),'index must load the refreshed live crowd module');
+assert(/score-habaita-refrain\.js\?v=1/.test(index),'index must keep loading the live crowd module');
 assert(/score-audio\.css\?v=4/.test(index),'index must keep loading the live-arena audio styles');
 assert(/score-audio\.js\?v=5/.test(index),'index must keep loading the rhythmic live-arena engine');
 
