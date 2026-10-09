@@ -13,6 +13,7 @@ const containJsPath = path.join(root, 'score-image-contain.js');
 const containCssPath = path.join(root, 'score-image-contain.css');
 const surfaceJsPath = path.join(root, 'score-card-surface.js');
 const surfaceCssPath = path.join(root, 'score-card-surface.css');
+const lowerJsPath = path.join(root, 'score-layout-lower.js');
 
 assert(!/score-final-column/.test(js.replace(/remove\(['"]score-final-column['"]\)/g, '')), 'patch must not force the legacy one-column class');
 assert(/classList\.remove\(['"]score-final-column['"]\)/.test(js), 'patch must remove the forced one-column class');
@@ -61,6 +62,14 @@ assert(/score-card-team-tint/.test(surfaceJs) && /\.score-card-team-tint/.test(s
 assert(/rgba\(var\(--score-team-rgb\),\s*0\.1[0-9]\)/.test(surfaceCss), 'team card tint must remain very light and translucent');
 assert(/backdrop-filter:blur/.test(surfaceCss), 'translucent team card must preserve visible background imagery');
 assert(!/score-card-tint-blue/.test(surfaceCss), 'surface styling must no longer be blue-only');
+assert(/surfaceLayoutObserver/.test(surfaceJs) && /attributeFilter:\s*\['data-score-layout-mode'\]/.test(surfaceJs), 'surface refresh must react directly to layout mode changes');
+assert(/surfaceProjectionObserver/.test(surfaceJs) && /surfaceProjectionObserver\.observe\(document\.body,\{attributes:true,attributeFilter:\['class'\]\}\)/.test(surfaceJs), 'surface refresh must react directly to projection mode changes');
+assert(fs.existsSync(lowerJsPath), '75-percent lower layout positioning script must exist');
+const lowerJs = read('score-layout-lower.js');
+assert(/LAYOUT_START_RATIO\s*=\s*0\.75/.test(lowerJs), 'card layouts must start at 75 percent of the visible image height');
+assert(/--score-layout-top/.test(lowerJs) && /--score-layout-height/.test(lowerJs), 'lower layout script must update both layout top and remaining height');
+assert(/data-score-layout-mode/.test(lowerJs) && /projection-mode/.test(lowerJs), 'lower layout positioning must react to layout and projection mode changes');
+assert(/#sharpBg img\.active/.test(lowerJs), 'lower layout positioning must derive its bounds from the visible foreground image');
 assert(/bar\.addEventListener\(['"]pointerdown['"]/.test(js), 'timer shell must be draggable without a visible move icon');
 assert(!/⠿/.test(js), 'timer must not render the move icon');
 assert(!/↘/.test(js), 'timer must not render the resize icon');
@@ -83,9 +92,11 @@ assert(/translateX\(-50%\)/.test(leader), 'top leader must center from its own m
 assert(/score-live-patch\.css\?v=10/.test(index), 'index must preserve the current base patch stylesheet');
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must preserve the current base patch script');
 assert(/score-card-surface\.css\?v=2/.test(index), 'index must load the current team-color surface stylesheet');
-assert(/score-card-surface\.js\?v=2/.test(index), 'index must load the current team-color surface script');
+assert(/score-card-surface\.js\?v=3/.test(index), 'index must load the all-layout surface refresh script');
+assert(/score-layout-lower\.js\?v=1/.test(index), 'index must load the 75-percent lower layout script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
 assert(/score-leader-top\.js\?v=9/.test(index), 'index must load the single-top-leader version');
-assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-card-surface.js?v=2'), 'surface behavior must load after the base score patch');
+assert(index.indexOf('score-layout-menu.js?v=1') < index.indexOf('score-layout-lower.js?v=1'), 'lower layout positioning must load after the layout controller');
+assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-card-surface.js?v=3'), 'surface behavior must load after the base score patch');
 console.log('score-live regression checks passed');
