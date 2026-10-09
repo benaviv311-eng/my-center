@@ -79,7 +79,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const competitionGamesJs='<script src="score-competition-games.js?v=1"><\/script>';
   const flexibleGuardJs='<script src="score-flexible-setup-guard.js?v=1"><\/script>';
   const flexibleGamesJs='<script src="score-flexible-games.js?v=1"><\/script>';
-  const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=1"><\/script>';
+  const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=2"><\/script>';
 
   html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
