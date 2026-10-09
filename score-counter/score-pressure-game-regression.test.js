@@ -1,0 +1,12 @@
+const fs=require('fs');
+const path=require('path');
+const read=n=>fs.readFileSync(path.join(__dirname,n),'utf8');
+const js=read('score-pressure-game.js');
+const css=read('score-pressure-game.css');
+const index=read('index.html');
+for(const token of ['Pressure Game','Replay Scenario','Commentary','Set point','Match point','We are tied','takes the lead','Speak Score']) if(!js.includes(token)) throw new Error('missing '+token);
+if(!/pressure-game/.test(js)) throw new Error('pressure session gate missing');
+if(!/voiceAlias/.test(js)) throw new Error('team pronunciation support missing');
+if(!/score-pressure-game\.css\?v=1/.test(index)||!/score-pressure-game\.js\?v=1/.test(index)) throw new Error('pressure assets not loaded');
+if(!/score-pressure-hud/.test(css)) throw new Error('pressure HUD styles missing');
+console.log('score-pressure-game regression checks passed');
