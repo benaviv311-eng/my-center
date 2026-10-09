@@ -1,0 +1,23 @@
+name: Crazy Family v0.28 RED
+on:
+  push:
+    paths:
+      - 'scripts/test-crazy-family-v028.py'
+      - '.github/workflows/test-crazy-family-v028-red.yml'
+  workflow_dispatch:
+jobs:
+  red:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Expect visual test to fail before implementation
+        run: |
+          set +e
+          python scripts/test-crazy-family-v028.py
+          code=$?
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo 'Test unexpectedly passed before implementation.'
+            exit 1
+          fi
+          echo 'RED confirmed.'
