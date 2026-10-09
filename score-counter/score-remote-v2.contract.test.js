@@ -1,0 +1,13 @@
+const fs=require('fs');
+const assert=require('assert');
+const js=fs.readFileSync(__dirname+'/score-remote-v2.js','utf8');
+const css=fs.readFileSync(__dirname+'/score-remote-v2.css','utf8');
+assert(/score-remote/.test(js),'remote client must target the score-remote function');
+assert(/controllerSecret/.test(js)&&/displaySecret/.test(js),'controller and display credentials must stay separate');
+assert(/remote=display/.test(js),'display link must identify display mode');
+assert(/location\.hash/.test(js),'display secret must stay in the URL fragment rather than query parameters');
+assert(/action:'write'/.test(js)&&/action:'read'/.test(js),'controller must write and display must read remote state');
+assert(/setInterval/.test(js),'display must refresh remote state continuously');
+assert(/ScoreTimerV2Core/.test(js),'remote display must render a smooth local timer from timestamps');
+assert(/score-v2-remote-display/.test(css),'remote display must have dedicated full-screen styling');
+console.log('score-remote-v2 contract tests passed');
