@@ -51,6 +51,10 @@
     return teams.classList.contains('score-layout-managed') || teams.classList.contains('score-layout-free');
   }
 
+  function projectionModeActive(){
+    return document.body.classList.contains('projection-mode');
+  }
+
   function applyLowerLayoutStart(){
     if(!managedLayoutActive()) return;
 
@@ -63,6 +67,7 @@
     teams.style.setProperty('--score-layout-top',top+'px');
     teams.style.setProperty('--score-layout-height',height+'px');
     teams.dataset.scoreLayoutStartRatio=String(LAYOUT_START_RATIO);
+    teams.dataset.scoreLayoutProjection=projectionModeActive()?'1':'0';
   }
 
   function scheduleLowerLayoutStart(){
