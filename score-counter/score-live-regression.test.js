@@ -56,11 +56,14 @@ assert(/document\.body\.appendChild\(banner\)/.test(leader), 'leader banner must
 assert(/findLeaderVisualTop/.test(leader), 'leader script must measure the actual visible leader text rather than only the wrapper');
 assert(/visualOffset/.test(leader) && /-visualOffset/.test(leader), 'leader wrapper must compensate for its internal top gap');
 assert(/scoreLeaderVisualOffset/.test(leader), 'measured leader visual offset must be recorded for regression/debugging');
+assert(/findImageCenterX/.test(leader), 'leader must calculate the active image horizontal center');
+assert(/#sharpBg img\.active/.test(leader), 'leader must center against the active foreground image');
+assert(/centerX-width\/2/.test(leader), 'leader left edge must derive from image center minus half its width');
 assert(/score-live-patch\.css\?v=9/.test(index), 'index must load the current patch stylesheet');
 assert(/score-live-patch\.js\?v=8/.test(index), 'index must load the current patch script');
 assert(/score-image-contain\.css\?v=1/.test(index), 'index must load the image containment stylesheet');
 assert(/score-image-contain\.js\?v=1/.test(index), 'index must load the image containment script');
-assert(/score-leader-top\.js\?v=6/.test(index), 'index must preserve the current leader script version');
+assert(/score-leader-top\.js\?v=7/.test(index), 'index must load the centered leader script version');
 assert(index.indexOf('score-live.js?v=9') < index.indexOf('score-live-patch.js?v=8'), 'timer/layout patch must load after score-live.js');
 assert(index.indexOf('score-live-patch.js?v=8') < index.indexOf('score-image-contain.js?v=1'), 'image containment must load after the base score patch');
 console.log('score-live regression checks passed');
