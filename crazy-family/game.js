@@ -6,6 +6,9 @@ import { createCharacterVisual, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from '
 import { createCameraController, stepCamera, chooseOccluders } from './camera.js';
 import { resolveInteraction, executeInteraction } from './interaction.js';
 import { createDadController, stepDad } from './dad.js';
+import { WORLD_ATTACK_DEFINITIONS, createWorldAttack, stepWorldAttack, attackHitsPlayer, dadForward } from './attacks.js';
+import { createAttackVisualSystem } from './attack-visuals.js';
+import { createSpatialAudioAdapter } from './audio.js';
 
 function horizontalBasis(pose){
   const dx=pose.target.x-pose.position.x,dz=pose.target.z-pose.position.z;
@@ -32,7 +35,9 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const sceneInteraction={setObjectVisible(id,value){const object=sceneHandle.objectsById.get(id)||sceneHandle.scene.getObjectByName(id);if(!object)return false;object.visible=Boolean(value);return true;}};
   const playerVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
   const dadVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
+  const attackVisuals=createAttackVisualSystem(sceneHandle.scene);
   const cameraController = createCameraController();
+  const spatialAudio=createSpatialAudioAdapter({retainedAudio:{setDadSpatial:(state)=>legacyAdapter?.setDadSpatial?.(state)}});
 
   const keys = Object.create(null);
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
@@ -40,6 +45,8 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   let dadFrame={position:{...dadController.position},velocity:{...dadController.velocity},facing:-1,state:'idle',cameraModeHint:'explore'};
   let cameraPose = stepCamera(cameraController,{player,dad:dadFrame,world,mode:'explore',dt:1});
   let currentInteraction=null;
+  let activeAttacks=[];
+  let nextAttackAt=0,attackCursor=0,nearDadSince=0,nextPreAt=0,preIndex=0,wasSongPlaying=false;
   sceneHandle.applyCameraPose(cameraPose);
 
   const syncSize = () => {
@@ -94,27 +101,64 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     const dt = last ? Math.min(0.033, (now - last) / 1000) : 0;
     last = now;
 
+    const retainedBefore=legacyAdapter?.getSnapshot?.() || {};
     const basis=horizontalBasis(cameraPose);
     const raw = keyboardIntent(keys);
+    if(retainedBefore.controlsReversed){raw.x*=-1;raw.z*=-1;}
     const intent = cameraRelativeIntent(raw, basis.forward, basis.right);
-    player = stepCharacter(player, intent, dt, world);
+    const crouching=Boolean(keys.c||keys.C)&&player.grounded;
+    const moveIntent=crouching?{x:intent.x*.58,z:intent.z*.58}:intent;
+    player = stepCharacter(player, moveIntent, dt, world);
     if (Math.abs(player.velocity.x) > 0.05) facing = player.velocity.x < 0 ? -1 : 1;
 
-    const retained=legacyAdapter?.getSnapshot?.() || {};
-    dadFrame=stepDad(dadController,{player,world,retainedState:retained,dt,now});
+    dadFrame=stepDad(dadController,{player,world,retainedState:retainedBefore,dt,now});
+    const dadDistance=Math.hypot(player.position.x-dadFrame.position.x,player.position.z-dadFrame.position.z);
 
-    playerVisual.setPose({ position: player.position, facing, state: player.grounded ? 'ground' : 'jump' });
-    dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: dadFrame.state });
+    let songPlaying=Boolean(legacyAdapter?.dadSongIsPlaying?.()||retainedBefore.dad?.singing);
+    if(!songPlaying&&dadDistance<4.2&&now>=nextPreAt){legacyAdapter?.playDadPre?.(preIndex++%9);nextPreAt=now+5200+Math.random()*2600;}
+    if(!songPlaying&&dadDistance<2.75){
+      if(!nearDadSince)nearDadSince=now;
+      if(now-nearDadSince>2500){legacyAdapter?.startDadSong?.();nearDadSince=now+9000;nextAttackAt=now+750;}
+    }else if(dadDistance>3.15){nearDadSince=0;}
+    songPlaying=Boolean(legacyAdapter?.dadSongIsPlaying?.()||retainedBefore.dad?.singing);
+    if(songPlaying&&!wasSongPlaying)nextAttackAt=now+700;
+    if(songPlaying&&now>=nextAttackAt){
+      const definition=WORLD_ATTACK_DEFINITIONS[attackCursor++%WORLD_ATTACK_DEFINITIONS.length];
+      activeAttacks.push(createWorldAttack(definition,{x:dadFrame.position.x,y:1.05,z:dadFrame.position.z},dadForward(dadFrame.position,player.position),now));
+      nextAttackAt=now+1050+Math.random()*550;
+    }
+    if(!songPlaying&&wasSongPlaying){nextPreAt=Math.max(nextPreAt,now+2800);activeAttacks=activeAttacks.filter(a=>a.travelled>.2&&!a.dead);}
+    wasSongPlaying=songPlaying;
+
+    const stepped=[];
+    for(const attack of activeAttacks){
+      let next=stepWorldAttack(attack,dt,world);
+      if(!next.dead&&attackHitsPlayer(next,{position:player.position,radius:player.capsule.radius,height:crouching?.58:player.capsule.height,crouching})){
+        legacyAdapter?.damagePlayer?.(next.damage,next.name);
+        next={...next,dead:true};
+      }
+      if(!next.dead)stepped.push(next);
+    }
+    activeAttacks=stepped;
+    attackVisuals.sync(activeAttacks);
+
+    const exposure=legacyAdapter?.applyDadSongExposure?.(dadDistance,dt)||{};
+    spatialAudio.update({listener:player.position,dad:dadFrame.position,roomRelation:'same'});
+
+    playerVisual.setPose({ position: player.position, facing, state: player.grounded ? (crouching?'crouch':'ground') : 'jump' });
+    playerVisual.setFrame(crouching?6:(player.grounded?(Math.hypot(player.velocity.x,player.velocity.z)>.25?((Math.floor(now/160)%2)?1:2):0):5));
+    dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: songPlaying?'sing':dadFrame.state });
     const dadMoving=Math.hypot(dadFrame.velocity.x,dadFrame.velocity.z)>.18;
-    if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
+    if(songPlaying)dadVisual.setFrame((Math.floor(now/210)%2)?4:5);
+    else if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
     else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadVisual.setFrame(dadFrame.state==='sneeze'?6:0);
     else dadVisual.setFrame(0);
 
     currentInteraction=resolveInteraction({player,interactables:world.interactables,maxDistance:1.15});
     if(currentInteraction){prompt.textContent=`✋ ${currentInteraction.label}`;prompt.hidden=false;}else{prompt.hidden=true;}
 
-    const dadDistance=Math.hypot(player.position.x-dadFrame.position.x,player.position.z-dadFrame.position.z);
-    const cameraMode=(retained.dad?.singing || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
+    const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;
+    const cameraMode=(songPlaying || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
     cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt});
     const camera=sceneHandle.applyCameraPose(cameraPose);
     const occluders=chooseOccluders({camera:cameraPose.position,target:cameraPose.target,occluders:world.occluders});
@@ -122,7 +166,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     playerVisual.faceCamera(camera.position);
     dadVisual.faceCamera(camera.position);
 
-    legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadFrame.position, dadState:dadFrame.state });
+    legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadFrame.position, dadState:dadFrame.state, songPlaying, controlsReversed:Boolean(exposure.controlsReversed||retainedAfter.controlsReversed) });
     legacyAdapter?.setDadWorldDistance?.(dadDistance);
     legacyAdapter?.tickRetainedSystems?.(dt);
     sceneHandle.render(camera);
@@ -136,6 +180,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     cameraController,
     dadController,
     get player() { return player; },
+    get attacks(){return activeAttacks.map(a=>({...a,position:{...a.position}}));},
     start() {
       if (running) return;
       running = true;
@@ -152,6 +197,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
       globalThis.removeEventListener?.('keyup', onKeyUp);
       globalThis.removeEventListener?.('resize', syncSize);
       actionButton?.removeEventListener('click',performInteraction);
+      attackVisuals.dispose();
       playerVisual.dispose();
       dadVisual.dispose();
       sceneHandle.dispose();
