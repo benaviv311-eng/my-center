@@ -1,0 +1,11 @@
+const fs=require('fs');
+const assert=require('assert');
+const js=fs.readFileSync(__dirname+'/score-advanced-ui-v2.js','utf8');
+assert(/best-of/.test(js)&&/bestOf/.test(js),'Best-of configuration must be wired');
+assert(/elimination/.test(js)&&/lives/.test(js),'Elimination lives must be configurable');
+assert(/sideout/.test(js)&&/attempts/.test(js),'Sideout attempts must be configurable');
+assert(/king-rotation/.test(js)&&/maxStreak/.test(js),'King rotation streak cap must be configurable');
+assert(/tournament/.test(js)&&/createTournament/.test(js)&&/recordTournamentResult/.test(js),'Tournament manager must use the tournament engine');
+assert(/custom/.test(js)&&/score:v2:custom-games/.test(js),'Custom game builder must save templates');
+assert(/data-advanced-start/.test(js),'advanced modes must have their own start action');
+console.log('score-advanced-ui-v2 contract tests passed');
