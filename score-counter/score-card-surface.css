@@ -15,12 +15,12 @@ body.projection-mode #teams > .card.score-card-professional .score-card-mega{
   padding-bottom:0!important;
 }
 
-/* Every team card inherits its own color while remaining translucent enough to show the photo. */
+/* Visible fallback for team-colored cards. JS also writes this background inline with !important. */
 #teams > .card.score-card-professional.score-card-team-tint,
 body.projection-mode #teams > .card.score-card-professional.score-card-team-tint{
-  background:rgba(var(--score-team-rgb),0.18)!important;
-  border-color:rgba(var(--score-team-rgb),0.32)!important;
-  box-shadow:0 8px 24px rgba(0,0,0,0.14)!important;
-  backdrop-filter:blur(2px) saturate(1.08)!important;
-  -webkit-backdrop-filter:blur(2px) saturate(1.08)!important;
+  background:linear-gradient(180deg,rgba(var(--score-team-light-rgb),0.34),rgba(var(--score-team-light-rgb),0.24))!important;
+  border-color:rgba(var(--score-team-light-rgb),0.48)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12)!important;
+  backdrop-filter:blur(1.5px) saturate(1.08)!important;
+  -webkit-backdrop-filter:blur(1.5px) saturate(1.08)!important;
 }
