@@ -78,8 +78,8 @@ export function createLivingRoomScene({ canvas, world }) {
   scene.fog = new THREE.Fog(0xd7c2a8, 12, 24);
 
   const camera = new THREE.PerspectiveCamera(48, 16 / 10, 0.05, 60);
-  camera.position.set(0, 4.3, 8.1);
-  camera.lookAt(0, 0.9, 0);
+  camera.position.set(2.35, 3.97, 5.75);
+  camera.lookAt(0, 0.82, 0);
 
   const hemi = new THREE.HemisphereLight(0xfff2d5, 0x5b6372, 1.2);
   scene.add(hemi);
@@ -146,6 +146,8 @@ export function createLivingRoomScene({ canvas, world }) {
   scene.add(headphonesGroup);
   objectsById.set('headphones', headphonesGroup);
 
+  let faded = new Set();
+
   function resize(width, height) {
     const w = Math.max(1, Math.floor(width));
     const h = Math.max(1, Math.floor(height));
@@ -170,6 +172,22 @@ export function createLivingRoomScene({ canvas, world }) {
     return true;
   }
 
+  function applyCameraPose(pose) {
+    if (!pose) return camera;
+    camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+    camera.fov = pose.fov;
+    camera.updateProjectionMatrix();
+    camera.lookAt(pose.target.x, pose.target.y, pose.target.z);
+    return camera;
+  }
+
+  function setOccluders(ids = []) {
+    const next = new Set(ids);
+    for (const id of faded) if (!next.has(id)) setObjectOpacity(id, 1);
+    for (const id of next) setObjectOpacity(id, 0.75);
+    faded = next;
+  }
+
   return {
     scene,
     renderer,
@@ -181,7 +199,10 @@ export function createLivingRoomScene({ canvas, world }) {
     },
     resize,
     setObjectOpacity,
+    applyCameraPose,
+    setOccluders,
     dispose() {
+      for (const id of faded) setObjectOpacity(id, 1);
       scene.traverse(object => {
         if (object.geometry) object.geometry.dispose?.();
         const mats = object.material ? (Array.isArray(object.material) ? object.material : [object.material]) : [];
