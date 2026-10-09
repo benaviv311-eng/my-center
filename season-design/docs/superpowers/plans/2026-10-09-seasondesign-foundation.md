@@ -16,6 +16,7 @@
 - Version 1 is private/invite-only but supports multiple coaches in the data model.
 - Google sign-in is the authentication method.
 - Version 1 invitation access is configured by server-only `SEASON_DESIGN_ALLOWED_EMAILS`; no values are committed.
+- A server-only Supabase admin client may activate invited profiles; its credential is never exposed to the browser.
 - Database policies enforce ownership of private coach data and require an active profile.
 - The five skill levels are `beginner`, `basic`, `intermediate`, `advanced`, `competitive`.
 - Approved level and future system-recommended level remain separate fields.
@@ -56,33 +57,7 @@
 - [ ] **Step 5: Run `npm test && npm run build`**; expected PASS.
 - [ ] **Step 6: Commit** `feat: scaffold SeasonDesign foundation`.
 
-### Task 2: Authentication, invitation gate, and protected app layout
-
-**Files:**
-- Create: `season-design/lib/supabase/browser.ts`
-- Create: `season-design/lib/supabase/server.ts`
-- Create: `season-design/lib/auth/current-user.ts`
-- Create: `season-design/lib/auth/invitation.ts`
-- Create: `season-design/middleware.ts`
-- Create: `season-design/app/login/page.tsx`
-- Create: `season-design/app/auth/callback/route.ts`
-- Create: `season-design/app/(app)/layout.tsx`
-- Create: `season-design/.env.example`
-- Test: `season-design/tests/auth-routing.test.ts`
-
-**Interfaces:**
-- Produces `getCurrentUser(): Promise<{ id: string; email: string } | null>`.
-- Produces `isInvitedEmail(email: string): boolean`, reading only `SEASON_DESIGN_ALLOWED_EMAILS` on the server.
-- Produces a protected `(app)` route group.
-
-- [ ] **Step 1: Write failing tests** for unauthenticated redirect, invited authenticated access, uninvited rejection, and callback failure.
-- [ ] **Step 2: Run the auth test**; expected FAIL.
-- [ ] **Step 3: Implement Supabase browser/server clients, `getCurrentUser()`, and normalized case-insensitive invitation matching**.
-- [ ] **Step 4: Implement Google login/callback**; after successful invited login, upsert an active profile for the authenticated user id.
-- [ ] **Step 5: Run tests**; expected PASS.
-- [ ] **Step 6: Commit** `feat: add SeasonDesign sign in`.
-
-### Task 3: Group and skill database
+### Task 2: Group, profile, and skill database
 
 **Files:**
 - Create: `season-design/supabase/config.toml`
@@ -99,9 +74,37 @@
 - [ ] **Step 1: Write failing database tests** for active-profile ownership, disabled-profile rejection, cross-owner rejection, and canonical skill visibility.
 - [ ] **Step 2: Run `supabase test db`**; expected FAIL.
 - [ ] **Step 3: Create migration** with the five exact levels and canonical skills: forearm pass, overhead setting, serve, attack, block, defense, reception, coverage, transitions.
-- [ ] **Step 4: Add ownership/access policies** for group and group-skill records.
+- [ ] **Step 4: Add ownership/access policies** for group and group-skill records; ordinary authenticated users cannot self-promote `profiles.access_status`.
 - [ ] **Step 5: Run `supabase test db`**; expected PASS.
 - [ ] **Step 6: Commit** `feat: add group skill data model`.
+
+### Task 3: Authentication, invitation gate, and protected app layout
+
+**Files:**
+- Create: `season-design/lib/supabase/browser.ts`
+- Create: `season-design/lib/supabase/server.ts`
+- Create: `season-design/lib/supabase/admin.ts`
+- Create: `season-design/lib/auth/current-user.ts`
+- Create: `season-design/lib/auth/invitation.ts`
+- Create: `season-design/middleware.ts`
+- Create: `season-design/app/login/page.tsx`
+- Create: `season-design/app/auth/callback/route.ts`
+- Create: `season-design/app/(app)/layout.tsx`
+- Create: `season-design/.env.example`
+- Test: `season-design/tests/auth-routing.test.ts`
+
+**Interfaces:**
+- Produces `getCurrentUser(): Promise<{ id: string; email: string } | null>`.
+- Produces `isInvitedEmail(email: string): boolean`, reading only `SEASON_DESIGN_ALLOWED_EMAILS` on the server.
+- `getSupabaseAdmin()` is server-only and is used only for invitation/profile administration.
+- Produces a protected `(app)` route group.
+
+- [ ] **Step 1: Write failing tests** for unauthenticated redirect, invited authenticated access, uninvited rejection, and callback failure.
+- [ ] **Step 2: Run the auth test**; expected FAIL.
+- [ ] **Step 3: Implement Supabase browser/server/admin clients, `getCurrentUser()`, and normalized case-insensitive invitation matching**.
+- [ ] **Step 4: Implement Google login/callback**; after successful invited login, the server-only admin client upserts that authenticated user id as an active profile. Uninvited identities are signed out/rejected and never activated.
+- [ ] **Step 5: Run tests**; expected PASS.
+- [ ] **Step 6: Commit** `feat: add SeasonDesign sign in`.
 
 ### Task 4: Group repository and actions
 
@@ -113,9 +116,9 @@
 **Interfaces:**
 - Produces `listGroups()`, `getGroup(groupId)`, `createGroup(input)`, `updateGroup(groupId,input)`, `setApprovedSkillLevel(groupId,skillId,level)`.
 
-- [ ] **Step 1: Write failing tests** for create/list/update, empty name, invalid player count, and invalid level.
+- [ ] **Step 1: Write failing tests** for create/list/update, empty name, invalid player count, invalid level, and inactive profile.
 - [ ] **Step 2: Run targeted tests**; expected FAIL.
-- [ ] **Step 3: Implement validated repository/actions** using the authenticated coach context.
+- [ ] **Step 3: Implement validated repository/actions** using the authenticated active coach context.
 - [ ] **Step 4: Run targeted tests**; expected PASS.
 - [ ] **Step 5: Commit** `feat: add group persistence`.
 
