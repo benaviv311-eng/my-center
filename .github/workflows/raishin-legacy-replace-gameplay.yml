@@ -1,0 +1,40 @@
+name: Replace Raishin Legacy gameplay visual
+
+on:
+  push:
+    branches:
+      - fix-raishin-gameplay-visual-lock
+    paths:
+      - '.github/workflows/raishin-legacy-replace-gameplay.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  replace-approved-asset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix-raishin-gameplay-visual-lock
+
+      - name: Replace approved gameplay image
+        env:
+          ASSET_URL: "https://d2jqrm6oza8nb6.cloudfront.net/datasets/f299a800-2338-4d13-863f-e0b5ad7cf312.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiYzU3ZmEwOGE4OGFiNTc0NiIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTcxMjUyMn0.v_v7rhUl2Blw_HF30Qr2Rb0i1oSzeonWI-mRY3i0qgA"
+        run: |
+          curl --fail --location --retry 3 "$ASSET_URL" -o raishin-legacy/assets/gameplay/gameplay-hud-v1.png
+          echo "98c467c527c8d3432408229a119738ab5db3006e399790ea332abb362f6c25d6  raishin-legacy/assets/gameplay/gameplay-hud-v1.png" | sha256sum -c -
+
+      - name: Commit replacement
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add raishin-legacy/assets/gameplay/gameplay-hud-v1.png
+          if git diff --cached --quiet; then
+            echo "Approved asset already present."
+            exit 0
+          fi
+          git commit -m "fix: replace Raishin gameplay visual with approved Raika lock"
+          git push origin HEAD:fix-raishin-gameplay-visual-lock
