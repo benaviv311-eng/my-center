@@ -1,0 +1,17 @@
+const fs=require('fs');
+const assert=require('assert');
+const js=fs.readFileSync(__dirname+'/score-games-ui.js','utf8');
+const css=fs.readFileSync(__dirname+'/score-games.css','utf8');
+assert(/ScoreGamesCore\.catalog/.test(js),'UI must render the game catalog');
+assert(/ScoreTimerV2Core/.test(js),'UI must use the timer V2 core');
+assert(/coach/.test(js)&&/arena/.test(js),'UI must offer coach and arena voice profiles');
+assert(/Google US English|Microsoft/.test(js),'voice selection must prefer named natural voices');
+assert(/speechSynthesis/.test(js),'voice layer must support spoken announcements');
+assert(/navigator\.wakeLock/.test(js),'active timer should request wake lock when supported');
+assert(/localStorage/.test(js),'timer/game preferences must persist');
+assert(/score-v2-games-grid/.test(css),'game chooser grid must be styled');
+assert(/score-v2-court/.test(css),'court mode must be styled');
+assert(/score-v2-resize-handle/.test(css),'timer must keep a resize handle');
+assert(/spiegel/i.test(js),'Spiegel must have a dedicated player UI');
+assert(/four-team/.test(js),'four-team mode must have dedicated status support');
+console.log('score-games-ui contract tests passed');
