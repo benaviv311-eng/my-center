@@ -5,6 +5,7 @@ const assert=require('assert');
 const root=__dirname;
 const menuJs=fs.readFileSync(path.join(root,'score-layout-menu.js'),'utf8');
 const stabilityJs=fs.readFileSync(path.join(root,'score-layout-stability.js'),'utf8');
+const lowerJs=fs.readFileSync(path.join(root,'score-layout-lower.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'score-layout-menu.css'),'utf8');
 const js=menuJs+'\n'+stabilityJs;
 
@@ -19,4 +20,5 @@ assert(/LAYOUT_GLYPHS/.test(js),'layout controller must define a glyph for each 
 assert(/updateTriggerIcon/.test(js),'layout controller must update the trigger icon when the mode changes');
 assert(/trigger\.dataset\.scoreLayoutMode/.test(js),'trigger must expose the selected layout mode');
 assert(/icon\.textContent=glyph/.test(js),'visible trigger icon must reflect the selected mode');
+assert(!/score-layout-managed'\)\s*\|\|\s*teams\.classList\.contains\('score-layout-free/.test(lowerJs),'free drag mode must not be compressed into the lower managed-layout strip');
 console.log('score layout menu regression checks passed');
