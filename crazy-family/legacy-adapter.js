@@ -4,7 +4,7 @@ export function createLegacyAdapter(windowRef = globalThis.window) {
   const retained = windowRef?.__crazyFamilyRetainedApi || {};
   return {
     getSnapshot: retained.getSnapshot?.bind(retained) || (() => ({
-      player: { lives: 3, stamina: 100, shield: 0, inventory: [] },
+      player: { lives: 3, stamina: 100, shield: 0, inventory: [], selected: 0 },
       dad: { singing: false, state: 'idle' },
       dizziness: 0,
       controlsReversed: false,
@@ -13,6 +13,7 @@ export function createLegacyAdapter(windowRef = globalThis.window) {
     collectItem: retained.collectItem?.bind(retained) || (() => false),
     useItem: retained.useItem?.bind(retained) || (() => false),
     damagePlayer: retained.damagePlayer?.bind(retained) || noop,
+    updateStamina: retained.updateStamina?.bind(retained) || (() => 100),
     setDadWorldDistance: retained.setDadWorldDistance?.bind(retained) || noop,
     setDadSpatial: retained.setDadSpatial?.bind(retained) || noop,
     startDadSong: retained.startDadSong?.bind(retained) || (() => false),
