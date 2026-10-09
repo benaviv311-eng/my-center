@@ -52,4 +52,5 @@ assert(/data-now-playing/.test(js),'audio console must render now-playing inform
 assert(/score-audio\.css\?v=4/.test(index),'index must load the live-arena audio styles');
 assert(/score-audio\.js\?v=4/.test(index),'index must load the live-arena audio behavior');
 
+// Keep this contract tied to the deployed v4 live-console behavior.
 console.log('score arena endless-live audio checks passed');
