@@ -6,6 +6,7 @@ on:
       - 'score-counter/score-audio.js'
       - 'score-counter/score-audio.css'
       - 'score-counter/score-audio.test.js'
+      - 'score-counter/score-habaita-refrain.js'
       - 'score-counter/score-live-regression.test.js'
       - 'score-counter/score-layout-header-gap.test.js'
       - 'score-counter/index.html'
@@ -24,11 +25,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(find score-counter/audio/chants -type f -name '*.mp3' -size +0c | wc -l)" -eq 16
+          test "$(find score-counter/audio/chants -type f -name '*.mp3' -size +0c | wc -l)" -eq 18
           test "$(find score-counter/audio/anthems -type f -name '*.mp3' -size +0c | wc -l)" -eq 4
           test "$(find score-counter/audio/noise -type f -name '*.mp3' -size +0c | wc -l)" -eq 3
       - name: Check audio JavaScript syntax
-        run: node --check score-counter/score-audio.js
+        run: |
+          node --check score-counter/score-audio.js
+          node --check score-counter/score-habaita-refrain.js
       - name: Run arena audio contract test
         run: node score-counter/score-audio.test.js
       - name: Run TeamScore regression checks

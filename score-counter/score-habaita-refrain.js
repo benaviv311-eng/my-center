@@ -14,17 +14,30 @@
   const NEXT_MIN_MS=32000;
   const NEXT_MAX_MS=58000;
 
+  const USER_CROWD_CLIPS=[
+    {label:'קדימה!',src:'audio/chants/kadima-live.mp3'},
+    {label:'מי פה? אנחנו!',src:'audio/chants/mi-po-anachnu-live.mp3'}
+  ];
+  const USER_CROWD_FIRST_MIN_MS=7000;
+  const USER_CROWD_FIRST_MAX_MS=14000;
+  const USER_CROWD_NEXT_MIN_MS=18000;
+  const USER_CROWD_NEXT_MAX_MS=42000;
+
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
   const cache=new Map();
   const activeSources=new Set();
   let ctx=null;
   let refrainGain=null;
+  let crowdGain=null;
   let clapBuffer=null;
   let timer=0;
+  let userCrowdTimer=0;
+  let lastUserCrowd=-1;
   let liveButton=null;
   let pressureButton=null;
   let observer=null;
   let manualButton=null;
+  let userCrowdButtons=[];
 
   function clamp(value,min,max){ return Math.max(min,Math.min(max,value)); }
   function randomDelay(min,max){ return Math.round(min+Math.random()*(max-min)); }
@@ -42,6 +55,12 @@
     return clamp(master*anthems*1.18,0.18,1);
   }
 
+  function currentChantVolume(){
+    const master=readSlider('.score-audio-master input',0.9);
+    const chants=readSlider('[data-layer-volume="chants"]',0.98);
+    return clamp(master*chants*1.1,0,1);
+  }
+
   function liveIsOn(){
     return !!(liveButton&&liveButton.getAttribute('aria-pressed')==='true');
   }
@@ -55,8 +74,17 @@
     return !toggle||toggle.getAttribute('aria-pressed')==='true';
   }
 
+  function chantsAreOn(){
+    const toggle=document.querySelector('[data-layer-toggle="chants"]');
+    return !toggle||toggle.getAttribute('aria-pressed')==='true';
+  }
+
   function canAutoPlay(){
     return liveIsOn()&&!pressureIsOn()&&anthemsAreOn();
+  }
+
+  function canAutoPlayUserCrowd(){
+    return liveIsOn()&&!pressureIsOn()&&chantsAreOn();
   }
 
   async function ensureAudio(){
@@ -66,6 +94,9 @@
       refrainGain=ctx.createGain();
       refrainGain.gain.value=currentVolume();
       refrainGain.connect(ctx.destination);
+      crowdGain=ctx.createGain();
+      crowdGain.gain.value=currentChantVolume();
+      crowdGain.connect(ctx.destination);
     }
     if(ctx.state==='suspended'){
       try{ await ctx.resume(); }catch(_){ }
@@ -171,6 +202,16 @@
     },durationMs);
   }
 
+  function showUserCrowdNowPlaying(label,durationMs){
+    const el=document.querySelector('[data-now-playing]');
+    if(!el) return;
+    const previous=el.textContent;
+    el.textContent='📣 '+label+'  •  קהל';
+    setTimeout(()=>{
+      if(el.textContent.includes(label)) el.textContent=previous||'ממתין לסאונד…';
+    },durationMs);
+  }
+
   async function playHabaitaRefrain(options){
     const opts=options||{};
     if(!opts.manual&&!canAutoPlay()) return false;
@@ -201,9 +242,51 @@
     return true;
   }
 
+  async function playUserCrowdClip(index,options){
+    const opts=options||{};
+    if(!chantsAreOn()) return false;
+    if(!opts.manual&&!canAutoPlayUserCrowd()) return false;
+    if(!(await ensureAudio())) return false;
+    const clip=USER_CROWD_CLIPS[index];
+    if(!clip) return false;
+
+    let buffer;
+    try{
+      buffer=await loadBuffer(clip.src);
+    }catch(_){
+      return false;
+    }
+    if(!opts.manual&&!canAutoPlayUserCrowd()) return false;
+    if(!crowdGain) return false;
+
+    crowdGain.gain.setTargetAtTime(currentChantVolume(),ctx.currentTime,0.03);
+    const source=trackSource(ctx.createBufferSource());
+    source.buffer=buffer;
+    source.connect(crowdGain);
+    source.start();
+    showUserCrowdNowPlaying(clip.label,Math.round(buffer.duration*1000)+250);
+    return true;
+  }
+
+  function pickUserCrowdIndex(){
+    if(USER_CROWD_CLIPS.length<2){
+      lastUserCrowd=0;
+      return 0;
+    }
+    let index=Math.floor(Math.random()*USER_CROWD_CLIPS.length);
+    if(index===lastUserCrowd) index=(index+1)%USER_CROWD_CLIPS.length;
+    lastUserCrowd=index;
+    return index;
+  }
+
   function clearSchedule(){
     clearTimeout(timer);
     timer=0;
+  }
+
+  function clearUserCrowdSchedule(){
+    clearTimeout(userCrowdTimer);
+    userCrowdTimer=0;
   }
 
   function scheduleHabaitaRefrain(first){
@@ -218,11 +301,29 @@
     },randomDelay(min,max));
   }
 
+  function scheduleUserCrowdClip(first){
+    clearUserCrowdSchedule();
+    if(!canAutoPlayUserCrowd()) return;
+    const min=first?USER_CROWD_FIRST_MIN_MS:USER_CROWD_NEXT_MIN_MS;
+    const max=first?USER_CROWD_FIRST_MAX_MS:USER_CROWD_NEXT_MAX_MS;
+    userCrowdTimer=setTimeout(async()=>{
+      userCrowdTimer=0;
+      if(canAutoPlayUserCrowd()) await playUserCrowdClip(pickUserCrowdIndex(),{manual:false});
+      scheduleUserCrowdClip(false);
+    },randomDelay(min,max));
+  }
+
   function syncSchedule(){
     if(canAutoPlay()){
       if(!timer) scheduleHabaitaRefrain(true);
     }else{
       clearSchedule();
+    }
+
+    if(canAutoPlayUserCrowd()){
+      if(!userCrowdTimer) scheduleUserCrowdClip(true);
+    }else{
+      clearUserCrowdSchedule();
     }
   }
 
@@ -239,11 +340,29 @@
     current.appendChild(manualButton);
   }
 
+  function addUserCrowdButtons(){
+    const host=document.querySelector('.score-audio-chants');
+    if(!host) return;
+    USER_CROWD_CLIPS.forEach((clip,index)=>{
+      if(host.querySelector('[data-user-crowd="'+index+'"]')) return;
+      const button=document.createElement('button');
+      button.type='button';
+      button.setAttribute('data-user-crowd',String(index));
+      button.textContent=clip.label;
+      button.title='קריאת קהל: '+clip.label;
+      button.addEventListener('pointerdown',()=>ensureAudio(),{passive:true});
+      button.addEventListener('click',()=>playUserCrowdClip(index,{manual:true}));
+      host.appendChild(button);
+      userCrowdButtons.push(button);
+    });
+  }
+
   function bindPanel(){
     liveButton=document.querySelector('.score-audio-live');
     pressureButton=document.querySelector('.score-audio-pressure');
     if(!liveButton||!pressureButton) return false;
     addManualButton();
+    addUserCrowdButtons();
     liveButton.addEventListener('pointerdown',()=>ensureAudio(),{passive:true});
     manualButton&&manualButton.addEventListener('pointerdown',()=>ensureAudio(),{passive:true});
     observer=new MutationObserver(syncSchedule);
@@ -251,6 +370,8 @@
     observer.observe(pressureButton,{attributes:true,attributeFilter:['aria-pressed']});
     const anthemToggle=document.querySelector('[data-layer-toggle="anthems"]');
     if(anthemToggle) observer.observe(anthemToggle,{attributes:true,attributeFilter:['aria-pressed']});
+    const chantToggle=document.querySelector('[data-layer-toggle="chants"]');
+    if(chantToggle) observer.observe(chantToggle,{attributes:true,attributeFilter:['aria-pressed']});
     syncSchedule();
     return true;
   }
@@ -266,9 +387,11 @@
 
   window.addEventListener('pagehide',()=>{
     clearSchedule();
+    clearUserCrowdSchedule();
     if(observer) observer.disconnect();
     activeSources.forEach(source=>{ try{ source.stop(); }catch(_){} });
     activeSources.clear();
+    userCrowdButtons=[];
   });
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
