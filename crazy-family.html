@@ -21,7 +21,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.20</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · חקירה חופשית · v0.21</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -372,6 +372,27 @@ const dadPreClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-pre-09.mp3')
 ];
 dadPreClips.forEach(a=>{a.preload='auto';a.volume=.96});
+const libiVoiceClips=[
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-01.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-02.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-03.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-04.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-05.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-06.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-07.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-08.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-09.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-10.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-11.mp3'),
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-12.mp3')
+];
+libiVoiceClips.forEach(a=>{a.preload='auto';a.volume=.98});
+const libiReactionGroups=[[0,1,2,3],[4,5,6,7],[8,9,10,11]];
+let libiVoiceAudio=null,lastLibiVoice=-1,libiReactionToken=0;
+function libiVoicePlaying(){return !!(libiVoiceAudio&&!libiVoiceAudio.paused&&!libiVoiceAudio.ended)}
+function pickLibiReaction(level){const pool=(libiReactionGroups[level]||libiReactionGroups[0]).filter(i=>i!==lastLibiVoice),list=pool.length?pool:(libiReactionGroups[level]||libiReactionGroups[0]);const i=list[Math.floor(Math.random()*list.length)];lastLibiVoice=i;return i}
+function playLibiClip(index){if(index<0||index>=libiVoiceClips.length||libiVoicePlaying()||dadPrePlaying()||dadSongPlaying())return false;const a=libiVoiceClips[index];libiVoiceAudio=a;a.currentTime=0;a.playbackRate=1;a.preservesPitch=false;setBgDuck(true);a.onended=()=>{if(libiVoiceAudio===a)libiVoiceAudio=null;if(!dadPrePlaying()&&!dadSongPlaying())setBgDuck(false)};a.play().catch(()=>{if(libiVoiceAudio===a)libiVoiceAudio=null});return true}
+function queueLibiReaction(level){const token=++libiReactionToken,index=pickLibiReaction(level),started=performance.now();const attempt=()=>{if(token!==libiReactionToken||player.scene!==dad.scene)return;if(!dadPrePlaying()&&!dadSongPlaying()&&!libiVoicePlaying()){playLibiClip(index);return}if(performance.now()-started<2600)setTimeout(attempt,140)};setTimeout(attempt,220)};
 function refillFarChatter(){
  farChatterBag=[...dadPreClips.keys()].filter(i=>i!==lastFarChatter);
  for(let i=farChatterBag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[farChatterBag[i],farChatterBag[j]]=[farChatterBag[j],farChatterBag[i]]}
@@ -381,7 +402,7 @@ function nextFarChatter(){
  const i=farChatterBag.pop();lastFarChatter=i;return i;
 }
 function primeDadVoice(){
- const clips=[...dadVoiceClips,...dadPreClips];
+ const clips=[...dadVoiceClips,...dadPreClips,...libiVoiceClips];
  clips.forEach(a=>{
    const old=a.volume;a.volume=.001;
    a.play().then(()=>{a.pause();a.currentTime=0;a.volume=old}).catch(()=>{a.volume=old});
@@ -453,9 +474,9 @@ function updateDad(dt){
  if(distToPlayer>430&&!songPlaying){
    if(dadEncounterStage){dadEncounterStage=0;dadSongStartAt=0;stopDadPre()}
  }else if(!songPlaying){
-   if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800){playDadPre(Math.floor(Math.random()*3));dadEncounterStage=1;lastPreAt=now}
-   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200&&!dadPrePlaying()){playDadPre(3+Math.floor(Math.random()*3));dadEncounterStage=2;lastPreAt=now}
-   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()){playDadPre(6+Math.floor(Math.random()*3));dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
+   if(distToPlayer<430&&dadEncounterStage<1&&now-lastPreAt>1800){playDadPre(Math.floor(Math.random()*3));queueLibiReaction(0);dadEncounterStage=1;lastPreAt=now}
+   if(distToPlayer<300&&dadEncounterStage<2&&now-lastPreAt>1200&&!dadPrePlaying()){playDadPre(3+Math.floor(Math.random()*3));queueLibiReaction(1);dadEncounterStage=2;lastPreAt=now}
+   if(distToPlayer<210&&dadEncounterStage<3&&now-lastPreAt>900&&!dadPrePlaying()){playDadPre(6+Math.floor(Math.random()*3));queueLibiReaction(2);dadEncounterStage=3;lastPreAt=now;dadSongStartAt=now+3000}
    if(distToPlayer<300){dad.targetX=player.x;dad.targetY=player.y}
  }
  if(!songPlaying&&distToPlayer>300&&now>=nextFarChatterAt&&!dadPrePlaying()){
