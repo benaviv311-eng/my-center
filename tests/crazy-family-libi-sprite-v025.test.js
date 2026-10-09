@@ -6,8 +6,8 @@ const checks=[
   ['sprite renderer marker', html.includes('LIBI_SPRITE_RENDERER_V025')],
   ['sprite draw call', html.includes('ctx.drawImage(libiSprite')],
   ['ten-pose sheet', html.includes('LIBI_CELL_W=280') && html.includes('LIBI_CELL_H=420')],
-  ['walk animation', html.includes("pose==='walk'") && html.includes('walkFrame')),
-  ['run animation', html.includes("pose==='run'") && html.includes('runFrame')),
+  ['walk animation', html.includes("pose==='walk'") && html.includes('walkFrame')],
+  ['run animation', html.includes("pose==='run'") && html.includes('runFrame')],
   ['old vector renderer removed', !html.includes('LIBI_VISUAL_V24')]
 ];
 const failed=checks.filter(([,ok])=>!ok);
