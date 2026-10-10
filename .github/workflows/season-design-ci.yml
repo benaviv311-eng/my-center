@@ -29,6 +29,13 @@ jobs:
           npm --version
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start local Supabase
+        run: supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
+      - name: Test database
+        run: supabase test db
       - run: npm run lint
       - run: npm test
       - run: npm run build
