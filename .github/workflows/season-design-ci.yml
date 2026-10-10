@@ -1,0 +1,29 @@
+name: SeasonDesign CI
+
+on:
+  push:
+    branches:
+      - feature/season-design-foundation
+    paths:
+      - "season-design/**"
+      - ".github/workflows/season-design-ci.yml"
+  pull_request:
+    paths:
+      - "season-design/**"
+      - ".github/workflows/season-design-ci.yml"
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: season-design
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
