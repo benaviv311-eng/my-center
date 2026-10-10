@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#160f0a">
+  <meta name="theme-color" content="#24180d">
   <title>מורשת ראיישין — המשחק</title>
   <link rel="preload" as="image" href="./assets/gameplay/gameplay-hud-v1.png">
   <link rel="preload" as="image" href="./assets/gameplay/inazuma-main-hall-clean.png">
@@ -11,59 +11,27 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main class="game-app" aria-label="מורשת ראיישין — אב טיפוס תנועה">
+  <main class="game-app" aria-label="מורשת ראיישין — דוג'ו אינאזומה">
     <section class="game-frame" data-game-aspect="16:9" aria-label="Inazuma Dojo free roam" tabindex="0">
-      <canvas
-        id="gameCanvas"
-        width="1600"
-        height="900"
-        data-background="./assets/gameplay/inazuma-main-hall-clean.png"
-        data-sprite="./assets/player/raika-walk-4dir-8f.png"
-        aria-label="ראיקה נעה בחופשיות בדוג'ו אינאזומה"
-      ></canvas>
-
-      <div class="hud" aria-label="HUD v0.2">
-        <div class="hud-status" dir="ltr">
-          <div class="portrait" aria-hidden="true">R</div>
-          <div class="status-copy">
-            <strong>Raika</strong>
-            <div class="bar health"><span></span></div>
-            <div class="bar raihatsu"><span></span></div>
-          </div>
-        </div>
-
-        <div class="objective" dir="ltr">
-          <strong>Inazuma Dojo</strong>
-          <span>Objective: Walk the Main Hall</span>
-        </div>
-
-        <div class="minimap" aria-label="minimap">
-          <span class="north">N</span>
-          <span class="player-dot"></span>
-        </div>
-
-        <div class="hud-actions" dir="ltr">
-          <div><span class="action-icon">↥</span><b>Jump</b></div>
-          <div><span class="action-icon">↝</span><b>Dodge</b></div>
-          <div><span class="action-icon">✋</span><b>Interact</b></div>
-        </div>
-
-        <div class="controls-hint" dir="ltr">WASD / Arrow Keys</div>
-
-        <span class="sr-only">Health</span>
-        <span class="sr-only">Raihatsu</span>
-        <span class="sr-only">Objective</span>
-        <span class="sr-only">Jump</span>
-        <span class="sr-only">Dodge</span>
-        <span class="sr-only">Interact</span>
+      <canvas id="gameCanvas" width="1600" height="900" data-background="./assets/gameplay/inazuma-main-hall-clean.png" data-sprite="./assets/player/raika-walk-4dir-8f.png" aria-label="ראיקה נעה בחופשיות בדוג'ו אינאזומה"></canvas>
+      <div class="ambient-light-overlay" aria-hidden="true"></div>
+      <div id="seikaOverlay" class="seika-overlay" aria-hidden="true"></div>
+      <div class="hud" aria-label="HUD v1 dojo">
+        <div class="hud-status" dir="ltr"><div class="portrait" aria-hidden="true">R</div><div class="status-copy"><strong>Raika</strong><div class="bar health"><span></span></div><div class="bar raihatsu"><span></span></div></div></div>
+        <div class="objective" dir="ltr"><strong>Inazuma Dojo</strong><span id="objectiveText">Objective: Explore the Main Hall</span></div>
+        <div class="minimap" aria-label="minimap"><span class="north">N</span><span id="minimapPlayer" class="player-dot"></span></div>
+        <div id="interactionPrompt" class="interaction-prompt" dir="ltr" hidden></div>
+        <section id="interactionPanel" class="interaction-panel" dir="ltr" aria-live="polite" hidden><button id="interactionClose" type="button" aria-label="Close">×</button><strong id="interactionTitle"></strong><p id="interactionBody"></p></section>
+        <div class="hud-actions" dir="ltr"><div><span class="action-icon">↥</span><b>Jump</b></div><div><span class="action-icon">↝</span><b>Dodge</b></div><div><span class="action-icon">E</span><b>Interact</b></div></div>
+        <div class="controls-hint" dir="ltr">WASD / Arrow Keys · E / Enter</div>
+        <span class="sr-only">Health</span><span class="sr-only">Raihatsu</span><span class="sr-only">Objective</span><span class="sr-only">Jump</span><span class="sr-only">Dodge</span><span class="sr-only">Interact</span>
       </div>
-
-      <div id="loadError" class="load-error" role="alert" hidden>
-        לא ניתן לטעון את נכסי המשחק.
-      </div>
+      <div id="loadError" class="load-error" role="alert" hidden>לא ניתן לטעון את נכסי המשחק.</div>
     </section>
   </main>
   <script src="./movement.js"></script>
+  <script src="./dojo-world.js"></script>
+  <script src="./dojo-effects.js"></script>
   <script src="./game.js"></script>
 </body>
 </html>
