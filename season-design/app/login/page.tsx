@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
 const errorCopy: Record<string, string> = {
@@ -10,7 +10,7 @@ const errorCopy: Record<string, string> = {
   "profile-activation": "החשבון אומת, אבל הפעלת הגישה נכשלה. נסה שוב.",
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -35,16 +35,24 @@ export default function LoginPage() {
   }
 
   return (
+    <section className="panel" aria-labelledby="login-title">
+      <p className="eyebrow">גישה פרטית למאמנים מוזמנים</p>
+      <h1 id="login-title">SeasonDesign</h1>
+      <p>התחבר עם חשבון Google שהוזמן למערכת.</p>
+      {errorMessage && <p role="alert">{errorMessage}</p>}
+      <button type="button" onClick={signIn} disabled={busy}>
+        {busy ? "מתחבר…" : "התחברות עם Google"}
+      </button>
+    </section>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <main className="offlinePage">
-      <section className="panel" aria-labelledby="login-title">
-        <p className="eyebrow">גישה פרטית למאמנים מוזמנים</p>
-        <h1 id="login-title">SeasonDesign</h1>
-        <p>התחבר עם חשבון Google שהוזמן למערכת.</p>
-        {errorMessage && <p role="alert">{errorMessage}</p>}
-        <button type="button" onClick={signIn} disabled={busy}>
-          {busy ? "מתחבר…" : "התחברות עם Google"}
-        </button>
-      </section>
+      <Suspense fallback={<section className="panel">טוען התחברות…</section>}>
+        <LoginContent />
+      </Suspense>
     </main>
   );
 }
