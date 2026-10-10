@@ -1,6 +1,7 @@
 (function(){
   'use strict';
   const ENDPOINT='https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/score-remote';
+  const QR_ENDPOINT='https://iwemlxvjyhffumzcqrxf.supabase.co/functions/v1/score-qr';
   const STORE='teamScoreRemote.controller.v1';
   let panel=null,writeTimer=0,readTimer=0,lastSent='',lastState=null,busy=false;
 
@@ -39,6 +40,7 @@
   function capture(){return{v:2,at:Date.now(),teams:teams(),timer:timerSnapshot(),session:sessionSnapshot()}}
   function currentPath(){return location.origin+location.pathname}
   function displayLink(room,displaySecret){return `${currentPath()}?display=1&remote=${encodeURIComponent(room)}&secret=${encodeURIComponent(displaySecret)}`}
+  function qrLink(room,displaySecret){return `${QR_ENDPOINT}?data=${encodeURIComponent(displayLink(room,displaySecret))}`}
   function setStatus(text,kind){const el=panel?.querySelector('[data-r-status]');if(el){el.textContent=text;el.dataset.kind=kind||''}}
   async function createRoom(){
     if(busy)return;busy=true;setStatus('Creating room…');
@@ -65,7 +67,7 @@
   }
   function renderPanel(){
     if(!panel)return;const c=loadController();
-    panel.innerHTML=`<div class="score-ops-head"><div><strong>📺 Remote Display</strong><small>טלפון שולט · טאבלט/מסך מציג</small></div><button data-close>✕</button></div>${c?`<div class="score-remote-room"><span>ROOM CODE</span><b>${c.room}</b><div class="score-ops-actions"><button data-copy-code>Copy code</button><button data-copy-link>Copy display link</button><button data-open-display>Open display</button><button data-push>Push now</button><button class="danger" data-stop>Close room</button></div><img class="score-remote-qr" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&margin=8&data=${encodeURIComponent(displayLink(c.room,c.displaySecret))}"><p>Display secret: <code>${c.displaySecret}</code></p><small>החדר נשאר פעיל עד 6 שעות. כמה מסכים יכולים להתחבר לאותו קישור.</small></div>`:`<div class="score-ops-empty"><p>צור חדר חדש. תקבל קוד קצר וקישור למסך תצוגה.</p><button class="primary" data-create>Create Remote Room</button></div>`}<div class="score-ops-status" data-r-status></div>`;
+    panel.innerHTML=`<div class="score-ops-head"><div><strong>📺 Remote Display</strong><small>טלפון שולט · טאבלט/מסך מציג</small></div><button data-close>✕</button></div>${c?`<div class="score-remote-room"><span>ROOM CODE</span><b>${c.room}</b><div class="score-ops-actions"><button data-copy-code>Copy code</button><button data-copy-link>Copy display link</button><button data-open-display>Open display</button><button data-push>Push now</button><button class="danger" data-stop>Close room</button></div><img class="score-remote-qr" alt="QR" src="${qrLink(c.room,c.displaySecret)}"><p>Display secret: <code>${c.displaySecret}</code></p><small>החדר נשאר פעיל עד 6 שעות. כמה מסכים יכולים להתחבר לאותו קישור.</small></div>`:`<div class="score-ops-empty"><p>צור חדר חדש. תקבל קוד קצר וקישור למסך תצוגה.</p><button class="primary" data-create>Create Remote Room</button></div>`}<div class="score-ops-status" data-r-status></div>`;
   }
   function closePanel(){if(panel?.isConnected)panel.remove();panel=null}
   function renderDisplay(state,connected){
@@ -87,6 +89,6 @@
     document.querySelectorAll('.score-suite-toolbar').forEach(bar=>{if(bar.querySelector('[data-remote-display]'))return;const b=document.createElement('button');b.type='button';b.dataset.remoteDisplay='';b.textContent='📺 Remote';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()});bar.appendChild(b)});
   }
   function init(){if(startDisplayFromUrl())return;installToolbar();new MutationObserver(installToolbar).observe(document.documentElement,{childList:true,subtree:true});if(loadController())startWriter();}
-  window.TeamScoreRemoteDisplay={open,createRoom,closeRoom,writeOnce,capture,displayLink,getController:loadController,poll};
+  window.TeamScoreRemoteDisplay={open,createRoom,closeRoom,writeOnce,capture,displayLink,qrLink,getController:loadController,poll};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
