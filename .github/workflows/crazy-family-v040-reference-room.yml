@@ -19,6 +19,8 @@ jobs:
           node-version: 22
       - name: Apply v0.40 reference-quality room
         run: python scripts/apply-crazy-family-v040-reference-room.py
+      - name: Convert reference depth to authored 3D
+        run: python scripts/fix-crazy-family-v040-reference-depth.py
       - name: v0.40 reference room acceptance
         run: python scripts/test-crazy-family-v040-reference-room.py
       - name: Existing movie-set contract
