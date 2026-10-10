@@ -11,4 +11,5 @@ assert.doesNotMatch(all,/raika\.html|crazy-family|libi/i,'standalone dojo must s
 assert.match(js,/Math\.min\([^\n]*devicePixelRatio[^\n]*2|Math\.min\([^\n]*2[^\n]*devicePixelRatio/,'DPR must be capped at 2');
 assert.doesNotMatch(js,/ctx\.filter\s*=\s*['"][^'"]*brightness|filter\s*:\s*brightness/,'must not brightness-filter full scene per frame');
 assert.match(css,/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*(ambient|particle|seika|transition|animation)/,'reduced motion must cover ambient effects');
+assert.match(css,/\.load-error\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*;?\s*\}/,'hidden load-error overlay must never cover a successfully running game');
 console.log('PASS: Premium dojo shell contract');
