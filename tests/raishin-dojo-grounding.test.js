@@ -1,0 +1,18 @@
+const assert=require('assert'),path=require('path');
+const effects=require(path.join(__dirname,'..','raishin-legacy','dojo-effects.js'));
+assert.strictEqual(typeof effects.worldToScreen,'function','worldToScreen must exist');
+assert.strictEqual(typeof effects.groundingMotion,'function','groundingMotion must exist');
+const rect=effects.backgroundRect({x:12,y:-8},1.08,1600,900);
+const center=effects.worldToScreen({x:800,y:450},{x:12,y:-8},1.08,1600,900);
+assert.deepStrictEqual(center,{x:812,y:442},'world center must follow camera offset only');
+const topLeft=effects.worldToScreen({x:0,y:0},{x:12,y:-8},1.08,1600,900);
+assert.ok(Math.abs(topLeft.x-rect.x)<1e-9&&Math.abs(topLeft.y-rect.y)<1e-9,'world transform must match background transform');
+const bottomRight=effects.worldToScreen({x:1600,y:900},{x:12,y:-8},1.08,1600,900);
+assert.ok(Math.abs(bottomRight.x-(rect.x+rect.width))<1e-9&&Math.abs(bottomRight.y-(rect.y+rect.height))<1e-9,'world bottom-right must match scaled background');
+const idle=effects.groundingMotion(0,false,0,1);
+assert.strictEqual(idle.bobY,0,'idle must sit directly on floor');
+assert.ok(idle.shadowAlpha>=.22&&idle.shadowAlpha<=.42,'idle contact shadow must be visible');
+const walking=effects.groundingMotion(.125,true,180,1);
+assert.ok(Math.abs(walking.bobY)<=3.5,'walk bob must stay subtle');
+assert.ok(walking.shadowScaleX>=.88&&walking.shadowScaleX<=1.12,'shadow width must remain grounded');
+console.log('PASS: dojo grounding transform and weight');
