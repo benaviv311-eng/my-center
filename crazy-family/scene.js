@@ -57,26 +57,35 @@ function createWoodFloor(def){
   base.receiveShadow=true;base.castShadow=false;
 
   const cols=6,rows=15;
-  const plankW=def.width/cols-0.055;
-  const plankD=def.depth/rows-0.035;
-  const plankColors=[0x9f714d,0x956746,0xaa7950,0x8e6144];
-  for(let row=0;row<rows;row++){
-    for(let col=0;col<cols;col++){
-      const plank=new THREE.Mesh(
-        new THREE.BoxGeometry(plankW,0.022,plankD),
-        material(plankColors[(row*3+col)%plankColors.length],0.76)
-      );
-      plank.position.set(
-        -def.width/2+plankW/2+0.04+col*(def.width/cols),
-        0.006,
-        -def.depth/2+plankD/2+0.025+row*(def.depth/rows)
-      );
-      plank.receiveShadow=true;
-      plank.castShadow=false;
-      group.add(plank);
-    }
+const plankW=def.width/cols-0.055;
+const plankD=def.depth/rows-0.035;
+const plankColors=[0x9f714d,0x956746,0xaa7950,0x8e6144];
+const plankGeometry=new THREE.BoxGeometry(plankW,0.022,plankD);
+const plankMaterial=material(0xffffff,0.76);
+const planks=new THREE.InstancedMesh(plankGeometry,plankMaterial,cols*rows);
+semantic(planks,'wood-floor-planks');
+const dummy=new THREE.Object3D();
+let instance=0;
+for(let row=0;row<rows;row++){
+  for(let col=0;col<cols;col++){
+    dummy.position.set(
+      -def.width/2+plankW/2+0.04+col*(def.width/cols),
+      0.006,
+      -def.depth/2+plankD/2+0.025+row*(def.depth/rows)
+    );
+    dummy.rotation.set(0,0,0);
+    dummy.updateMatrix();
+    planks.setMatrixAt(instance,dummy.matrix);
+    planks.setColorAt(instance,new THREE.Color(plankColors[(row*3+col)%plankColors.length]));
+    instance++;
   }
-  rememberBase(group);
+}
+planks.instanceMatrix.needsUpdate=true;
+if(planks.instanceColor)planks.instanceColor.needsUpdate=true;
+planks.receiveShadow=true;
+planks.castShadow=false;
+group.add(planks);
+rememberBase(group);
   return group;
 }
 
@@ -362,7 +371,7 @@ export function createLivingRoomScene({ canvas, world }) {
   practical.name = 'warm-practical-light';
   practical.userData.semanticId = 'warm-practical-light';
   practical.position.set(-5.0, 1.45, 0.25);
-  practical.castShadow = true;
+  practical.castShadow = false;
   scene.add(practical);
 
   const objectsById = new Map();
