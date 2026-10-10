@@ -19,15 +19,56 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Mark v0.38 in current HTML without replacing current content
+      - name: Apply v0.38 version marker and render optimization
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('crazy-family.html')
-          s=p.read_text(encoding='utf-8')
+          import re
+
+          html=Path('crazy-family.html')
+          s=html.read_text(encoding='utf-8')
           if 'v0.38' not in s:
               s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.37','עולם הבית · שלב 1: מפגש אבא · v0.38',1)
-          p.write_text(s,encoding='utf-8')
+          html.write_text(s,encoding='utf-8')
+
+          scene=Path('crazy-family/scene.js')
+          s=scene.read_text(encoding='utf-8')
+          pattern=re.compile(r"  const cols=6,rows=15;.*?  rememberBase\(group\);",re.S)
+          replacement="""  const cols=6,rows=15;
+          const plankW=def.width/cols-0.055;
+          const plankD=def.depth/rows-0.035;
+          const plankColors=[0x9f714d,0x956746,0xaa7950,0x8e6144];
+          const plankGeometry=new THREE.BoxGeometry(plankW,0.022,plankD);
+          const plankMaterial=material(0xffffff,0.76);
+          const planks=new THREE.InstancedMesh(plankGeometry,plankMaterial,cols*rows);
+          semantic(planks,'wood-floor-planks');
+          const dummy=new THREE.Object3D();
+          let instance=0;
+          for(let row=0;row<rows;row++){
+            for(let col=0;col<cols;col++){
+              dummy.position.set(
+                -def.width/2+plankW/2+0.04+col*(def.width/cols),
+                0.006,
+                -def.depth/2+plankD/2+0.025+row*(def.depth/rows)
+              );
+              dummy.rotation.set(0,0,0);
+              dummy.updateMatrix();
+              planks.setMatrixAt(instance,dummy.matrix);
+              planks.setColorAt(instance,new THREE.Color(plankColors[(row*3+col)%plankColors.length]));
+              instance++;
+            }
+          }
+          planks.instanceMatrix.needsUpdate=true;
+          if(planks.instanceColor)planks.instanceColor.needsUpdate=true;
+          planks.receiveShadow=true;
+          planks.castShadow=false;
+          group.add(planks);
+          rememberBase(group);"""
+          s,count=pattern.subn(replacement,s,count=1)
+          if count!=1:
+              raise SystemExit(f'floor optimization patch count={count}')
+          s=s.replace('  practical.castShadow = true;','  practical.castShadow = false;',1)
+          scene.write_text(s,encoding='utf-8')
           PY
       - name: v0.38 RED/GREEN acceptance
         run: python scripts/test-crazy-family-v038-cinematic-room.py
@@ -57,11 +98,11 @@ jobs:
           name: crazy-family-v038-cinematic-room
           path: artifacts/crazy-family-movie-set.png
           if-no-files-found: ignore
-      - name: Commit verified v0.38 version marker
+      - name: Commit verified v0.38 room
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add crazy-family.html
+          git add crazy-family.html crazy-family/scene.js
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'chore: mark Crazy Family cinematic room v0.38'
+          git commit -m 'feat: optimize Crazy Family cinematic room v0.38'
           git push origin HEAD:feature/crazy-family-cinematic-living-room-v038
