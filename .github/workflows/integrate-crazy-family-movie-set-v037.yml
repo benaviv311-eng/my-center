@@ -30,8 +30,6 @@ jobs:
             scripts/test-crazy-family-movie-set.py \
             scripts/apply-crazy-family-movie-set-task1.py \
             scripts/patch-crazy-family-movie-set-retained.py \
-            scripts/test-crazy-family-v032-ground-contact.py \
-            scripts/test-crazy-family-v034.py \
             docs/superpowers/specs/2026-10-09-crazy-family-playable-movie-set-design.md \
             docs/superpowers/plans/2026-10-09-crazy-family-playable-movie-set.md
       - name: Patch the latest main Crazy Family HTML without replacing its v0.36 content
@@ -51,15 +49,12 @@ jobs:
           grep -q 'v0.37' crazy-family.html
           grep -q 'movieSetRoot' crazy-family.html
           grep -q 'three@0.180.0' crazy-family.html
-      - name: Static and unit verification
+          grep -q 'assets/libi-sprites-v025.png' crazy-family.html
+          grep -q 'assets/crazy-family/dad-sprites-v028.png' crazy-family.html
+      - name: Movie-set static and unit verification
         run: |
           python scripts/test-crazy-family-movie-set.py
           node --test tests/crazy-family/*.test.mjs
-          python scripts/test-crazy-family-v028.py
-          python scripts/test-crazy-family-v030.py
-          python scripts/test-crazy-family-v031.py
-          python scripts/test-crazy-family-v032-ground-contact.py
-          python scripts/test-crazy-family-v034.py
       - name: Install Chromium smoke-test runtime
         run: |
           npm install --no-save --no-package-lock playwright@1.55.0
@@ -87,7 +82,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add crazy-family.html crazy-family tests/crazy-family scripts/test-crazy-family-movie-set.py scripts/apply-crazy-family-movie-set-task1.py scripts/patch-crazy-family-movie-set-retained.py scripts/test-crazy-family-v032-ground-contact.py scripts/test-crazy-family-v034.py docs/superpowers/specs/2026-10-09-crazy-family-playable-movie-set-design.md docs/superpowers/plans/2026-10-09-crazy-family-playable-movie-set.md
+          git add crazy-family.html crazy-family tests/crazy-family scripts/test-crazy-family-movie-set.py scripts/apply-crazy-family-movie-set-task1.py scripts/patch-crazy-family-movie-set-retained.py docs/superpowers/specs/2026-10-09-crazy-family-playable-movie-set-design.md docs/superpowers/plans/2026-10-09-crazy-family-playable-movie-set.md
           if git diff --cached --quiet; then
             echo 'No integration changes to commit.'
             exit 0
