@@ -54,6 +54,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const trainingGamesCss='<link rel="stylesheet" href="score-training-games.css?v=1">';
   const competitionGamesCss='<link rel="stylesheet" href="score-competition-games.css?v=1">';
   const flexibleGamesCss='<link rel="stylesheet" href="score-flexible-games.css?v=1">';
+  const operationsCss='<link rel="stylesheet" href="score-operations.css?v=1">';
   const liveCoreJs='<script src="score-live-core.js?v=3"><\/script>';
   const liveJs='<script src="score-live.js?v=9"><\/script>';
   const patchJs='<script src="score-live-patch.js?v=8"><\/script>';
@@ -79,9 +80,12 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const competitionGamesJs='<script src="score-competition-games.js?v=1"><\/script>';
   const flexibleGuardJs='<script src="score-flexible-setup-guard.js?v=1"><\/script>';
   const flexibleGamesJs='<script src="score-flexible-games.js?v=1"><\/script>';
+  const remoteDisplayJs='<script src="score-remote-display.js?v=1"><\/script>';
+  const cloudSyncJs='<script src="score-cloud-sync.js?v=1"><\/script>';
+  const dataHubJs='<script src="score-data-hub.js?v=1"><\/script>';
   const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=2"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+testLabLiveStatusJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+operationsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+remoteDisplayJs+cloudSyncJs+dataHubJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
