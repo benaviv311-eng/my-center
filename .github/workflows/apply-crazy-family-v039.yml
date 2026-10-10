@@ -28,10 +28,10 @@ jobs:
           from pathlib import Path
           import re
           h=Path('crazy-family.html').read_text(encoding='utf-8')
-          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',h,re.S)
+          scripts=re.findall(r'<script>(.*?)</script>',h,re.S)
           inline=[x for x in scripts if x.strip()]
           if not inline:
-              raise SystemExit('inline script block not found')
+              raise SystemExit('plain inline script block not found')
           Path('/tmp/crazy-family.js').write_text('\n'.join(inline),encoding='utf-8')
           PY
           node --check /tmp/crazy-family.js
