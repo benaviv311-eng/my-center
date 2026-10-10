@@ -63,7 +63,10 @@ try {
   await page.waitForFunction(() => window.__crazyFamilyMovieSetGame?.player?.position?.y > 0.08, null, { timeout: 3000 });
   const airborneY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(airborneY > 0.08, `jump did not raise world Y: ${airborneY}`);
-  await page.waitForFunction(() => Math.abs(window.__crazyFamilyMovieSetGame.player.position.y) < 0.02, null, { timeout: 5000 });
+  // SwiftShader can render the same deterministic jump at only a handful of frames
+  // per second. The game caps simulation dt by design, so give the behavioral landing
+  // assertion enough wall-clock headroom without changing production physics.
+  await page.waitForFunction(() => Math.abs(window.__crazyFamilyMovieSetGame.player.position.y) < 0.02, null, { timeout: 15000 });
   const landedY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(Math.abs(landedY) < 0.02, `Libi did not return to room floor: ${landedY}`);
 
