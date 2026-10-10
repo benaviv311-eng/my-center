@@ -23,7 +23,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-audit --no-fund
+      - name: Install dependencies with diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm install --no-audit --no-fund --loglevel verbose
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "=== npm debug log ==="
+            cat "$HOME"/.npm/_logs/*-debug-0.log || true
+            exit "$status"
+          fi
       - run: npm run lint
       - run: npm test
       - run: npm run build
