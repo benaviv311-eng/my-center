@@ -1,0 +1,11 @@
+const assert=require('assert'),path=require('path');
+const effects=require(path.join(__dirname,'..','raishin-legacy','dojo-effects.js'));
+assert.strictEqual(typeof effects.updateCamera,'function');assert.strictEqual(typeof effects.interactionFramingOffset,'function');
+const options={centerX:800,centerY:650,deadZoneX:180,deadZoneY:90,maxX:48,maxY:28,followStrength:6,frameWidth:1600,frameHeight:900};
+let camera={x:0,y:0};
+let next=effects.updateCamera(camera,{x:860,y:680},0.016,options);assert.deepStrictEqual(next,{x:0,y:0},'inside dead-zone must not move camera');
+next=effects.updateCamera(camera,{x:1300,y:650},0.016,options);assert.ok(next.x<0&&Math.abs(next.x)<48,'camera should ease toward right-side target without overshoot');
+const next2=effects.updateCamera(next,{x:1300,y:650},0.016,options);assert.ok(next2.x<next.x&&next2.x>=-48,'camera must move monotonically');
+const huge=effects.updateCamera({x:0,y:0},{x:1600,y:900},5,options);assert.ok(Number.isFinite(huge.x)&&Math.abs(huge.x)<=48&&Math.abs(huge.y)<=28,'large dt must stay clamped and finite');
+const framed=effects.interactionFramingOffset({x:0,y:0},{x:1600,y:900},1);assert.ok(Math.abs(framed.x)<=64&&Math.abs(framed.y)<=36,'interaction framing <= 4%');
+console.log('PASS: cinematic dojo camera');
