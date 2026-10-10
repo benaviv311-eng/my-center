@@ -3,10 +3,7 @@ from pathlib import Path
 html = Path('crazy-family.html').read_text(encoding='utf-8')
 scene = Path('crazy-family/scene.js').read_text(encoding='utf-8')
 camera = Path('crazy-family/camera.js').read_text(encoding='utf-8')
-asset = Path('assets/crazy-family/reference-room-v040.webp')
 
-assert asset.exists(), 'clean environment-only reference asset missing'
-assert asset.stat().st_size > 100_000, 'reference asset is unexpectedly small'
 assert 'v0.40' in html, 'page version must advance to v0.40'
 assert 'REFERENCE_QUALITY_HOME_V040' in scene, 'reference-quality room marker missing'
 assert 'function createProceduralTexture' in scene, 'room needs procedural material detail'
@@ -14,7 +11,8 @@ assert 'function createSoftSofa' in scene, 'room needs rounded/soft sofa geometr
 assert 'function createReferenceKitchenDepth' in scene, 'room needs visible kitchen/dining depth'
 assert 'function createGoldenHourWindow' in scene, 'room needs cinematic window treatment'
 assert 'function createFamilyLifeDetails' in scene, 'room needs lived-in family dressing'
-assert "assets/crazy-family/reference-room-v040.webp" in scene, 'clean reference matte must be wired into the room'
+assert "reference-kitchen-depth-v040" in scene, '3D dining/kitchen continuation must be authored from the reference'
+assert "assets/crazy-family/reference-room-v040.webp" not in scene, 'reference image must not become a flat in-game background'
 assert "renderer.toneMappingExposure = 1.16" in scene, 'reference lighting exposure contract missing'
 assert 'renderer.shadowMap.type = THREE.PCFSoftShadowMap' in scene, 'soft shadow contract must remain'
 assert "scene.background = new THREE.Color(0xb88668)" in scene, 'warm reference palette missing'
