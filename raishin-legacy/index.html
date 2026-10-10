@@ -5,34 +5,65 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#160f0a">
   <title>מורשת ראיישין — המשחק</title>
+  <link rel="preload" as="image" href="./assets/gameplay/gameplay-hud-v1.png">
+  <link rel="preload" as="image" href="./assets/gameplay/inazuma-main-hall-clean.png">
+  <link rel="preload" as="image" href="./assets/player/raika-walk-4dir-8f.png">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <main class="game-app" aria-label="מורשת ראיישין — גרסת משחק 0.1">
-    <section class="game-frame" data-game-aspect="16:9" aria-label="Inazuma Dojo gameplay preview">
-      <img
-        id="gameplayShot"
-        class="gameplay-shot"
-        src="./assets/gameplay/gameplay-hud-v1.png?v=20261010-raika-v2"
-        alt="ראיקה בדוג'ו אינאזומה בתצוגת משחק מגוף שלישי"
-        draggable="false"
-      >
+  <main class="game-app" aria-label="מורשת ראיישין — אב טיפוס תנועה">
+    <section class="game-frame" data-game-aspect="16:9" aria-label="Inazuma Dojo free roam" tabindex="0">
+      <canvas
+        id="gameCanvas"
+        width="1600"
+        height="900"
+        data-background="./assets/gameplay/inazuma-main-hall-clean.png"
+        data-sprite="./assets/player/raika-walk-4dir-8f.png"
+        aria-label="ראיקה נעה בחופשיות בדוג'ו אינאזומה"
+      ></canvas>
 
-      <div class="hud-contract" aria-label="HUD v0.1">
+      <div class="hud" aria-label="HUD v0.2">
+        <div class="hud-status" dir="ltr">
+          <div class="portrait" aria-hidden="true">R</div>
+          <div class="status-copy">
+            <strong>Raika</strong>
+            <div class="bar health"><span></span></div>
+            <div class="bar raihatsu"><span></span></div>
+          </div>
+        </div>
+
+        <div class="objective" dir="ltr">
+          <strong>Inazuma Dojo</strong>
+          <span>Objective: Walk the Main Hall</span>
+        </div>
+
+        <div class="minimap" aria-label="minimap">
+          <span class="north">N</span>
+          <span class="player-dot"></span>
+        </div>
+
+        <div class="hud-actions" dir="ltr">
+          <div><span class="action-icon">↥</span><b>Jump</b></div>
+          <div><span class="action-icon">↝</span><b>Dodge</b></div>
+          <div><span class="action-icon">✋</span><b>Interact</b></div>
+        </div>
+
+        <div class="controls-hint" dir="ltr">WASD / Arrow Keys</div>
+
         <span class="sr-only">Health</span>
         <span class="sr-only">Raihatsu</span>
         <span class="sr-only">Objective</span>
         <span class="sr-only">Jump</span>
         <span class="sr-only">Dodge</span>
         <span class="sr-only">Interact</span>
-        <span class="sr-only">minimap</span>
       </div>
 
       <div id="loadError" class="load-error" role="alert" hidden>
-        לא ניתן לטעון את מסך המשחק המאושר.
+        לא ניתן לטעון את נכסי המשחק.
       </div>
     </section>
   </main>
+  <script src="./movement.js"></script>
   <script src="./game.js"></script>
 </body>
 </html>
