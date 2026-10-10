@@ -1,0 +1,15 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const dir=path.join(__dirname,'..','raishin-legacy'),html=fs.readFileSync(path.join(dir,'index.html'),'utf8'),js=fs.readFileSync(path.join(dir,'game.js'),'utf8');
+for(const id of ['interactionPrompt','interactionPanel','interactionClose','objectiveText','seikaOverlay']) assert.match(html,new RegExp(`id="${id}"`));
+assert.match(js,/KeyE/);assert.match(js,/Enter/);
+assert.match(js,/nearestInteraction/,'must query proximity every frame');
+assert.match(js,/interactionPrompt/);assert.match(js,/\.hidden\s*=\s*true/,'prompt/panel must clear outside range');
+for(const id of ['training-bag','weapons-wall','training-center','courtyard-exit','seika-point']) assert.ok(js.includes(id),`missing response for ${id}`);
+assert.match(js,/Practice 10 controlled strikes|Practice.*bag/i,'bag must update practice objective');
+assert.match(js,/Training Weapons|equipment|weapon/i,'weapons wall must show examine copy');
+assert.match(js,/movement drill|training center/i,'center must update tutorial guidance');
+assert.match(js,/Courtyard.*locked|courtyard.*preview/i,'courtyard must be visible but locked');
+assert.match(js,/is-seika|seikaOverlay/,'Seika must visibly toggle focus state');
+assert.match(js,/interactionClose[\s\S]*addEventListener/,'panel must be closable');
+assert.doesNotMatch(js,/(location\.(href|assign)|window\.open).*courtyard/i,'courtyard must not navigate away');
+console.log('PASS: dojo interaction contracts');
