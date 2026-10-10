@@ -17,9 +17,46 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Apply v0.40 reference-quality room
+        run: python scripts/apply-crazy-family-v040-reference-room.py
       - name: v0.40 reference room acceptance
         run: python scripts/test-crazy-family-v040-reference-room.py
       - name: Existing movie-set contract
         run: python scripts/test-crazy-family-movie-set.py
       - name: Movie-set unit tests
         run: node --test tests/crazy-family/*.test.mjs
+      - name: Install Chromium smoke runtime
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/crazy-family-v040-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/crazy-family.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/crazy-family-v040-server.log
+          exit 1
+      - name: Real-browser movie-set acceptance
+        run: node tests/crazy-family/browser-smoke.mjs
+      - name: Upload rendered screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crazy-family-v040-reference-room
+          path: artifacts/crazy-family-movie-set.png
+          if-no-files-found: ignore
+      - name: Verify patch cleanliness
+        run: git diff --check
+      - name: Commit verified v0.40 room
+        run: |
+          if git diff --quiet -- crazy-family.html crazy-family/scene.js crazy-family/camera.js; then
+            echo "No production changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html crazy-family/scene.js crazy-family/camera.js
+          git commit -m "feat: apply reference-quality family room v0.40"
+          git push
