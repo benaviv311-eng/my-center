@@ -1,121 +1,29 @@
 (() => {
   'use strict';
-
-  const root = document.querySelector('.game-app');
-  const frame = document.querySelector('.game-frame');
-  const canvas = document.getElementById('gameCanvas');
-  const error = document.getElementById('loadError');
-  const movement = window.RaishinMovement;
-  if (!root || !frame || !canvas || !error || !movement) return;
-
-  const ctx = canvas.getContext('2d');
-  const background = new Image();
-  const sprite = new Image();
-  background.decoding = 'async';
-  sprite.decoding = 'async';
-  background.src = canvas.dataset.background;
-  sprite.src = canvas.dataset.sprite;
-
-  const keys = new Set();
-  const bounds = { minX: 170, maxX: 1430, minY: 380, maxY: 835 };
-  const state = {
-    x: 800,
-    y: 690,
-    direction: 'down',
-    moving: false,
-    walkTime: 0,
-    lastTimestamp: 0,
-  };
-  const rowByDirection = { down: 0, up: 1, left: 2, right: 3 };
-  const speed = 245;
-  const frameCount = 8;
-  const walkFps = 10;
-
-  const movementKeys = new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
-
-  function onKeyDown(event) {
-    if (!movementKeys.has(event.code)) return;
-    event.preventDefault();
-    keys.add(event.code);
-  }
-
-  function onKeyUp(event) {
-    if (!movementKeys.has(event.code)) return;
-    event.preventDefault();
-    keys.delete(event.code);
-  }
-
-  window.addEventListener('keydown', onKeyDown, { passive: false });
-  window.addEventListener('keyup', onKeyUp, { passive: false });
-  window.addEventListener('blur', () => keys.clear());
-  frame.addEventListener('pointerdown', () => frame.focus());
-
-  function markReady() {
-    root.dataset.state = 'ready';
-    error.hidden = true;
-    frame.focus({ preventScroll: true });
-  }
-
-  function markError() {
-    root.dataset.state = 'asset-error';
-    error.hidden = false;
-  }
-
-  function drawPlayer(frameIndex) {
-    const sourceW = sprite.naturalWidth / 8;
-    const sourceH = sprite.naturalHeight / 4;
-    const row = rowByDirection[state.direction];
-    const scale = movement.scaleForDepth(state.y, bounds.minY, bounds.maxY);
-    const displayH = 355 * scale;
-    const displayW = displayH * (sourceW / sourceH);
-
-    ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(
-      sprite,
-      frameIndex * sourceW,
-      row * sourceH,
-      sourceW,
-      sourceH,
-      state.x - displayW / 2,
-      state.y - displayH,
-      displayW,
-      displayH
-    );
-    ctx.restore();
-  }
-
-  function render(timestamp) {
-    if (!state.lastTimestamp) state.lastTimestamp = timestamp;
-    const dt = Math.min(0.033, (timestamp - state.lastTimestamp) / 1000);
-    state.lastTimestamp = timestamp;
-
-    const vector = movement.inputVector(keys);
-    state.moving = Boolean(vector.x || vector.y);
-    state.direction = movement.directionFromVector(vector, state.direction);
-    if (state.moving) {
-      const next = movement.stepPlayer(state, vector, dt, bounds, speed);
-      state.x = next.x;
-      state.y = next.y;
-      state.walkTime += dt;
-    } else {
-      state.walkTime = 0;
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-    const frameIndex = movement.frameAt(state.walkTime, state.moving, frameCount, walkFps);
-    drawPlayer(frameIndex);
-    requestAnimationFrame(render);
-  }
-
-  Promise.all([
-    background.decode ? background.decode() : Promise.resolve(),
-    sprite.decode ? sprite.decode() : Promise.resolve(),
-  ]).then(() => {
-    if (!background.naturalWidth || !sprite.naturalWidth) throw new Error('missing game asset');
-    markReady();
-    requestAnimationFrame(render);
-  }).catch(markError);
+  const root=document.querySelector('.game-app'),frame=document.querySelector('.game-frame'),canvas=document.getElementById('gameCanvas'),error=document.getElementById('loadError');
+  const interactionPrompt=document.getElementById('interactionPrompt'),interactionPanel=document.getElementById('interactionPanel'),interactionClose=document.getElementById('interactionClose'),interactionTitle=document.getElementById('interactionTitle'),interactionBody=document.getElementById('interactionBody'),objectiveText=document.getElementById('objectiveText'),seikaOverlay=document.getElementById('seikaOverlay'),ambientLight=document.querySelector('.ambient-light-overlay');
+  const movement=window.RaishinMovement,dojoWorld=window.RaishinDojoWorld,effects=window.RaishinDojoEffects;
+  if(!root||!frame||!canvas||!error||!movement||!dojoWorld||!effects||!interactionPrompt||!interactionPanel||!objectiveText)return;
+  const ctx=canvas.getContext('2d'),background=new Image(),sprite=new Image(),logicalWidth=1600,logicalHeight=900;
+  function configureCanvas(){const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(logicalWidth*dpr);canvas.height=Math.round(logicalHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);return dpr;} configureCanvas();
+  background.decoding='async';sprite.decoding='async';background.src=canvas.dataset.background;sprite.src=canvas.dataset.sprite;
+  const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const keys=new Set(),state={x:800,y:690,vx:0,vy:0,direction:'down',moving:false,walkTime:0,lastTimestamp:0,currentInteraction:null,overlayOpen:false,seikaActive:false,camera:{x:0,y:0},renderOffset:{x:0,y:0},atmosphere:effects.createAtmosphereState(reducedMotion)};
+  const rowByDirection={down:0,up:1,left:2,right:3},frameCount=8,walkFps=10,maxSpeed=245,acceleration=900,deceleration=1100,playerRadius=24;
+  const movementKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
+  const interactionKeys=new Set(['KeyE','Enter']);
+  function openPanel(title,body){interactionTitle.textContent=title;interactionBody.textContent=body;interactionPanel.hidden=false;state.overlayOpen=true;keys.clear();state.vx=0;state.vy=0;}
+  function closePanel(){interactionPanel.hidden=true;state.overlayOpen=false;frame.focus({preventScroll:true});}
+  function performInteraction(){const item=state.currentInteraction;if(!item)return;switch(item.id){case'training-bag':objectiveText.textContent='Objective: Practice 10 controlled strikes at the bag.';break;case'weapons-wall':openPanel('Training Weapons','Examine the wooden practice equipment. Weapon training unlocks after the movement lesson.');break;case'training-center':objectiveText.textContent='Objective: Begin the movement drill in the training center.';break;case'courtyard-exit':openPanel('Courtyard — locked preview','The courtyard is visible and usable as the next transition, but it is locked in this dojo build.');break;case'seika-point':state.seikaActive=!state.seikaActive;frame.classList.toggle('is-seika',state.seikaActive);seikaOverlay.setAttribute('aria-hidden',String(!state.seikaActive));objectiveText.textContent=state.seikaActive?'Seika: Breathe. Observe the room.':'Objective: Explore the Main Hall';break;}}
+  function onKeyDown(event){if(state.overlayOpen){if(event.code==='Escape'){event.preventDefault();closePanel();return;}if(interactionKeys.has(event.code)||movementKeys.has(event.code))event.preventDefault();return;}if(interactionKeys.has(event.code)){event.preventDefault();if(!event.repeat)performInteraction();return;}if(!movementKeys.has(event.code))return;event.preventDefault();keys.add(event.code);}
+  function onKeyUp(event){if(!movementKeys.has(event.code))return;event.preventDefault();keys.delete(event.code);}
+  window.addEventListener('keydown',onKeyDown,{passive:false});window.addEventListener('keyup',onKeyUp,{passive:false});window.addEventListener('blur',()=>keys.clear());frame.addEventListener('pointerdown',()=>frame.focus());interactionClose.addEventListener('click',closePanel);
+  function updateDirection(input){const ax=Math.abs(state.vx),ay=Math.abs(state.vy);if(Math.hypot(state.vx,state.vy)<22)return;if(ax>ay*1.12)state.direction=state.vx>0?'right':'left';else if(ay>ax*1.12)state.direction=state.vy>0?'down':'up';else if(Math.abs(input.x)>Math.abs(input.y))state.direction=input.x>0?'right':'left';else if(Math.abs(input.y)>Math.abs(input.x))state.direction=input.y>0?'down':'up';}
+  function updateInteractionUI(){const active=dojoWorld.nearestInteraction(state,165);state.currentInteraction=active;if(!active||state.overlayOpen){interactionPrompt.hidden=true;return;}interactionPrompt.hidden=false;interactionPrompt.textContent=`[E] ${active.prompt}`;interactionPrompt.style.left=`${(active.x+state.renderOffset.x)/logicalWidth*100}%`;interactionPrompt.style.top=`${Math.max(8,(active.y+state.renderOffset.y-95)/logicalHeight*100)}%`;interactionPrompt.style.bottom='auto';}
+  function drawInteractionHighlight(item,timestamp){if(!item||state.overlayOpen)return;const alpha=reducedMotion?.34:.34+Math.sin(timestamp*.004)*.07,x=item.x+state.renderOffset.x,y=item.y+state.renderOffset.y;ctx.save();ctx.lineWidth=2.2;ctx.strokeStyle=`rgba(247,207,115,${alpha})`;ctx.fillStyle=`rgba(247,207,115,${alpha*.12})`;ctx.shadowColor=`rgba(247,207,115,${alpha*.55})`;ctx.shadowBlur=reducedMotion?0:12;ctx.beginPath();ctx.ellipse(x,y,42,14,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
+  function drawPlayer(frameIndex){const sw=sprite.naturalWidth/8,sh=sprite.naturalHeight/4,row=rowByDirection[state.direction],scale=movement.scaleForDepth(state.y,365,830),dh=355*scale,dw=dh*(sw/sh);ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(sprite,frameIndex*sw,row*sh,sw,sh,state.x+state.renderOffset.x-dw/2,state.y+state.renderOffset.y-dh,dw,dh);ctx.restore();}
+  function updateMinimap(){const m=dojoWorld.worldToMinimap(state);const dot=document.getElementById('minimapPlayer');if(dot){dot.style.left=`${18+m.x*64}%`;dot.style.top=`${18+m.y*64}%`;}}
+  function render(timestamp){if(!state.lastTimestamp)state.lastTimestamp=timestamp;const dt=Math.min(.05,(timestamp-state.lastTimestamp)/1000);state.lastTimestamp=timestamp;const input=state.overlayOpen?{x:0,y:0}:movement.inputVector(keys),velocity=movement.smoothVelocity({x:state.vx,y:state.vy},input,dt,acceleration,deceleration,maxSpeed);state.vx=velocity.x;state.vy=velocity.y;state.moving=Math.hypot(state.vx,state.vy)>4;updateDirection(input);if(state.moving){const proposed={x:state.x+state.vx*dt,y:state.y+state.vy*dt},next=dojoWorld.resolvePlayerMotion(state,proposed,playerRadius);if(next.x===state.x)state.vx=0;if(next.y===state.y)state.vy=0;state.x=next.x;state.y=next.y;state.walkTime+=dt;}else{state.walkTime=0;}state.camera=effects.updateCamera(state.camera,state,dt,{centerX:800,centerY:650,deadZoneX:180,deadZoneY:90,maxX:48,maxY:28,followStrength:reducedMotion?9:6});const near=dojoWorld.nearestInteraction(state,165),focus=near?effects.interactionFramingOffset(state.camera,near,reducedMotion?.15:.35):{x:0,y:0};state.renderOffset={x:state.camera.x+focus.x,y:state.camera.y+focus.y};state.atmosphere.reducedMotion=reducedMotion||state.seikaActive;state.atmosphere=effects.updateAtmosphere(state.atmosphere,dt,{width:logicalWidth,height:logicalHeight});updateInteractionUI();updateMinimap();if(ambientLight)ambientLight.style.opacity=String(reducedMotion?.78:.82+effects.lightPulse(timestamp)*1.15);ctx.clearRect(0,0,logicalWidth,logicalHeight);const bg=effects.backgroundRect(state.renderOffset,1.08,logicalWidth,logicalHeight);ctx.drawImage(background,bg.x,bg.y,bg.width,bg.height);drawInteractionHighlight(near,timestamp);const depthScale=movement.scaleForDepth(state.y,365,830);effects.drawFloorContact(ctx,state.x+state.renderOffset.x,state.y+state.renderOffset.y,depthScale);drawPlayer(movement.frameAt(state.walkTime,state.moving,frameCount,walkFps));effects.renderAtmosphere(ctx,state.atmosphere,state.renderOffset);requestAnimationFrame(render);}
+  function markReady(){root.dataset.state='ready';error.hidden=true;frame.focus({preventScroll:true});}function markError(){root.dataset.state='asset-error';error.hidden=false;}
+  Promise.all([background.decode?background.decode():Promise.resolve(),sprite.decode?sprite.decode():Promise.resolve()]).then(()=>{if(!background.naturalWidth||!sprite.naturalWidth)throw new Error('missing game asset');markReady();requestAnimationFrame(render);}).catch(markError);
 })();

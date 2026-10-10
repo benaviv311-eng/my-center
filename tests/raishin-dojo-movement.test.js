@@ -1,0 +1,11 @@
+const assert=require('assert'),path=require('path');
+const movement=require(path.join(__dirname,'..','raishin-legacy','movement.js'));
+for(const name of ['inputVector','directionFromVector','stepPlayer','frameAt','scaleForDepth','smoothVelocity']) assert.strictEqual(typeof movement[name],'function',`${name} must exist`);
+assert.deepStrictEqual(movement.inputVector(new Set(['KeyA','KeyD'])),{x:0,y:0});
+let v=movement.smoothVelocity({x:0,y:0},{x:1,y:0},0.05,500,650,245);assert.ok(v.x>0&&v.x<=25.001);assert.strictEqual(v.y,0);
+v=movement.smoothVelocity(v,{x:1,y:0},0.05,500,650,245);assert.ok(v.x>25&&v.x<=50.001);
+const capped=movement.smoothVelocity({x:240,y:0},{x:1,y:0},1,500,650,245);assert.ok(capped.x<=245,'velocity must not exceed max speed');
+const largeDt=movement.smoothVelocity({x:0,y:0},{x:1,y:0},1,500,650,245);assert.ok(largeDt.x<=25.001,'large dt must be clamped');
+const slowing=movement.smoothVelocity({x:100,y:0},{x:0,y:0},0.05,500,400,245);assert.ok(slowing.x<100&&slowing.x>0);
+assert.strictEqual(movement.frameAt(0.35,true,8,10),3);assert.ok(movement.scaleForDepth(340,340,830)<movement.scaleForDepth(830,340,830));
+console.log('PASS: smooth dojo movement');

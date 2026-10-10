@@ -1,0 +1,14 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const root=path.resolve(__dirname,'..'),dir=path.join(root,'raishin-legacy');
+const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
+const css=fs.readFileSync(path.join(dir,'styles.css'),'utf8');
+const js=fs.readFileSync(path.join(dir,'game.js'),'utf8');
+const all=`${html}\n${css}\n${js}`;
+assert.match(html,/data-game-aspect="16:9"/);
+assert.match(html,/\.\/dojo-world\.js[\s\S]*\.\/dojo-effects\.js[\s\S]*\.\/game\.js/,'premium modules must load before game.js');
+for(const id of ['interactionPrompt','interactionPanel','objectiveText','minimapPlayer','seikaOverlay']) assert.match(html,new RegExp(`id="${id}"`),`missing ${id}`);
+assert.doesNotMatch(all,/raika\.html|crazy-family|libi/i,'standalone dojo must stay isolated');
+assert.match(js,/Math\.min\([^\n]*devicePixelRatio[^\n]*2|Math\.min\([^\n]*2[^\n]*devicePixelRatio/,'DPR must be capped at 2');
+assert.doesNotMatch(js,/ctx\.filter\s*=\s*['"][^'"]*brightness|filter\s*:\s*brightness/,'must not brightness-filter full scene per frame');
+assert.match(css,/@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*(ambient|particle|seika|transition|animation)/,'reduced motion must cover ambient effects');
+console.log('PASS: Premium dojo shell contract');
