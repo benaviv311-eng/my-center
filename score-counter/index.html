@@ -83,9 +83,10 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const remoteDisplayJs='<script src="score-remote-display.js?v=1"><\/script>';
   const cloudSyncJs='<script src="score-cloud-sync.js?v=1"><\/script>';
   const dataHubJs='<script src="score-data-hub.js?v=1"><\/script>';
+  const humanVoiceJs='<script src="score-human-voice-pack.js?v=1"><\/script>';
   const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=2"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+operationsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+remoteDisplayJs+cloudSyncJs+dataHubJs+testLabLiveStatusJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+pressureCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+operationsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+timedRoundsJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+remoteDisplayJs+cloudSyncJs+dataHubJs+humanVoiceJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
