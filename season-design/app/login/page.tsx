@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const error = searchParams.get("error");
+  const queryError = error ? errorCopy[error] ?? null : null;
+  const errorMessage = localError ?? queryError;
 
   async function signIn() {
     setBusy(true);
@@ -38,9 +40,7 @@ export default function LoginPage() {
         <p className="eyebrow">גישה פרטית למאמנים מוזמנים</p>
         <h1 id="login-title">SeasonDesign</h1>
         <p>התחבר עם חשבון Google שהוזמן למערכת.</p>
-        {(localError || (error && errorCopy[error])) && (
-          <p role="alert">{localError ?? errorCopy[error]}</p>
-        )}
+        {errorMessage && <p role="alert">{errorMessage}</p>}
         <button type="button" onClick={signIn} disabled={busy}>
           {busy ? "מתחבר…" : "התחברות עם Google"}
         </button>
