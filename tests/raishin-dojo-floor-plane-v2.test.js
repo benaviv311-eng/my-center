@@ -6,6 +6,10 @@ assert.strictEqual(world.isWalkable({x:800,y:650},24),true,'main floor center mu
 assert.strictEqual(world.isWalkable({x:800,y:540},24),false,'Raika must never walk onto the rear wall');
 assert.strictEqual(world.isWalkable({x:650,y:520},24),false,'weapon shelves/rear wall must be outside the floor plane');
 assert.ok(world.floorBackEdgeAtX(800)>=560,'rear floor edge must stay below the wall shelves');
+for(const x of [240,390,600,800,1000,1210,1360]){
+  const back=world.floorBackEdgeAtX(x);
+  assert.strictEqual(world.isWalkable({x,y:back-1},0),false,`wall side of floor edge must block at x=${x}`);
+}
 
 let p={x:800,y:650};
 for(let i=0;i<120;i++)p=world.resolvePlayerMotion(p,{x:p.x,y:p.y-4},24);
