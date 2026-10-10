@@ -18,7 +18,8 @@ assert 'renderer.shadowMap.type = THREE.PCFSoftShadowMap' in scene, 'soft shadow
 assert "scene.background = new THREE.Color(0xb88668)" in scene, 'warm reference palette missing'
 assert "objectsById.set('headphones', headphonesGroup)" in scene, 'canonical headphones interaction must remain'
 assert "import * as THREE from 'three'" in scene, 'Three.js room renderer must remain'
-assert "exploreOffset: { x: 1.9, y: 2.05, z: 4.5 }" in camera, 'camera must move down into the room'
-assert "targetHeight: 0.72" in camera, 'camera target height must stay child-scale'
+assert "exploreOffset: { x: 1.35, y: 1.45, z: 2.75 }" in camera, 'camera must sit inside the living room, not outside the dollhouse'
+assert "chaseOffset: { x: 1.7, y: 1.72, z: 3.4 }" in camera, 'chase camera must remain inside the room'
+assert "targetHeight: 0.68" in camera, 'camera target height must stay child-scale'
 
 print('PASS: Crazy Family v0.40 reference-quality living-room structural acceptance')
