@@ -40,17 +40,30 @@ try {
   assert.equal(initial.contextLost, false);
   assert.ok(initial.cameraY > initial.player.y + 1, 'camera must be above player');
 
+  // Wait on the gameplay condition, not a fixed wall-clock delay. SwiftShader CI can
+  // render far fewer frames than a real device while the simulation intentionally
+  // caps dt per frame, so a fixed 550 ms wait is not a reliable movement contract.
   await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(550);
-  await page.keyboard.up('ArrowRight');
+  try {
+    await page.waitForFunction(
+      ({ x, z }) => {
+        const p = window.__crazyFamilyMovieSetGame?.player?.position;
+        return p && Math.hypot(p.x - x, p.z - z) > 0.2;
+      },
+      { x: initial.player.x, z: initial.player.z },
+      { timeout: 4000 },
+    );
+  } finally {
+    await page.keyboard.up('ArrowRight');
+  }
   const moved = await page.evaluate(() => ({ ...window.__crazyFamilyMovieSetGame.player.position }));
   assert.ok(Math.hypot(moved.x - initial.player.x, moved.z - initial.player.z) > 0.2, 'camera-relative movement did not move Libi in world space');
 
   await page.keyboard.press('Space');
-  await page.waitForTimeout(110);
+  await page.waitForFunction(() => window.__crazyFamilyMovieSetGame?.player?.position?.y > 0.08, null, { timeout: 3000 });
   const airborneY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(airborneY > 0.08, `jump did not raise world Y: ${airborneY}`);
-  await page.waitForFunction(() => Math.abs(window.__crazyFamilyMovieSetGame.player.position.y) < 0.02, null, { timeout: 4000 });
+  await page.waitForFunction(() => Math.abs(window.__crazyFamilyMovieSetGame.player.position.y) < 0.02, null, { timeout: 5000 });
   const landedY = await page.evaluate(() => window.__crazyFamilyMovieSetGame.player.position.y);
   assert.ok(Math.abs(landedY) < 0.02, `Libi did not return to room floor: ${landedY}`);
 
