@@ -31,8 +31,8 @@ assert.ok(movement.scaleForDepth(340, 340, 830) < movement.scaleForDepth(830, 34
 
 assert.match(html, /id="gameCanvas"/, 'game canvas required');
 assert.match(html, /movement\.js/, 'movement module script required');
-assert.match(html, /raika-walk-4dir-8f\.webp/, 'walk sprite asset required');
-assert.match(html, /inazuma-main-hall-clean\.webp/, 'clean dojo background required');
+assert.match(html, /raika-walk-4dir-8f\.png/, 'walk sprite asset required');
+assert.match(html, /inazuma-main-hall-clean\.png/, 'clean dojo background required');
 assert.match(js, /requestAnimationFrame/, 'render loop required');
 assert.match(js, /keydown/, 'keyboard input required');
 assert.match(js, /keyup/, 'keyboard input release required');
