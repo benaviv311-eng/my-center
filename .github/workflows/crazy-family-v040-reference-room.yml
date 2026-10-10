@@ -1,0 +1,25 @@
+name: Crazy Family v0.40 reference room
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-reference-room-v040
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: v0.40 reference room acceptance
+        run: python scripts/test-crazy-family-v040-reference-room.py
+      - name: Existing movie-set contract
+        run: python scripts/test-crazy-family-movie-set.py
+      - name: Movie-set unit tests
+        run: node --test tests/crazy-family/*.test.mjs
