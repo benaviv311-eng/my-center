@@ -1,0 +1,96 @@
+name: Integrate Crazy Family Movie Set v0.37
+
+on:
+  push:
+    branches:
+      - integration/crazy-family-movie-set-v037
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bring only movie-set engine and tests from verified feature branch
+        run: |
+          git fetch origin feature/crazy-family-playable-movie-set
+          git checkout origin/feature/crazy-family-playable-movie-set -- \
+            crazy-family \
+            tests/crazy-family \
+            scripts/test-crazy-family-movie-set.py \
+            scripts/apply-crazy-family-movie-set-task1.py \
+            scripts/patch-crazy-family-movie-set-retained.py \
+            scripts/test-crazy-family-v032-ground-contact.py \
+            scripts/test-crazy-family-v034.py \
+            docs/superpowers/specs/2026-10-09-crazy-family-playable-movie-set-design.md \
+            docs/superpowers/plans/2026-10-09-crazy-family-playable-movie-set.md
+      - name: Patch the latest main Crazy Family HTML without replacing its v0.36 content
+        run: |
+          python scripts/apply-crazy-family-movie-set-task1.py
+          python scripts/patch-crazy-family-movie-set-retained.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('crazy-family.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.36','עולם הבית · שלב 1: מפגש אבא · v0.37',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify latest-main content was preserved
+        run: |
+          grep -q '24 שירי שטות' crazy-family.html
+          grep -q 'v0.37' crazy-family.html
+          grep -q 'movieSetRoot' crazy-family.html
+          grep -q 'three@0.180.0' crazy-family.html
+      - name: Static and unit verification
+        run: |
+          python scripts/test-crazy-family-movie-set.py
+          node --test tests/crazy-family/*.test.mjs
+          python scripts/test-crazy-family-v028.py
+          python scripts/test-crazy-family-v030.py
+          python scripts/test-crazy-family-v031.py
+          python scripts/test-crazy-family-v032-ground-contact.py
+          python scripts/test-crazy-family-v034.py
+      - name: Install Chromium smoke-test runtime
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/crazy-family-server.log 2>&1 &
+          echo $! > /tmp/crazy-family-server.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/crazy-family.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/crazy-family-server.log
+          exit 1
+      - name: Real-browser acceptance on rebased v0.37
+        run: node tests/crazy-family/browser-smoke.mjs
+      - name: Upload rendered acceptance screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crazy-family-v037-main-integration
+          path: artifacts/crazy-family-movie-set.png
+          if-no-files-found: ignore
+      - name: Commit verified integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add crazy-family.html crazy-family tests/crazy-family scripts/test-crazy-family-movie-set.py scripts/apply-crazy-family-movie-set-task1.py scripts/patch-crazy-family-movie-set-retained.py scripts/test-crazy-family-v032-ground-contact.py scripts/test-crazy-family-v034.py docs/superpowers/specs/2026-10-09-crazy-family-playable-movie-set-design.md docs/superpowers/plans/2026-10-09-crazy-family-playable-movie-set.md
+          if git diff --cached --quiet; then
+            echo 'No integration changes to commit.'
+            exit 0
+          fi
+          git commit -m 'feat: publish Crazy Family playable movie set v0.37'
+          git push origin HEAD:integration/crazy-family-movie-set-v037
