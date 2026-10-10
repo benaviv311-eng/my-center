@@ -1,0 +1,46 @@
+name: Apply Crazy Family v0.39 Dad Abilities
+
+on:
+  push:
+    paths:
+      - 'scripts/apply-crazy-family-v039.py'
+      - 'tests/crazy-family-dad-abilities-v039.test.js'
+      - '.github/workflows/apply-crazy-family-v039.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check patch script syntax
+        run: python3 -m py_compile scripts/apply-crazy-family-v039.py
+      - name: Apply Dad abilities v0.39
+        run: python3 scripts/apply-crazy-family-v039.py
+      - name: Verify Dad ability contract
+        run: node tests/crazy-family-dad-abilities-v039.test.js
+      - name: Verify Crazy Family JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('crazy-family.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',h,re.S)
+          inline=[x for x in scripts if x.strip()]
+          if not inline:
+              raise SystemExit('inline script block not found')
+          Path('/tmp/crazy-family.js').write_text('\n'.join(inline),encoding='utf-8')
+          PY
+          node --check /tmp/crazy-family.js
+      - name: Commit game update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: map Dad songs and add ambient note abilities v0.39"
+          git pull --rebase origin main
+          git push origin main
