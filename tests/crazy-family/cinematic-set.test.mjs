@@ -14,6 +14,7 @@ const baseManifest={
   layers:[
     {id:'cinematic-background',src:'background.webp',kind:'background',world:{x:0,y:2,z:-4.5,width:12,height:6},renderOrder:-20,occluder:false,required:true},
     {id:'cinematic-sofa',src:'sofa.webp',kind:'furniture',anchorId:'sofa',world:{x:.2,y:1.3,z:-.1,width:4,height:2.5},renderOrder:8,occluder:true,required:true,proxy:{width:3.15,depth:1.25}},
+    {id:'cinematic-coffee-table',src:'coffee.webp',kind:'furniture',anchorId:'coffee-table',world:{x:0,y:.76,z:0,width:3.15,height:1.75},renderOrder:9,occluder:true,required:true,proxy:{width:2.15,depth:1.2}},
     {id:'cinematic-decoration',src:'optional.webp',kind:'foreground',world:{x:4,y:1,z:2,width:2,height:2},renderOrder:20,occluder:false,required:false},
   ],
 };
@@ -21,7 +22,7 @@ const baseManifest={
 test('manifest entries become stable semantic layer definitions',()=>{
   validateCinematicManifest(baseManifest);
   const prepared=prepareCinematicDefinitions(baseManifest,world);
-  assert.deepEqual(prepared.layers.map(layer=>layer.id),['cinematic-background','cinematic-sofa','cinematic-decoration']);
+  assert.deepEqual(prepared.layers.map(layer=>layer.id),['cinematic-background','cinematic-sofa','cinematic-coffee-table','cinematic-decoration']);
   assert.equal(prepared.visualEnvelope.maxZ,4.5);
 });
 
