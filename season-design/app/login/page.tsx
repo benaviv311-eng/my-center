@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { OfflineIdentityReset } from "@/lib/offline/identity-bridge";
 
 const errorCopy: Record<string, string> = {
   "not-invited": "החשבון הזה עדיין לא הוזמן ל־SeasonDesign.",
@@ -36,6 +37,7 @@ function LoginContent() {
 
   return (
     <section className="panel" aria-labelledby="login-title">
+      <OfflineIdentityReset />
       <p className="eyebrow">גישה פרטית למאמנים מוזמנים</p>
       <h1 id="login-title">SeasonDesign</h1>
       <p>התחבר עם חשבון Google שהוזמן למערכת.</p>

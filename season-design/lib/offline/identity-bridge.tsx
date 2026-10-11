@@ -11,3 +11,11 @@ export function OfflineIdentityBridge({ userId }: { userId: string }) {
 
   return null;
 }
+
+export function OfflineIdentityReset() {
+  useEffect(() => {
+    window.localStorage.removeItem(ACTIVE_USER_STORAGE_KEY);
+  }, []);
+
+  return null;
+}

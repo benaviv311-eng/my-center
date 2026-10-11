@@ -12,6 +12,10 @@ on:
       - "season-design/**"
       - ".github/workflows/season-design-ci.yml"
 
+concurrency:
+  group: season-design-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   foundation:
     runs-on: ubuntu-latest
