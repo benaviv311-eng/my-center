@@ -10,7 +10,9 @@ export const dynamic = "force-dynamic";
 
 export default async function ProtectedAppLayout({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
-  const decision = resolveAppAccess(user, user ? isInvitedEmail(user.email) : false);
+  if (!user) redirect("/login");
+
+  const decision = resolveAppAccess(user, isInvitedEmail(user.email));
   if (decision.kind === "redirect") redirect(decision.to);
 
   return (
