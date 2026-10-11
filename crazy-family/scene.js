@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createCinematicSet } from './cinematic-set.js';
+import { createContactEffects } from './contact-effects.js';
 
 // HYBRID_CINEMATIC_SET_V042 — authored environment art is the primary visible home.
 // Gameplay geometry stays authoritative and invisible in cinematic mode.
@@ -125,6 +126,8 @@ export async function createLivingRoomScene({canvas,world,visualMode='cinematic'
     proceduralGroup.visible=true;
   }
 
+  const contactEffects=createContactEffects(scene,{THREE});
+
   function resize(width,height){
     const w=Math.max(1,Math.floor(width)),h=Math.max(1,Math.floor(height));
     renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
@@ -172,6 +175,7 @@ export async function createLivingRoomScene({canvas,world,visualMode='cinematic'
     camera,
     objectsById,
     cinematicSet,
+    contactEffects,
     visualMode,
     visualEnvelope:cinematicSet?.visualEnvelope||null,
     proceduralGroup,
@@ -182,6 +186,7 @@ export async function createLivingRoomScene({canvas,world,visualMode='cinematic'
     setOccluders,
     applyReactiveTransforms,
     dispose(){
+      contactEffects.dispose();
       cinematicSet?.dispose?.();
       scene.traverse(object=>{
         object.geometry?.dispose?.();
