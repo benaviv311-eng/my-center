@@ -26,14 +26,22 @@ export async function putOfflineSnapshot<T>(
   updatedAt: string,
 ): Promise<void> {
   const db = await getDb();
-  await db.put(STORE_NAME, { key, value, updatedAt } satisfies SnapshotRecord<T>);
+  try {
+    await db.put(STORE_NAME, { key, value, updatedAt } satisfies SnapshotRecord<T>);
+  } finally {
+    db.close();
+  }
 }
 
 export async function getOfflineSnapshot<T>(
   key: string,
 ): Promise<{ value: T; updatedAt: string } | null> {
   const db = await getDb();
-  const record = (await db.get(STORE_NAME, key)) as SnapshotRecord<T> | undefined;
-  if (!record) return null;
-  return { value: record.value, updatedAt: record.updatedAt };
+  try {
+    const record = (await db.get(STORE_NAME, key)) as SnapshotRecord<T> | undefined;
+    if (!record) return null;
+    return { value: record.value, updatedAt: record.updatedAt };
+  } finally {
+    db.close();
+  }
 }
