@@ -31,11 +31,18 @@ function unionSets(...sets){
   return result;
 }
 
+function applyProjectedCharacter(visual,projected,facing,state,frame){
+  visual.setPose({position:projected,facing,state});
+  const scale=projected.scale||1;
+  visual.mesh.scale.set((facing<0?-1:1)*scale,scale,scale);
+  visual.setFrame(frame);
+}
+
 export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const doc = root.ownerDocument || document;
   const canvas = doc.createElement('canvas');
   canvas.className = 'movie-set-canvas';
-  canvas.setAttribute('aria-label', 'המשפחה המשגעת — סלון תלת־ממדי');
+  canvas.setAttribute('aria-label', 'המשפחה המשגעת — סלון קולנועי');
   canvas.width = 960;
   canvas.height = 600;
   const prompt=doc.createElement('div');
@@ -51,15 +58,15 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const sceneHandle = await createLivingRoomScene({ canvas, world, visualMode:'cinematic' });
   const specialItemVisual=sceneHandle.objectsById.get(scenario.item.id);
   if(specialItemVisual){
-    const {x,y,z}=scenario.item.position;
-    specialItemVisual.position.set(x,y,z);
+    sceneHandle.projectObject(specialItemVisual,scenario.item.position,{scaleMultiplier:.8});
     specialItemVisual.rotation.y=scenario.item.rotationY||0;
     specialItemVisual.userData.scenarioSpawnId=scenario.item.spawnId;
+    specialItemVisual.userData.logicalPosition={...scenario.item.position};
   }
   const sceneInteraction={setObjectVisible(id,value){const object=sceneHandle.objectsById.get(id)||sceneHandle.scene.getObjectByName(id);if(!object)return false;object.visible=Boolean(value);return true;}};
-  const playerVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
-  const dadVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
-  const attackVisuals=createAttackVisualSystem(sceneHandle.scene);
+  const playerVisual = createCharacterVisual({ scene: sceneHandle.visualStage, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
+  const dadVisual = createCharacterVisual({ scene: sceneHandle.visualStage, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
+  const attackVisuals=createAttackVisualSystem(sceneHandle.visualStage,{projectPosition:sceneHandle.projectWorld,screenStage:true});
   const reactions=createReactivePropController(world);
   const cameraController = createCameraController();
   const spatialAudio=createSpatialAudioAdapter({retainedAudio:{setDadSpatial:(state)=>legacyAdapter?.setDadSpatial?.(state)}});
@@ -87,8 +94,8 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
 
   const onContextAction=(action,id)=>{
     if(action==='push'&&id==='toy-ball'){
-      const ball=sceneHandle.objectsById.get('toy-ball');
-      if(ball){const dx=ball.position.x-player.position.x,dz=ball.position.z-player.position.z;triggerRoomReaction(reactions,'toy-kick',{id:'toy-ball',direction:{x:dx,z:dz}});}
+      const ballDef=world.objects.find(object=>object.id==='toy-ball');
+      if(ballDef){const dx=ballDef.x-player.position.x,dz=ballDef.z-player.position.z;triggerRoomReaction(reactions,'toy-kick',{id:'toy-ball',direction:{x:dx,z:dz}});}
     }
     if(action==='climb'&&id==='sofa')triggerRoomReaction(reactions,'sofa-compress');
     if(action==='open'&&id==='doorway'){
@@ -225,20 +232,23 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     stepRoomReactions(reactions,dt);
     sceneHandle.applyReactiveTransforms(reactions);
 
-    playerVisual.setPose({ position: player.position, facing, state: player.grounded ? (crouching?'crouch':'ground') : 'jump' });
-    playerVisual.setFrame(crouching?6:(player.grounded?(playerSpeed>.25?((Math.floor(now/(sprinting?115:160))%2)?1:2):0):5));
-    dadVisual.setPose({ position: dadFrame.position, facing: dadFrame.facing, state: songPlaying?'sing':dadFrame.state });
-    if(songPlaying)dadVisual.setFrame((Math.floor(now/210)%2)?4:5);
-    else if(dadFrame.state==='chase'&&dadMoving)dadVisual.setFrame((Math.floor(now/170)%2)?1:2);
-    else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadVisual.setFrame(dadFrame.state==='sneeze'?6:0);
-    else dadVisual.setFrame(0);
+    const playerProjected=sceneHandle.projectWorld(player.position);
+    const dadProjected=sceneHandle.projectWorld(dadFrame.position);
+    const playerFrame=crouching?6:(player.grounded?(playerSpeed>.25?((Math.floor(now/(sprinting?115:160))%2)?1:2):0):5);
+    applyProjectedCharacter(playerVisual,playerProjected,facing,player.grounded ? (crouching?'crouch':'ground') : 'jump',playerFrame);
+    let dadFrameIndex=0;
+    if(songPlaying)dadFrameIndex=(Math.floor(now/210)%2)?4:5;
+    else if(dadFrame.state==='chase'&&dadMoving)dadFrameIndex=(Math.floor(now/170)%2)?1:2;
+    else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadFrameIndex=dadFrame.state==='sneeze'?6:0;
+    applyProjectedCharacter(dadVisual,dadProjected,dadFrame.facing,songPlaying?'sing':dadFrame.state,dadFrameIndex);
 
     const playerSurface=world.surfaceAt(player.position.x,player.position.z)?.kind||'wood';
     const dadSurface=world.surfaceAt(dadFrame.position.x,dadFrame.position.z)?.kind||'wood';
-    sceneHandle.contactEffects.syncActor('libi',{position:player.position,grounded:player.grounded,surfaceKind:playerSurface,scale:1});
-    sceneHandle.contactEffects.syncActor('dad',{position:dadFrame.position,grounded:true,surfaceKind:dadSurface,scale:1.18});
+    sceneHandle.contactEffects.syncActor('libi',{position:playerProjected,logicalHeight:player.position.y,grounded:player.grounded,surfaceKind:playerSurface,scale:playerProjected.scale});
+    sceneHandle.contactEffects.syncActor('dad',{position:dadProjected,logicalHeight:0,grounded:true,surfaceKind:dadSurface,scale:dadProjected.scale*1.18});
     const itemInteractable=world.interactables.find(item=>item.id===scenario.item.id);
-    sceneHandle.contactEffects.syncItem(scenario.item.id,{position:scenario.item.position,visible:Boolean(itemInteractable?.enabled),surfaceKind:world.surfaceAt(scenario.item.position.x,scenario.item.position.z)?.kind||'wood'});
+    const itemProjected=sceneHandle.projectWorld(scenario.item.position);
+    sceneHandle.contactEffects.syncItem(scenario.item.id,{position:itemProjected,logicalHeight:0,visible:Boolean(itemInteractable?.enabled),scale:itemProjected.scale*.55,surfaceKind:world.surfaceAt(scenario.item.position.x,scenario.item.position.z)?.kind||'wood'});
 
     currentInteraction=resolveInteraction({player,interactables:world.interactables,maxDistance:1.15});
     if(currentInteraction){prompt.textContent=`✋ ${currentInteraction.label}`;prompt.hidden=false;}else{prompt.hidden=true;}
@@ -246,56 +256,30 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;
     const cameraMode=(songPlaying || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
     cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt,visualEnvelope:sceneHandle.visualEnvelope});
-    const camera=sceneHandle.applyCameraPose(cameraPose,reactions.cameraShake,now);
+    sceneHandle.applyCameraPose(cameraPose,reactions.cameraShake,now);
     const cinematicOccluders=sceneHandle.cinematicSet?.occluders||[];
     const playerOcclusion=resolveCinematicOcclusion({camera:cameraPose.position,actor:player.position,occluders:cinematicOccluders});
     const dadOcclusion=resolveCinematicOcclusion({camera:cameraPose.position,actor:dadFrame.position,occluders:cinematicOccluders});
     applyCinematicOcclusion(sceneHandle.cinematicSet,unionSets(playerOcclusion,dadOcclusion));
-    playerVisual.faceCamera(camera.position);
-    dadVisual.faceCamera(camera.position);
 
     legacyAdapter?.setWorldPose?.({ player: player.position, dad: dadFrame.position, dadState:dadFrame.state, songPlaying, controlsReversed:Boolean(exposure.controlsReversed||retainedAfter.controlsReversed) });
     legacyAdapter?.setDadWorldDistance?.(dadDistance);
     legacyAdapter?.tickRetainedSystems?.(dt);
-    sceneHandle.render(camera);
+    sceneHandle.render();
     raf = requestAnimationFrame(frame);
   };
 
   return {
-    canvas,
-    world,
-    scenario,
-    scene: sceneHandle,
-    cameraController,
-    dadController,
-    reactions,
-    playerVisual,
-    dadVisual,
+    canvas,world,scenario,scene:sceneHandle,cameraController,dadController,reactions,playerVisual,dadVisual,
     get player() { return player; },
     get dadFrame(){return {...dadFrame,position:{...dadFrame.position},velocity:{...dadFrame.velocity}};},
+    get cameraPose(){return {position:{...cameraPose.position},target:{...cameraPose.target},fov:cameraPose.fov};},
     get attacks(){return activeAttacks.map(a=>({...a,position:{...a.position}}));},
-    start() {
-      if (running) return;
-      running = true;
-      raf = requestAnimationFrame(frame);
-    },
-    stop() {
-      running = false;
-      if (raf) cancelAnimationFrame(raf);
-      raf = 0;
-    },
+    start() {if (running) return;running = true;raf = requestAnimationFrame(frame);},
+    stop() {running = false;if (raf) cancelAnimationFrame(raf);raf = 0;},
     dispose() {
-      this.stop();
-      globalThis.removeEventListener?.('keydown', onKeyDown);
-      globalThis.removeEventListener?.('keyup', onKeyUp);
-      globalThis.removeEventListener?.('resize', syncSize);
-      for(const cleanup of controlCleanups)cleanup();
-      attackVisuals.dispose();
-      playerVisual.dispose();
-      dadVisual.dispose();
-      sceneHandle.dispose();
-      canvas.remove();
-      prompt.remove();
+      this.stop();globalThis.removeEventListener?.('keydown', onKeyDown);globalThis.removeEventListener?.('keyup', onKeyUp);globalThis.removeEventListener?.('resize', syncSize);
+      for(const cleanup of controlCleanups)cleanup();attackVisuals.dispose();playerVisual.dispose();dadVisual.dispose();sceneHandle.dispose();canvas.remove();prompt.remove();
     },
   };
 }
