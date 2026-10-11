@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGroupAction } from "@/features/groups/actions";
 import { GroupForm } from "@/features/groups/group-form";
+import { OfflineGroupSnapshot } from "@/features/groups/offline-group-snapshot";
 import { SkillProfile, type SkillRow } from "@/features/groups/skill-profile";
 import type { GroupSkillLevel, SkillLevel } from "@/features/groups/types";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -42,6 +43,18 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
 
   return (
     <main className="shell pageStack">
+      <OfflineGroupSnapshot
+        userId={group.coachId}
+        updatedAt={group.updatedAt}
+        group={{
+          id: group.id,
+          name: group.name,
+          ageGradeLabel: group.ageGradeLabel,
+          typicalPlayerCount: group.typicalPlayerCount,
+          generalLevel: group.generalLevel,
+          notes: group.notes,
+        }}
+      />
       <Link className="backLink" href="/groups">חזרה לקבוצות</Link>
 
       <section className="groupHero panel">
