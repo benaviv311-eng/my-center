@@ -11,5 +11,6 @@ assert.match(js,/raika-walk-up-v(?:1\.avif|2\.png)/,'Walk UP sprite path must be
 assert.match(js,/state\.direction\s*===\s*['"]up['"]/,'UP direction must use the dedicated sprite');
 assert.match(js,/upSprite\.naturalWidth\/8/,'Walk UP sprite must be rendered as eight frames');
 assert.match(js,/sprite\.naturalWidth\/8/,'legacy four-direction sprite must remain as fallback');
-assert.match(js,/upSprite\.decode/,'asset readiness must include the Walk UP sprite');
+assert.match(js,/upSprite\.onload/,'dedicated Walk UP readiness must be tracked progressively');
+assert.match(js,/upSpriteReady/,'UP renderer must distinguish ready dedicated art from fallback');
 console.log('PASS: canonical Raika Walk UP integration');
