@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 import { createLivingRoomWorld } from '../../crazy-family/world.js';
-import { APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from '../../crazy-family/characters.js';
 import { createScenario, applyScenarioToWorld } from '../../crazy-family/scenario.js';
 
 function blockerSnapshot(world){
@@ -11,9 +11,10 @@ function blockerSnapshot(world){
     .sort((a,b)=>a.id.localeCompare(b.id));
 }
 
-test('cinematic rewrite keeps canonical Libi and Dad assets',()=>{
-  assert.equal(APPROVED_LIBI_ASSET,'assets/libi-sprites-v025.png');
-  assert.equal(APPROVED_DAD_ASSET,'assets/crazy-family/dad-sprites-v028.png');
+test('cinematic rewrite keeps canonical Libi and Dad assets',async()=>{
+  const source=await fs.readFile(new URL('../../crazy-family/characters.js',import.meta.url),'utf8');
+  assert.match(source,/APPROVED_LIBI_ASSET\s*=\s*'assets\/libi-sprites-v025\.png'/);
+  assert.match(source,/APPROVED_DAD_ASSET\s*=\s*'assets\/crazy-family\/dad-sprites-v028\.png'/);
 });
 
 test('cinematic rewrite keeps fixed blocker geometry unchanged',()=>{
