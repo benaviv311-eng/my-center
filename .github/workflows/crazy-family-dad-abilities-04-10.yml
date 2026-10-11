@@ -1,0 +1,23 @@
+name: Crazy Family Dad abilities 4-10
+
+on:
+  push:
+    paths:
+      - 'crazy-family.html'
+      - 'tests/crazy-family-dad-abilities-04-10.behavior.test.js'
+      - '.github/workflows/crazy-family-dad-abilities-04-10.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-abilities:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify Dad abilities 4 through 10
+        run: node --test tests/crazy-family-dad-abilities-04-10.behavior.test.js
