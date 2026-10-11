@@ -52,6 +52,7 @@ function segmentBoxFraction(start, end, collider, padding = 0.1) {
 }
 
 export function createLivingRoomWorld() {
+  // Furniture/layout is canonical and fixed. Scenario state may move actors/items only.
   const objects = [
     box('floor', 0, 0, 12, 9.2, 0.08, { kind: 'floor', material: 'wood' }),
     box('sofa', -3.35, 0.55, 3.15, 1.25, 1.05, { kind: 'furniture', color: 0xc97e78, occluder: true, cameraBlocker: true }),
@@ -68,7 +69,7 @@ export function createLivingRoomWorld() {
 
   const colliders = objects.filter(o => ['sofa', 'coffee-table', 'side-table'].includes(o.id));
   const interactables = [
-    { id: 'headphones', action: 'take', label: 'לקחת אוזניות', x: -4.15, y: 1.02, z: 0.1, radius: 0.9, priority: 20, enabled: true, surfaceId: 'sofa' },
+    { id: 'headphones', action: 'take', label: 'לקחת אוזניות', x: -4.15, y: 1.08, z: 0.1, radius: 0.9, priority: 20, enabled: true, surfaceId: 'sofa' },
     { id: 'sofa', action: 'climb', label: 'לטפס על הספה', x: -3.35, y: 0, z: 1.25, radius: 1.15, priority: 5, enabled: true },
     { id: 'toy-ball', action: 'push', label: 'לבעוט בכדור', x: 1.95, y: 0.19, z: 1.65, radius: 0.9, priority: 4, enabled: true },
     { id: 'doorway', action: 'open', label: 'לעבור לפינת האוכל', x: 4.9, y: 0, z: -3.35, radius: 1.2, priority: 3, enabled: true },
@@ -79,6 +80,23 @@ export function createLivingRoomWorld() {
     { id: 'tile', kind: 'tile', minX: 3.9, maxX: 6, minZ: -4.6, maxZ: -2.65 },
     { id: 'sofa', kind: 'sofa', minX: -4.9, maxX: -1.8, minZ: -0.08, maxZ: 1.18 },
   ];
+  const scenarioSpawns = {
+    item: [
+      { id: 'sofa-left', zone: 'living', surfaceId: 'sofa', x: -4.15, y: 1.08, z: 0.1, rotationY: -0.35 },
+      { id: 'side-table', zone: 'living', surfaceId: 'side-table', x: -5.05, y: 0.78, z: 0.38, rotationY: 0.2 },
+      { id: 'coffee-table', zone: 'living', surfaceId: 'coffee-table', x: -0.45, y: 0.64, z: 0.35, rotationY: 0.55 },
+      { id: 'dining-side', zone: 'dining', x: 3.35, y: 0.82, z: -2.3, rotationY: -0.4 },
+      { id: 'kitchen-counter', zone: 'kitchen', x: 4.25, y: 1.02, z: -3.05, rotationY: 0.7 },
+      { id: 'back-console', zone: 'dining', x: 2.05, y: 0.88, z: -3.82, rotationY: -0.1 },
+    ],
+    dad: [
+      { id: 'dining-entry', zone: 'dining', x: 1.8, y: 0, z: -2.6 },
+      { id: 'kitchen-entry', zone: 'kitchen', x: 4.25, y: 0, z: -3.3 },
+      { id: 'rug-far-side', zone: 'living', x: 3.7, y: 0, z: 2.9 },
+      { id: 'window-side', zone: 'living', x: -1.1, y: 0, z: -2.7 },
+      { id: 'hall-side', zone: 'hall', x: 5.1, y: 0, z: -1.1 },
+    ],
+  };
   const navBlockers = colliders.map(c => ({ id: c.id, x: c.x, z: c.z, width: c.width, depth: c.depth, clearance: c.id === 'coffee-table' ? 0.55 : 0.75 }));
   const cameraBlockers = colliders.filter(c => c.cameraBlocker);
   const occluders = objects.filter(o => o.occluder);
@@ -90,6 +108,7 @@ export function createLivingRoomWorld() {
     colliders,
     interactables,
     surfaces,
+    scenarioSpawns,
     navBlockers,
     cameraBlockers,
     occluders,
