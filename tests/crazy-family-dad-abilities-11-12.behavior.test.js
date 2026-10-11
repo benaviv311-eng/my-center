@@ -7,7 +7,19 @@ const html = fs.readFileSync('crazy-family.html', 'utf8');
 function extractFunction(name) {
   const start = html.indexOf(`function ${name}(`);
   assert.notStrictEqual(start, -1, `${name} should exist`);
-  const brace = html.indexOf('{', start);
+  const openParen = html.indexOf('(', start);
+  let parenDepth = 0;
+  let closeParen = -1;
+  for (let i = openParen; i < html.length; i++) {
+    if (html[i] === '(') parenDepth++;
+    else if (html[i] === ')') {
+      parenDepth--;
+      if (parenDepth === 0) { closeParen = i; break; }
+    }
+  }
+  assert.notStrictEqual(closeParen, -1, `${name} should have a complete parameter list`);
+  const brace = html.indexOf('{', closeParen);
+  assert.notStrictEqual(brace, -1, `${name} should have a body`);
   let depth = 0;
   for (let i = brace; i < html.length; i++) {
     if (html[i] === '{') depth++;
@@ -71,8 +83,8 @@ test('ability 11 — note barrage is routed from Dad speech and uses 1-3 of thre
   mathBarrage.random = () => 0.8;
   const runBarrage = new Function('dad','player','Math','setTimeout', `
     const dadSongPlaying=()=>false;
-    const fireDadLaneVolley=()=>{volleys++; return true};
     let volleys=0;
+    const fireDadLaneVolley=()=>{volleys++; return true};
     ${laneBarrageSource}
     const ok=fireDadLaneBarrage();
     return {ok,volleys};
