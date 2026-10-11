@@ -45,7 +45,7 @@
 
 (function(){
   if(typeof document==='undefined'||!document.getElementById('core')) return;
-  const V='8';
+  const V='9';
   const frame=document.getElementById('core');
 
   try{
@@ -95,6 +95,19 @@
         load('double/icon-sprite-2.js?v='+V,'data-double-icon-sprite-2',()=>false,()=>
           load('double/icon-sprite-3.js?v='+V,'data-double-icon-sprite-3',()=>false,()=>
             load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,loadPackBridge)))));
+  }
+
+  function loadStatsBridge(){load('double/stats-game-bridge.js?v='+V,'data-double-stats-game-bridge',()=>false)}
+  let reusedParentStats=false;
+  try{
+    if(window.parent&&window.parent!==window&&window.parent.DoubleStatsStore){
+      window.DoubleStatsStore=window.parent.DoubleStatsStore;
+      reusedParentStats=true;
+      loadStatsBridge();
+    }
+  }catch(_){ }
+  if(!reusedParentStats){
+    load('double/stats-store.js?v='+V,'data-double-stats-store',()=>!!window.DoubleStatsStore,loadStatsBridge);
   }
 
   function injectCoreFix(){
