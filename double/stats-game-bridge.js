@@ -44,7 +44,7 @@
     if(!modeKey().startsWith('versus:'))return;
     for(const m of list){
       if(m.type!=='attributes'||m.attributeName!=='class')continue;
-      const el=m.target;if(!(el instanceof Element))continue;
+      const el=m.target;if(!el||el.nodeType!==1||!el.classList)continue;
       const before=String(m.oldValue||'');
       if(el.classList.contains('versus-winner')&&!before.includes('versus-winner'))recordCorrect(0);
       if(el.classList.contains('versus-wrong')&&!before.includes('versus-wrong'))recordWrong();
