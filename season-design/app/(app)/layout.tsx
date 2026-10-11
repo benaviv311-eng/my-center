@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { resolveAppAccess } from "@/lib/auth/access";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { isInvitedEmail } from "@/lib/auth/invitation";
+import { AppNav } from "@/features/navigation/app-nav";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +12,10 @@ export default async function ProtectedAppLayout({ children }: { children: React
   const decision = resolveAppAccess(user, user ? isInvitedEmail(user.email) : false);
   if (decision.kind === "redirect") redirect(decision.to);
 
-  return <>{children}</>;
+  return (
+    <>
+      <AppNav />
+      {children}
+    </>
+  );
 }
