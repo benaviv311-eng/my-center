@@ -60,3 +60,28 @@ test('unrelated walls are never selected for transparency', () => {
   assert.deepEqual(ids,['sofa']);
   assert.equal(ids.includes('back-wall'),false);
 });
+
+test('visual envelope shortens camera before exposing unauthored set edge',()=>{
+  const player={position:{x:5.2,y:0,z:3.8}};
+  const envelope={minX:-5.8,maxX:5.8,minY:.2,maxY:4.1,minZ:-4.4,maxZ:4.25};
+  const pose=stepCamera(createCameraController(),{player,world:clearWorld,mode:'chase',dt:1,visualEnvelope:envelope});
+  assert.ok(pose.position.x<=envelope.maxX);
+  assert.ok(pose.position.z<=envelope.maxZ);
+  assert.ok(pose.position.y<=envelope.maxY);
+});
+
+test('visual envelope does not clamp player movement',()=>{
+  const player={position:{x:5.65,y:0,z:4.1}};
+  const before={...player.position};
+  stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1,visualEnvelope:{minX:-5,maxX:5,minY:.2,maxY:4,minZ:-4,maxZ:4}});
+  assert.deepEqual(player.position,before);
+});
+
+test('chase framing remains wider than explore inside cinematic envelope',()=>{
+  const envelope={minX:-5.8,maxX:5.8,minY:.2,maxY:4.2,minZ:-4.45,maxZ:4.35};
+  const player={position:{x:0,y:0,z:0}},dad={position:{x:1.5,y:0,z:-1.5}};
+  const explore=stepCamera(createCameraController(),{player,dad,world:clearWorld,mode:'explore',dt:1,visualEnvelope:envelope});
+  const chase=stepCamera(createCameraController(),{player,dad,world:clearWorld,mode:'chase',dt:1,visualEnvelope:envelope});
+  assert.ok(chase.fov>explore.fov);
+  assert.ok(distance(chase.position,chase.target)>=distance(explore.position,explore.target)*.9);
+});
