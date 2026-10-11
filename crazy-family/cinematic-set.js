@@ -4,6 +4,8 @@ const REQUIRED_LAYER_IDS = new Set([
   'cinematic-coffee-table',
 ]);
 
+const SCREEN_STAGE=Object.freeze({width:16,height:9});
+
 function worldById(world){
   return new Map((world?.objects||[]).map(object=>[object.id,object]));
 }
@@ -48,12 +50,7 @@ export function prepareCinematicDefinitions(manifest,world){
       width:Number(layer.proxy.width)||Number(worldPlacement.width)||0,
       depth:Number(layer.proxy.depth)||Number(worldPlacement.depth)||0,
     } : null;
-    return {
-      ...layer,
-      world:{...worldPlacement},
-      position,
-      proxy,
-    };
+    return {...layer,world:{...worldPlacement},position,proxy};
   });
   return {layers,visualEnvelope:cloneEnvelope(manifest.visualEnvelope)};
 }
@@ -70,18 +67,28 @@ function makeMaterial(THREE,texture,layer){
   return new THREE.MeshBasicMaterial({
     map:texture,
     transparent:true,
-    alphaTest:0.015,
-    opacity:light?.72:1,
+    alphaTest:light?0:.012,
+    opacity:light?.34:1,
     depthWrite:false,
-    depthTest:true,
+    depthTest:!light,
     side:THREE.DoubleSide,
     toneMapped:false,
     blending:light?THREE.AdditiveBlending:THREE.NormalBlending,
   });
 }
 
+function screenDepth(layer){
+  if(layer.kind==='background')return -9;
+  if(layer.kind==='surface')return -8.8;
+  if(layer.kind==='light')return 2.2;
+  return -8.55;
+}
+
 function makeLayerObject(THREE,layer,texture){
-  const geometry=new THREE.PlaneGeometry(layer.world.width,layer.world.height);
+  // Every exported layer is a full-frame transparent plate cropped from the same master.
+  // Keeping identical screen geometry guarantees exact pixel registration instead of
+  // tilting the reference art as if it were a physical wall in the room.
+  const geometry=new THREE.PlaneGeometry(SCREEN_STAGE.width,SCREEN_STAGE.height);
   const material=makeMaterial(THREE,texture,layer);
   const mesh=new THREE.Mesh(geometry,material);
   mesh.name=layer.id;
@@ -90,13 +97,11 @@ function makeLayerObject(THREE,layer,texture){
   mesh.userData.anchorId=layer.anchorId||null;
   mesh.userData.baseRenderOrder=Number(layer.renderOrder)||0;
   mesh.userData.required=layer.required!==false;
-  mesh.userData.cinematicBase={
-    position:{...layer.position},
-    rotation:{x:0,y:0,z:0},
-    scale:{x:1,y:1,z:1},
-  };
-  mesh.position.set(layer.position.x,layer.position.y,layer.position.z);
-  if(layer.orientation==='floor')mesh.rotation.x=-Math.PI/2;
+  mesh.userData.screenLayer=true;
+  mesh.userData.inactiveZ=screenDepth(layer);
+  mesh.userData.activeOccluderZ=-2.35;
+  mesh.userData.cinematicBase={position:{x:0,y:0,z:mesh.userData.inactiveZ},rotation:{x:0,y:0,z:0},scale:{x:1,y:1,z:1}};
+  mesh.position.set(0,0,mesh.userData.inactiveZ);
   mesh.renderOrder=mesh.userData.baseRenderOrder;
   mesh.frustumCulled=false;
   return mesh;
@@ -104,6 +109,7 @@ function makeLayerObject(THREE,layer,texture){
 
 export async function createCinematicSet({
   scene,
+  parent=scene,
   world,
   THREE,
   manifestUrl='assets/crazy-family/cinematic-home-v042/manifest.json',
@@ -111,6 +117,7 @@ export async function createCinematicSet({
   textureLoader=null,
 }={}){
   if(!scene)throw new Error('cinematic set requires a scene');
+  if(!parent)throw new Error('cinematic set requires a parent');
   if(!THREE)throw new Error('cinematic set requires THREE');
   if(!fetchImpl)throw new Error('cinematic set requires fetch');
   const response=await fetchImpl(manifestUrl,{cache:'no-store'});
@@ -127,7 +134,7 @@ export async function createCinematicSet({
     try{
       const texture=await loadTexture(loader,layer.src);
       const object=makeLayerObject(THREE,layer,texture);
-      scene.add(object);
+      parent.add(object);
       layersById.set(layer.id,object);
       if(layer.anchorId){
         if(!anchorsByWorldId.has(layer.anchorId))anchorsByWorldId.set(layer.anchorId,[]);
@@ -154,22 +161,17 @@ export async function createCinematicSet({
     warnings,
     visualEnvelope:prepared.visualEnvelope,
     manifest,
-    setDebugVisible(value){
-      for(const object of layersById.values())object.visible=Boolean(value);
-    },
+    screenStage:{...SCREEN_STAGE},
+    screenLayered:true,
+    setDebugVisible(value){for(const object of layersById.values())object.visible=Boolean(value);},
     dispose(){
       for(const object of layersById.values()){
-        scene.remove(object);
+        parent.remove(object);
         object.geometry?.dispose?.();
         const materials=Array.isArray(object.material)?object.material:[object.material];
-        for(const material of materials){
-          material?.map?.dispose?.();
-          material?.dispose?.();
-        }
+        for(const material of materials){material?.map?.dispose?.();material?.dispose?.();}
       }
-      layersById.clear();
-      anchorsByWorldId.clear();
-      occluders.length=0;
+      layersById.clear();anchorsByWorldId.clear();occluders.length=0;
     },
   };
 }
