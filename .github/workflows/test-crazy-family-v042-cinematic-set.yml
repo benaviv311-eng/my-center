@@ -8,28 +8,40 @@ on:
       - 'crazy-family/**'
       - 'tests/crazy-family/**'
       - 'assets/crazy-family/cinematic-home-v042/**'
+      - 'scripts/build-crazy-family-v042-assets.py'
       - 'scripts/test-crazy-family-v042-assets.py'
       - 'crazy-family.html'
       - '.github/workflows/test-crazy-family-v042-cinematic-set.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      CRAZY_FAMILY_V042_MASTER_URL: "https://dnznrvs05pmza.cloudfront.net/gemini/gemini-3-pro-image/images/b1f1ebd8-4d98-45c5-97a4-f16cf80ecfe0/4981e6c2-05f0-40e3-8c58-63883c4b82e0/A_single_standalone_wide_cinematic_interior_environment_for_.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiMzA1NTY2Zjg0ZjhjNWQ1MiIsImJ1Y2tldCI6InJ1bndheS10YXNrLWFydGlmYWN0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MTg4ODg4OH0.yjFWrBS09CxMIA2hiezIpe11kqXrbmbZDN37clqfqWg"
     steps:
       - uses: actions/checkout@v4
+      - name: Install asset tooling
+        run: python3 -m pip install --quiet pillow
+      - name: Build cinematic asset pack once
+        if: ${{ !hashFiles('assets/crazy-family/cinematic-home-v042/background.webp') }}
+        run: python3 scripts/build-crazy-family-v042-assets.py
+      - name: Verify v0.42 asset contract
+        run: python3 scripts/test-crazy-family-v042-assets.py
+      - name: Commit generated cinematic assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/crazy-family/cinematic-home-v042
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: add Crazy Family cinematic home artwork v0.42"
+            git push origin HEAD:feature/crazy-family-hybrid-cinematic-set-spec
+          fi
       - name: Verify Crazy Family node tests
         run: node --test tests/crazy-family/*.test.mjs
-      - name: Verify v0.42 asset contract when present
-        run: |
-          if [ -f scripts/test-crazy-family-v042-assets.py ]; then
-            python3 scripts/test-crazy-family-v042-assets.py
-          else
-            echo 'asset contract not added yet'
-          fi
       - name: Verify Crazy Family JavaScript syntax
         run: |
           for f in crazy-family/*.js; do node --check "$f"; done
