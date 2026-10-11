@@ -16,5 +16,7 @@ jobs:
           node-version: 22
       - name: Scenario unit test
         run: node --test tests/crazy-family/scenario.test.mjs
+      - name: Scenario integration contract
+        run: python scripts/test-crazy-family-v041-scenario-integration.py
       - name: Crazy Family regression tests
         run: node --test tests/crazy-family/*.test.mjs
