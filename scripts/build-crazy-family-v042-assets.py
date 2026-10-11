@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'assets' / 'crazy-family' / 'cinematic-home-v042'
 MASTER_URL = os.environ.get('CRAZY_FAMILY_V042_MASTER_URL', '').strip()
-TARGET = (1920, 1080)
+TARGET = (1600, 1000)  # exact 16:10 gameplay canvas ratio
 
 
 def fetch_master() -> Image.Image:
@@ -20,57 +20,65 @@ def fetch_master() -> Image.Image:
     with urllib.request.urlopen(request, timeout=90) as response:
         data = response.read()
     image = Image.open(io.BytesIO(data)).convert('RGB')
-    image.thumbnail(TARGET, Image.Resampling.LANCZOS)
-    canvas = Image.new('RGB', TARGET, '#9d735a')
-    x = (TARGET[0] - image.width) // 2
-    y = (TARGET[1] - image.height) // 2
-    canvas.paste(image, (x, y))
-    return canvas
+    # The selected clean master is already almost exact 16:10. Fill by center crop only;
+    # never letterbox it and never invent a different room composition here.
+    src_ratio = image.width / image.height
+    target_ratio = TARGET[0] / TARGET[1]
+    if src_ratio > target_ratio:
+        crop_w = int(image.height * target_ratio)
+        left = (image.width - crop_w) // 2
+        image = image.crop((left, 0, left + crop_w, image.height))
+    elif src_ratio < target_ratio:
+        crop_h = int(image.width / target_ratio)
+        top = (image.height - crop_h) // 2
+        image = image.crop((0, top, image.width, top + crop_h))
+    return image.resize(TARGET, Image.Resampling.LANCZOS)
 
 
-def feathered_mask(polygons: list[list[tuple[float,float]]], blur: int = 18) -> Image.Image:
+def feathered_mask(polygons: list[list[tuple[float,float]]], blur: int = 8) -> Image.Image:
     w, h = TARGET
     mask = Image.new('L', TARGET, 0)
     draw = ImageDraw.Draw(mask)
     for polygon in polygons:
-        points = [(int(px*w), int(py*h)) for px,py in polygon]
-        draw.polygon(points, fill=255)
+        draw.polygon([(int(px*w), int(py*h)) for px,py in polygon], fill=255)
     return mask.filter(ImageFilter.GaussianBlur(blur)) if blur else mask
 
 
-def layer_from(master: Image.Image, name: str, polygons: list[list[tuple[float,float]]], quality: int = 88) -> None:
+def layer_from(master: Image.Image, name: str, polygons: list[list[tuple[float,float]]], quality: int = 86, blur: int = 8) -> None:
     rgba = master.convert('RGBA')
-    rgba.putalpha(feathered_mask(polygons))
+    rgba.putalpha(feathered_mask(polygons, blur))
     rgba.save(OUT / name, 'WEBP', quality=quality, method=6)
 
 
-def save_light_overlay(master: Image.Image) -> None:
+def save_light_overlay() -> None:
     w,h = TARGET
     overlay = Image.new('RGBA', TARGET, (0,0,0,0))
     draw = ImageDraw.Draw(overlay)
-    for i in range(14):
-        alpha = max(0, 34 - i*2)
-        x0 = int(-0.08*w + i*0.04*w)
-        draw.polygon([(x0,0),(int(.46*w+i*.02*w),0),(int(.72*w),h),(int(.30*w),h)], fill=(255,176,105,alpha))
-    overlay = overlay.filter(ImageFilter.GaussianBlur(24))
-    overlay.save(OUT / 'light-overlay.webp', 'WEBP', quality=84, method=6)
+    # Restrained golden window wash; the master already carries the primary lighting.
+    for i in range(12):
+        alpha = max(0, 18 - i)
+        draw.polygon([(0,0),(int(.38*w),0),(int((.64+i*.005)*w),h),(int((.28+i*.005)*w),h)], fill=(255,184,105,alpha))
+    overlay = overlay.filter(ImageFilter.GaussianBlur(30))
+    overlay.save(OUT / 'light-overlay.webp', 'WEBP', quality=80, method=6)
 
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     master = fetch_master()
-    master.save(OUT / 'background.webp', 'WEBP', quality=90, method=6)
+    master.save(OUT / 'background.webp', 'WEBP', quality=88, method=6)
 
-    layer_from(master, 'floor-rug.webp', [[(.05,.49),(.87,.49),(.98,1),(.01,1)]], 86)
-    layer_from(master, 'sofa.webp', [[(.01,.28),(.55,.27),(.61,.77),(.04,.86)]], 90)
-    layer_from(master, 'coffee-table.webp', [[(.26,.50),(.70,.49),(.76,.86),(.24,.88)]], 90)
-    layer_from(master, 'dining-kitchen.webp', [[(.45,.08),(.99,.06),(.99,.67),(.48,.68)]], 88)
-    layer_from(master, 'foreground-left.webp', [[(0,.18),(.17,.18),(.24,1),(0,1)]], 88)
-    layer_from(master, 'foreground-right.webp', [[(.82,.22),(1,.18),(1,1),(.76,1)]], 88)
-    save_light_overlay(master)
+    # Masks are authored against this exact clean master. Every layer remains full-frame
+    # so it pixel-registers perfectly with the background when moved for occlusion.
+    layer_from(master, 'floor-rug.webp', [[(0,.42),(.72,.42),(.98,1),(0,1)]], 84, 8)
+    layer_from(master, 'sofa.webp', [[(0,.27),(.56,.27),(.57,.53),(.49,.57),(.36,.57),(.26,.55),(.02,.58),(0,.58)]], 88, 6)
+    layer_from(master, 'coffee-table.webp', [[(.035,.34),(.39,.34),(.40,.58),(.02,.60)]], 88, 5)
+    layer_from(master, 'dining-kitchen.webp', [[(.45,.06),(.90,.06),(.90,.53),(.47,.53)]], 86, 8)
+    layer_from(master, 'foreground-left.webp', [[(0,.13),(.12,.13),(.18,1),(0,1)]], 86, 7)
+    layer_from(master, 'foreground-right.webp', [[(.86,.12),(1,.10),(1,1),(.84,1)]], 86, 7)
+    save_light_overlay()
 
     manifest = {
-      'version': '0.42',
+      'version': '0.42-reference-home',
       'visualEnvelope': {'minX': -5.8, 'maxX': 5.8, 'minY': 0.0, 'maxY': 4.2, 'minZ': -4.45, 'maxZ': 4.35},
       'layers': [
         {'id':'cinematic-background','src':'assets/crazy-family/cinematic-home-v042/background.webp','kind':'background','world':{'x':0,'y':2.2,'z':-4.5,'width':12.2,'height':6.86},'renderOrder':-20,'occluder':False,'required':True},
@@ -84,7 +92,7 @@ def main() -> None:
       ],
     }
     (OUT / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
-    print('Built Crazy Family cinematic-home-v042 asset pack')
+    print('Built Crazy Family cinematic-home-v042 reference-like asset pack')
 
 
 if __name__ == '__main__':
