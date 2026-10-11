@@ -29,8 +29,8 @@ test('manifest entries become stable semantic layer definitions',()=>{
 test('anchored sofa resolves from world coordinates plus presentation offset',()=>{
   const prepared=prepareCinematicDefinitions(baseManifest,world);
   const sofa=prepared.layers.find(layer=>layer.id==='cinematic-sofa');
-  assert.equal(sofa.position.x,-3.15);
-  assert.equal(sofa.position.z,.45);
+  assert.ok(Math.abs(sofa.position.x-(-3.15))<1e-9);
+  assert.ok(Math.abs(sofa.position.z-.45)<1e-9);
   assert.equal(sofa.position.y,1.3);
   assert.equal(sofa.anchorId,'sofa');
   assert.deepEqual(sofa.proxy,{x:-3.35,z:.55,width:3.15,depth:1.25});
