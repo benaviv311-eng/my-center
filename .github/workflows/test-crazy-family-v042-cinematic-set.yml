@@ -1,0 +1,35 @@
+name: Crazy Family v0.42 Cinematic Set
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-hybrid-cinematic-set-spec
+    paths:
+      - 'crazy-family/**'
+      - 'tests/crazy-family/**'
+      - 'assets/crazy-family/cinematic-home-v042/**'
+      - 'scripts/test-crazy-family-v042-assets.py'
+      - 'crazy-family.html'
+      - '.github/workflows/test-crazy-family-v042-cinematic-set.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Crazy Family node tests
+        run: node --test tests/crazy-family/*.test.mjs
+      - name: Verify v0.42 asset contract when present
+        run: |
+          if [ -f scripts/test-crazy-family-v042-assets.py ]; then
+            python3 scripts/test-crazy-family-v042-assets.py
+          else
+            echo 'asset contract not added yet'
+          fi
+      - name: Verify Crazy Family JavaScript syntax
+        run: |
+          for f in crazy-family/*.js; do node --check "$f"; done
