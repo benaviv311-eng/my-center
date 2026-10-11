@@ -1,0 +1,153 @@
+{
+  "version": "0.42",
+  "visualEnvelope": {
+    "minX": -5.8,
+    "maxX": 5.8,
+    "minY": 0.0,
+    "maxY": 4.2,
+    "minZ": -4.45,
+    "maxZ": 4.35
+  },
+  "layers": [
+    {
+      "id": "cinematic-background",
+      "src": "assets/crazy-family/cinematic-home-v042/background.webp",
+      "kind": "background",
+      "world": {
+        "x": 0,
+        "y": 2.2,
+        "z": -4.5,
+        "width": 12.2,
+        "height": 6.86
+      },
+      "renderOrder": -20,
+      "occluder": false,
+      "required": true
+    },
+    {
+      "id": "cinematic-floor-rug",
+      "src": "assets/crazy-family/cinematic-home-v042/floor-rug.webp",
+      "kind": "surface",
+      "anchorId": "rug",
+      "world": {
+        "x": 0,
+        "y": 0.012,
+        "z": 0,
+        "width": 11.8,
+        "height": 8.9
+      },
+      "renderOrder": -12,
+      "occluder": false,
+      "required": true,
+      "orientation": "floor"
+    },
+    {
+      "id": "cinematic-sofa",
+      "src": "assets/crazy-family/cinematic-home-v042/sofa.webp",
+      "kind": "furniture",
+      "anchorId": "sofa",
+      "world": {
+        "x": 0,
+        "y": 1.35,
+        "z": 0,
+        "width": 4.55,
+        "height": 2.55
+      },
+      "renderOrder": 8,
+      "occluder": true,
+      "required": true,
+      "proxy": {
+        "width": 3.15,
+        "depth": 1.25
+      }
+    },
+    {
+      "id": "cinematic-coffee-table",
+      "src": "assets/crazy-family/cinematic-home-v042/coffee-table.webp",
+      "kind": "furniture",
+      "anchorId": "coffee-table",
+      "world": {
+        "x": 0,
+        "y": 0.76,
+        "z": 0,
+        "width": 3.15,
+        "height": 1.75
+      },
+      "renderOrder": 9,
+      "occluder": true,
+      "required": true,
+      "proxy": {
+        "width": 2.15,
+        "depth": 1.2
+      }
+    },
+    {
+      "id": "cinematic-dining-kitchen",
+      "src": "assets/crazy-family/cinematic-home-v042/dining-kitchen.webp",
+      "kind": "furniture",
+      "world": {
+        "x": 3.5,
+        "y": 2.0,
+        "z": -3.95,
+        "width": 6.2,
+        "height": 4.25
+      },
+      "renderOrder": -2,
+      "occluder": false,
+      "required": true
+    },
+    {
+      "id": "cinematic-foreground-left",
+      "src": "assets/crazy-family/cinematic-home-v042/foreground-left.webp",
+      "kind": "foreground",
+      "world": {
+        "x": -5.2,
+        "y": 1.65,
+        "z": 2.7,
+        "width": 2.7,
+        "height": 3.4
+      },
+      "renderOrder": 30,
+      "occluder": true,
+      "required": true,
+      "proxy": {
+        "width": 1.45,
+        "depth": 2.1
+      }
+    },
+    {
+      "id": "cinematic-foreground-right",
+      "src": "assets/crazy-family/cinematic-home-v042/foreground-right.webp",
+      "kind": "foreground",
+      "world": {
+        "x": 5.15,
+        "y": 1.65,
+        "z": 2.45,
+        "width": 2.85,
+        "height": 3.45
+      },
+      "renderOrder": 30,
+      "occluder": true,
+      "required": true,
+      "proxy": {
+        "width": 1.55,
+        "depth": 2.0
+      }
+    },
+    {
+      "id": "cinematic-light-overlay",
+      "src": "assets/crazy-family/cinematic-home-v042/light-overlay.webp",
+      "kind": "light",
+      "world": {
+        "x": 0,
+        "y": 2.15,
+        "z": -4.32,
+        "width": 12.1,
+        "height": 6.8
+      },
+      "renderOrder": 40,
+      "occluder": false,
+      "required": false
+    }
+  ]
+}
