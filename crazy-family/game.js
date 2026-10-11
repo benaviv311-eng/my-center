@@ -4,7 +4,8 @@ import { createLivingRoomWorld } from './world.js';
 import { createScenario, applyScenarioToWorld } from './scenario.js';
 import { createLivingRoomScene } from './scene.js';
 import { createCharacterVisual, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from './characters.js';
-import { createCameraController, stepCamera, chooseOccluders } from './camera.js';
+import { createCameraController, stepCamera } from './camera.js';
+import { resolveCinematicOcclusion, applyCinematicOcclusion } from './cinematic-occlusion.js';
 import { resolveInteraction, executeInteraction } from './interaction.js';
 import { createDadController, stepDad } from './dad.js';
 import { WORLD_ATTACK_DEFINITIONS, createWorldAttack, stepWorldAttack, attackHitsPlayer, dadForward } from './attacks.js';
@@ -17,6 +18,17 @@ function horizontalBasis(pose){
   const length=Math.hypot(dx,dz)||1;
   const forward={x:dx/length,z:dz/length};
   return {forward,right:{x:-forward.z,z:forward.x}};
+}
+
+function scenarioRng(){
+  const params=new URLSearchParams(globalThis.location?.search||'');
+  return params.get('cinematic-seed')==='1' ? ()=>0.42 : Math.random;
+}
+
+function unionSets(...sets){
+  const result=new Set();
+  for(const set of sets)for(const value of set||[])result.add(value);
+  return result;
 }
 
 export async function createCrazyFamilyGame({ root, legacyAdapter }) {
@@ -34,9 +46,9 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
 
   const world = createLivingRoomWorld();
   // SCENARIO_SPAWNS_V041 — the house stays fixed; special items and Dad vary each run.
-  const scenario=createScenario({world});
+  const scenario=createScenario({world,rng:scenarioRng()});
   applyScenarioToWorld(world,scenario);
-  const sceneHandle = createLivingRoomScene({ canvas, world });
+  const sceneHandle = await createLivingRoomScene({ canvas, world, visualMode:'cinematic' });
   const specialItemVisual=sceneHandle.objectsById.get(scenario.item.id);
   if(specialItemVisual){
     const {x,y,z}=scenario.item.position;
@@ -57,7 +69,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
   const dadController=createDadController({position:{...scenario.dad.position}});
   let dadFrame={position:{...dadController.position},velocity:{...dadController.velocity},facing:-1,state:'idle',cameraModeHint:'explore'};
-  let cameraPose = stepCamera(cameraController,{player,dad:dadFrame,world,mode:'explore',dt:1});
+  let cameraPose = stepCamera(cameraController,{player,dad:dadFrame,world,mode:'explore',dt:1,visualEnvelope:sceneHandle.visualEnvelope});
   let currentInteraction=null;
   let activeAttacks=[];
   let nextAttackAt=0,attackCursor=0,nearDadSince=0,nextPreAt=0,preIndex=0,wasSongPlaying=false;
@@ -221,15 +233,24 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     else if(['pant','yawn','sneeze'].includes(dadFrame.state))dadVisual.setFrame(dadFrame.state==='sneeze'?6:0);
     else dadVisual.setFrame(0);
 
+    const playerSurface=world.surfaceAt(player.position.x,player.position.z)?.kind||'wood';
+    const dadSurface=world.surfaceAt(dadFrame.position.x,dadFrame.position.z)?.kind||'wood';
+    sceneHandle.contactEffects.syncActor('libi',{position:player.position,grounded:player.grounded,surfaceKind:playerSurface,scale:1});
+    sceneHandle.contactEffects.syncActor('dad',{position:dadFrame.position,grounded:true,surfaceKind:dadSurface,scale:1.18});
+    const itemInteractable=world.interactables.find(item=>item.id===scenario.item.id);
+    sceneHandle.contactEffects.syncItem(scenario.item.id,{position:scenario.item.position,visible:Boolean(itemInteractable?.enabled),surfaceKind:world.surfaceAt(scenario.item.position.x,scenario.item.position.z)?.kind||'wood'});
+
     currentInteraction=resolveInteraction({player,interactables:world.interactables,maxDistance:1.15});
     if(currentInteraction){prompt.textContent=`✋ ${currentInteraction.label}`;prompt.hidden=false;}else{prompt.hidden=true;}
 
     const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;
     const cameraMode=(songPlaying || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
-    cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt});
+    cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt,visualEnvelope:sceneHandle.visualEnvelope});
     const camera=sceneHandle.applyCameraPose(cameraPose,reactions.cameraShake,now);
-    const occluders=chooseOccluders({camera:cameraPose.position,target:cameraPose.target,occluders:world.occluders});
-    sceneHandle.setOccluders(occluders);
+    const cinematicOccluders=sceneHandle.cinematicSet?.occluders||[];
+    const playerOcclusion=resolveCinematicOcclusion({camera:cameraPose.position,actor:player.position,occluders:cinematicOccluders});
+    const dadOcclusion=resolveCinematicOcclusion({camera:cameraPose.position,actor:dadFrame.position,occluders:cinematicOccluders});
+    applyCinematicOcclusion(sceneHandle.cinematicSet,unionSets(playerOcclusion,dadOcclusion));
     playerVisual.faceCamera(camera.position);
     dadVisual.faceCamera(camera.position);
 
@@ -243,11 +264,15 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   return {
     canvas,
     world,
+    scenario,
     scene: sceneHandle,
     cameraController,
     dadController,
     reactions,
+    playerVisual,
+    dadVisual,
     get player() { return player; },
+    get dadFrame(){return {...dadFrame,position:{...dadFrame.position},velocity:{...dadFrame.velocity}};},
     get attacks(){return activeAttacks.map(a=>({...a,position:{...a.position}}));},
     start() {
       if (running) return;
