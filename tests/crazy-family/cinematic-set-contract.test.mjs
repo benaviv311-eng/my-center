@@ -40,3 +40,22 @@ test('cinematic rewrite keeps item scenarios dynamic',()=>{
   assert.deepEqual({x:firstHeadphones.x,y:firstHeadphones.y,z:firstHeadphones.z},first.item.position);
   assert.deepEqual({x:lastHeadphones.x,y:lastHeadphones.y,z:lastHeadphones.z},last.item.position);
 });
+
+test('cinematic mode is the primary scene path and keeps dynamic objects independent',async()=>{
+  const sceneSource=await fs.readFile(new URL('../../crazy-family/scene.js',import.meta.url),'utf8');
+  const gameSource=await fs.readFile(new URL('../../crazy-family/game.js',import.meta.url),'utf8');
+  assert.match(sceneSource,/HYBRID_CINEMATIC_SET_V042/);
+  assert.match(sceneSource,/visualMode\s*=\s*'cinematic'/);
+  assert.match(sceneSource,/cinematic-home-v042\/manifest\.json/);
+  assert.match(sceneSource,/objectsById\.set\('headphones'/);
+  assert.match(sceneSource,/objectsById\.set\('toy-ball'/);
+  assert.match(sceneSource,/debug-procedural/);
+  assert.match(gameSource,/await\s+createLivingRoomScene/);
+  assert.match(gameSource,/scenario\.item\.position/);
+  const world=createLivingRoomWorld();
+  assert.deepEqual(blockerSnapshot(world),[
+    {id:'coffee-table',x:-0.25,z:0.55,width:2.15,depth:1.2,height:0.52},
+    {id:'side-table',x:-5.05,z:0.38,width:0.85,depth:0.75,height:0.68},
+    {id:'sofa',x:-3.35,z:0.55,width:3.15,depth:1.25,height:1.05},
+  ]);
+});
