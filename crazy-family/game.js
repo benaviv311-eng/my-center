@@ -1,6 +1,7 @@
 import { keyboardIntent, cameraRelativeIntent } from './input.js';
 import { createCharacterState, stepCharacter, jumpCharacter, LIBI_MOVEMENT_DEFAULTS } from './movement.js';
 import { createLivingRoomWorld } from './world.js';
+import { createScenario, applyScenarioToWorld } from './scenario.js';
 import { createLivingRoomScene } from './scene.js';
 import { createCharacterVisual, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from './characters.js';
 import { createCameraController, stepCamera, chooseOccluders } from './camera.js';
@@ -32,7 +33,17 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   root.replaceChildren(canvas,prompt);
 
   const world = createLivingRoomWorld();
+  // SCENARIO_SPAWNS_V041 — the house stays fixed; special items and Dad vary each run.
+  const scenario=createScenario({world});
+  applyScenarioToWorld(world,scenario);
   const sceneHandle = createLivingRoomScene({ canvas, world });
+  const specialItemVisual=sceneHandle.objectsById.get(scenario.item.id);
+  if(specialItemVisual){
+    const {x,y,z}=scenario.item.position;
+    specialItemVisual.position.set(x,y,z);
+    specialItemVisual.rotation.y=scenario.item.rotationY||0;
+    specialItemVisual.userData.scenarioSpawnId=scenario.item.spawnId;
+  }
   const sceneInteraction={setObjectVisible(id,value){const object=sceneHandle.objectsById.get(id)||sceneHandle.scene.getObjectByName(id);if(!object)return false;object.visible=Boolean(value);return true;}};
   const playerVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'libi', approvedAssetUrl: APPROVED_LIBI_ASSET });
   const dadVisual = createCharacterVisual({ scene: sceneHandle.scene, kind: 'dad', approvedAssetUrl: APPROVED_DAD_ASSET });
@@ -44,7 +55,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const keys = Object.create(null);
   let touchRun=false,touchCrouch=false;
   let player = createCharacterState({ position: { x: 0, y: 0, z: 3.55 }, ...LIBI_MOVEMENT_DEFAULTS });
-  const dadController=createDadController({position:{x:2.7,y:0,z:-0.35}});
+  const dadController=createDadController({position:{...scenario.dad.position}});
   let dadFrame={position:{...dadController.position},velocity:{...dadController.velocity},facing:-1,state:'idle',cameraModeHint:'explore'};
   let cameraPose = stepCamera(cameraController,{player,dad:dadFrame,world,mode:'explore',dt:1});
   let currentInteraction=null;
