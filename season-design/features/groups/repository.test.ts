@@ -8,7 +8,7 @@ import {
 } from "./repository";
 
 const coachA: CoachAccess = {
-  id: "11111111-1111-1111-1111-111111111111",
+  id: "11111111-1111-4111-8111-111111111111",
   accessStatus: "active",
 };
 
@@ -29,7 +29,7 @@ class MemoryGroupSource implements GroupDataSource {
     const now = "2026-10-10T21:00:00.000Z";
     const group: Group = {
       ...input,
-      id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       coachId,
       createdAt: now,
       updatedAt: now,
@@ -137,7 +137,7 @@ describe("group repository", () => {
     const source = new MemoryGroupSource();
     const repository = createGroupRepository(source, coachA);
     const group = await repository.createGroup(validInput);
-    const skillId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+    const skillId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
     await expect(
       repository.setApprovedSkillLevel(group.id, skillId, "expert" as SkillLevel),
@@ -156,7 +156,7 @@ describe("group repository", () => {
 
   it("rejects all repository access for an inactive profile", async () => {
     const repository = createGroupRepository(new MemoryGroupSource(), {
-      id: "33333333-3333-3333-3333-333333333333",
+      id: "33333333-3333-4333-8333-333333333333",
       accessStatus: "disabled",
     });
 
