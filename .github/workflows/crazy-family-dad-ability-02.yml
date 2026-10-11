@@ -1,0 +1,23 @@
+name: Crazy Family Dad ability 2
+
+on:
+  push:
+    paths:
+      - 'crazy-family.html'
+      - 'tests/crazy-family-dad-ability-02-echo.test.js'
+      - '.github/workflows/crazy-family-dad-ability-02.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-returning-echo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify Dad ability 2 returning echo
+        run: node tests/crazy-family-dad-ability-02-echo.test.js
