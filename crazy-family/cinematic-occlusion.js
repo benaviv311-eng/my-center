@@ -27,6 +27,11 @@ function setDepthMode(object,active){
   object.userData.actorOccluderActive=active;
   const base=Number(object.userData.baseRenderOrder)||0;
   object.renderOrder=active?Math.max(50,base+40):base;
+  if(Number.isFinite(object.userData.inactiveZ)){
+    object.position.z=active
+      ? (Number.isFinite(object.userData.activeOccluderZ)?object.userData.activeOccluderZ:-2.35)
+      : object.userData.inactiveZ;
+  }
   object.traverse?.(node=>{
     if(!node?.material)return;
     const materials=Array.isArray(node.material)?node.material:[node.material];
@@ -41,9 +46,7 @@ function setDepthMode(object,active){
 
 export function applyCinematicOcclusion(cinematicSet,activeIds=new Set()){
   const active=activeIds instanceof Set?activeIds:new Set(activeIds||[]);
-  for(const proxy of cinematicSet?.occluders||[]){
-    setDepthMode(proxy.object,active.has(proxy.id));
-  }
+  for(const proxy of cinematicSet?.occluders||[])setDepthMode(proxy.object,active.has(proxy.id));
   cinematicSet && (cinematicSet.activeOccluderIds=new Set(active));
   return active;
 }
