@@ -1,0 +1,20 @@
+name: Crazy Family v0.41 scenarios
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-scenarios-v041
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Scenario unit test
+        run: node --test tests/crazy-family/scenario.test.mjs
+      - name: Crazy Family regression tests
+        run: node --test tests/crazy-family/*.test.mjs
