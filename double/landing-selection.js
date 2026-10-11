@@ -33,7 +33,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='8';
+  const V='9';
   const head=document.head||document.documentElement;
   if(!document.querySelector('link[data-double-lobby]')){
     const link=document.createElement('link');
@@ -65,7 +65,9 @@
   }
   const loadBridge=()=>load('double/landing-music-bridge.js?v='+V,'data-double-landing-music-bridge',()=>false);
   const loadCompetitiveFix=()=>load('double/competitive-landing-fix.js?v='+V,'data-double-competitive-landing-fix',()=>false,loadBridge);
-  const loadPackUi=()=>load('double/icon-pack-ui.js?v='+V,'data-double-icon-pack-ui',()=>false,loadCompetitiveFix);
+  const loadStatsUi=()=>load('double/stats-ui.js?v='+V,'data-double-stats-ui',()=>false,loadCompetitiveFix);
+  const loadStatsStore=()=>load('double/stats-store.js?v='+V,'data-double-stats-store',()=>!!window.DoubleStatsStore,loadStatsUi);
+  const loadPackUi=()=>load('double/icon-pack-ui.js?v='+V,'data-double-icon-pack-ui',()=>false,loadStatsStore);
   const loadLobby=()=>load('double/menu-lobby-v3.js?v='+V,'data-double-lobby-ui',()=>false,loadPackUi);
   const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadLobby);
   const loadPacks=()=>loadSprite(loadRules);
