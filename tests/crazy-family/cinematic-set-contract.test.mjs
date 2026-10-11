@@ -48,7 +48,8 @@ test('cinematic mode is the primary scene path and keeps dynamic objects indepen
   assert.match(sceneSource,/visualMode\s*=\s*'cinematic'/);
   assert.match(sceneSource,/cinematic-home-v042\/manifest\.json/);
   assert.match(sceneSource,/objectsById\.set\('headphones'/);
-  assert.match(sceneSource,/objectsById\.set\('toy-ball'/);
+  assert.match(sceneSource,/createToyBall\(def\)/);
+  assert.match(sceneSource,/objectsById\.set\(def\.id,object\)/);
   assert.match(sceneSource,/debug-procedural/);
   assert.match(gameSource,/await\s+createLivingRoomScene/);
   assert.match(gameSource,/scenario\.item\.position/);
