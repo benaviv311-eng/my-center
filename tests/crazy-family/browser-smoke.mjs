@@ -60,7 +60,9 @@ try{
   await page.waitForFunction(()=>window.__crazyFamilyMovieSetGame?.scene?.cinematicSet?.layersById?.get('cinematic-sofa')?.userData?.actorOccluderActive===true,null,{timeout:8000});
   assert.equal(await page.evaluate(()=>window.__crazyFamilyMovieSetGame.scene.cinematicSet.layersById.get('cinematic-sofa').userData.actorOccluderActive),true,'authored sofa must occlude an actor moving behind it');
 
-  await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame,p=game.player.position,item=game.scenario.item.position;p.x=item.x;p.y=0;p.z=item.z+.72;});
+  // The deterministic v0.42 item sits on the coffee table. Its reachable side is the
+  // near/lower-Z edge; approaching from +Z leaves the capsule inside the table blocker.
+  await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame,p=game.player.position,item=game.scenario.item.position;p.x=item.x;p.y=0;p.z=item.z-.72;});
   await page.waitForFunction(()=>Boolean(document.querySelector('.movie-set-action-prompt:not([hidden])')),null,{timeout:5000});await page.keyboard.press('Enter');
   await page.waitForFunction(()=>{const game=window.__crazyFamilyMovieSetGame;return game.world.interactables.find(entry=>entry.id===game.scenario.item.id)?.enabled===false;},null,{timeout:5000});
   const collected=await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame;return {enabled:game.world.interactables.find(entry=>entry.id===game.scenario.item.id)?.enabled,visible:game.scene.objectsById.get(game.scenario.item.id)?.visible};});
