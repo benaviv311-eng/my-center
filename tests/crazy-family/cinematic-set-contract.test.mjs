@@ -49,10 +49,13 @@ test('cinematic mode is the primary scene path and keeps dynamic objects indepen
   assert.match(sceneSource,/cinematic-home-v042\/manifest\.json/);
   assert.match(sceneSource,/objectsById\.set\('headphones'/);
   assert.match(sceneSource,/createToyBall\(def\)/);
-  assert.match(sceneSource,/objectsById\.set\(def\.id,object\)/);
+  assert.match(sceneSource,/objectsById\.set\(def\.id,ball\)/);
   assert.match(sceneSource,/debug-procedural/);
+  assert.match(sceneSource,/OrthographicCamera/);
+  assert.match(sceneSource,/projectWorldToCinematicStage/);
   assert.match(gameSource,/await\s+createLivingRoomScene/);
   assert.match(gameSource,/scenario\.item\.position/);
+  assert.match(gameSource,/sceneHandle\.projectWorld/);
   const world=createLivingRoomWorld();
   assert.deepEqual(blockerSnapshot(world),[
     {id:'coffee-table',x:-0.25,z:0.55,width:2.15,depth:1.2,height:0.52},
