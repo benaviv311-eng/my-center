@@ -14,6 +14,7 @@ const DEFAULTS = Object.freeze({
 
 function copy(v){ return {x:v.x,y:v.y,z:v.z}; }
 function mix(a,b,t){ return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t}; }
+function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
 
 export function createCameraController(config = {}) {
   return {
@@ -53,13 +54,24 @@ function shortenedByHit(target, desired, hit, padding){
   };
 }
 
-export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0.016}){
+function insideVisualEnvelope(desired,envelope){
+  if(!envelope)return desired;
+  const margin=.04;
+  return {
+    x:clamp(desired.x,(envelope.minX??-Infinity)+margin,(envelope.maxX??Infinity)-margin),
+    y:clamp(desired.y,(envelope.minY??-Infinity)+margin,(envelope.maxY??Infinity)-margin),
+    z:clamp(desired.z,(envelope.minZ??-Infinity)+margin,(envelope.maxZ??Infinity)-margin),
+  };
+}
+
+export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0.016,visualEnvelope=null}){
   const config=controller.config;
   const selected=modeSettings(config,mode);
   const target=desiredTarget(player,dad,mode,config.targetHeight);
   let desired={x:target.x+selected.offset.x,y:target.y+selected.offset.y,z:target.z+selected.offset.z};
   const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || []);
   desired=shortenedByHit(target,desired,hit,config.collisionPadding);
+  desired=insideVisualEnvelope(desired,visualEnvelope);
   const t=controller.position ? 1-Math.exp(-config.smoothing*Math.max(0,dt)) : 1;
   controller.position=controller.position?mix(controller.position,desired,t):copy(desired);
   controller.target=controller.target?mix(controller.target,target,t):copy(target);
