@@ -1,0 +1,116 @@
+name: Publish Crazy Family v0.42 Cinematic Home
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-hybrid-cinematic-set-spec
+    paths:
+      - '.github/workflows/publish-crazy-family-v042-cinematic-home.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build publish branch from latest main
+        run: |
+          set -euo pipefail
+          FEATURE_REF="origin/feature/crazy-family-hybrid-cinematic-set-spec"
+          git fetch origin main feature/crazy-family-hybrid-cinematic-set-spec
+          git checkout -B publish-crazy-family-v042 origin/main
+
+          files=(
+            crazy-family/cinematic-projection.js
+            crazy-family/cinematic-set.js
+            crazy-family/cinematic-occlusion.js
+            crazy-family/contact-effects.js
+            crazy-family/attack-visuals.js
+            crazy-family/camera.js
+            crazy-family/scene.js
+            crazy-family/game.js
+            assets/crazy-family/cinematic-home-v042/background.webp
+            assets/crazy-family/cinematic-home-v042/manifest.json
+            tests/crazy-family/cinematic-projection.test.mjs
+            tests/crazy-family/cinematic-set.test.mjs
+            tests/crazy-family/cinematic-set-contract.test.mjs
+            tests/crazy-family/cinematic-occlusion.test.mjs
+            tests/crazy-family/contact-effects.test.mjs
+            tests/crazy-family/browser-smoke.mjs
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "$(dirname "$file")"
+            git show "$FEATURE_REF:$file" > "$file"
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('crazy-family.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('שלב 1: מפגש אבא · v0.41','שלב 1: מפגש אבא · v0.42')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+          grep -q "APPROVED_LIBI_ASSET = 'assets/libi-sprites-v025.png'" crazy-family/characters.js
+          grep -q "APPROVED_DAD_ASSET = 'assets/crazy-family/dad-sprites-v028.png'" crazy-family/characters.js
+          grep -q 'HYBRID_CINEMATIC_SET_V042' crazy-family/scene.js
+          grep -q 'cinematic-home-v042/manifest.json' crazy-family/scene.js
+
+      - name: Verify Crazy Family node tests
+        run: node --test tests/crazy-family/*.test.mjs
+
+      - name: Verify Crazy Family JavaScript syntax
+        run: |
+          for f in crazy-family/*.js; do node --check "$f"; done
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/crazy-family-http.log 2>&1 &
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:8000/crazy-family.html >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/crazy-family-http.log
+          exit 1
+
+      - name: Verify real browser before publish
+        run: node tests/crazy-family/browser-smoke.mjs
+
+      - name: Commit v0.42 onto latest main
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            crazy-family.html \
+            crazy-family/cinematic-projection.js \
+            crazy-family/cinematic-set.js \
+            crazy-family/cinematic-occlusion.js \
+            crazy-family/contact-effects.js \
+            crazy-family/attack-visuals.js \
+            crazy-family/camera.js \
+            crazy-family/scene.js \
+            crazy-family/game.js \
+            assets/crazy-family/cinematic-home-v042/background.webp \
+            assets/crazy-family/cinematic-home-v042/manifest.json \
+            tests/crazy-family/cinematic-projection.test.mjs \
+            tests/crazy-family/cinematic-set.test.mjs \
+            tests/crazy-family/cinematic-set-contract.test.mjs \
+            tests/crazy-family/cinematic-occlusion.test.mjs \
+            tests/crazy-family/contact-effects.test.mjs \
+            tests/crazy-family/browser-smoke.mjs
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: publish Crazy Family cinematic home v0.42"
+          git pull --rebase origin main
+          git push origin HEAD:main
