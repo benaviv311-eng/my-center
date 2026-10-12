@@ -19,15 +19,19 @@
   };
   background.src=canvas.dataset.background;
   sprite.src=canvas.dataset.sprite;
-  upSprite.src='./assets/player/raika-walk-up-professional-v3.png?v=professional-walk-v3-1';
+  upSprite.src='./assets/player/raika-walk-up-professional-v3.png?v=professional-walk-v3-2';
 
   const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const keys=new Set(),state={x:800,y:690,vx:0,vy:0,direction:'down',moving:false,walkTime:0,upDistance:0,upIdleFrame:0,lastTimestamp:0,currentInteraction:null,overlayOpen:false,seikaActive:false,camera:{x:0,y:0},renderOffset:{x:0,y:0},atmosphere:effects.createAtmosphereState(reducedMotion)};
   const rowByDirection={down:0,up:1,left:2,right:3},frameCount=8,walkFps=10,maxSpeed=245,acceleration=900,deceleration=1100,playerRadius=24;
   const upFootBaselineRatio=1,upWalkBob=0,upFootContactOffsets=[14,-9,5,-10,-10,-12,15,-6];
   const upFrameStride=24;
-  const upFootContacts=[{x:62,y:372},{x:63,y:372},{x:60,y:372},{x:63,y:372},{x:81,y:372},{x:79,y:372},{x:80,y:372},{x:78,y:372}];
-  const upLowerMirror={x0:31,x1:109,y0:250};
+  // Normalized coordinates keep the planted paw locked to the floor regardless of PNG resolution.
+  const upFootContacts=[
+    {x:.517,y:.907},{x:.525,y:.907},{x:.467,y:.907},{x:.500,y:.907},
+    {x:.675,y:.907},{x:.658,y:.907},{x:.667,y:.907},{x:.650,y:.907}
+  ];
+  const upLowerMirror={x0:.258,x1:.908,y0:.610};
   const movementKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
   const interactionKeys=new Set(['KeyE','Enter']);
 
@@ -44,7 +48,7 @@
   function drawInteractionHighlight(item,timestamp){if(!item||state.overlayOpen)return;const alpha=reducedMotion?.34:.34+Math.sin(timestamp*.004)*.07,screen=worldPoint(item);ctx.save();ctx.lineWidth=2.2*worldScale;ctx.strokeStyle=`rgba(247,207,115,${alpha})`;ctx.fillStyle=`rgba(247,207,115,${alpha*.12})`;ctx.shadowColor=`rgba(247,207,115,${alpha*.55})`;ctx.shadowBlur=reducedMotion?0:12*worldScale;ctx.beginPath();ctx.ellipse(screen.x,screen.y,42*worldScale,14*worldScale,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
 
   function upFrameGeometry(frameIndex,anchor,depthScale){
-    const sw=upSprite.naturalWidth/8,sh=upSprite.naturalHeight,scale=depthScale*worldScale,dh=355*scale,dw=dh*(sw/sh),foot=upFootContacts[frameIndex]||upFootContacts[0],sx=frameIndex*sw,dx=anchor.x-dw/2,dy=anchor.y-foot.y*(dh/sh);
+    const sw=upSprite.naturalWidth/8,sh=upSprite.naturalHeight,scale=depthScale*worldScale,dh=355*scale,dw=dh*(sw/sh),contact=upFootContacts[frameIndex]||upFootContacts[0],foot={x:contact.x*sw,y:contact.y*sh},sx=frameIndex*sw,dx=anchor.x-dw/2,dy=anchor.y-foot.y*(dh/sh);
     return{sw,sh,dh,dw,foot,sx,dx,dy,scaleX:dw/sw,scaleY:dh/sh};
   }
   function drawUpFrame(frameIndex,anchor,depthScale){
@@ -52,7 +56,7 @@
     ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
     ctx.drawImage(upSprite,g.sx,0,g.sw,g.sh,g.dx,g.dy,g.dw,g.dh);
     if(frameIndex>=4){
-      const clipX=g.dx+upLowerMirror.x0*g.scaleX,clipY=g.dy+upLowerMirror.y0*g.scaleY,clipW=(upLowerMirror.x1-upLowerMirror.x0)*g.scaleX,clipH=(g.sh-upLowerMirror.y0)*g.scaleY,centerX=g.dx+g.dw/2;
+      const clipX=g.dx+upLowerMirror.x0*g.dw,clipY=g.dy+upLowerMirror.y0*g.dh,clipW=(upLowerMirror.x1-upLowerMirror.x0)*g.dw,clipH=(1-upLowerMirror.y0)*g.dh,centerX=g.dx+g.dw/2;
       ctx.save();ctx.beginPath();ctx.rect(clipX,clipY,clipW,clipH);ctx.clip();ctx.translate(centerX*2,0);ctx.scale(-1,1);ctx.drawImage(upSprite,g.sx,0,g.sw,g.sh,g.dx,g.dy,g.dw,g.dh);ctx.restore();
     }
     ctx.restore();
