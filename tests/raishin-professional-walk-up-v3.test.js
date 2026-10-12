@@ -2,7 +2,10 @@ const fs=require('fs'),path=require('path'),assert=require('assert');
 const root=path.resolve(__dirname,'..');
 const movement=require(path.join(root,'raishin-legacy','movement.js'));
 const game=fs.readFileSync(path.join(root,'raishin-legacy','game.js'),'utf8');
+const professionalSprite=path.join(root,'raishin-legacy','assets','player','raika-walk-up-professional-v3.png');
 
+assert.ok(fs.existsSync(professionalSprite),'professional Walk UP sprite must exist');
+assert.ok(fs.statSync(professionalSprite).size>10000,'professional Walk UP sprite must contain real image data');
 assert.equal(typeof movement.frameAtDistance,'function','movement should expose distance-driven walk frames');
 assert.equal(movement.frameAtDistance(0,24,8),0);
 assert.equal(movement.frameAtDistance(23.9,24,8),0);
