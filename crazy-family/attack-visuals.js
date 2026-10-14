@@ -91,8 +91,8 @@ export function createAttackVisualSystem(scene,{projectPosition=(position)=>posi
         const age=Math.max(0,now-(attack.born||now));
         const guide=visual.getObjectByName('low-wave-floor-guide');
         const core=visual.getObjectByName('low-wave-core');
-        if(guide?.material)guide.material.opacity=age<LOW_WAVE_TELEGRAPH_MS?.32:.10;
-        if(core?.material)core.material.opacity=age<LOW_WAVE_TELEGRAPH_MS?.55:.92;
+        if(guide?.material)guide.material.opacity=age<LOW_WAVE_TELEGRAPH_MS ? .32 : .10;
+        if(core?.material)core.material.opacity=age<LOW_WAVE_TELEGRAPH_MS ? .55 : .92;
         for(const note of visual.children.filter(child=>child.name==='low-wave-note')){
           const idx=note.userData.noteIndex||0;
           note.position.x=((idx-1)*.27)+Math.sin(now/190+idx*1.9)*.035;
