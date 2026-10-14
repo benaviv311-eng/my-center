@@ -5,7 +5,7 @@
   const STYLE_ID='double-stats-ui-style';
   const MODAL_ID='doubleStatsModal';
   const labels={
-    classic:'⚡ קלאסי',levels:'🗺️ שלבים',knockout:'🎯 נוקאאוט',survival:'🛡️ הישרדות',
+    classic:'⚡ קלאסי',levels:'🗺️ שלבים',knockout:'🎯 נוקאאוט',survival:'🛡️ הישרדות',daily:'🏆 אתגר יומי',
     'sprint:5':'⏱️ מרוץ 5','sprint:10':'⏱️ מרוץ 10','sprint:15':'⏱️ מרוץ 15',
     'versus:duel':'⚔️ דו־קרב','versus:deck':'🃏 חפיסה מלאה','versus:knockout':'❤️ נוקאאוט לשניים',
     'versus:race':'🏁 מרוץ ל־15','versus:combo':'🔥 קומבו','versus:sudden':'💥 מוות פתאומי','versus:gold':'⭐ קלף זהב'
