@@ -9,7 +9,7 @@
 
   let upSpriteReady=false,upSpriteProfessional=true,upFallbackTried=false;
   background.decoding='async';sprite.decoding='async';upSprite.decoding='async';
-  upSprite.onload=()=>{upSpriteReady=!!upSprite.naturalWidth;};
+  upSprite.onload=()=>{upSpriteReady=!!upSprite.naturalWidth;if(upSpriteReady&&upSpriteProfessional)buildUpGroundingMetrics();};
   upSprite.onerror=()=>{
     upSpriteReady=false;
     if(upFallbackTried)return;
@@ -25,12 +25,7 @@
   const keys=new Set(),state={x:800,y:690,vx:0,vy:0,direction:'down',moving:false,walkTime:0,upDistance:0,upIdleFrame:0,leftDistance:0,leftIdleFrame:0,lastTimestamp:0,currentInteraction:null,overlayOpen:false,seikaActive:false,camera:{x:0,y:0},renderOffset:{x:0,y:0},atmosphere:effects.createAtmosphereState(reducedMotion)};
   const rowByDirection={down:0,up:1,left:2,right:3},frameCount=8,walkFps=10,maxSpeed=245,acceleration=900,deceleration=1100,playerRadius=24;
   const upFootBaselineRatio=1,upWalkBob=0,upFootContactOffsets=[14,-9,5,-10,-10,-12,15,-6];
-  const upFrameStride=24,leftFrameStride=24,leftFrameMetrics=[];
-  // Normalized coordinates keep the planted paw locked to the floor regardless of PNG resolution.
-  const upFootContacts=[
-    {x:.517,y:.907},{x:.525,y:.907},{x:.467,y:.907},{x:.500,y:.907},
-    {x:.675,y:.907},{x:.658,y:.907},{x:.667,y:.907},{x:.650,y:.907}
-  ];
+  const upFrameStride=24,leftFrameStride=24,upFrameMetrics=[],leftFrameMetrics=[];
   const upLowerMirror={x0:.258,x1:.908,y0:.610};
   const movementKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
   const interactionKeys=new Set(['KeyE','Enter']);
@@ -46,6 +41,38 @@
   function worldPoint(point){return effects.worldToScreen(point,state.renderOffset,worldScale,logicalWidth,logicalHeight);}
   function updateInteractionUI(){const active=dojoWorld.nearestInteraction(state,165);state.currentInteraction=active;if(!active||state.overlayOpen){interactionPrompt.hidden=true;return;}const screen=worldPoint(active);interactionPrompt.hidden=false;interactionPrompt.textContent=`[E] ${active.prompt}`;interactionPrompt.style.left=`${screen.x/logicalWidth*100}%`;interactionPrompt.style.top=`${Math.max(8,(screen.y-95*worldScale)/logicalHeight*100)}%`;interactionPrompt.style.bottom='auto';}
   function drawInteractionHighlight(item,timestamp){if(!item||state.overlayOpen)return;const alpha=reducedMotion?.34:.34+Math.sin(timestamp*.004)*.07,screen=worldPoint(item);ctx.save();ctx.lineWidth=2.2*worldScale;ctx.strokeStyle=`rgba(247,207,115,${alpha})`;ctx.fillStyle=`rgba(247,207,115,${alpha*.12})`;ctx.shadowColor=`rgba(247,207,115,${alpha*.55})`;ctx.shadowBlur=reducedMotion?0:12*worldScale;ctx.beginPath();ctx.ellipse(screen.x,screen.y,42*worldScale,14*worldScale,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
+
+  function buildUpGroundingMetrics(){
+    upFrameMetrics.length=0;
+    try{
+      const sw=Math.floor(upSprite.naturalWidth/frameCount),sh=upSprite.naturalHeight;
+      if(!sw||!sh)return;
+      const scan=document.createElement('canvas');scan.width=sw;scan.height=sh;
+      const scanCtx=scan.getContext('2d',{willReadFrequently:true});if(!scanCtx)return;
+      const lowerStart=Math.floor(sh*.52),bandDepth=Math.max(3,Math.round(sh*.02));
+      for(let frameIndex=0;frameIndex<frameCount;frameIndex+=1){
+        scanCtx.clearRect(0,0,sw,sh);
+        scanCtx.drawImage(upSprite,frameIndex*sw,0,sw,sh,0,0,sw,sh);
+        const pixels=scanCtx.getImageData(0,0,sw,sh).data;
+        let maxY=-1;
+        for(let y=lowerStart;y<sh;y+=1){
+          for(let x=0;x<sw;x+=1){
+            if(pixels[(y*sw+x)*4+3]>40)maxY=y;
+          }
+        }
+        if(maxY<0){upFrameMetrics.push({x:.5,y:1});continue;}
+        const bandStart=Math.max(lowerStart,maxY-bandDepth),xs=[];
+        for(let y=bandStart;y<=maxY;y+=1){
+          for(let x=0;x<sw;x+=1){
+            if(pixels[(y*sw+x)*4+3]>72)xs.push(x);
+          }
+        }
+        xs.sort((a,b)=>a-b);
+        const contactX=xs.length?xs[Math.floor(xs.length/2)]:sw/2;
+        upFrameMetrics.push({x:(contactX+.5)/sw,y:(maxY+.5)/sh});
+      }
+    }catch(_error){upFrameMetrics.length=0;}
+  }
 
   function buildLeftGroundingMetrics(){
     leftFrameMetrics.length=0;
@@ -80,7 +107,7 @@
   }
 
   function upFrameGeometry(frameIndex,anchor,depthScale){
-    const sw=upSprite.naturalWidth/8,sh=upSprite.naturalHeight,scale=depthScale*worldScale,dh=355*scale,dw=dh*(sw/sh),contact=upFootContacts[frameIndex]||upFootContacts[0],foot={x:contact.x*sw,y:contact.y*sh},sx=frameIndex*sw,dx=anchor.x-dw/2,dy=anchor.y-foot.y*(dh/sh);
+    const sw=upSprite.naturalWidth/8,sh=upSprite.naturalHeight,scale=depthScale*worldScale,dh=355*scale,dw=dh*(sw/sh),metric=upFrameMetrics[frameIndex]||{x:.5,y:1},foot={x:metric.x*sw,y:metric.y*sh},sx=frameIndex*sw,dx=anchor.x-dw/2,dy=anchor.y-foot.y*(dh/sh);
     return{sw,sh,dh,dw,foot,sx,dx,dy,scaleX:dw/sw,scaleY:dh/sh};
   }
   function drawUpFrame(frameIndex,anchor,depthScale){
@@ -93,7 +120,7 @@
     }
     ctx.restore();
   }
-  function professionalUpContactX(frameIndex,anchor,depthScale){const g=upFrameGeometry(frameIndex,anchor,depthScale);return g.dx+g.foot.x*g.scaleX;}
+  function professionalUpContactX(frameIndex,anchor,depthScale){const g=upFrameGeometry(frameIndex,anchor,depthScale),rawX=g.dx+g.foot.x*g.scaleX;if(frameIndex<4)return rawX;return 2*(g.dx+g.dw/2)-rawX;}
 
   function leftFrameGeometry(frameIndex,anchor,depthScale){
     const sw=sprite.naturalWidth/frameCount,sh=sprite.naturalHeight/4,row=rowByDirection.left,scale=depthScale*worldScale,dh=355*scale,dw=dh*(sw/sh),metric=leftFrameMetrics[frameIndex]||{x:.5,y:1},foot={x:metric.x*sw,y:metric.y*sh},sx=frameIndex*sw,sy=row*sh,dx=anchor.x-dw/2,dy=anchor.y-foot.y*(dh/sh);
@@ -109,7 +136,7 @@
 
   function drawPlayer(frameIndex,anchor,depthScale,grounding){
     const scale=depthScale*worldScale;ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional){ctx.restore();drawUpFrame(frameIndex,anchor,depthScale);return;}
+    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional&&upFrameMetrics.length===frameCount){ctx.restore();drawUpFrame(frameIndex,anchor,depthScale);return;}
     if(state.direction==='left'&&leftFrameMetrics.length===frameCount){ctx.restore();drawLeftFrame(frameIndex,anchor,depthScale);return;}
     if(state.direction==='up'&&upSpriteReady){const sw=upSprite.naturalWidth/8,sh=upSprite.naturalHeight,dh=355*scale,dw=dh*(sw/sh);ctx.drawImage(upSprite,frameIndex*sw,0,sw,sh,anchor.x-dw/2,anchor.y-dh*upFootBaselineRatio+upWalkBob,dw,dh);}
     else{const sw=sprite.naturalWidth/8,sh=sprite.naturalHeight/4,row=rowByDirection[state.direction],dh=355*scale,dw=dh*(sw/sh);ctx.drawImage(sprite,frameIndex*sw,row*sh,sw,sh,anchor.x-dw/2,anchor.y-dh+grounding.bobY,dw,dh);}
@@ -135,10 +162,10 @@
     ctx.clearRect(0,0,logicalWidth,logicalHeight);const bg=effects.backgroundRect(state.renderOffset,worldScale,logicalWidth,logicalHeight);ctx.drawImage(background,bg.x,bg.y,bg.width,bg.height);drawInteractionHighlight(near,timestamp);
     const depthScale=movement.scaleForDepth(state.y,365,830),anchor=worldPoint(state),speed=Math.hypot(state.vx,state.vy),grounding=effects.groundingMotion(state.walkTime,state.moving,speed,depthScale*worldScale),legacyFrameIndex=movement.frameAt(state.walkTime,state.moving,frameCount,walkFps);
     let frameIndex=legacyFrameIndex;
-    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional){const distanceFrame=movement.frameAtDistance(state.upDistance,upFrameStride,frameCount);if(state.moving){frameIndex=distanceFrame;if(frameIndex===0||frameIndex===4)state.upIdleFrame=frameIndex;}else frameIndex=state.upIdleFrame;}
+    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional&&upFrameMetrics.length===frameCount){const distanceFrame=movement.frameAtDistance(state.upDistance,upFrameStride,frameCount);if(state.moving){frameIndex=distanceFrame;if(frameIndex===0||frameIndex===4)state.upIdleFrame=frameIndex;}else frameIndex=state.upIdleFrame;}
     if(state.direction==='left'&&leftFrameMetrics.length===frameCount){const distanceFrame=movement.frameAtDistance(state.leftDistance,leftFrameStride,frameCount);if(state.moving){frameIndex=distanceFrame;if(frameIndex===0||frameIndex===4)state.leftIdleFrame=frameIndex;}else frameIndex=state.leftIdleFrame;}
     let contactX=anchor.x;
-    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional)contactX=professionalUpContactX(frameIndex,anchor,depthScale);
+    if(state.direction==='up'&&upSpriteReady&&upSpriteProfessional&&upFrameMetrics.length===frameCount)contactX=professionalUpContactX(frameIndex,anchor,depthScale);
     else if(state.direction==='left'&&leftFrameMetrics.length===frameCount)contactX=leftGroundContactX(frameIndex,anchor,depthScale);
     else if(state.direction==='up'&&upSpriteReady&&upSprite.naturalHeight){const dh=355*depthScale*worldScale;contactX+=upFootContactOffsets[frameIndex]*(dh/upSprite.naturalHeight);}
     effects.drawFloorContact(ctx,contactX,anchor.y,depthScale*worldScale,grounding);drawPlayer(frameIndex,anchor,depthScale,grounding);effects.renderAtmosphere(ctx,state.atmosphere,state.renderOffset);requestAnimationFrame(render);
