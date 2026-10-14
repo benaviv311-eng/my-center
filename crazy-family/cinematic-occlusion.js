@@ -11,12 +11,14 @@ function segmentIntersectsRect(camera,actor,proxy){
   return t0<=t1 && t1>0.02 && t0<0.98;
 }
 
-export function resolveCinematicOcclusion({camera,actor,occluders=[]}={}){
+export function resolveCinematicOcclusion({camera,actor,actorRadius=.36,occluders=[]}={}){
   const active=new Set();
   if(!camera||!actor)return active;
+  const padding=Math.max(0,Number(actorRadius)||0);
   for(const proxy of occluders){
     if(!proxy||proxy.kind==='background'||proxy.kind==='light'||!Number.isFinite(proxy.width)||!Number.isFinite(proxy.depth))continue;
-    if(segmentIntersectsRect(camera,actor,proxy))active.add(proxy.id);
+    const paddedProxy=padding?{...proxy,width:proxy.width+padding*2,depth:proxy.depth+padding*2}:proxy;
+    if(segmentIntersectsRect(camera,actor,paddedProxy))active.add(proxy.id);
   }
   return active;
 }
