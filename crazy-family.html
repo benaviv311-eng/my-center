@@ -35,7 +35,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.43</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.44</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -351,8 +351,8 @@ const dadSongs=[
  ['כל הבית שר עכשיו!','דלת, כיסא וגם גרב — כולם ביחד!'],
  ['זה השיר שלא נגמר!','מהר יותר! חזק יותר! לה לה לה!']
 ];
-const DAD_SONG_LIBRARY=dadSongs.map((lines,i)=>({id:i+1,file:'dad-song-'+String(i+1).padStart(2,'0')+'.mp3',lines}));
-const DAD_SONG_TIERS=[{id:1,weight:.55,name:'רגיל',songs:[0,1,2,3,4,10,11,12,13,14],dizzy:32,chase:1.08},{id:2,weight:.30,name:'מעצבן',songs:[5,6,7,8,9,15,16,17],dizzy:42,chase:1.12},{id:3,weight:.12,name:'כאוטי',songs:[18,19,20,21],dizzy:52,chase:1.18},{id:4,weight:.03,name:'שיר־על',songs:[22,23],dizzy:66,chase:1.22}];
+const DAD_SONG_LIBRARY=dadSongs.slice(0,10).map((lines,i)=>({id:i+1,file:'dad-song-'+String(i+1).padStart(2,'0')+'.mp3',lines}));
+const DAD_SONG_TIERS=[{id:1,weight:1,name:'שירי אבא',songs:[0,1,2,3,4,5,6,7,8,9],dizzy:32,chase:1.08}];
 function chooseDadSongTier(){const r=Math.random();let acc=0;for(const tier of DAD_SONG_TIERS){acc+=tier.weight;if(r<=acc)return tier}return DAD_SONG_TIERS[0]}
 let dadSongTier=null,dadSongFxClock=0,dadSongSuperWaveAt=0;
 let dadSongBag=[],dadSongIndex=-1,dadLineIndex=0,dadNextLineAt=0,lastSongIndex=-1;
