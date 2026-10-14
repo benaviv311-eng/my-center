@@ -56,3 +56,16 @@ test('swept diagonal capsule move stays in room and outside sofa', () => {
   assert.equal(insideExpanded(resolved,sofa,radius), false, JSON.stringify(resolved));
   assert.notDeepEqual({x:resolved.x,z:resolved.z},{x:to.x,z:to.z},'move tunneled through sofa unchanged');
 });
+
+test('side table keeps a solid core while preserving the left circulation path', () => {
+  const world = createLivingRoomWorld();
+  const visual = world.objects.find(o => o.id === 'side-table');
+  const collider = world.colliders.find(o => o.id === 'side-table');
+  assert.equal(visual.width, .85, 'canonical side-table visual width changed');
+  assert.ok(collider.width < visual.width, 'side-table collision proxy should be simpler than the visual mesh');
+  const radius=.32;
+  const throughCore=world.resolveCharacterMove({x:-5.05,y:0,z:-.6},{x:-5.05,y:0,z:.4},{radius,height:1.15});
+  assert.ok(throughCore.z < .4, 'solid side-table core should block direct passage');
+  const leftPass=world.resolveCharacterMove({x:-5.65,y:0,z:-.6},{x:-5.65,y:0,z:1.4},{radius,height:1.15});
+  assert.ok(leftPass.z > 1.25, `left circulation path remains blocked: ${JSON.stringify(leftPass)}`);
+});
