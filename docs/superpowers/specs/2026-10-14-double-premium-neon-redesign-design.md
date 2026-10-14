@@ -6,147 +6,113 @@ Scope: DOUBLE only (`double.html`, main game wrapper/core, daily challenge, stat
 
 ## 1. Goal
 
-Transform DOUBLE from a functional browser game into a polished, commercial-feeling arcade experience while preserving all existing game modes, icon packs, daily challenge, statistics, announcer options, and local progress.
+Transform DOUBLE into a polished, commercial-feeling arcade experience while preserving all existing game modes, icon packs, daily challenge, statistics, announcer options, controls, and local progress.
 
 Success means:
-- The landing screen immediately feels like a premium game rather than a utility page.
-- The visual hierarchy is obvious: current mode, playable cards, primary action, then secondary controls.
+- Landing feels like a premium game rather than a utility page.
+- Visual hierarchy is obvious: current mode → playable cards → primary CTA → secondary controls.
 - Motion and sound add energy without obscuring gameplay.
-- Mobile and desktop both feel intentionally designed.
-- Existing data keys and gameplay behavior remain backward-compatible.
-- Reduced-motion and audio-off preferences remain respected.
+- Desktop and mobile both feel intentionally designed.
+- Existing localStorage keys and gameplay behavior remain backward-compatible.
+- Reduced-motion and audio-off preferences are respected.
 
 ## 2. Approaches considered
 
 ### A. Cosmetic skin only
-Replace colors, backgrounds, shadows, and typography without changing component structure.
+Colors, background, shadows and typography only.
 
-Pros: lowest implementation risk, fastest.
-Cons: does not solve the current fragmented visual hierarchy; menu, daily, stats, and end screens would still feel like separate products.
+Pros: fastest, lowest risk.
+Cons: menu, daily, stats and finish states would still feel like separate products.
 
 ### B. Unified Premium Neon design system — selected
-Create one shared visual/motion language and apply it across landing, lobby, gameplay shell, daily challenge, statistics, and finish states. Keep the existing gameplay engines and localStorage contracts intact.
+One shared visual/motion/audio language across landing, lobby, gameplay shell, daily challenge, statistics and finish states, while keeping existing game logic intact.
 
-Pros: strong visual upgrade with controlled technical risk; avoids rewriting working game logic; gives every screen one coherent identity.
-Cons: touches multiple presentation modules and requires careful regression testing.
+Pros: strongest visible upgrade with controlled technical risk.
+Cons: touches multiple presentation modules and requires regression testing.
 
 ### C. Full gameplay rewrite
-Rebuild the game UI and state management into a new single-page architecture.
+Rebuild UI/state into a new SPA architecture.
 
 Pros: cleanest long-term architecture.
-Cons: unnecessary risk for this goal; could break mature game modes, audio, icon packs, stats, and daily challenge. Rejected.
+Cons: unnecessary risk for this goal; could break mature gameplay and stored progress. Rejected.
 
-## 3. Selected visual identity
+## 3. Visual identity
 
 Name: **DOUBLE — Premium Neon Arcade**
 
-Mood:
-- energetic
-- premium
-- futuristic
-- playful without looking childish
-- dark cinematic base with controlled neon highlights
+Mood: energetic, premium, futuristic, playful without looking childish.
 
 ### Core palette
-- Deep Navy: `#060B18`
-- Midnight: `#0B1530`
-- Space Indigo: `#171A3D`
-- Electric Blue: `#49A6FF`
-- Arcade Gold: `#FFD84D`
-- Hot Pink: `#FF5C82`
-- Mint Success: `#63E6BE`
-- Energy Orange: `#FFB347`
-- Error Red: `#FF6B7F`
-- Glass Surface: `rgba(10, 20, 46, .72)`
-- Glass Border: `rgba(255,255,255,.12)`
+- Deep Navy `#060B18`
+- Midnight `#0B1530`
+- Space Indigo `#171A3D`
+- Electric Blue `#49A6FF`
+- Arcade Gold `#FFD84D`
+- Hot Pink `#FF5C82`
+- Mint Success `#63E6BE`
+- Energy Orange `#FFB347`
+- Error Red `#FF6B7F`
+- Glass Surface `rgba(10,20,46,.72)`
+- Glass Border `rgba(255,255,255,.12)`
 
-### Semantic color rules
-- Player 1: Electric Blue
-- Player 2: Hot Pink
-- Daily challenge / records / trophies: Arcade Gold
-- Success: Mint
-- Mistake: Error Red
-- Neutral interactive highlight: Blue/Indigo
+Semantic rules: Player 1 blue, Player 2 pink, daily/records/trophies gold, success mint, mistakes red.
 
 ## 4. Shared design system
 
-Create a shared presentation layer rather than repeating ad hoc CSS across pages.
+Create shared presentation files that never own game state:
+- `double/premium-theme.css` — tokens, surfaces, buttons, cards, HUD, modals, responsive layout.
+- `double/premium-motion.css` — entrance, hover, success, error, countdown, trophy, shimmer and parallax motion.
+- `double/premium-effects.js` — particles, glow reactions, reduced-motion handling and visual micro-interactions.
+- `double/premium-fx.js` — isolated UI/game sound effects with the existing `double-effects-enabled-v1` preference.
 
-### New shared files
-- `double/premium-theme.css` — tokens, surfaces, buttons, cards, HUD, modals, responsive rules.
-- `double/premium-motion.css` — entrance, hover, success, error, countdown, trophy, shimmer, parallax rules.
-- `double/premium-effects.js` — lightweight particles, glow reactions, UI micro-interactions, reduced-motion detection.
-
-These files must not own game state. They only enhance presentation.
-
-### Design tokens
-Use CSS custom properties on `:root` for:
-- colors
-- glass opacity
-- border opacity
-- shadow strength
-- glow intensity
-- radius scale
-- motion durations
-- easing curves
-
-This ensures landing, daily, stats, and finish screens stay visually synchronized.
+Use CSS custom properties for colors, radii, shadows, glass opacity, glow intensity, durations and easing.
 
 ## 5. Landing screen
 
 ### Background
-Build a layered background entirely from performant browser-native effects:
+Five lightweight browser-native layers:
 1. deep gradient base
-2. slow aurora/radial light blooms
+2. slow aurora/radial blooms
 3. star/particle field
-4. very subtle grid/noise layer
-5. focused glow behind the active card area
+4. subtle grid/noise texture
+5. focused glow behind active cards
 
-No large autoplay video background in this pass. The design should remain fast on mobile.
+No video background in this pass.
 
 ### Top bar
 - compact DOUBLE wordmark
-- profile/status cluster where relevant
-- menu button as glass icon button
-- optional tiny live music state indicator
+- menu button as glass icon control
+- small status accents only; no competing secondary navigation
 
-### Main preview area
+### Main preview
 - cards remain the visual focus
-- deeper material treatment: soft silver-white card face, edge light, inner ring, contact shadow
+- silver-white material, edge light, inner ring and deeper contact shadow
 - mode-specific glow around card pair
-- preview HUD becomes compact glass chips
+- HUD becomes compact glass chips
 
-### Hero / CTA
-- current game title large and crisp
-- one-line mode description
-- primary gold CTA: `▶ שחק עכשיו`
-- secondary actions are visually quieter
+### CTA
+- current game title
+- one-line description
+- primary gold `▶ שחק עכשיו`
+- secondary actions visually quieter
 
-## 6. Lobby / menu architecture
+## 6. Lobby/menu
 
-Keep the current logical order:
+Logical order remains:
 1. number of players
 2. game mode
 3. difficulty where relevant
 
-Then expose customization/settings below gameplay selection.
+Then customization/settings.
 
-### Menu visual structure
+Visual structure:
 - glass control-center panel
-- section headings with clear hierarchy
-- mode rows use icon tile + title + one short description
-- selected item receives border glow and soft fill, not a large color block
-- settings grouped separately from play flow
+- strong section hierarchy
+- mode rows: icon tile + title + one short description
+- selected state: border glow + soft fill
+- settings visually separated from play flow
 
-### Sections
-- Play
-- Icon pack
-- Audio / announcer
-- Statistics
-- Help
-- Daily challenge card for single-player flow
-
-The daily challenge remains visually special with gold shimmer and daily status chips.
+Sections: Play, Icon pack, Audio/announcer, Statistics, Help. Daily challenge remains a special gold card in single-player mode.
 
 ## 7. Gameplay presentation
 
@@ -154,202 +120,171 @@ Gameplay logic remains unchanged.
 
 ### Cards
 - premium radial material
-- stronger depth and cleaner edge highlight
-- subtle floating idle motion
-- match reaction: quick scale pulse + expanding ring + tiny particles
-- wrong reaction: short shake + red edge flash
+- cleaner edge highlight and depth
+- subtle idle float
+- correct: quick scale pulse + expanding ring + tiny particles
+- wrong: short shake + red edge flash
 
 ### HUD
-- central compact chip system
-- score/time/target readable at a glance
-- competitive modes color-code players consistently
-- tension state under 10 seconds adds subtle warm glow and pulse, never screen-wide flashing
+- compact chip system
+- score/time/target readable instantly
+- consistent player colors
+- <=10 seconds: restrained warm tension glow/pulse
 
 ### Countdown
-`3 → 2 → 1 → GO`
-- center-stage scale animation
-- slight blur-to-sharp transition
-- one short audio cue per count
+`3 → 2 → 1 → GO` with scale + blur-to-sharp + audio cue.
 
-### Victory / finish
-- trophy rise animation
-- result number counts up or settles with scale
-- new record gets gold shimmer treatment
-- replay is the primary action
-- return is secondary
+### Finish
+- trophy rise
+- result settles with scale/count-up treatment
+- new record gets one gold shimmer/burst
+- replay primary, return secondary
 
 ## 8. Daily challenge
 
-Daily challenge keeps its existing deterministic seed and gameplay rules.
+Keep deterministic seed and all current rules unchanged.
 
-Visual changes:
-- gold/indigo identity
-- richer header with date and streak badge
-- progress 0/15 gets an animated progress rail
-- penalties get visible but restrained red feedback
-- finish state highlights daily best, streak, completed days, and penalties
-- `שיא חדש` receives a one-time gold burst
+Visual identity:
+- gold/indigo
+- richer header with date/streak
+- animated 0/15 progress rail
+- visible but restrained penalty feedback
+- finish card highlights best, streak, completed days and penalties
+- one-time gold burst for a new daily record
 
-## 9. Statistics screen
+## 9. Statistics
 
-Keep the existing stored metrics and calculations.
+Keep existing stored metrics/calculations unchanged.
 
 Redesign:
-- premium full-screen/modal dashboard
+- premium dashboard modal
 - five primary metric cards
-- reaction graph uses glowing bars with clearer labels
-- per-mode cards become compact data tiles
-- best values highlighted in gold/mint
-- reset action remains visually destructive and separate
+- clearer glowing reaction graph
+- compact per-mode data tiles
+- best values highlighted gold/mint
+- destructive reset visually separated
+- no external chart library
 
-No external charting dependency.
+## 10. Motion rules
 
-## 10. Motion system
-
-### Principles
-- 120–260 ms for interaction feedback
-- 280–450 ms for page/section transitions
-- background motion very slow: 8–30 seconds
+- interaction feedback: 120–260 ms
+- page/section transitions: 280–450 ms
+- background loops: 8–30 s
 - no continuous aggressive pulsing
-- motion must never delay input
+- motion never delays input
 
-### Required motion states
-- menu enter/exit
-- mode card hover/press
-- button press depth
-- card idle float
-- correct match pulse/ring/particles
-- wrong shake/flash
-- combo emphasis
-- daily gold shimmer
-- countdown
-- result/trophy entrance
-- statistics number entrance
+Required states: menu enter/exit, hover/press, card idle, correct, wrong, combo, daily shimmer, countdown, trophy/result, stats entrance.
 
-### Accessibility
-If `prefers-reduced-motion: reduce`:
-- disable parallax, floating loops, shimmer sweeps, particle bursts
-- keep only instant state changes or simple opacity transitions
+If `prefers-reduced-motion: reduce`: disable parallax, float loops, shimmer sweeps and particle bursts; retain simple opacity/state changes.
 
-## 11. Audio and music
+## 11. Audio/music
 
-The existing `DoubleMusic` interface remains the contract so current bridges do not break.
+Preserve the public `DoubleMusic` API so existing bridges keep working.
 
-### Music architecture
-Keep HTML Audio/WebAudio-generated assets local to the browser, but replace the current single-feel loop with a richer adaptive mix while preserving low file/dependency overhead.
+Adaptive scenes:
+- `lobby`: calm synthwave arcade groove
+- `play`: stronger beat/bass
+- `tension`: denser/faster layer for <=10 seconds
+- `victory`: loop pauses, short stinger plays
 
-Scenes:
-- `lobby`: calm synthwave/arcade groove
-- `play`: stronger beat and bass
-- `tension`: faster/denser layer for <=10 seconds
-- `victory`: loop pauses and stinger plays
-
-### Sound effects
-Add a dedicated lightweight FX module with independent on/off state:
+`premium-fx.js` owns independent effects:
 - UI click
 - menu whoosh
-- correct match
+- correct
 - combo escalation
 - wrong buzz
 - countdown tick
-- GO cue
-- record/new-best sparkle
+- GO
+- new-best sparkle
 - trophy/victory cue
 
-Audio rules:
-- music and FX remain separately controllable
-- no sound before browser user gesture permits playback
-- audio failures must be silent failures; gameplay must continue
-- existing announcer remains independent
+Rules:
+- music and FX independently controllable
+- no playback before permitted user gesture
+- audio failure never blocks gameplay
+- announcer remains independent
 
-## 12. Performance rules
+## 12. Performance
 
-- No framework migration.
-- No large video backgrounds.
-- No heavy canvas renderer for the whole UI.
-- Decorative particles capped and auto-removed.
-- Prefer CSS transforms/opacity for animation.
-- Avoid layout thrashing in gameplay loops.
-- Existing icon sprite packs remain lazy-loaded through current bootstrap flow.
+- no framework migration
+- no video background
+- no full-screen heavy canvas renderer
+- particles capped and auto-removed
+- animations favor transform/opacity
+- avoid layout thrashing in gameplay loops
+- existing icon sprites remain lazy-loaded
 
 ## 13. Backward compatibility
 
-Must preserve:
+Preserve:
 - all current game modes
 - `double-difficulty-v1`
 - `double-music-enabled-v1`
 - `double-effects-enabled-v1`
-- announcer preference key
+- announcer preference
 - icon pack selection
 - statistics store
-- daily challenge record/streak store
-- versus controls and avatars
-- existing direct-launch query parameters
+- daily challenge store/streak
+- versus controls/avatars
+- direct-launch query parameters
 
-No user progress migration should be required.
+No progress migration.
 
-## 14. File-level implementation map
+## 14. File map
 
-Expected presentation changes:
-- `double.html` — add shared premium theme hooks and updated cache version.
-- `double/menu-lobby.css` — align with shared tokens; reduce duplicated visual rules.
-- `double/menu-lobby-v3.js` — add classes/state hooks only where needed; preserve flow.
-- `double-game.html` — premium end overlay and shared visual assets.
-- `double-game-core.html` / `double/game.js` — minimal class/data hooks for motion/audio reactions only; gameplay logic unchanged.
-- `double-daily.html` — shared premium theme and daily-specific gold identity.
-- `double/daily-challenge-game.js` — presentation event hooks only.
-- `double/stats-ui.js` — redesigned dashboard markup/classes without changing stats calculations.
-- `double/music-engine.js` — richer scene behavior behind the same public API.
+Expected changes:
+- `double.html` — premium hooks and cache version
+- `double/menu-lobby.css` — shared tokens, less duplicated visual styling
+- `double/menu-lobby-v3.js` — presentation hooks only; selection flow preserved
+- `double-game.html` — premium end overlay/shared assets
+- `double-game-core.html` / `double/game.js` — minimal state classes/events for reactions; gameplay unchanged
+- `double-daily.html` — shared theme + daily gold identity
+- `double/daily-challenge-game.js` — presentation/FX event hooks only
+- `double/stats-ui.js` — premium dashboard markup/classes; calculations unchanged
+- `double/music-engine.js` — richer scene behavior behind same API
 - new `double/premium-theme.css`
 - new `double/premium-motion.css`
 - new `double/premium-effects.js`
-- optional new `double/premium-fx.js` if FX should remain isolated from visual effects.
+- new `double/premium-fx.js`
 
 ## 15. Error handling
 
-- Missing premium stylesheet: existing inline styles still leave the app usable.
-- Missing effects module: gameplay continues without decorative motion.
-- Audio unavailable/blocked: controls remain functional and music status reflects disabled/unavailable state where possible.
-- Unsupported `backdrop-filter`: opaque fallback surfaces must remain legible.
-- Low-performance/reduced-motion environments receive simplified effects.
+- missing premium stylesheet: existing inline styles remain usable
+- missing visual effects module: gameplay continues
+- audio blocked/unavailable: silent failure; gameplay continues
+- unsupported backdrop filter: opaque readable fallback
+- reduced-motion/low-performance: simplified effects
 
-## 16. Testing strategy
+## 16. Testing
 
-### Regression
+Regression:
 - all single-player modes launch
 - all versus modes launch
-- daily challenge launches and deterministic sequence remains unchanged
-- icon pack switching still works
-- stats still record and render
-- music toggle and FX toggle persist
-- announcer still works
-- back/replay flows still work
+- daily deterministic sequence unchanged
+- icon pack switching works
+- stats record/render
+- music and FX preferences persist
+- announcer works
+- back/replay flows work
 
-### Visual behavior
-- menu hierarchy on desktop/mobile
-- cards never overlap critical HUD/CTA areas
-- end overlays fit small screens
-- daily challenge remains playable at narrow widths
-- reduced-motion removes continuous animation
+Visual:
+- menu hierarchy desktop/mobile
+- cards do not overlap critical HUD/CTA
+- end overlay fits small screens
+- daily is playable at narrow widths
+- reduced-motion disables continuous effects
 
-### Audio
-- music starts after an allowed user gesture
+Audio:
+- starts only after allowed gesture
 - music OFF persists
 - FX OFF persists
-- victory stinger does not permanently stop lobby/play recovery
+- victory stinger recovers to later lobby/play state
 
-### Performance
+Performance:
 - no runaway MutationObserver loops
 - no unbounded particle DOM growth
-- no repeated audio-object creation in steady gameplay loops
+- no repeated audio-object churn in steady loops
 
 ## 17. Definition of done
 
-The redesign is complete when:
-- landing, lobby, main game, daily challenge, stats, and finish states visibly share the same Premium Neon identity
-- animations and audio react coherently to game states
-- every existing mode remains playable
-- daily challenge/stats/progress remain intact
-- mobile layout is intentionally polished
-- reduced-motion and audio-off behavior work
-- regression tests and syntax checks pass
+Complete when landing, lobby, main game, daily challenge, stats and finish states share one Premium Neon identity; motion/audio react coherently; every mode remains playable; progress/stats/daily data remain intact; mobile is polished; reduced-motion/audio-off work; and regression/syntax tests pass.
