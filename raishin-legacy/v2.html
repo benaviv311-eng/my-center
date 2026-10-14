@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#24180d">
+  <title>מורשת ריישין — Movement Engine v2 Preview</title>
+  <link rel="preload" as="image" href="./assets/gameplay/inazuma-main-hall-clean.png">
+  <link rel="preload" as="image" href="./assets/player/raika-walk-4dir-8f.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="game-app" aria-label="מורשת ריישין — תצוגת מנוע תנועה v2">
+    <section class="game-frame" data-game-aspect="16:9" aria-label="Inazuma Dojo movement v2 preview" tabindex="0">
+      <div id="phaserGame"
+           data-background="./assets/gameplay/inazuma-main-hall-clean.png"
+           data-sprite="./assets/player/raika-walk-4dir-8f.png"
+           style="width:100%;height:100%;position:absolute;inset:0"
+           aria-label="ראיקה — תצוגת מנוע תנועה חדש"></div>
+      <div class="ambient-light-overlay" aria-hidden="true"></div>
+      <div id="seikaOverlay" class="seika-overlay" aria-hidden="true"></div>
+      <div class="hud" aria-label="HUD v1 dojo">
+        <div class="hud-status" dir="ltr"><div class="portrait" aria-hidden="true">R</div><div class="status-copy"><strong>Raika</strong><div class="bar health"><span></span></div><div class="bar raihatsu"><span></span></div></div></div>
+        <div class="objective" dir="ltr"><strong>Inazuma Dojo</strong><span id="objectiveText">Objective: Movement Engine v2 Preview</span></div>
+        <div class="minimap" aria-label="minimap"><span class="north">N</span><span id="minimapPlayer" class="player-dot"></span></div>
+        <div id="interactionPrompt" class="interaction-prompt" dir="ltr" hidden></div>
+        <section id="interactionPanel" class="interaction-panel" dir="ltr" aria-live="polite" hidden><button id="interactionClose" type="button" aria-label="Close">×</button><strong id="interactionTitle"></strong><p id="interactionBody"></p></section>
+        <div class="hud-actions" dir="ltr"><div><span class="action-icon">↥</span><b>Jump</b></div><div><span class="action-icon">↝</span><b>Dodge</b></div><div><span class="action-icon">E</span><b>Interact</b></div></div>
+        <div class="controls-hint" dir="ltr">WASD / Arrow Keys · V2 Preview</div>
+        <span class="sr-only">Health</span><span class="sr-only">Raihatsu</span><span class="sr-only">Objective</span><span class="sr-only">Jump</span><span class="sr-only">Dodge</span><span class="sr-only">Interact</span>
+      </div>
+      <div id="loadError" class="load-error" role="alert" hidden>לא ניתן לטעון את Movement Engine v2.</div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@4.2.1/dist/phaser.min.js"></script>
+  <script src="./v2-game.js"></script>
+</body>
+</html>
