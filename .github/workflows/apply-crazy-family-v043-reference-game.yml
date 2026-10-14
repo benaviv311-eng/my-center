@@ -30,7 +30,17 @@ jobs:
           im.save('assets/crazy-family/cinematic-home-v043/background.webp','WEBP',quality=84,method=6)
           PY
       - name: Build v0.43 game
-        run: python scripts/build-crazy-family-v043.py
+        run: |
+          python scripts/build-crazy-family-v043.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('crazy-family/cinematic-projection.js')
+          s=p.read_text()
+          old='scale:.54+depth*.62'
+          new='scale:1.28+depth*1.28'
+          if old not in s: raise SystemExit('projection scale anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
       - name: Static and regression tests
         run: |
           python scripts/test-crazy-family-v043-reference-game.py
@@ -66,5 +76,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add crazy-family.html crazy-family/game.js crazy-family/scene.js crazy-family/cinematic-set.js crazy-family/cinematic-projection.js assets/crazy-family/cinematic-home-v043 scripts/build-crazy-family-v043.py
-          git commit -m "feat: turn Crazy Family reference art into playable v0.43" || exit 0
+          git commit -m "visual: match Crazy Family actor scale to reference" || exit 0
           git push origin HEAD:feature/crazy-family-v043-reference-game
