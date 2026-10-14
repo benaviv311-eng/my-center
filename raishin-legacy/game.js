@@ -42,6 +42,28 @@
   function updateInteractionUI(){const active=dojoWorld.nearestInteraction(state,165);state.currentInteraction=active;if(!active||state.overlayOpen){interactionPrompt.hidden=true;return;}const screen=worldPoint(active);interactionPrompt.hidden=false;interactionPrompt.textContent=`[E] ${active.prompt}`;interactionPrompt.style.left=`${screen.x/logicalWidth*100}%`;interactionPrompt.style.top=`${Math.max(8,(screen.y-95*worldScale)/logicalHeight*100)}%`;interactionPrompt.style.bottom='auto';}
   function drawInteractionHighlight(item,timestamp){if(!item||state.overlayOpen)return;const alpha=reducedMotion?.34:.34+Math.sin(timestamp*.004)*.07,screen=worldPoint(item);ctx.save();ctx.lineWidth=2.2*worldScale;ctx.strokeStyle=`rgba(247,207,115,${alpha})`;ctx.fillStyle=`rgba(247,207,115,${alpha*.12})`;ctx.shadowColor=`rgba(247,207,115,${alpha*.55})`;ctx.shadowBlur=reducedMotion?0:12*worldScale;ctx.beginPath();ctx.ellipse(screen.x,screen.y,42*worldScale,14*worldScale,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
 
+  function findDenseFootContact(pixels,sw,sh,lowerStart){
+    const alphaThreshold=96,minRowPixels=Math.max(4,Math.round(sw*.055)),minRunPixels=Math.max(3,Math.round(sw*.035)),supportBandDepth=Math.max(4,Math.round(sh*.028));
+    let supportY=-1;
+    for(let y=sh-1;y>=lowerStart;y-=1){
+      let rowPixels=0,runPixels=0,maxRunPixels=0;
+      for(let x=0;x<sw;x+=1){
+        if(pixels[(y*sw+x)*4+3]>=alphaThreshold){rowPixels+=1;runPixels+=1;if(runPixels>maxRunPixels)maxRunPixels=runPixels;}else runPixels=0;
+      }
+      if(rowPixels>=minRowPixels&&maxRunPixels>=minRunPixels){supportY=y;break;}
+    }
+    if(supportY<0)return{x:.5,y:1};
+    const bandStart=Math.max(lowerStart,supportY-supportBandDepth+1),xs=[];
+    for(let y=bandStart;y<=supportY;y+=1){
+      for(let x=0;x<sw;x+=1){
+        if(pixels[(y*sw+x)*4+3]>=alphaThreshold)xs.push(x);
+      }
+    }
+    xs.sort((a,b)=>a-b);
+    const contactX=xs.length?xs[Math.floor(xs.length/2)]:sw/2;
+    return{x:(contactX+.5)/sw,y:(supportY+.5)/sh};
+  }
+
   function buildUpGroundingMetrics(){
     upFrameMetrics.length=0;
     try{
@@ -49,27 +71,12 @@
       if(!sw||!sh)return;
       const scan=document.createElement('canvas');scan.width=sw;scan.height=sh;
       const scanCtx=scan.getContext('2d',{willReadFrequently:true});if(!scanCtx)return;
-      const lowerStart=Math.floor(sh*.52),bandDepth=Math.max(3,Math.round(sh*.02));
+      const lowerStart=Math.floor(sh*.52);
       for(let frameIndex=0;frameIndex<frameCount;frameIndex+=1){
         scanCtx.clearRect(0,0,sw,sh);
         scanCtx.drawImage(upSprite,frameIndex*sw,0,sw,sh,0,0,sw,sh);
         const pixels=scanCtx.getImageData(0,0,sw,sh).data;
-        let maxY=-1;
-        for(let y=lowerStart;y<sh;y+=1){
-          for(let x=0;x<sw;x+=1){
-            if(pixels[(y*sw+x)*4+3]>40)maxY=y;
-          }
-        }
-        if(maxY<0){upFrameMetrics.push({x:.5,y:1});continue;}
-        const bandStart=Math.max(lowerStart,maxY-bandDepth),xs=[];
-        for(let y=bandStart;y<=maxY;y+=1){
-          for(let x=0;x<sw;x+=1){
-            if(pixels[(y*sw+x)*4+3]>72)xs.push(x);
-          }
-        }
-        xs.sort((a,b)=>a-b);
-        const contactX=xs.length?xs[Math.floor(xs.length/2)]:sw/2;
-        upFrameMetrics.push({x:(contactX+.5)/sw,y:(maxY+.5)/sh});
+        upFrameMetrics.push(findDenseFootContact(pixels,sw,sh,lowerStart));
       }
     }catch(_error){upFrameMetrics.length=0;}
   }
