@@ -1,11 +1,16 @@
 (function(root,factory){
-  let data={};
-  if(typeof module!=='undefined'&&module.exports) data=require('./coach-training-lab-data.js');
-  else if(root&&root.CoachTrainingLabData) data=root.CoachTrainingLabData;
-  const api=factory(data);
+  let data={},diagramData={DIAGRAMS:{}};
+  if(typeof module!=='undefined'&&module.exports){
+    data=require('./coach-training-lab-data.js');
+    try{diagramData=require('./coach-training-lab-diagrams.js');}catch(_error){}
+  }else{
+    if(root&&root.CoachTrainingLabData) data=root.CoachTrainingLabData;
+    if(root&&root.CoachTrainingLabDiagrams) diagramData=root.CoachTrainingLabDiagrams;
+  }
+  const api=factory(data,diagramData);
   if(typeof module!=='undefined'&&module.exports) module.exports=api;
   if(root) root.CoachTrainingLab=api;
-})(typeof window!=='undefined'?window:globalThis,function(data){
+})(typeof window!=='undefined'?window:globalThis,function(data,diagramData){
   'use strict';
 
   const GRADE_ALIASES={'א':'א','ב':'ב','ג':'ג','ד':'ד','ה':'ה','ו':'ו','ז':'ז','ח':'ח','ט':'ט','י':'י','יא':'יא','יב':'יב'};
@@ -182,6 +187,53 @@
     return parts.join(' · ');
   }
 
+  function orderedListHtml(values){
+    return (values||[]).length?`<ol class="training-lab-steps">${values.map(v=>`<li>${esc(v)}</li>`).join('')}</ol>`:'';
+  }
+
+  function diagramForItem(item){
+    return item?.diagram||diagramData?.DIAGRAMS?.[item?.id]||null;
+  }
+
+  function renderDiagram(diagram,title=''){
+    if(!diagram){
+      return `<section class="training-lab-diagram training-lab-diagram-placeholder"><div class="training-lab-diagram-head"><h3>תרשים התרגיל</h3></div><p>תרשים יתווסף בהמשך</p></section>`;
+    }
+    const points=new Map();
+    for(const player of diagram.players||[]) points.set(player.id,{x:Number(player.x),y:Number(player.y)});
+    for(const zone of diagram.targetZones||[]) points.set(zone.id,{x:Number(zone.x)+(Number(zone.w)||0)/2,y:Number(zone.y)+(Number(zone.h)||0)/2});
+    const line=(path,cls,markerId)=>{
+      const from=points.get(path.from);
+      const to=path.to?points.get(path.to):{x:Number(path.toX),y:Number(path.toY)};
+      if(!from||!to||![from.x,from.y,to.x,to.y].every(Number.isFinite)) return '';
+      const step=path.step?`<text class="training-lab-step-badge" x="${(from.x+to.x)/2}" y="${(from.y+to.y)/2-1}">${esc(path.step)}</text>`:'';
+      return `<line class="${cls}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" marker-end="url(#${markerId})"></line>${step}`;
+    };
+    const targets=(diagram.targetZones||[]).map(zone=>`<g><rect class="training-lab-target-zone" x="${esc(zone.x)}" y="${esc(zone.y)}" width="${esc(zone.w)}" height="${esc(zone.h)}" rx="2"></rect>${zone.label?`<text class="training-lab-target-label" x="${Number(zone.x)+Number(zone.w)/2}" y="${Number(zone.y)+Number(zone.h)/2}">${esc(zone.label)}</text>`:''}</g>`).join('');
+    const players=(diagram.players||[]).map(player=>`<g class="training-lab-player-group"><circle class="training-lab-player training-lab-player-${esc(player.role||'player')}" cx="${esc(player.x)}" cy="${esc(player.y)}" r="3.4"></circle><text class="training-lab-player-label" x="${esc(player.x)}" y="${Number(player.y)+.8}">${esc(player.label||'')}</text></g>`).join('');
+    const notes=(diagram.notes||[]).map(note=>`<text class="training-lab-diagram-note" x="${esc(note.x)}" y="${esc(note.y)}">${esc(note.text)}</text>`).join('');
+    const net=diagram.net===false?'':`<line class="training-lab-court-net" x1="50" y1="4" x2="50" y2="56"></line>`;
+    const ballPaths=(diagram.ballPaths||[]).map(path=>line(path,'training-lab-ball-path','lab-arrow-ball')).join('');
+    const movementPaths=(diagram.movementPaths||[]).map(path=>line(path,'training-lab-movement-path','lab-arrow-move')).join('');
+    return `<section class="training-lab-diagram" data-court-type="${esc(diagram.courtType||'full')}">
+      <div class="training-lab-diagram-head"><div><p class="training-lab-kicker">מבט מהיר</p><h3>תרשים התרגיל</h3></div><button type="button" data-lab-action="expand-diagram" aria-label="הגדל תרשים">⛶ הגדל תרשים</button></div>
+      <div class="training-lab-diagram-canvas">
+        <svg viewBox="0 0 100 60" role="img" aria-label="תרשים התרגיל — ${esc(title)}" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="lab-arrow-ball" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" class="training-lab-arrow-ball"></path></marker>
+            <marker id="lab-arrow-move" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" class="training-lab-arrow-move"></path></marker>
+          </defs>
+          <rect class="training-lab-court-surface" x="3" y="4" width="94" height="52" rx="2"></rect>
+          <rect class="training-lab-court-line" x="3" y="4" width="94" height="52" rx="1"></rect>
+          <line class="training-lab-court-line" x1="34" y1="4" x2="34" y2="56"></line>
+          <line class="training-lab-court-line" x1="66" y1="4" x2="66" y2="56"></line>
+          ${net}${targets}${movementPaths}${ballPaths}${players}${notes}
+        </svg>
+      </div>
+      <div class="training-lab-diagram-legend"><span><i class="ball"></i> מסלול כדור</span><span><i class="move"></i> תנועת שחקן</span><span><i class="target"></i> אזור מטרה</span></div>
+    </section>`;
+  }
+
   function renderCard(item,state={}){
     const favorite=state.favorites?.includes?.(item.id); const next=state.nextPractice?.includes?.(item.id);
     const compare=comparisonLabel(state.allItems||data.LAB_ITEMS,item.comparisonGroup);
@@ -219,8 +271,9 @@
       ${section('למי מתאים',audienceLabel(item)?`<p>${esc(audienceLabel(item))}</p>`:'','training-lab-audience')}
       ${section('מה המטרה',item.objective?`<p>${esc(item.objective)}</p>`:'')}
       ${section('איך זה נראה במשחק',item.gameContext?`<p>${esc(item.gameContext)}</p>`:'')}
+      ${item.type==='drill'?renderDiagram(diagramForItem(item),item.title):''}
       ${section('איך מארגנים',item.setup?`<p>${esc(item.setup)}</p>`:'')}
-      ${section('מה עושים',listHtml(item.steps))}
+      ${section('מה עושים',orderedListHtml(item.steps))}
       ${section('ניקוד / תחרות',item.scoring?`<p>${esc(item.scoring)}</p>`:'')}
       ${section('מה המאמן מסתכל עליו',listHtml(item.coachLooksFor))}
       ${section('טעויות נפוצות',listHtml(item.commonMistakes))}
@@ -303,7 +356,17 @@
       if(action==='compare'){openItem(item,'.training-lab-comparison');return;}
       openItem(item);
     });
-    detail?.addEventListener('click',e=>{if(e.target.closest('[data-lab-action="close-detail"]')){detail.hidden=true;detail.innerHTML='';}});
+    detail?.addEventListener('click',e=>{
+      if(e.target.closest('[data-lab-action="close-detail"]')){detail.hidden=true;detail.innerHTML='';return;}
+      const expand=e.target.closest('[data-lab-action="expand-diagram"]');
+      if(expand){
+        const diagram=expand.closest('.training-lab-diagram');
+        if(!diagram) return;
+        const expanded=diagram.classList.toggle('is-expanded');
+        expand.textContent=expanded?'↩ חזור לתיאור':'⛶ הגדל תרשים';
+        expand.setAttribute('aria-label',expanded?'חזור לתיאור':'הגדל תרשים');
+      }
+    });
     doc.addEventListener('click',e=>{const jump=e.target.closest('[data-jump-id]');if(jump) openItem(labData.LAB_ITEMS.find(x=>x.id===jump.dataset.jumpId));});
 
     const form=$('training-lab-now-form'),nowResults=$('training-lab-now-results');
@@ -319,5 +382,5 @@
 
   if(typeof document!=='undefined') document.addEventListener('DOMContentLoaded',()=>initTrainingLab(document,data));
 
-  return {normalizeText,isValidHttpUrl,validateItem,validateData,parseGradeTokens,filterItems,searchItems,getComparison,comparisonLabel,recommendNow,createStorageAdapter,toggleStoredId,readStoredIds,renderCard,renderDetail,renderQuickMatchResult,initTrainingLab,safeLocalStorage};
+  return {normalizeText,isValidHttpUrl,validateItem,validateData,parseGradeTokens,filterItems,searchItems,getComparison,comparisonLabel,recommendNow,createStorageAdapter,toggleStoredId,readStoredIds,renderCard,renderDetail,renderDiagram,diagramForItem,renderQuickMatchResult,initTrainingLab,safeLocalStorage};
 });
