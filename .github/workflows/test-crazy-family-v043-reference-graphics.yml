@@ -1,0 +1,23 @@
+name: Crazy Family v0.43 Reference Graphics
+
+on:
+  push:
+    branches:
+      - feature/crazy-family-v043-reference-graphics
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: v0.43 reference graphics contract
+        run: python3 scripts/test-crazy-family-v043-reference-graphics.py
+      - name: Existing movie-set contract
+        run: python3 scripts/test-crazy-family-movie-set.py
+      - name: JavaScript syntax
+        run: |
+          node --check crazy-family/game.js
+          node --check crazy-family/scene.js
+          node --check crazy-family/cinematic-set.js
+          node --check crazy-family/scenario.js
