@@ -74,12 +74,13 @@ function shortenedByHitCinematic(target,desired,hit,padding){
   };
 }
 
-function shortenedByHitThirdPerson(target,desired,hit,padding,minDistance){
+function shortenedByHitThirdPerson(target,desired,hit,padding){
   if(!hit || !Number.isFinite(hit.fraction)) return desired;
   const fullDistance=distance3(target,desired);
   if(fullDistance<=1e-9)return desired;
-  const minFraction=Math.min(1,Math.max(0,minDistance/fullDistance));
-  const fraction=clamp(hit.fraction-padding,minFraction,1);
+  const safeFraction=clamp(hit.fraction-padding,0.02,1);
+  // Collision safety wins when the room cannot fit the preferred camera boom.
+  const fraction=safeFraction;
   return {
     x:target.x+(desired.x-target.x)*fraction,
     y:target.y+(desired.y-target.y)*fraction,
@@ -117,7 +118,7 @@ export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0
       z:target.z+Math.cos(yaw)*horizontal,
     };
     const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || [],config.collisionRadius);
-    desired=shortenedByHitThirdPerson(target,desired,hit,config.collisionPadding,config.minTargetDistance);
+    desired=shortenedByHitThirdPerson(target,desired,hit,config.collisionPadding);
   }else{
     desired={x:target.x+selected.offset.x,y:target.y+selected.offset.y,z:target.z+selected.offset.z};
     const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || []);
