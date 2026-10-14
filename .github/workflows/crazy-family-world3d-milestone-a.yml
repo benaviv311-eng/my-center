@@ -1,0 +1,67 @@
+name: Crazy Family world3d Milestone A
+
+on:
+  push:
+    branches:
+      - feature/livi-professional-home-a
+  pull_request:
+    paths:
+      - 'crazy-family/**'
+      - 'crazy-family.html'
+      - 'tests/crazy-family/**'
+      - '.github/workflows/crazy-family-world3d-milestone-a.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Focused world3d unit and regression tests
+        run: |
+          node --test \
+            tests/crazy-family/renderer-mode.test.mjs \
+            tests/crazy-family/world.test.mjs \
+            tests/crazy-family/movement.test.mjs \
+            tests/crazy-family/camera.test.mjs \
+            tests/crazy-family/scene-3d.test.mjs \
+            tests/crazy-family/world3d-game-contract.test.mjs \
+            tests/crazy-family/attacks.test.mjs \
+            tests/crazy-family/cinematic-set.test.mjs
+      - name: JavaScript syntax checks
+        run: |
+          node --check crazy-family/game.js
+          node --check crazy-family/scene-3d.js
+          node --check crazy-family/world.js
+          node --check crazy-family/camera.js
+      - name: Install Chromium acceptance runtime
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/crazy-family-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/crazy-family.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/crazy-family-server.log
+          exit 1
+      - name: Existing cinematic browser regression
+        run: node tests/crazy-family/browser-smoke.mjs
+      - name: World3d real-browser acceptance
+        run: node tests/crazy-family/browser-world3d-smoke.mjs
+      - name: Upload world3d screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crazy-family-world3d-milestone-a
+          path: artifacts/crazy-family-world3d-milestone-a.png
+          if-no-files-found: ignore
