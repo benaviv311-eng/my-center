@@ -1,0 +1,23 @@
+name: Crazy Family cinematic Dad song audio
+
+on:
+  push:
+    paths:
+      - 'crazy-family/game.js'
+      - 'tests/crazy-family-cinematic-song-audio-retry.test.js'
+      - '.github/workflows/crazy-family-cinematic-song-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-cinematic-dad-song-audio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify cinematic Dad song playback retry
+        run: node tests/crazy-family-cinematic-song-audio-retry.test.js
