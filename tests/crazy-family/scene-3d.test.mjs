@@ -11,6 +11,8 @@ test('graybox descriptors expose canonical room geometry in world coordinates', 
   for(const d of descriptors){
     for(const key of ['x','y','z','width','depth','height']) assert.ok(Number.isFinite(d[key]),`${d.id}.${key}`);
   }
+  const floor=descriptors.find(d=>d.id==='floor');
+  assert.ok(Math.abs((floor.y+floor.height/2)-0)<1e-9,'floor top must align with logical ground Y=0');
 });
 
 test('true 3d scene uses PerspectiveCamera and no cinematic projection', async () => {
