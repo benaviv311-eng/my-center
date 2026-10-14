@@ -5,6 +5,7 @@ on:
     paths:
       - 'raishin-legacy/**'
       - 'tests/raishin-v2-browser-qa.mjs'
+      - 'tests/raishin-v2-pivot-diagnostic.mjs'
       - '.github/workflows/raishin-v2-visual-qa.yml'
   workflow_dispatch:
 
@@ -27,6 +28,8 @@ jobs:
           sleep 2
       - name: Capture movement states
         run: node tests/raishin-v2-browser-qa.mjs
+      - name: Diagnose static frame pivots
+        run: node tests/raishin-v2-pivot-diagnostic.mjs
       - name: Upload visual QA
         if: always()
         uses: actions/upload-artifact@v4
