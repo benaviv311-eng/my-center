@@ -68,6 +68,17 @@ export function createLivingRoomWorld() {
   ];
 
   const colliders = objects.filter(o => ['sofa', 'coffee-table', 'side-table'].includes(o.id));
+  const wallThickness = 0.18;
+  const wallHeight = 3.2;
+  const roomWidth = ROOM_BOUNDS.maxX - ROOM_BOUNDS.minX;
+  const roomDepth = ROOM_BOUNDS.maxZ - ROOM_BOUNDS.minZ;
+  const roomShell = [
+    box('wall-north', 0, ROOM_BOUNDS.minZ - wallThickness / 2, roomWidth + wallThickness * 2, wallThickness, wallHeight, { kind: 'wall', cameraBlocker: true, color: 0xd7c9bc }),
+    box('wall-south', 0, ROOM_BOUNDS.maxZ + wallThickness / 2, roomWidth + wallThickness * 2, wallThickness, wallHeight, { kind: 'wall', cameraBlocker: true, color: 0xd7c9bc }),
+    box('wall-west', ROOM_BOUNDS.minX - wallThickness / 2, 0, wallThickness, roomDepth, wallHeight, { kind: 'wall', cameraBlocker: true, color: 0xd7c9bc }),
+    box('wall-east', ROOM_BOUNDS.maxX + wallThickness / 2, 0, wallThickness, roomDepth, wallHeight, { kind: 'wall', cameraBlocker: true, color: 0xd7c9bc }),
+  ];
+  const renderables = [...objects, ...roomShell];
   const interactables = [
     { id: 'headphones', action: 'take', label: 'לקחת אוזניות', x: -4.15, y: 1.08, z: 0.1, radius: 0.9, priority: 20, enabled: true, surfaceId: 'sofa' },
     { id: 'sofa', action: 'climb', label: 'לטפס על הספה', x: -3.35, y: 0, z: 1.25, radius: 1.15, priority: 5, enabled: true },
@@ -98,7 +109,7 @@ export function createLivingRoomWorld() {
     ],
   };
   const navBlockers = colliders.map(c => ({ id: c.id, x: c.x, z: c.z, width: c.width, depth: c.depth, clearance: c.id === 'coffee-table' ? 0.55 : 0.75 }));
-  const cameraBlockers = colliders.filter(c => c.cameraBlocker);
+  const cameraBlockers = [...colliders.filter(c => c.cameraBlocker), ...roomShell];
   const occluders = objects.filter(o => o.occluder);
 
   return {
@@ -106,6 +117,8 @@ export function createLivingRoomWorld() {
     bounds: { ...ROOM_BOUNDS },
     objects,
     colliders,
+    roomShell,
+    renderables,
     interactables,
     surfaces,
     scenarioSpawns,
@@ -119,18 +132,30 @@ export function createLivingRoomWorld() {
     },
     resolveCharacterMove(from, to, capsule = { radius: 0.3 }) {
       const radius = Number(capsule.radius) || 0.3;
-      let resolved = {
-        x: Math.max(ROOM_BOUNDS.minX + radius, Math.min(ROOM_BOUNDS.maxX - radius, to.x)),
-        y: to.y,
-        z: Math.max(ROOM_BOUNDS.minZ + radius, Math.min(ROOM_BOUNDS.maxZ - radius, to.z)),
-      };
-      for (const collider of colliders) resolved = pushOutside(from, resolved, collider, radius);
-      return resolved;
+      const dx = to.x - from.x;
+      const dz = to.z - from.z;
+      const dy = to.y - from.y;
+      const maxStep = Math.max(0.08, radius * 0.5);
+      const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dz)) / maxStep));
+      const stepDx = dx / steps;
+      const stepDy = dy / steps;
+      const stepDz = dz / steps;
+      let current = { ...from };
+      for (let i = 0; i < steps; i += 1) {
+        let resolved = {
+          x: Math.max(ROOM_BOUNDS.minX + radius, Math.min(ROOM_BOUNDS.maxX - radius, current.x + stepDx)),
+          y: current.y + stepDy,
+          z: Math.max(ROOM_BOUNDS.minZ + radius, Math.min(ROOM_BOUNDS.maxZ - radius, current.z + stepDz)),
+        };
+        for (const collider of colliders) resolved = pushOutside(current, resolved, collider, radius);
+        current = resolved;
+      }
+      return current;
     },
-    traceCameraSegment(start, end, blockers = cameraBlockers) {
+    traceCameraSegment(start, end, blockers = cameraBlockers, padding = 0.12) {
       let best = null;
       for (const blocker of blockers) {
-        const fraction = segmentBoxFraction(start, end, blocker, 0.12);
+        const fraction = segmentBoxFraction(start, end, blocker, padding);
         if (fraction == null || (best && fraction >= best.fraction)) continue;
         best = {
           id: blocker.id,
