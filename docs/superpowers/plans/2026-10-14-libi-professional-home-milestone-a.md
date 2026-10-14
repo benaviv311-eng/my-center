@@ -4,7 +4,7 @@
 
 **Goal:** Build an opt-in true-3D playable graybox of Libi’s canonical living room with professional third-person movement, camera orbit/collision, world-space characters, and stable furniture collision, while keeping the current v0.44 cinematic renderer as the default fallback.
 
-**Architecture:** Add a second renderer behind `?renderer=3d` rather than replacing the live cinematic path. Keep `world.js`, `movement.js`, `camera.js`, Dad/gameplay state, and scenario data authoritative; the new `scene-3d.js` consumes the same world coordinates and renders them with a `PerspectiveCamera` and real world-space geometry. `game.js` selects the renderer and uses a shared scene contract so gameplay code does not fork into two separate games.
+**Architecture:** Add a second renderer behind `?renderer=3d` rather than replacing the live cinematic path. Keep `world.js`, `movement.js`, `camera.js`, Dad/gameplay state, and scenario data authoritative; the new `scene-3d.js` consumes the same world coordinates and renders them with a `PerspectiveCamera` and real world-space geometry. `game.js` selects the renderer and uses a shared scene contract so gameplay code does not fork into two separate games. The existing cinematic camera behavior remains the default camera rig; third-person orbit math is enabled only by the world3d path.
 
 **Tech Stack:** Browser JavaScript ES modules, Three.js `0.180.0`, Node `node:test`, Playwright browser smoke tests, GitHub Pages.
 
@@ -156,7 +156,7 @@ git add crazy-family/movement.js tests/crazy-family/movement.test.mjs
 git commit -m "feat: add smooth Libi locomotion state"
 ```
 
-### Task 4: Upgrade the camera to a real orbiting third-person rig
+### Task 4: Upgrade the camera with an opt-in real third-person rig
 
 **Files:**
 - Modify: `crazy-family/camera.js`
@@ -165,57 +165,60 @@ git commit -m "feat: add smooth Libi locomotion state"
 **Interfaces:**
 - Keep: `createCameraController(config = {})`.
 - Add: `orbitCamera(controller, { yawDelta = 0, pitchDelta = 0 }) -> controller`.
-- Extend: `stepCamera(controller, { player, dad = null, world, mode = 'explore', dt = 0.016, visualEnvelope = null, speed = 0 })`.
-- In `world3d` usage, do not pass `visualEnvelope`; the camera is constrained by collision, not cinematic frame bounds.
+- Extend: `stepCamera(controller, { player, dad = null, world, mode = 'explore', dt = 0.016, visualEnvelope = null, speed = 0, rig = 'cinematic' })`.
+- `rig='cinematic'` must preserve current fixed-offset behavior exactly enough for the existing camera/browser tests.
+- `rig='third-person'` uses yaw/pitch orbit, speed-sensitive distance, and collision-safe perspective positioning.
 
 - [ ] **Step 1: Write failing camera-rig tests**
 
 Add tests that assert:
+- the existing default `stepCamera()` fixed-offset behavior remains unchanged when `rig` is omitted.
 - `orbitCamera()` changes yaw and clamps pitch between `-0.55` and `0.32` radians.
-- explore camera position changes around the player after a yaw orbit while target height remains stable.
-- higher `speed` increases desired follow distance within configured limits.
-- a blocker hit shortens camera distance but keeps camera farther than `0.45` from the target.
+- `rig:'third-person'` changes camera position around the player after a yaw orbit while target height remains stable.
+- higher `speed` increases desired follow distance within configured limits only in the third-person rig.
+- a blocker hit shortens third-person camera distance but keeps camera farther than `0.45` from the target.
 - repeated small `dt` steps converge smoothly rather than teleporting.
 - camera position/target/fov remain finite with `dt=0`.
 
 - [ ] **Step 2: Run camera tests to verify RED**
 
 Run: `node --test tests/crazy-family/camera.test.mjs`
-Expected: FAIL on missing orbit API/new speed behavior.
+Expected: FAIL on missing orbit API/third-person rig behavior while existing tests still describe the cinematic baseline.
 
-- [ ] **Step 3: Implement orbit + perspective-friendly follow math**
+- [ ] **Step 3: Implement the new rig behind the `rig` option**
 
-Store `yaw` and `pitch` on the controller. Build desired camera position from target + spherical/orbit offset; retain named camera modes (`explore`, `chase`, `interaction`, `cinematic`) and existing damping. Use `world.traceCameraSegment(target, desired, world.cameraBlockers, config.collisionRadius)` for collision. Set default `collisionRadius` to `0.22`.
+Do not replace the current cinematic path. For `rig:'third-person'`, store `yaw` and `pitch` on the controller, build desired camera position from target + spherical/orbit offset, and use `world.traceCameraSegment(target, desired, world.cameraBlockers, config.collisionRadius)` for collision. Set default `collisionRadius` to `0.22`.
 
 - [ ] **Step 4: Run camera tests to verify GREEN**
 
 Run: `node --test tests/crazy-family/camera.test.mjs`
-Expected: all tests PASS.
+Expected: all tests PASS, including preserved cinematic behavior.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add crazy-family/camera.js tests/crazy-family/camera.test.mjs
-git commit -m "feat: add professional third-person camera rig"
+git commit -m "feat: add opt-in professional third-person camera rig"
 ```
 
 ### Task 5: Build the true-3D graybox scene
 
 **Files:**
+- Create: `crazy-family/graybox-layout.js`
 - Create: `crazy-family/scene-3d.js`
 - Modify: `crazy-family/scene.js`
 - Create: `tests/crazy-family/scene-3d.test.mjs`
 
 **Interfaces:**
+- Create pure helper: `buildGrayboxDescriptors(world) -> descriptor[]` in `graybox-layout.js`; this file must not import Three.js or browser globals.
 - Add cinematic alias in `scene.js`: `renderPosition(position) -> projected cinematic position`.
 - Create: `createLivingRoom3DScene({ canvas, world }) -> Promise<SceneHandle>`.
 - `SceneHandle` shared fields/methods used by `game.js`: `scene`, `renderer`, `camera`, `objectsById`, `contactEffects`, `screenStage`, `visualMode`, `renderPosition`, `render()`, `resize(width,height)`, `applyCameraPose(pose, shake?, now?)`, `setObjectOpacity(id,value)`, `applyReactiveTransforms(controller)`, `dispose()`.
 - For 3D mode: `screenStage=false`, `visualMode='world3d'`, `renderPosition(position)` returns an unprojected `{x,y,z}` copy.
-- Export pure helper: `buildGrayboxDescriptors(world) -> descriptor[]` for unit testing without WebGL.
 
 - [ ] **Step 1: Write failing graybox scene-contract tests**
 
-Test `buildGrayboxDescriptors(world)` and source contract to assert:
+Import `buildGrayboxDescriptors()` directly in Node and read `scene-3d.js` as source text. Assert:
 - descriptors include floor, four room walls, sofa, coffee table, rug, side table and doorway.
 - every descriptor has finite world-space position and dimensions.
 - `scene-3d.js` declares a `THREE.PerspectiveCamera` and never imports `cinematic-projection.js`.
@@ -224,23 +227,27 @@ Test `buildGrayboxDescriptors(world)` and source contract to assert:
 - [ ] **Step 2: Run scene tests to verify RED**
 
 Run: `node --test tests/crazy-family/scene-3d.test.mjs`
-Expected: FAIL because `scene-3d.js` does not exist and `scene.js` lacks the alias.
+Expected: FAIL because the new graybox modules do not exist and `scene.js` lacks the alias.
 
-- [ ] **Step 3: Implement the graybox renderer**
+- [ ] **Step 3: Implement the pure descriptor builder**
 
-Use a `THREE.PerspectiveCamera(50, aspect, 0.08, 60)`. Render the room shell and furniture with simple warm neutral `MeshStandardMaterial` values, with real world `x/y/z` coordinates. Floor and large furniture receive shadows; Libi/Dad/props can cast shadows. Use one hemisphere light plus one shadow-casting key directional light; no decorative lighting system in Milestone A.
+Map `world.renderables` to renderer descriptors without changing world coordinates. Keep material/color hints declarative; do not create Three.js objects in this file.
+
+- [ ] **Step 4: Implement the graybox renderer**
+
+Use a `THREE.PerspectiveCamera(50, aspect, 0.08, 60)`. Render descriptor geometry with simple warm neutral `MeshStandardMaterial` values at real world `x/y/z` coordinates. Floor and large furniture receive shadows; Libi/Dad/props can cast shadows. Use one hemisphere light plus one shadow-casting key directional light; no decorative lighting system in Milestone A.
 
 `resize()` updates `camera.aspect` and `camera.updateProjectionMatrix()`. `applyCameraPose()` copies pose position, calls `camera.lookAt(target.x,target.y,target.z)`, and applies pose FOV.
 
-- [ ] **Step 4: Run scene tests and cinematic regression tests**
+- [ ] **Step 5: Run scene tests and cinematic regression tests**
 
 Run: `node --test tests/crazy-family/scene-3d.test.mjs tests/crazy-family/cinematic-projection.test.mjs tests/crazy-family/cinematic-set.test.mjs`
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add crazy-family/scene-3d.js crazy-family/scene.js tests/crazy-family/scene-3d.test.mjs
+git add crazy-family/graybox-layout.js crazy-family/scene-3d.js crazy-family/scene.js tests/crazy-family/scene-3d.test.mjs
 git commit -m "feat: add true 3d living room graybox renderer"
 ```
 
@@ -257,7 +264,8 @@ git commit -m "feat: add true 3d living room graybox renderer"
 - Scene choice: `world3d` uses `createLivingRoom3DScene`; `cinematic` uses existing `createLivingRoomScene`.
 - Add input helper: `cameraLookDelta({dx,dy}, sensitivity = {yaw:0.004,pitch:0.003}) -> {yawDelta,pitchDelta}`.
 - In world3d actor presentation, character mesh position uses logical world position directly, visual scale remains `1`, and `visual.faceCamera(sceneHandle.camera.position)` is called after camera pose is applied.
-- Cinematic mode retains projection/scaling behavior.
+- Cinematic mode retains projection/scaling behavior and uses `rig:'cinematic'`.
+- World3d uses `stepCamera(..., { rig:'third-person' })`.
 
 - [ ] **Step 1: Write failing input and game-contract tests**
 
@@ -266,7 +274,7 @@ Add tests that assert:
 - `game.js` resolves renderer mode instead of hard-coding `visualMode:'cinematic'`.
 - world3d character presentation does not call `projectWorldToCinematicStage` or apply cinematic scale.
 - attack visual system receives `screenStage: sceneHandle.screenStage` and `projectPosition: sceneHandle.renderPosition`.
-- default cinematic imports/path remain present.
+- default cinematic imports/path remain present and default camera calls use the cinematic rig.
 
 - [ ] **Step 2: Run focused tests to verify RED**
 
@@ -277,7 +285,7 @@ Expected: FAIL on missing look helper/world3d integration.
 
 On `pointerdown` inside the game canvas in world3d mode, capture the pointer. While captured, convert `movementX/movementY` through `cameraLookDelta()` and call `orbitCamera()`. Release on pointer up/cancel. Do not enable pointer-look behavior in cinematic mode.
 
-Pass `{ crouching, sprinting }` into `stepCharacter()`, pass `speed: playerSpeed` into `stepCamera()`, and keep existing Dad/song/stamina/interaction systems running from the same logical world state.
+Pass `{ crouching, sprinting }` into `stepCharacter()`, pass `speed: playerSpeed` and `rig:'third-person'` into `stepCamera()` only for world3d, and keep existing Dad/song/stamina/interaction systems running from the same logical world state.
 
 - [ ] **Step 4: Run focused tests to verify GREEN**
 
@@ -313,6 +321,7 @@ Start from the existing `browser-smoke.mjs` harness and assert in world3d mode:
 - moving Libi near a wall causes the camera to pull inward instead of crossing the wall.
 - Libi can complete a scripted route around the sofa/coffee table without entering either collider.
 - the canonical Libi and Dad approved asset URLs remain unchanged.
+- resize to a narrow viewport keeps camera aspect finite and the Libi mesh visible.
 - no fatal page errors occur and the WebGL context remains valid.
 
 - [ ] **Step 2: Run the world3d smoke test to verify RED**
