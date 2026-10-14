@@ -1,0 +1,62 @@
+name: Apply Crazy Family audio order v0.44
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-audio-order-v044.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep only Dad songs 1-10 as songs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('crazy-family.html')
+          s=p.read_text(encoding='utf-8')
+          original=s
+
+          old="const DAD_SONG_LIBRARY=dadSongs.map((lines,i)=>({id:i+1,file:'dad-song-'+String(i+1).padStart(2,'0')+'.mp3',lines}));"
+          new="const DAD_SONG_LIBRARY=dadSongs.slice(0,10).map((lines,i)=>({id:i+1,file:'dad-song-'+String(i+1).padStart(2,'0')+'.mp3',lines}));"
+          if old not in s:
+              raise SystemExit('DAD_SONG_LIBRARY pattern not found')
+          s=s.replace(old,new,1)
+
+          s,n=re.subn(r"const DAD_SONG_TIERS=\[[^\n]+\];",
+              "const DAD_SONG_TIERS=[{id:1,weight:1,name:'שירי אבא',songs:[0,1,2,3,4,5,6,7,8,9],dizzy:32,chase:1.08}];",s,count=1)
+          if n!=1:
+              raise SystemExit('DAD_SONG_TIERS pattern not found')
+
+          # Keep dadSongs text definitions for reference, but only the first 10 are selectable/audio-backed songs.
+          # Preserve dadPreClips and libiVoiceClips exactly as they are.
+          s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.43','עולם הבית · שלב 1: מפגש אבא · v0.44',1)
+
+          if s==original:
+              raise SystemExit('No changes made')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify only songs 1-10 are selectable and speech remains
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const s=fs.readFileSync('crazy-family.html','utf8');
+          const lib=s.match(/const DAD_SONG_LIBRARY=([^;]+);/);
+          if(!lib||!lib[0].includes('dadSongs.slice(0,10)')) throw new Error('song library not limited to 10');
+          const tiers=s.match(/const DAD_SONG_TIERS=([^;]+);/);
+          if(!tiers||!tiers[0].includes('songs:[0,1,2,3,4,5,6,7,8,9]')) throw new Error('song picker not limited to 1-10');
+          if(/songs:\[[^\]]*\b(?:10|11|12|13|14|15|16|17|18|19|20|21|22|23)\b/.test(tiers[0])) throw new Error('obsolete song index still selectable');
+          if(!s.includes('const dadPreClips=[')) throw new Error('Dad speech clips missing');
+          if(!s.includes('const libiVoiceClips=[')) throw new Error('Libi speech clips missing');
+          console.log('audio order v0.44 PASS');
+          JS
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git commit -m "fix: keep only Dad songs 1-10 in song pool"
+          git push
