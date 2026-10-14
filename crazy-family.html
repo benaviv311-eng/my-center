@@ -35,7 +35,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.44</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.45</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -335,21 +335,7 @@ const dadSongs=[
  ['אֲנָנָס נִכְנַס לַכֶּנֶס','וְצָעַק: מִי עוֹד נִכְנָס?'],
  ['בָּצָל נִרְדַּם עַל הַסַּפְסָל','וְחָלַם עַל קַרְנָבָל'],
  ['קוֹקוֹס בָּרַח מֵהַמָּטוֹס','וּפָגַשׁ תַּרְנְגוֹל מְאֹד מְנוּמָס'],
- ['תּוּת לָבַשׁ מַגָּפַיִם','וְיָצָא לָעוּף בַּשָּׁמַיִם'],
- ['גזר קפץ למקרר','וצעק: אני זמר!'],
- ['עגבנייה רקדה בגינה','עם כפכף ועם גבינה!'],
- ['פיתה טסה בכיתה','ונחתה בתוך מיטה!'],
- ['קורנפלקס נכנס לטקס','ועשה לכולם פלקס!'],
- ['שוקולד עלה על גלגל','ונפל ישר לתוך הסל!'],
- ['חומוס רץ עם קקטוס','ושניהם פספסו אוטובוס!'],
- ['פסטה לבשה אפודה','ויצאה לרקוד עם סודה!'],
- ['די די די? לא לא לא!','עוד שיר קטן וזה נגמר — בכלל לא נגמר!'],
- ['לאט לאט עולה הקצב','אחת שתיים שלוש — מהר יותר!'],
- ['הו, מלפפון אבוד שלי!','למה ברחת מהסלט שלי?'],
- ['גרב רקדה עם מגבת','ונפלה ישר לצלחת!'],
- ['כפית טיפסה על כרית','והכריזה: אני חללית!'],
- ['כל הבית שר עכשיו!','דלת, כיסא וגם גרב — כולם ביחד!'],
- ['זה השיר שלא נגמר!','מהר יותר! חזק יותר! לה לה לה!']
+ ['תּוּת לָבַשׁ מַגָּפַיִם','וְיָצָא לָעוּף בַּשָּׁמַיִם']
 ];
 const DAD_SONG_LIBRARY=dadSongs.slice(0,10).map((lines,i)=>({id:i+1,file:'dad-song-'+String(i+1).padStart(2,'0')+'.mp3',lines}));
 const DAD_SONG_TIERS=[{id:1,weight:1,name:'שירי אבא',songs:[0,1,2,3,4,5,6,7,8,9],dizzy:32,chase:1.08}];
@@ -400,21 +386,7 @@ const dadVoiceClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-07.mp3'),
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-08.mp3'),
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-09.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-10.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-11.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-12.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-13.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-14.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-15.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-16.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-17.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-18.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-19.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-20.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-21.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-22.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-23.mp3'),
-  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-24.mp3')
+  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-10.mp3')
 ];
 dadVoiceClips.forEach(a=>{a.preload='auto';a.volume=.96});
 const dadPreClips=[
