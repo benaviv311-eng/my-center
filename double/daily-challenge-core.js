@@ -65,6 +65,11 @@
   }
   function load(){if(typeof localStorage==='undefined')return emptyRecord();try{return normalizeRecord(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(_){return emptyRecord()}}
   function save(record){const clean=normalizeRecord(record);if(typeof localStorage!=='undefined')try{localStorage.setItem(KEY,JSON.stringify(clean))}catch(_){}return clean}
-  function summary(record,day){const r=normalizeRecord(record);return {bestMs:Number(r.bestByDate[day])||null,doneToday:r.completedDates.includes(day),streak:r.streak,totalDays:r.totalDays}}
+  function summary(record,day){
+    const r=normalizeRecord(record),doneToday=r.completedDates.includes(day),latest=r.completedDates[r.completedDates.length-1]||null;
+    let streak=0;
+    if(latest){const gap=dateOrdinal(day)-dateOrdinal(latest);if(gap===0||gap===1)streak=r.streak;}
+    return {bestMs:Number(r.bestByDate[day])||null,doneToday,streak,totalDays:r.totalDays};
+  }
   return {KEY,ICONS,buildDeck,hashSeed,mulberry32,shuffle,dateKey,dailySequence,emptyRecord,normalizeRecord,computeStreak,updateRecord,load,save,summary};
 });
