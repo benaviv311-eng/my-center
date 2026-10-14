@@ -9,6 +9,7 @@
   function directionFromVector(v,last){if(!v.x&&!v.y)return last||'down';if(Math.abs(v.x)>Math.abs(v.y))return v.x>0?'right':'left';if(Math.abs(v.y)>Math.abs(v.x))return v.y>0?'down':'up';if(v.y)return v.y>0?'down':'up';return v.x>0?'right':'left';}
   function stepPlayer(p,v,dt,b,speed){let x=v.x,y=v.y;const l=Math.hypot(x,y)||1;if(l>1){x/=l;y/=l;}const nx=p.x+x*speed*dt,ny=p.y+y*speed*dt;return{x:Math.max(b.minX,Math.min(b.maxX,nx)),y:Math.max(b.minY,Math.min(b.maxY,ny))};}
   function frameAt(t,m,c,fps){if(!m)return 0;return Math.floor(t*fps)%c;}
+  function frameAtDistance(distance,stride,count){const d=Math.max(0,Number(distance)||0),s=Math.max(1,Number(stride)||1),c=Math.max(1,Math.floor(Number(count)||1));return Math.floor(d/s)%c;}
   function scaleForDepth(y,minY,maxY){const r=Math.max(1,maxY-minY),t=Math.max(0,Math.min(1,(y-minY)/r));return .72+.34*t;}
   function moveToward(current,target,maxDelta){if(current<target)return Math.min(current+maxDelta,target);if(current>target)return Math.max(current-maxDelta,target);return current;}
   function smoothVelocity(current,input,dt,acceleration,decelleration,maxSpeed){
@@ -17,5 +18,5 @@
     const hasInput=!!(ix||iy),targetX=ix*maxSpeed,targetY=iy*maxSpeed,rate=(hasInput?acceleration:decelleration)*dt;
     let x=moveToward(current.x||0,targetX,rate),y=moveToward(current.y||0,targetY,rate);const speed=Math.hypot(x,y);if(speed>maxSpeed){x=x/speed*maxSpeed;y=y/speed*maxSpeed;}return{x,y};
   }
-  return{inputVector,directionFromVector,stepPlayer,frameAt,scaleForDepth,smoothVelocity};
+  return{inputVector,directionFromVector,stepPlayer,frameAt,frameAtDistance,scaleForDepth,smoothVelocity};
 });
