@@ -102,10 +102,17 @@ test('higher speed increases follow distance within limits', () => {
 
 test('blocker keeps camera outside a 0.45 minimum target distance and passes collision radius', () => {
   let receivedPadding=null;
-  const world={cameraBlockers:[{id:'wall'}],traceCameraSegment(target,desired,blockers,padding){receivedPadding=padding;return {id:'wall',fraction:.08};}};
+  const world={cameraBlockers:[{id:'wall'}],traceCameraSegment(target,desired,blockers,padding){receivedPadding=padding;return {id:'wall',fraction:.3};}};
   const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world,dt:1,rig:'third-person'});
   assert.ok(distance(pose.position,pose.target)>.45);
   assert.equal(receivedPadding,.22);
+});
+
+test('extremely close blocker wins over minimum camera distance', () => {
+  const world={cameraBlockers:[{id:'wall'}],traceCameraSegment(){return {id:'wall',fraction:.08};}};
+  const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world,dt:1,rig:'third-person'});
+  assert.ok(distance(pose.position,pose.target)<.45,'camera must not be forced through a blocker just to preserve boom length');
+  assert.equal(finitePose(pose),true);
 });
 
 test('repeated small dt converges smoothly instead of teleporting', () => {
