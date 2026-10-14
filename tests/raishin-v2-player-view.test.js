@@ -27,6 +27,16 @@ for(const direction of ['up','down','left','right']){
   }
 }
 
+const measuredSupportY={
+  down:[.9870848708487084,.9981549815498155,.9981549815498155,.9981549815498155,.9981549815498155,.9981549815498155,.9944649446494465,.9981549815498155],
+  up:[.9907749077490775,.9981549815498155,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465],
+  left:[.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9649446494464945,.9686346863468634],
+  right:[.9501845018450185,.9538745387453874,.9464944649446494,.9538745387453874,.9501845018450185,.9538745387453874,.9501845018450185,.9501845018450185]
+};
+for(const direction of Object.keys(measuredSupportY)){
+  data.pivots[direction].forEach((pivot,index)=>assert.ok(Math.abs(pivot.y-measuredSupportY[direction][index])<1e-12,`${direction} frame ${index} pivot must match measured planted-paw support row`));
+}
+
 const animator=PlayerAnimator.create(data,{stride:24});
 let frame=animator.update({facing:'up',moving:true,movedDistance:0});
 assert.equal(frame.frameIndex,0);
@@ -54,8 +64,8 @@ for(const direction of ['up','down','left','right']){
     assert.equal(view.shadowDepth,projection.depth-1);
   }
 }
-const far=PlayerView.compute({projection:plane.project({x:500,y:60}),pivot:{x:.5,y:.985}});
-const near=PlayerView.compute({projection:plane.project({x:500,y:540}),pivot:{x:.5,y:.985}});
+const far=PlayerView.compute({projection:plane.project({x:500,y:60}),pivot:{x:.5,y:.99}});
+const near=PlayerView.compute({projection:plane.project({x:500,y:540}),pivot:{x:.5,y:.99}});
 assert.ok(far.scale<near.scale,'farther movement into dojo must render smaller');
 assert.ok(far.depth<near.depth,'farther movement into dojo must sort behind near movement');
 
