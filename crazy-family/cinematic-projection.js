@@ -12,7 +12,7 @@ export function projectWorldToCinematicStage(point,{bounds=DEFAULT_BOUNDS}={}){
   const x=(Number(point?.x)||0)*perspective*.96;
   const floorY=.95-depth*4.72;
   const jumpY=(Number(point?.y)||0)*.94;
-  return {x,y:floorY+jumpY,z:-4.65+depth*1.75,scale:.54+depth*.62,depth};
+  return {x,y:floorY+jumpY,z:-4.65+depth*1.75,scale:1.28+depth*1.28,depth};
 }
 
 export function projectScaleForCinematicStage(point,options){return projectWorldToCinematicStage(point,options).scale;}
