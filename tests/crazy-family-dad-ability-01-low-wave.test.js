@@ -2,6 +2,7 @@ const fs = require('fs');
 const assert = require('assert');
 
 const html = fs.readFileSync('crazy-family.html', 'utf8');
+const attackVisuals = fs.readFileSync('crazy-family/attack-visuals.js', 'utf8');
 
 function extractFunction(name) {
   const start = html.indexOf(`function ${name}(`);
@@ -66,4 +67,14 @@ assert.match(
   'lowWave hit path should remove exactly one life when not defended'
 );
 
-console.log('PASS: Dad ability 1 lowWave — mapping, collision, and jump defense');
+// 6. Cinematic runtime: lowWave must have its own readable low-to-the-floor visual.
+assert.match(attackVisuals, /DAD_LOW_WAVE_VISUAL_V044/, 'cinematic low-wave visual marker should exist');
+assert.match(attackVisuals, /function makeLowWaveVisual\(/, 'lowWave should have a dedicated cinematic visual builder');
+assert.match(attackVisuals, /attack\.definitionId==='wave-low'/, 'wave-low should branch away from the generic ring visual');
+assert.match(attackVisuals, /low-wave-floor-guide/, 'lowWave should include a faint floor-level direction guide');
+assert.match(attackVisuals, /low-wave-core/, 'lowWave should include a bright compact core');
+assert.match(attackVisuals, /low-wave-crest/, 'lowWave should include layered musical-wave crests');
+assert.match(attackVisuals, /LOW_WAVE_TELEGRAPH_MS\s*=\s*420/, 'lowWave visual telegraph should last 420ms');
+assert.match(attackVisuals, /visual\.rotation\.z\s*=\s*Math\.atan2/, 'lowWave should orient to its projected travel direction');
+
+console.log('PASS: Dad ability 1 lowWave — mapping, collision, jump defense, and cinematic visual');
