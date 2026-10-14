@@ -62,6 +62,15 @@ test('unrelated walls are never selected for transparency', () => {
   assert.equal(ids.includes('back-wall'),false);
 });
 
+test('default cinematic rig ignores orbit and preserves fixed-offset pose', () => {
+  const player={position:{x:0,y:0,z:0}};
+  const base=stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1});
+  const controller=createCameraController();
+  orbitCamera(controller,{yawDelta:1.1,pitchDelta:.2});
+  const after=stepCamera(controller,{player,world:clearWorld,mode:'explore',dt:1,speed:8});
+  assert.deepEqual(after,base);
+});
+
 test('orbitCamera changes yaw and clamps pitch', () => {
   const controller=createCameraController();
   const startYaw=controller.yaw;
@@ -78,15 +87,15 @@ test('yaw orbit moves explore camera around player while target height stays sta
   const base=stepCamera(baseController,{player,world:clearWorld,mode:'explore',dt:1});
   const orbitController=createCameraController();
   orbitCamera(orbitController,{yawDelta:Math.PI/2});
-  const orbited=stepCamera(orbitController,{player,world:clearWorld,mode:'explore',dt:1});
+  const orbited=stepCamera(orbitController,{player,world:clearWorld,mode:'explore',dt:1,rig:'third-person'});
   assert.notDeepEqual({x:orbited.position.x,z:orbited.position.z},{x:base.position.x,z:base.position.z});
   assert.equal(orbited.target.y,base.target.y);
 });
 
 test('higher speed increases follow distance within limits', () => {
   const player={position:{x:0,y:0,z:0}};
-  const slow=stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1,speed:0});
-  const fast=stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1,speed:8});
+  const slow=stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1,speed:0,rig:'third-person'});
+  const fast=stepCamera(createCameraController(),{player,world:clearWorld,mode:'explore',dt:1,speed:8,rig:'third-person'});
   assert.ok(distance(fast.position,fast.target)>distance(slow.position,slow.target));
   assert.ok(distance(fast.position,fast.target)<5);
 });
@@ -94,7 +103,7 @@ test('higher speed increases follow distance within limits', () => {
 test('blocker keeps camera outside a 0.45 minimum target distance and passes collision radius', () => {
   let receivedPadding=null;
   const world={cameraBlockers:[{id:'wall'}],traceCameraSegment(target,desired,blockers,padding){receivedPadding=padding;return {id:'wall',fraction:.08};}};
-  const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world,dt:1});
+  const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world,dt:1,rig:'third-person'});
   assert.ok(distance(pose.position,pose.target)>.45);
   assert.equal(receivedPadding,.22);
 });
@@ -102,17 +111,17 @@ test('blocker keeps camera outside a 0.45 minimum target distance and passes col
 test('repeated small dt converges smoothly instead of teleporting', () => {
   const controller=createCameraController();
   const player={position:{x:0,y:0,z:0}};
-  stepCamera(controller,{player,world:clearWorld,dt:1});
+  stepCamera(controller,{player,world:clearWorld,dt:1,rig:'third-person'});
   player.position.x=3;
-  const first=stepCamera(controller,{player,world:clearWorld,dt:.016});
+  const first=stepCamera(controller,{player,world:clearWorld,dt:.016,rig:'third-person'});
   const firstGap=Math.abs(first.target.x-player.position.x);
   assert.ok(firstGap>0);
   let pose=first;
-  for(let i=0;i<90;i++) pose=stepCamera(controller,{player,world:clearWorld,dt:.016});
+  for(let i=0;i<90;i++) pose=stepCamera(controller,{player,world:clearWorld,dt:.016,rig:'third-person'});
   assert.ok(Math.abs(pose.target.x-player.position.x)<firstGap);
 });
 
 test('dt zero keeps camera pose finite', () => {
-  const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world:clearWorld,dt:0});
+  const pose=stepCamera(createCameraController(),{player:{position:{x:0,y:0,z:0}},world:clearWorld,dt:0,rig:'third-person'});
   assert.equal(finitePose(pose),true);
 });
