@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'crazy-family.html'
+      - 'crazy-family/attack-visuals.js'
       - 'tests/crazy-family-dad-ability-01-low-wave.test.js'
       - '.github/workflows/crazy-family-dad-ability-01.yml'
   workflow_dispatch:
