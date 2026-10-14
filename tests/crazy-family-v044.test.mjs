@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 
-async function loadSourceModule(relativePath) {
+async function readSource(relativePath) {
   const url = new URL(`../${relativePath}`, import.meta.url);
-  const source = await fs.readFile(url, 'utf8');
+  return fs.readFile(url, 'utf8');
+}
+
+async function loadSourceModule(relativePath) {
+  const source = await readSource(relativePath);
   return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 }
 
@@ -31,5 +35,8 @@ const active = occlusion.resolveCinematicOcclusion({
   occluders: [proxy],
 });
 assert.equal(active.has('coffee-table'), true, 'default actor body padding should keep near-edge furniture occlusion stable');
+
+const bootstrapSource = await readSource('crazy-family/bootstrap.js');
+assert.match(bootstrapSource, /v0\.44/, 'boot layer must publish the visible v0.44 label');
 
 console.log('v0.44 character integration tests passed');
