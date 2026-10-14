@@ -11,7 +11,7 @@ function segmentIntersectsRect(camera,actor,proxy){
   return t0<=t1 && t1>0.02 && t0<0.98;
 }
 
-export function resolveCinematicOcclusion({camera,actor,actorRadius=0,occluders=[]}={}){
+export function resolveCinematicOcclusion({camera,actor,actorRadius=.36,occluders=[]}={}){
   const active=new Set();
   if(!camera||!actor)return active;
   const padding=Math.max(0,Number(actorRadius)||0);
