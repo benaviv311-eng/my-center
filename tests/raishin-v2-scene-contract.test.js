@@ -1,0 +1,37 @@
+const fs=require('fs');
+const path=require('path');
+const assert=require('assert');
+
+const root=path.resolve(__dirname,'..');
+const scenePath=path.join(root,'raishin-legacy','src','scenes','DojoScene.js');
+const bootstrapPath=path.join(root,'raishin-legacy','v2-game.js');
+const htmlPath=path.join(root,'raishin-legacy','v2.html');
+assert.ok(fs.existsSync(scenePath),'DojoScene must exist');
+
+const source=fs.readFileSync(scenePath,'utf8');
+const bootstrap=fs.readFileSync(bootstrapPath,'utf8');
+const html=fs.readFileSync(htmlPath,'utf8');
+assert.match(source,/function\s+createDojoScene\s*\(Phaser\s*,\s*deps\)/,'scene factory must accept Phaser and pure dependencies');
+assert.match(source,/class\s+DojoScene\s+extends\s+Phaser\.Scene/,'factory must produce a Phaser Scene');
+for(const dep of ['WorldPlane','PlayerController','CollisionMap','PlayerAnimator','PlayerView','RaikaAnimationData','DojoLayout'])assert.ok(source.includes(dep),`scene must use ${dep}`);
+assert.match(source,/load\.image\([^\n]*dojo-bg/,'scene must preload approved dojo background');
+assert.match(source,/load\.image\([^\n]*raika/i,'scene must preload existing Raika sheet');
+assert.match(source,/texture\.add\(/,'scene must define frames from the existing sheet');
+assert.match(source,/framesPerDirection/,'scene must use the known eight-frame row metadata');
+assert.match(source,/for\s*\([^)]*row[^)]*<\s*4/,'scene must split four directional rows');
+assert.match(source,/for\s*\([^)]*frame[^)]*<\s*framesPerDirection/,'scene must split eight frames per row');
+assert.match(source,/add\.ellipse\(/,'scene must create a ground shadow');
+assert.match(source,/keyboard\.createCursorKeys\(/,'scene must wire arrow keys');
+assert.match(source,/addKeys\(/,'scene must wire WASD');
+
+const controllerIndex=source.indexOf('controller.step');
+const projectIndex=source.indexOf('worldPlane.project',controllerIndex);
+const animatorIndex=source.indexOf('animator.update',projectIndex);
+const viewIndex=source.indexOf('PlayerView.compute',animatorIndex);
+assert.ok(controllerIndex>=0&&projectIndex>controllerIndex&&animatorIndex>projectIndex&&viewIndex>animatorIndex,'update order must be simulation → projection → animation → view');
+for(const forbidden of ['requestAnimationFrame','getImageData','findDenseFootContact','buildUpGroundingMetrics','buildLeftGroundingMetrics','upFootContactOffsets'])assert.ok(!source.includes(forbidden),`DojoScene must reject legacy path: ${forbidden}`);
+assert.doesNotMatch(source,/ctx\.clip|scale\(-1\s*,\s*1\)/,'DojoScene must not use clipped lower-body mirroring');
+assert.doesNotMatch(source,/startFollow|setDeadzone/,'Task 6 camera must remain static');
+assert.match(html,/src="\.\/src\/scenes\/DojoScene\.js"[\s\S]*src="\.\/v2-game\.js"/,'DojoScene must load before bootstrap');
+assert.match(bootstrap,/createDojoScene/,'v2 bootstrap must start the scene factory');
+console.log('PASS: Phaser DojoScene uses ground-anchored world simulation');
