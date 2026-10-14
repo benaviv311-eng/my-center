@@ -1,0 +1,20 @@
+name: Crazy Family v0.43 Reference Game
+on:
+  push:
+    branches: [feature/crazy-family-v043-reference-game]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: v0.43 RED/GREEN contract
+        run: python scripts/test-crazy-family-v043-reference-game.py
+      - name: Existing Crazy Family movie-set contract
+        run: python scripts/test-crazy-family-movie-set.py
+      - name: JavaScript syntax
+        run: |
+          for f in crazy-family/*.js; do node --check "$f"; done
