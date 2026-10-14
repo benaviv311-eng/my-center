@@ -1,0 +1,36 @@
+name: Raishin v2 visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'raishin-legacy/**'
+      - 'tests/raishin-v2-browser-qa.mjs'
+      - '.github/workflows/raishin-v2-visual-qa.yml'
+  workflow_dispatch:
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local preview server
+        run: |
+          python3 -m http.server 4173 > /tmp/raishin-v2-http.log 2>&1 &
+          echo $! > /tmp/raishin-v2-http.pid
+          sleep 2
+      - name: Capture movement states
+        run: node tests/raishin-v2-browser-qa.mjs
+      - name: Upload visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raishin-v2-visual-qa
+          path: artifacts/raishin-v2-visual/
+          if-no-files-found: warn
