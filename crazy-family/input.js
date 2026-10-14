@@ -20,3 +20,9 @@ export function keyboardIntent(keys) {
     z: (keys?.ArrowDown || keys?.s ? 1 : 0) - (keys?.ArrowUp || keys?.w ? 1 : 0),
   };
 }
+
+export function cameraLookDelta({ dx = 0, dy = 0 } = {}, sensitivity = { yaw: 0.004, pitch: 0.003 }) {
+  const yaw = Number(sensitivity?.yaw) || 0;
+  const pitch = Number(sensitivity?.pitch) || 0;
+  return { yawDelta: (Number(dx) || 0) * yaw, pitchDelta: -(Number(dy) || 0) * pitch };
+}
