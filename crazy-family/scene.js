@@ -95,7 +95,7 @@ export async function createLivingRoomScene({canvas,world,visualMode='cinematic'
 
   return {
     scene,renderer,camera,visualStage,objectsById,cinematicSet,contactEffects,visualMode,visualEnvelope:cinematicSet?.visualEnvelope||null,proceduralGroup:debugWorld,
-    screenStage:true,projectWorld,
+    screenStage:true,projectWorld,renderPosition:projectWorld,
     render(){renderer.render(scene,camera);},resize,setObjectOpacity,applyCameraPose,setOccluders,applyReactiveTransforms,
     projectObject(object,logicalPosition,options){const projected=projectWorld(logicalPosition);setProjectedObject(object,projected,options);return projected;},
     dispose(){contactEffects.dispose();cinematicSet?.dispose?.();scene.traverse(object=>{object.geometry?.dispose?.();const mats=object.material?(Array.isArray(object.material)?object.material:[object.material]):[];for(const mat of mats)mat?.dispose?.();});renderer.dispose();},
