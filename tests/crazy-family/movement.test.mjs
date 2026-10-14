@@ -55,3 +55,33 @@ test('world collision response prevents crossing a blocker', () => {
   state = stepCharacter(state,{x:1,z:0},0.1,world);
   assert.equal(state.position.x, 2);
 });
+
+test('90 degree input change rotates heading toward travel direction without snapping', () => {
+  let state = createCharacterState({position:{x:0,y:0,z:0},maxSpeed:5,acceleration:20,braking:20,radius:.3,height:1});
+  state = stepCharacter(state,{x:0,z:1},0.2,world);
+  const before = state.heading;
+  state = stepCharacter(state,{x:1,z:0},0.05,world);
+  assert.ok(state.heading > before);
+  assert.ok(state.heading < Math.PI / 2);
+});
+
+test('zero input keeps heading finite and stable', () => {
+  let state = createCharacterState({position:{x:0,y:0,z:0},maxSpeed:5,acceleration:20,braking:20,radius:.3,height:1});
+  state.heading = 0.7;
+  state = stepCharacter(state,{x:0,z:0},0.016,world);
+  assert.ok(Number.isFinite(state.heading));
+  assert.equal(state.heading, 0.7);
+});
+
+test('locomotion state exposes idle run sprint crouch and airborne', () => {
+  let state = createCharacterState({position:{x:0,y:0,z:0},maxSpeed:5,acceleration:20,braking:20,radius:.3,height:1});
+  assert.equal(state.locomotionState,'idle');
+  state = stepCharacter(state,{x:1,z:0},0.3,world);
+  assert.equal(state.locomotionState,'run');
+  state = stepCharacter(state,{x:1,z:0},0.016,world,{sprinting:true});
+  assert.equal(state.locomotionState,'sprint');
+  state = stepCharacter(state,{x:0,z:0},0.016,world,{crouching:true});
+  assert.equal(state.locomotionState,'crouch');
+  state = jumpCharacter(state,7);
+  assert.equal(state.locomotionState,'airborne');
+});
