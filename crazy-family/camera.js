@@ -64,7 +64,17 @@ function desiredTarget(player, dad, mode, height){
   return {x:p.x,y:p.y+height,z:p.z};
 }
 
-function shortenedByHit(target,desired,hit,padding,minDistance){
+function shortenedByHitCinematic(target,desired,hit,padding){
+  if(!hit || !Number.isFinite(hit.fraction)) return desired;
+  const fraction=Math.max(0.12,Math.min(1,hit.fraction-padding));
+  return {
+    x:target.x+(desired.x-target.x)*fraction,
+    y:target.y+(desired.y-target.y)*fraction,
+    z:target.z+(desired.z-target.z)*fraction,
+  };
+}
+
+function shortenedByHitThirdPerson(target,desired,hit,padding,minDistance){
   if(!hit || !Number.isFinite(hit.fraction)) return desired;
   const fullDistance=distance3(target,desired);
   if(fullDistance<=1e-9)return desired;
@@ -87,25 +97,32 @@ function insideVisualEnvelope(desired,envelope){
   };
 }
 
-export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0.016,visualEnvelope=null,speed=0}){
+export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0.016,visualEnvelope=null,speed=0,rig='cinematic'}){
   const config=controller.config;
   const selected=modeSettings(config,mode);
   const target=desiredTarget(player,dad,mode,config.targetHeight);
-  const baseYaw=Math.atan2(config.exploreOffset.x,config.exploreOffset.z);
-  const modeYaw=Math.atan2(selected.offset.x,selected.offset.z);
-  const yaw=(Number.isFinite(controller.yaw)?controller.yaw:baseYaw)+(modeYaw-baseYaw);
-  const pitch=clamp(Number.isFinite(controller.pitch)?controller.pitch:0,config.minPitch,config.maxPitch);
-  const baseDistance=Math.hypot(selected.offset.x,selected.offset.z);
-  const speedRatio=clamp((Number.isFinite(speed)?Math.max(0,speed):0)/config.speedForMaxDistance,0,1);
-  const distance=baseDistance*(1+speedRatio*config.speedDistanceGain);
-  const horizontal=Math.cos(pitch)*distance;
-  let desired={
-    x:target.x+Math.sin(yaw)*horizontal,
-    y:target.y+selected.offset.y+Math.sin(pitch)*distance,
-    z:target.z+Math.cos(yaw)*horizontal,
-  };
-  const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || [],config.collisionRadius);
-  desired=shortenedByHit(target,desired,hit,config.collisionPadding,config.minTargetDistance);
+  let desired;
+  if(rig==='third-person'){
+    const baseYaw=Math.atan2(config.exploreOffset.x,config.exploreOffset.z);
+    const modeYaw=Math.atan2(selected.offset.x,selected.offset.z);
+    const yaw=(Number.isFinite(controller.yaw)?controller.yaw:baseYaw)+(modeYaw-baseYaw);
+    const pitch=clamp(Number.isFinite(controller.pitch)?controller.pitch:0,config.minPitch,config.maxPitch);
+    const baseDistance=Math.hypot(selected.offset.x,selected.offset.z);
+    const speedRatio=clamp((Number.isFinite(speed)?Math.max(0,speed):0)/config.speedForMaxDistance,0,1);
+    const distance=baseDistance*(1+speedRatio*config.speedDistanceGain);
+    const horizontal=Math.cos(pitch)*distance;
+    desired={
+      x:target.x+Math.sin(yaw)*horizontal,
+      y:target.y+selected.offset.y+Math.sin(pitch)*distance,
+      z:target.z+Math.cos(yaw)*horizontal,
+    };
+    const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || [],config.collisionRadius);
+    desired=shortenedByHitThirdPerson(target,desired,hit,config.collisionPadding,config.minTargetDistance);
+  }else{
+    desired={x:target.x+selected.offset.x,y:target.y+selected.offset.y,z:target.z+selected.offset.z};
+    const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || []);
+    desired=shortenedByHitCinematic(target,desired,hit,config.collisionPadding);
+  }
   desired=insideVisualEnvelope(desired,visualEnvelope);
   const safeDt=Number.isFinite(dt)?Math.max(0,dt):0;
   const t=controller.position ? 1-Math.exp(-config.smoothing*safeDt) : 1;
