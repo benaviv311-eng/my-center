@@ -1,0 +1,96 @@
+from pathlib import Path
+import json
+
+ROOT = Path(__file__).resolve().parents[1]
+ASSET_DIR = ROOT / 'assets' / 'crazy-family' / 'cinematic-home-v043'
+ASSET_DIR.mkdir(parents=True, exist_ok=True)
+
+manifest = {
+    'version': '0.43-reference-game',
+    'visualEnvelope': {'minX': -5.8, 'maxX': 5.8, 'minY': 0, 'maxY': 4.2, 'minZ': -4.45, 'maxZ': 4.35},
+    'layers': [
+        {'id':'cinematic-background','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'background','world':{'x':0,'y':2.2,'z':-4.5,'width':12.2,'height':6.86},'renderOrder':-20,'occluder':False,'required':True},
+        {'id':'cinematic-floor-rug','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'surface','anchorId':'rug','mask':[[0.08,0.49],[0.74,0.49],[0.78,1],[0.05,1]],'world':{'x':0,'y':0.012,'z':0,'width':11.8,'height':8.9},'renderOrder':-12,'occluder':False,'required':True},
+        {'id':'cinematic-sofa','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'furniture','anchorId':'sofa','mask':[[0,0.31],[0.47,0.31],[0.49,0.59],[0,0.62]],'world':{'x':0,'y':1.35,'z':0,'width':4.55,'height':2.55},'renderOrder':8,'occluder':True,'required':True,'proxy':{'width':3.15,'depth':1.25}},
+        {'id':'cinematic-coffee-table','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'furniture','anchorId':'coffee-table','mask':[[0.22,0.42],[0.48,0.42],[0.49,0.67],[0.20,0.69]],'world':{'x':0,'y':0.76,'z':0,'width':3.15,'height':1.75},'renderOrder':9,'occluder':True,'required':True,'proxy':{'width':2.15,'depth':1.2}},
+        {'id':'cinematic-dining-kitchen','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'furniture','mask':[[0.42,0.06],[0.87,0.06],[0.87,0.56],[0.44,0.56]],'world':{'x':3.5,'y':2,'z':-3.95,'width':6.2,'height':4.25},'renderOrder':-2,'occluder':False,'required':True},
+        {'id':'cinematic-foreground-left','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'foreground','mask':[[0,0.38],[0.22,0.39],[0.28,1],[0,1]],'world':{'x':-5.2,'y':1.65,'z':2.7,'width':2.7,'height':3.4},'renderOrder':30,'occluder':True,'required':True,'proxy':{'width':1.45,'depth':2.1}},
+        {'id':'cinematic-foreground-right','src':'assets/crazy-family/cinematic-home-v043/background.webp','kind':'foreground','mask':[[0.75,0.30],[1,0.25],[1,1],[0.77,1]],'world':{'x':5.15,'y':1.65,'z':2.45,'width':2.85,'height':3.45},'renderOrder':30,'occluder':True,'required':True,'proxy':{'width':1.55,'depth':2}},
+    ],
+}
+(ASSET_DIR / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+
+p = ROOT / 'crazy-family' / 'cinematic-set.js'
+s = p.read_text(encoding='utf-8').replace('assets/crazy-family/cinematic-home-v042/manifest.json','assets/crazy-family/cinematic-home-v043/manifest.json')
+p.write_text(s, encoding='utf-8')
+
+p = ROOT / 'crazy-family' / 'scene.js'
+s = p.read_text(encoding='utf-8')
+s = s.replace('HYBRID_CINEMATIC_SET_V042','REFERENCE_GAME_RENDER_V043')
+s = s.replace('assets/crazy-family/cinematic-home-v042/manifest.json','assets/crazy-family/cinematic-home-v043/manifest.json')
+# Preserve semantic light names required by the established movie-set contract.
+s = s.replace("const key=new THREE.DirectionalLight(0xffbd78,2.5);key.position.set(-5,7,8);visualStage.add(key);", "const key=new THREE.DirectionalLight(0xffbd78,2.5);key.name='warm-window-light';key.position.set(-5,7,8);visualStage.add(key);")
+s = s.replace("const fill=new THREE.PointLight(0xffd2a1,2.2,20,2);fill.position.set(-4,2,6);visualStage.add(fill);", "const fill=new THREE.PointLight(0xffd2a1,2.2,20,2);fill.name='warm-practical-light';fill.position.set(-4,2,6);visualStage.add(fill);")
+p.write_text(s, encoding='utf-8')
+
+(ROOT / 'crazy-family' / 'cinematic-projection.js').write_text("""const DEFAULT_BOUNDS=Object.freeze({minX:-6,maxX:6,minZ:-4.6,maxZ:4.6});
+
+// REFERENCE_FLOOR_V043 — project the logical 3D room onto the photographed-style floor plane.
+function clamp01(value){return Math.max(0,Math.min(1,value));}
+
+export function projectWorldToCinematicStage(point,{bounds=DEFAULT_BOUNDS}={}){
+  const minZ=Number(bounds.minZ)??-4.6;
+  const maxZ=Number(bounds.maxZ)??4.6;
+  const spanZ=Math.max(.001,maxZ-minZ);
+  const depth=clamp01(((Number(point?.z)||0)-minZ)/spanZ);
+  const perspective=.56+depth*.44;
+  const x=(Number(point?.x)||0)*perspective*.96;
+  const floorY=.95-depth*4.72;
+  const jumpY=(Number(point?.y)||0)*.94;
+  return {x,y:floorY+jumpY,z:-4.65+depth*1.75,scale:.54+depth*.62,depth};
+}
+
+export function projectScaleForCinematicStage(point,options){return projectWorldToCinematicStage(point,options).scale;}
+""", encoding='utf-8')
+
+p = ROOT / 'crazy-family' / 'game.js'
+s = p.read_text(encoding='utf-8')
+needle = "    const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;"
+addition = "\n    const referenceGoal=doc.getElementById('referenceHeadphoneCount');\n    if(referenceGoal){const inventory=retainedAfter.player?.inventory||[];referenceGoal.textContent=`${inventory.some(item=>item?.id==='headphones')?1:0}/1`; }"
+if 'referenceHeadphoneCount' not in s:
+    if needle not in s: raise SystemExit('game.js retainedAfter anchor not found')
+    s = s.replace(needle, needle + addition, 1)
+p.write_text(s, encoding='utf-8')
+
+p = ROOT / 'crazy-family.html'
+s = p.read_text(encoding='utf-8')
+s = s.replace('שלב 1: מפגש אבא · v0.42','שלב 1: מפגש אבא · v0.43',1)
+style = r'''
+<style id="reference-game-v043">
+/* REFERENCE_GAME_V043 — cinematic room is the visual game surface; gameplay remains live underneath. */
+.game-shell{max-width:1540px;padding:8px 10px 16px}.layout{display:block}.side{display:none}.stage{aspect-ratio:16/9;border:3px solid rgba(48,29,20,.82);border-radius:24px;box-shadow:0 20px 60px rgba(48,25,10,.28);background:#2b190f}.movie-set-root{inset:0}.movie-set-canvas{width:100%!important;height:100%!important;aspect-ratio:auto!important}.stage>canvas#game{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}.inventory{max-width:760px;margin:8px auto 0;opacity:.9}
+.reference-game-hud{position:absolute;inset:16px 18px auto 18px;z-index:8;margin:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;direction:ltr;pointer-events:none;gap:14px}.reference-game-hud .pill{border:2px solid rgba(255,255,255,.78);background:rgba(35,22,22,.72);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28);backdrop-filter:blur(4px)}.reference-game-hud .pill.grow{display:none}.reference-game-hud .meters{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.reference-game-hud .meterbox{min-width:180px;padding:7px 11px}.reference-game-hud .meterbox:nth-child(3){display:none}.reference-game-hud .meterbox:nth-child(1){min-width:190px}.reference-game-hud .meterbox:nth-child(2){margin-left:auto}.reference-game-hud .meterbox:nth-child(4){margin-left:0}.reference-game-hud .label{color:#fff;font-size:11px;text-shadow:0 1px 3px #000}.reference-game-hud #lives{font-size:27px!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}.reference-game-hud .meter{height:14px;background:rgba(30,20,30,.6);border:2px solid rgba(255,255,255,.55)}.reference-game-hud #stamina{background:linear-gradient(90deg,#32d45b,#8ef04d)}.reference-game-hud #dizzyMeter{background:linear-gradient(90deg,#8c35ff,#ff24d6)!important}
+.reference-headphone-goal{position:absolute;right:22px;top:88px;z-index:9;direction:ltr;display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:18px;border:2px solid rgba(255,255,255,.75);background:rgba(34,25,30,.72);color:#fff;font-size:25px;font-weight:900;text-shadow:0 2px 3px #000;box-shadow:0 5px 16px rgba(0,0,0,.25);pointer-events:none}
+.reference-stage-controls{position:absolute;left:18px;right:18px;bottom:18px;z-index:10;margin:0!important;display:flex!important;justify-content:space-between!important;align-items:flex-end!important;pointer-events:none;direction:ltr}.reference-stage-controls button{pointer-events:auto;color:#fff;text-shadow:0 2px 3px rgba(0,0,0,.7);border-color:rgba(255,255,255,.85)!important;background:rgba(28,25,30,.50)!important;box-shadow:0 4px 14px rgba(0,0,0,.25)!important;backdrop-filter:blur(3px)}.reference-stage-controls .dpad{grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:3px}.reference-stage-controls .cbtn{border-radius:50%;font-size:25px}.reference-stage-controls .actions{max-width:330px;gap:9px;align-items:flex-end}.reference-stage-controls .abtn{width:72px;height:72px}.reference-stage-controls #action{font-size:0}.reference-stage-controls #action:after{content:'✋';font-size:31px}.reference-stage-controls #jump{font-size:0}.reference-stage-controls #jump:after{content:'⬆';font-size:31px}.reference-stage-controls #run{font-size:0}.reference-stage-controls #run:after{content:'🏃';font-size:27px}.reference-stage-controls #itemUse{width:58px;height:58px;font-size:0}.reference-stage-controls #itemUse:after{content:'🎧';font-size:25px}.reference-stage-controls #crouch,.reference-stage-controls #hang{width:50px;height:50px;font-size:9px;opacity:.82}.top{margin-bottom:6px}.top h1{font-size:clamp(22px,3vw,34px)}
+@media(max-width:900px){.reference-game-hud{inset:8px 8px auto 8px}.reference-game-hud .meterbox{min-width:120px;padding:5px 7px}.reference-game-hud .meterbox:nth-child(1){min-width:135px}.reference-game-hud #lives{font-size:20px!important}.reference-headphone-goal{right:10px;top:66px;font-size:19px;padding:6px 10px}.reference-stage-controls{left:8px;right:8px;bottom:8px}.reference-stage-controls .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}.reference-stage-controls .actions{max-width:245px;gap:5px}.reference-stage-controls .abtn{width:56px;height:56px}.reference-stage-controls #itemUse{width:46px;height:46px}.reference-stage-controls #crouch,.reference-stage-controls #hang{display:none}.inventory{display:none}.top .back{padding:6px 9px;font-size:12px}}
+</style>
+'''
+if 'reference-game-v043' not in s:
+    s = s.replace('</head>', style + '</head>', 1)
+mover = r'''
+<script id="reference-game-ui-v043">
+document.addEventListener('DOMContentLoaded',()=>{
+  const stage=document.querySelector('.stage');
+  const hud=document.querySelector('.worldbar');
+  const controls=document.querySelector('.controls');
+  if(stage&&hud){hud.classList.add('reference-game-hud');stage.appendChild(hud);}
+  if(stage&&controls){controls.classList.add('reference-stage-controls');stage.appendChild(controls);}
+  if(stage&&!document.getElementById('referenceHeadphoneCount')){const goal=document.createElement('div');goal.className='reference-headphone-goal';goal.innerHTML='🎧 <span id="referenceHeadphoneCount">0/1</span>';stage.appendChild(goal);}
+});
+</script>
+'''
+if 'reference-game-ui-v043' not in s:
+    s = s.replace('</body>', mover + '</body>', 1)
+p.write_text(s, encoding='utf-8')
+
+print('Built Crazy Family v0.43 reference-game files')
