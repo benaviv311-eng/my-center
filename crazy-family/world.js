@@ -67,7 +67,7 @@ export function createLivingRoomWorld() {
     box('toy-blocks', 2.7, 1.85, 0.8, 0.65, 0.32, { kind: 'dressing', color: 0x6ba6b8, reactive: true }),
   ];
 
-  const colliders = objects.filter(o => ['sofa', 'coffee-table', 'side-table'].includes(o.id));
+  const colliders = objects.filter(o => ['sofa', 'coffee-table', 'side-table'].includes(o.id)).map(o => o.id === 'side-table' ? { ...o, width: 0.5, depth: 0.62 } : o);
   const wallThickness = 0.18;
   const wallHeight = 3.2;
   const roomWidth = ROOM_BOUNDS.maxX - ROOM_BOUNDS.minX;
