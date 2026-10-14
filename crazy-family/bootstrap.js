@@ -1,3 +1,5 @@
+export const CRAZY_FAMILY_VERSION = 'v0.44';
+
 export function shouldUseLegacy(search = '') {
   const params = new URLSearchParams(search || '');
   return params.get('legacy') === '1';
@@ -20,8 +22,16 @@ function webGLAvailable(root) {
   }
 }
 
+function publishVersionLabel(root) {
+  const doc = root?.ownerDocument || globalThis.document;
+  const label = doc?.querySelector?.('.top .sub');
+  if (label?.textContent) label.textContent = label.textContent.replace(/v0\.\d+/g, CRAZY_FAMILY_VERSION);
+  if (root?.dataset) root.dataset.gameVersion = CRAZY_FAMILY_VERSION;
+}
+
 export async function bootCrazyFamily({ root, legacyAdapter }) {
   if (!root) throw new Error('movie-set root is required');
+  publishVersionLabel(root);
   if (!webGLAvailable(root)) {
     const error = new Error('WebGL unavailable');
     renderUnsupported(root, error);
