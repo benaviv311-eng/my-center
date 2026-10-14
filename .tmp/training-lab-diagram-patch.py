@@ -1,0 +1,141 @@
+from pathlib import Path
+
+p=Path('coach-training-lab.js')
+s=p.read_text()
+
+old="""(function(root,factory){
+  let data={};
+  if(typeof module!=='undefined'&&module.exports) data=require('./coach-training-lab-data.js');
+  else if(root&&root.CoachTrainingLabData) data=root.CoachTrainingLabData;
+  const api=factory(data);
+  if(typeof module!=='undefined'&&module.exports) module.exports=api;
+  if(root) root.CoachTrainingLab=api;
+})(typeof window!=='undefined'?window:globalThis,function(data){"""
+new="""(function(root,factory){
+  let data={},diagramData={DIAGRAMS:{}};
+  if(typeof module!=='undefined'&&module.exports){
+    data=require('./coach-training-lab-data.js');
+    try{diagramData=require('./coach-training-lab-diagrams.js');}catch(_error){}
+  }else{
+    if(root&&root.CoachTrainingLabData) data=root.CoachTrainingLabData;
+    if(root&&root.CoachTrainingLabDiagrams) diagramData=root.CoachTrainingLabDiagrams;
+  }
+  const api=factory(data,diagramData);
+  if(typeof module!=='undefined'&&module.exports) module.exports=api;
+  if(root) root.CoachTrainingLab=api;
+})(typeof window!=='undefined'?window:globalThis,function(data,diagramData){"""
+if old not in s:
+    raise SystemExit('wrapper needle missing')
+s=s.replace(old,new,1)
+
+marker='  function renderCard(item,state={}){'
+if marker not in s:
+    raise SystemExit('renderCard marker missing')
+block=r'''  function orderedListHtml(values){
+    return (values||[]).length?`<ol class="training-lab-steps">${values.map(v=>`<li>${esc(v)}</li>`).join('')}</ol>`:'';
+  }
+
+  function diagramForItem(item){
+    return item?.diagram||diagramData?.DIAGRAMS?.[item?.id]||null;
+  }
+
+  function renderDiagram(diagram,title=''){
+    if(!diagram){
+      return `<section class="training-lab-diagram training-lab-diagram-placeholder"><div class="training-lab-diagram-head"><h3>תרשים התרגיל</h3></div><p>תרשים יתווסף בהמשך</p></section>`;
+    }
+    const points=new Map();
+    for(const player of diagram.players||[]) points.set(player.id,{x:Number(player.x),y:Number(player.y)});
+    for(const zone of diagram.targetZones||[]) points.set(zone.id,{x:Number(zone.x)+(Number(zone.w)||0)/2,y:Number(zone.y)+(Number(zone.h)||0)/2});
+    const line=(path,cls,markerId)=>{
+      const from=points.get(path.from);
+      const to=path.to?points.get(path.to):{x:Number(path.toX),y:Number(path.toY)};
+      if(!from||!to||![from.x,from.y,to.x,to.y].every(Number.isFinite)) return '';
+      const step=path.step?`<text class="training-lab-step-badge" x="${(from.x+to.x)/2}" y="${(from.y+to.y)/2-1}">${esc(path.step)}</text>`:'';
+      return `<line class="${cls}" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" marker-end="url(#${markerId})"></line>${step}`;
+    };
+    const targets=(diagram.targetZones||[]).map(zone=>`<g><rect class="training-lab-target-zone" x="${esc(zone.x)}" y="${esc(zone.y)}" width="${esc(zone.w)}" height="${esc(zone.h)}" rx="2"></rect>${zone.label?`<text class="training-lab-target-label" x="${Number(zone.x)+Number(zone.w)/2}" y="${Number(zone.y)+Number(zone.h)/2}">${esc(zone.label)}</text>`:''}</g>`).join('');
+    const players=(diagram.players||[]).map(player=>`<g class="training-lab-player-group"><circle class="training-lab-player training-lab-player-${esc(player.role||'player')}" cx="${esc(player.x)}" cy="${esc(player.y)}" r="3.4"></circle><text class="training-lab-player-label" x="${esc(player.x)}" y="${Number(player.y)+.8}">${esc(player.label||'')}</text></g>`).join('');
+    const notes=(diagram.notes||[]).map(note=>`<text class="training-lab-diagram-note" x="${esc(note.x)}" y="${esc(note.y)}">${esc(note.text)}</text>`).join('');
+    const net=diagram.net===false?'':`<line class="training-lab-court-net" x1="50" y1="4" x2="50" y2="56"></line>`;
+    const ballPaths=(diagram.ballPaths||[]).map(path=>line(path,'training-lab-ball-path','lab-arrow-ball')).join('');
+    const movementPaths=(diagram.movementPaths||[]).map(path=>line(path,'training-lab-movement-path','lab-arrow-move')).join('');
+    return `<section class="training-lab-diagram" data-court-type="${esc(diagram.courtType||'full')}">
+      <div class="training-lab-diagram-head"><div><p class="training-lab-kicker">מבט מהיר</p><h3>תרשים התרגיל</h3></div><button type="button" data-lab-action="expand-diagram" aria-label="הגדל תרשים">⛶ הגדל תרשים</button></div>
+      <div class="training-lab-diagram-canvas">
+        <svg viewBox="0 0 100 60" role="img" aria-label="תרשים התרגיל — ${esc(title)}" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="lab-arrow-ball" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" class="training-lab-arrow-ball"></path></marker>
+            <marker id="lab-arrow-move" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" class="training-lab-arrow-move"></path></marker>
+          </defs>
+          <rect class="training-lab-court-surface" x="3" y="4" width="94" height="52" rx="2"></rect>
+          <rect class="training-lab-court-line" x="3" y="4" width="94" height="52" rx="1"></rect>
+          <line class="training-lab-court-line" x1="34" y1="4" x2="34" y2="56"></line>
+          <line class="training-lab-court-line" x1="66" y1="4" x2="66" y2="56"></line>
+          ${net}${targets}${movementPaths}${ballPaths}${players}${notes}
+        </svg>
+      </div>
+      <div class="training-lab-diagram-legend"><span><i class="ball"></i> מסלול כדור</span><span><i class="move"></i> תנועת שחקן</span><span><i class="target"></i> אזור מטרה</span></div>
+    </section>`;
+  }
+
+'''
+s=s.replace(marker,block+marker,1)
+
+old_detail="""      ${section('איך זה נראה במשחק',item.gameContext?`<p>${esc(item.gameContext)}</p>`:'')}
+      ${section('איך מארגנים',item.setup?`<p>${esc(item.setup)}</p>`:'')}
+      ${section('מה עושים',listHtml(item.steps))}"""
+new_detail="""      ${section('איך זה נראה במשחק',item.gameContext?`<p>${esc(item.gameContext)}</p>`:'')}
+      ${item.type==='drill'?renderDiagram(diagramForItem(item),item.title):''}
+      ${section('איך מארגנים',item.setup?`<p>${esc(item.setup)}</p>`:'')}
+      ${section('מה עושים',orderedListHtml(item.steps))}"""
+if old_detail not in s:
+    raise SystemExit('detail needle missing')
+s=s.replace(old_detail,new_detail,1)
+
+old_listener='''    detail?.addEventListener('click',e=>{if(e.target.closest('[data-lab-action="close-detail"]')){detail.hidden=true;detail.innerHTML='';}});'''
+new_listener='''    detail?.addEventListener('click',e=>{
+      if(e.target.closest('[data-lab-action="close-detail"]')){detail.hidden=true;detail.innerHTML='';return;}
+      const expand=e.target.closest('[data-lab-action="expand-diagram"]');
+      if(expand){
+        const diagram=expand.closest('.training-lab-diagram');
+        if(!diagram) return;
+        const expanded=diagram.classList.toggle('is-expanded');
+        expand.textContent=expanded?'↩ חזור לתיאור':'⛶ הגדל תרשים';
+        expand.setAttribute('aria-label',expanded?'חזור לתיאור':'הגדל תרשים');
+      }
+    });'''
+if old_listener not in s:
+    raise SystemExit('listener needle missing')
+s=s.replace(old_listener,new_listener,1)
+
+old_export='renderCard,renderDetail,renderQuickMatchResult'
+new_export='renderCard,renderDetail,renderDiagram,diagramForItem,renderQuickMatchResult'
+if old_export not in s:
+    raise SystemExit('export needle missing')
+s=s.replace(old_export,new_export,1)
+p.write_text(s)
+
+p=Path('coach-training-lab.css')
+css=p.read_text()
+addition=r'''
+
+/* Exercise detail diagrams */
+.training-lab-diagram{margin:18px 0;padding:16px;border:1px solid var(--lab-line);border-radius:20px;background:linear-gradient(180deg,#0d1711,#101d15);clear:both}
+.training-lab-diagram-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.training-lab-diagram-head h3{margin:.1em 0}
+.training-lab-diagram-head button{min-height:44px;border:1px solid var(--lab-line);border-radius:12px;background:#19271f;color:var(--lab-text);padding:8px 12px;font:inherit;font-weight:800}
+.training-lab-diagram-canvas{overflow:hidden;border-radius:16px;background:#1b5a38;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.training-lab-diagram svg{display:block;width:100%;height:auto;min-height:280px}
+.training-lab-court-surface{fill:#237347}.training-lab-court-line{fill:none;stroke:rgba(255,255,255,.7);stroke-width:.45}.training-lab-court-net{stroke:#f5f2dc;stroke-width:1.2;stroke-dasharray:1.5 1}
+.training-lab-player{fill:#eef8f1;stroke:#0b2416;stroke-width:.8}.training-lab-player-server{fill:#ffd66b}.training-lab-player-attacker{fill:#ff9c7e}.training-lab-player-defender,.training-lab-player-receiver{fill:#95d8ff}.training-lab-player-setter,.training-lab-player-setter-target{fill:#d4b6ff}.training-lab-player-blocker{fill:#ffb5d5}.training-lab-player-coach{fill:#c8d0c9}
+.training-lab-player-label{fill:#102018;font-size:2.6px;font-weight:900;text-anchor:middle;pointer-events:none}.training-lab-target-zone{fill:rgba(255,221,102,.18);stroke:#ffdc68;stroke-width:.75;stroke-dasharray:1.6 1}.training-lab-target-label{fill:#fff5bd;font-size:2.5px;font-weight:900;text-anchor:middle;dominant-baseline:middle}
+.training-lab-ball-path{stroke:#ffe171;stroke-width:1.1;stroke-dasharray:3 2;fill:none}.training-lab-movement-path{stroke:#8de3b1;stroke-width:1.05;fill:none}.training-lab-arrow-ball{fill:#ffe171}.training-lab-arrow-move{fill:#8de3b1}.training-lab-step-badge{fill:#fff;font-size:2.6px;font-weight:900;text-anchor:middle;paint-order:stroke;stroke:#102018;stroke-width:.8px}.training-lab-diagram-note{fill:#f7fff9;font-size:2.4px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#123421;stroke-width:.65px}
+.training-lab-diagram-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;color:var(--lab-muted);font-size:.8rem;font-weight:700}.training-lab-diagram-legend span{display:flex;align-items:center;gap:6px}.training-lab-diagram-legend i{display:inline-block;width:24px;height:0;border-top:2px solid}.training-lab-diagram-legend .ball{border-color:#ffe171;border-top-style:dashed}.training-lab-diagram-legend .move{border-color:#8de3b1}.training-lab-diagram-legend .target{width:16px;height:10px;border:1px dashed #ffdc68;background:rgba(255,221,102,.12)}
+.training-lab-diagram-placeholder{min-height:150px;display:grid;align-content:center;text-align:center;color:var(--lab-muted);border-style:dashed}.training-lab-steps{margin:0;padding-right:1.5rem;display:grid;gap:10px}.training-lab-steps li{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.035)}
+.training-lab-diagram.is-expanded{position:fixed;inset:12px;z-index:90;margin:0;padding:18px;background:#0c1510;overflow:auto;display:flex;flex-direction:column}.training-lab-diagram.is-expanded .training-lab-diagram-canvas{flex:1;display:grid;place-items:center}.training-lab-diagram.is-expanded svg{width:min(1200px,100%);height:min(78vh,760px);min-height:0}
+@media(min-width:900px){.training-lab-detail-card{max-width:1040px}.training-lab-diagram svg{min-height:360px}}
+@media(max-width:640px){.training-lab-diagram{padding:12px;margin:14px 0}.training-lab-diagram-head{align-items:flex-start}.training-lab-diagram-head button{font-size:.84rem}.training-lab-diagram svg{min-height:230px}.training-lab-diagram-legend{gap:8px;font-size:.74rem}.training-lab-diagram.is-expanded{inset:4px;border-radius:14px}.training-lab-steps{padding-right:1.25rem}}
+'''
+if '/* Exercise detail diagrams */' not in css:
+    css += addition
+p.write_text(css)
