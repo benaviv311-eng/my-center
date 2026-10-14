@@ -23,10 +23,19 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 .movie-set-root{position:absolute;inset:0;z-index:3;background:#201b1d;overflow:hidden}.movie-set-root[hidden]{display:none!important}.movie-set-canvas{width:100%;height:100%;display:block;aspect-ratio:auto}.movie-set-unsupported{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:28px;background:linear-gradient(145deg,#3b3035,#1f1a1d);color:#fff;font-weight:800;line-height:1.6}.legacy-mode .movie-set-root{display:none!important}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
+
+<style id="reference-game-v043">
+/* REFERENCE_GAME_V043 — cinematic room is the visual game surface; gameplay remains live underneath. */
+.game-shell{max-width:1540px;padding:8px 10px 16px}.layout{display:block}.side{display:none}.stage{aspect-ratio:16/9;border:3px solid rgba(48,29,20,.82);border-radius:24px;box-shadow:0 20px 60px rgba(48,25,10,.28);background:#2b190f}.movie-set-root{inset:0}.movie-set-canvas{width:100%!important;height:100%!important;aspect-ratio:auto!important}.stage>canvas#game{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none}.inventory{max-width:760px;margin:8px auto 0;opacity:.9}
+.reference-game-hud{position:absolute;inset:16px 18px auto 18px;z-index:8;margin:0!important;display:flex!important;align-items:flex-start!important;justify-content:space-between!important;direction:ltr;pointer-events:none;gap:14px}.reference-game-hud .pill{border:2px solid rgba(255,255,255,.78);background:rgba(35,22,22,.72);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.28);backdrop-filter:blur(4px)}.reference-game-hud .pill.grow{display:none}.reference-game-hud .meters{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.reference-game-hud .meterbox{min-width:180px;padding:7px 11px}.reference-game-hud .meterbox:nth-child(3){display:none}.reference-game-hud .meterbox:nth-child(1){min-width:190px}.reference-game-hud .meterbox:nth-child(2){margin-left:auto}.reference-game-hud .meterbox:nth-child(4){margin-left:0}.reference-game-hud .label{color:#fff;font-size:11px;text-shadow:0 1px 3px #000}.reference-game-hud #lives{font-size:27px!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}.reference-game-hud .meter{height:14px;background:rgba(30,20,30,.6);border:2px solid rgba(255,255,255,.55)}.reference-game-hud #stamina{background:linear-gradient(90deg,#32d45b,#8ef04d)}.reference-game-hud #dizzyMeter{background:linear-gradient(90deg,#8c35ff,#ff24d6)!important}
+.reference-headphone-goal{position:absolute;right:22px;top:88px;z-index:9;direction:ltr;display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:18px;border:2px solid rgba(255,255,255,.75);background:rgba(34,25,30,.72);color:#fff;font-size:25px;font-weight:900;text-shadow:0 2px 3px #000;box-shadow:0 5px 16px rgba(0,0,0,.25);pointer-events:none}
+.reference-stage-controls{position:absolute;left:18px;right:18px;bottom:18px;z-index:10;margin:0!important;display:flex!important;justify-content:space-between!important;align-items:flex-end!important;pointer-events:none;direction:ltr}.reference-stage-controls button{pointer-events:auto;color:#fff;text-shadow:0 2px 3px rgba(0,0,0,.7);border-color:rgba(255,255,255,.85)!important;background:rgba(28,25,30,.50)!important;box-shadow:0 4px 14px rgba(0,0,0,.25)!important;backdrop-filter:blur(3px)}.reference-stage-controls .dpad{grid-template-columns:repeat(3,54px);grid-template-rows:repeat(3,54px);gap:3px}.reference-stage-controls .cbtn{border-radius:50%;font-size:25px}.reference-stage-controls .actions{max-width:330px;gap:9px;align-items:flex-end}.reference-stage-controls .abtn{width:72px;height:72px}.reference-stage-controls #action{font-size:0}.reference-stage-controls #action:after{content:'✋';font-size:31px}.reference-stage-controls #jump{font-size:0}.reference-stage-controls #jump:after{content:'⬆';font-size:31px}.reference-stage-controls #run{font-size:0}.reference-stage-controls #run:after{content:'🏃';font-size:27px}.reference-stage-controls #itemUse{width:58px;height:58px;font-size:0}.reference-stage-controls #itemUse:after{content:'🎧';font-size:25px}.reference-stage-controls #crouch,.reference-stage-controls #hang{width:50px;height:50px;font-size:9px;opacity:.82}.top{margin-bottom:6px}.top h1{font-size:clamp(22px,3vw,34px)}
+@media(max-width:900px){.reference-game-hud{inset:8px 8px auto 8px}.reference-game-hud .meterbox{min-width:120px;padding:5px 7px}.reference-game-hud .meterbox:nth-child(1){min-width:135px}.reference-game-hud #lives{font-size:20px!important}.reference-headphone-goal{right:10px;top:66px;font-size:19px;padding:6px 10px}.reference-stage-controls{left:8px;right:8px;bottom:8px}.reference-stage-controls .dpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px)}.reference-stage-controls .actions{max-width:245px;gap:5px}.reference-stage-controls .abtn{width:56px;height:56px}.reference-stage-controls #itemUse{width:46px;height:46px}.reference-stage-controls #crouch,.reference-stage-controls #hang{display:none}.inventory{display:none}.top .back{padding:6px 9px;font-size:12px}}
+</style>
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.42</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.43</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -576,6 +585,17 @@ if(shouldUseLegacy(location.search)){document.body.classList.add('legacy-mode');
  const legacyAdapter=createLegacyAdapter(window);
  bootCrazyFamily({root:movieSetRoot,legacyAdapter}).catch(error=>renderUnsupported(movieSetRoot,error));
 }
+</script>
+
+<script id="reference-game-ui-v043">
+document.addEventListener('DOMContentLoaded',()=>{
+  const stage=document.querySelector('.stage');
+  const hud=document.querySelector('.worldbar');
+  const controls=document.querySelector('.controls');
+  if(stage&&hud){hud.classList.add('reference-game-hud');stage.appendChild(hud);}
+  if(stage&&controls){controls.classList.add('reference-stage-controls');stage.appendChild(controls);}
+  if(stage&&!document.getElementById('referenceHeadphoneCount')){const goal=document.createElement('div');goal.className='reference-headphone-goal';goal.innerHTML='🎧 <span id="referenceHeadphoneCount">0/1</span>';stage.appendChild(goal);}
+});
 </script>
 </body>
 </html>

@@ -254,6 +254,8 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     if(currentInteraction){prompt.textContent=`✋ ${currentInteraction.label}`;prompt.hidden=false;}else{prompt.hidden=true;}
 
     const retainedAfter=legacyAdapter?.getSnapshot?.() || retainedBefore;
+    const referenceGoal=doc.getElementById('referenceHeadphoneCount');
+    if(referenceGoal){const inventory=retainedAfter.player?.inventory||[];referenceGoal.textContent=`${inventory.some(item=>item?.id==='headphones')?1:0}/1`; }
     const cameraMode=(songPlaying || dadFrame.cameraModeHint==='chase' || dadDistance<2.9)?'chase':'explore';
     cameraPose=stepCamera(cameraController,{player,dad:dadFrame,world,mode:cameraMode,dt,visualEnvelope:sceneHandle.visualEnvelope});
     sceneHandle.applyCameraPose(cameraPose,reactions.cameraShake,now);

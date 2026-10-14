@@ -69,7 +69,7 @@ function makeLayerObject(THREE,layer,texture){
   mesh.position.set(0,0,mesh.userData.inactiveZ);mesh.renderOrder=mesh.userData.baseRenderOrder;mesh.frustumCulled=false;return mesh;
 }
 
-export async function createCinematicSet({scene,parent=scene,world,THREE,manifestUrl='assets/crazy-family/cinematic-home-v042/manifest.json',fetchImpl=globalThis.fetch?.bind(globalThis),textureLoader=null}={}){
+export async function createCinematicSet({scene,parent=scene,world,THREE,manifestUrl='assets/crazy-family/cinematic-home-v043/manifest.json',fetchImpl=globalThis.fetch?.bind(globalThis),textureLoader=null}={}){
   if(!scene)throw new Error('cinematic set requires a scene');if(!parent)throw new Error('cinematic set requires a parent');if(!THREE)throw new Error('cinematic set requires THREE');if(!fetchImpl)throw new Error('cinematic set requires fetch');
   const response=await fetchImpl(manifestUrl,{cache:'no-store'});if(!response?.ok)throw new Error(`cinematic manifest failed to load: ${response?.status??'unknown'}`);
   const manifest=await response.json();const prepared=prepareCinematicDefinitions(manifest,world);const loader=textureLoader||new THREE.TextureLoader();
