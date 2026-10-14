@@ -80,6 +80,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   let currentInteraction=null;
   let activeAttacks=[];
   let nextAttackAt=0,attackCursor=0,nearDadSince=0,nextPreAt=0,preIndex=0,wasSongPlaying=false;
+  let pendingDadSongStart=false;
   let dadRunHeat=0,nextYawnAt=performance.now()+11000,nextSneezeAt=performance.now()+13500,lastDadState='idle',sneezeCount=0,lastStepAt=0;
   sceneHandle.applyCameraPose(cameraPose);
 
@@ -110,7 +111,17 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     return result.ok;
   };
 
+  function retryPendingDadSongOnGesture(){
+    if(!pendingDadSongStart)return false;
+    if(legacyAdapter?.dadSongIsPlaying?.()){pendingDadSongStart=false;return true;}
+    const started=legacyAdapter?.startDadSong?.();
+    pendingDadSongStart=false;
+    if(started)nextAttackAt=performance.now()+700;
+    return Boolean(started);
+  }
+
   const onKeyDown = (event) => {
+    retryPendingDadSongOnGesture();
     keys[event.key] = true;
     keys[event.key.toLowerCase?.() || event.key] = true;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault?.();
@@ -128,7 +139,7 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const controlCleanups=[];
   const bindHold=(button,onStart,onEnd)=>{
     if(!button)return;
-    const down=(event)=>{event.preventDefault?.();button.classList.add('pressed');onStart();button.setPointerCapture?.(event.pointerId);};
+    const down=(event)=>{event.preventDefault?.();retryPendingDadSongOnGesture();button.classList.add('pressed');onStart();button.setPointerCapture?.(event.pointerId);};
     const up=(event)=>{event.preventDefault?.();button.classList.remove('pressed');onEnd();};
     button.addEventListener('pointerdown',down);button.addEventListener('pointerup',up);button.addEventListener('pointercancel',up);button.addEventListener('lostpointercapture',up);
     controlCleanups.push(()=>{button.removeEventListener('pointerdown',down);button.removeEventListener('pointerup',up);button.removeEventListener('pointercancel',up);button.removeEventListener('lostpointercapture',up);});
@@ -140,17 +151,18 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
   const runButton=doc.getElementById('run');
   bindHold(runButton,()=>{touchRun=true;},()=>{touchRun=false;});
   const jumpButton=doc.getElementById('jump');
-  const jumpClick=(event)=>{event.preventDefault?.();player=jumpCharacter(player,7.2);};
+  const jumpClick=(event)=>{event.preventDefault?.();retryPendingDadSongOnGesture();player=jumpCharacter(player,7.2);};
   jumpButton?.addEventListener('click',jumpClick);controlCleanups.push(()=>jumpButton?.removeEventListener('click',jumpClick));
   const crouchButton=doc.getElementById('crouch');
   bindHold(crouchButton,()=>{touchCrouch=true;},()=>{touchCrouch=false;});
   const itemButton=doc.getElementById('itemUse');
-  const itemClick=(event)=>{event.preventDefault?.();const snap=legacyAdapter?.getSnapshot?.()||{},inventory=snap.player?.inventory||[],selected=Number.isInteger(snap.player?.selected)?snap.player.selected:0,item=inventory[selected]||inventory[0];if(item)legacyAdapter?.useItem?.(item.id);};
+  const itemClick=(event)=>{event.preventDefault?.();retryPendingDadSongOnGesture();const snap=legacyAdapter?.getSnapshot?.()||{},inventory=snap.player?.inventory||[],selected=Number.isInteger(snap.player?.selected)?snap.player.selected:0,item=inventory[selected]||inventory[0];if(item)legacyAdapter?.useItem?.(item.id);};
   itemButton?.addEventListener('click',itemClick);controlCleanups.push(()=>itemButton?.removeEventListener('click',itemClick));
   const actionButton=doc.getElementById('action');
-  actionButton?.addEventListener('click',performInteraction);controlCleanups.push(()=>actionButton?.removeEventListener('click',performInteraction));
+  const actionClick=(event)=>{retryPendingDadSongOnGesture();return performInteraction(event);};
+  actionButton?.addEventListener('click',actionClick);controlCleanups.push(()=>actionButton?.removeEventListener('click',actionClick));
   const hangButton=doc.getElementById('hang');
-  const hangClick=(event)=>{event.preventDefault?.();prompt.textContent='✋ היתלות זמינה כשיש נקודת אחיזה בסביבה';prompt.hidden=false;};
+  const hangClick=(event)=>{event.preventDefault?.();retryPendingDadSongOnGesture();prompt.textContent='✋ היתלות זמינה כשיש נקודת אחיזה בסביבה';prompt.hidden=false;};
   hangButton?.addEventListener('click',hangClick);controlCleanups.push(()=>hangButton?.removeEventListener('click',hangClick));
 
   let running = false;
@@ -203,9 +215,10 @@ export async function createCrazyFamilyGame({ root, legacyAdapter }) {
     if(!songPlaying&&dadDistance<4.2&&now>=nextPreAt){legacyAdapter?.playDadPre?.(preIndex++%9);nextPreAt=now+5200+Math.random()*2600;}
     if(!songPlaying&&dadDistance<2.75){
       if(!nearDadSince)nearDadSince=now;
-      if(now-nearDadSince>2500){legacyAdapter?.startDadSong?.();nearDadSince=now+9000;nextAttackAt=now+750;}
+      if(now-nearDadSince>2500){legacyAdapter?.startDadSong?.();pendingDadSongStart=!Boolean(legacyAdapter?.dadSongIsPlaying?.());nearDadSince=now+9000;nextAttackAt=now+750;}
     }else if(dadDistance>3.15){nearDadSince=0;}
     songPlaying=Boolean(legacyAdapter?.dadSongIsPlaying?.()||retainedBefore.dad?.singing);
+    if(songPlaying)pendingDadSongStart=false;
     if(songPlaying&&!wasSongPlaying)nextAttackAt=now+700;
     if(songPlaying&&now>=nextAttackAt){
       const definition=WORLD_ATTACK_DEFINITIONS[attackCursor++%WORLD_ATTACK_DEFINITIONS.length];
