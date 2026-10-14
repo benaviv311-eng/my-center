@@ -1,0 +1,18 @@
+name: Crazy Family Dad audio order
+on:
+  push:
+    paths:
+      - 'crazy-family.html'
+      - 'tests/crazy-family-dad-audio-order.test.js'
+      - '.github/workflows/crazy-family-dad-audio-order.yml'
+  workflow_dispatch:
+jobs:
+  test-dad-audio-order:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify Dad songs 1-10 only and preserve speech
+        run: node tests/crazy-family-dad-audio-order.test.js
