@@ -57,14 +57,14 @@
   const control = document.createElement('button');
   control.type = 'button';
   control.className = 'training-lab-diagram-only';
-  control.dataset.diagramOnly = 'false';
+  control.setAttribute('data-diagram-only', 'false');
   control.setAttribute('aria-pressed', 'false');
   control.textContent = `🗺️ רק עם תרשים (${Object.keys(diagrams).length})`;
   filters.insertAdjacentElement('afterend', control);
 
   control.addEventListener('click', () => {
     diagramOnly = !diagramOnly;
-    control.dataset.diagramOnly = String(diagramOnly);
+    control.setAttribute('data-diagram-only', String(diagramOnly));
     control.setAttribute('aria-pressed', String(diagramOnly));
     control.classList.toggle('active', diagramOnly);
     applyDiagramOnly();
