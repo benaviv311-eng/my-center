@@ -3,10 +3,10 @@ import { createCinematicSet } from './cinematic-set.js';
 import { createContactEffects } from './contact-effects.js';
 import { projectWorldToCinematicStage } from './cinematic-projection.js';
 
-// HYBRID_CINEMATIC_SET_V042 — authored environment art is the primary visible home.
+// REFERENCE_GAME_RENDER_V043 — authored environment art is the primary visible home.
 // Gameplay geometry stays authoritative and invisible; visible actors are projected into
 // the fixed cinematic frame so the room keeps the approved reference composition.
-const CINEMATIC_MANIFEST_URL='assets/crazy-family/cinematic-home-v042/manifest.json';
+const CINEMATIC_MANIFEST_URL='assets/crazy-family/cinematic-home-v043/manifest.json';
 
 function material(color,roughness=.75,extra={}){return new THREE.MeshStandardMaterial({color,roughness,metalness:.02,...extra});}
 function semantic(object,id){object.name=id;object.userData.semanticId=id;return object;}
@@ -57,8 +57,8 @@ export async function createLivingRoomScene({canvas,world,visualMode='cinematic'
   const debugWorld=semantic(new THREE.Group(),'debug-procedural-room');debugWorld.userData.visualMode='debug-procedural';scene.add(debugWorld);
 
   visualStage.add(new THREE.HemisphereLight(0xffeddf,0x66586b,1.45));
-  const key=new THREE.DirectionalLight(0xffbd78,2.5);key.position.set(-5,7,8);visualStage.add(key);
-  const fill=new THREE.PointLight(0xffd2a1,2.2,20,2);fill.position.set(-4,2,6);visualStage.add(fill);
+  const key=new THREE.DirectionalLight(0xffbd78,2.5);key.name='warm-window-light';key.position.set(-5,7,8);visualStage.add(key);
+  const fill=new THREE.PointLight(0xffd2a1,2.2,20,2);fill.name='warm-practical-light';fill.position.set(-4,2,6);visualStage.add(fill);
 
   const projectWorld=(position)=>projectWorldToCinematicStage(position,{bounds:world.bounds});
   const objectsById=new Map();const debugVisible=visualMode==='debug-procedural';
