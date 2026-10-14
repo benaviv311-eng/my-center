@@ -1,0 +1,77 @@
+name: Apply Crazy Family audio clean v0.45
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-audio-clean-v045.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove obsolete Dad song content and audio
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('crazy-family.html')
+          s=p.read_text(encoding='utf-8')
+
+          # Canonical song text library: exactly songs 1-10.
+          start=s.index('const dadSongs=[')
+          end=s.index('const DAD_SONG_LIBRARY', start)
+          block=s[start:end]
+          entries=[line.strip() for line in block.splitlines() if line.strip().startswith("['")]
+          if len(entries)<10:
+              raise SystemExit(f'Expected at least 10 Dad songs, found {len(entries)}')
+          first10=[]
+          for i,line in enumerate(entries[:10]):
+              line=line.rstrip(',')
+              first10.append(' '+line+(',' if i<9 else ''))
+          canonical='const dadSongs=[\n'+'\n'.join(first10)+'\n];\n'
+          s=s[:start]+canonical+s[end:]
+
+          # Canonical singing audio: exactly dad-song-01..10.
+          clips='const dadVoiceClips=[\n' + ',\n'.join(
+              f"  new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/dad-song-{i:02d}.mp3')"
+              for i in range(1,11)
+          ) + '\n];\n'
+          s,n=re.subn(r"const dadVoiceClips=\[.*?\];\s*\n(?=dadVoiceClips\.forEach)",clips,s,count=1,flags=re.S)
+          if n!=1:
+              raise SystemExit('dadVoiceClips block not found')
+
+          # Picker stays exactly 1-10.
+          s,n=re.subn(r"const DAD_SONG_TIERS=\[[^\n]+\];",
+              "const DAD_SONG_TIERS=[{id:1,weight:1,name:'שירי אבא',songs:[0,1,2,3,4,5,6,7,8,9],dizzy:32,chase:1.08}];",s,count=1)
+          if n!=1:
+              raise SystemExit('DAD_SONG_TIERS not found')
+
+          s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.44','עולם הבית · שלב 1: מפגש אבא · v0.45',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify canonical audio separation
+        run: node tests/crazy-family-dad-audio-order.test.js
+      - name: Verify exact song and speech structure
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const s=fs.readFileSync('crazy-family.html','utf8');
+          const songBlock=s.match(/const dadSongs=\[(.*?)\];\s*const DAD_SONG_LIBRARY/s)?.[1]||'';
+          const entries=(songBlock.match(/^\s*\['/gm)||[]).length;
+          if(entries!==10) throw new Error(`expected exactly 10 Dad song texts, got ${entries}`);
+          const voiceBlock=s.match(/const dadVoiceClips=\[(.*?)\];\s*dadVoiceClips\.forEach/s)?.[1]||'';
+          const refs=[...voiceBlock.matchAll(/dad-song-(\d{2})\.mp3/g)].map(m=>Number(m[1]));
+          if(JSON.stringify(refs)!==JSON.stringify([1,2,3,4,5,6,7,8,9,10])) throw new Error(`Dad voice song refs wrong: ${refs}`);
+          if(!s.includes('const dadPreClips=[')) throw new Error('Dad dialogue missing');
+          if(!s.includes('const libiVoiceClips=[')) throw new Error('Libi dialogue missing');
+          console.log('canonical Dad songs 1-10 + dialogue preserved: PASS');
+          JS
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git commit -m "fix: separate Dad songs 1-10 from dialogue audio"
+          git push
