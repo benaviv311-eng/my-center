@@ -69,7 +69,7 @@ try{
   await page.keyboard.press('Space');await page.waitForFunction(()=>window.__crazyFamilyMovieSetGame?.player?.position?.y>.08,null,{timeout:3000});
   await page.waitForFunction(()=>Math.abs(window.__crazyFamilyMovieSetGame.player.position.y)<.02,null,{timeout:15000});
 
-  await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame,p=game.player;p.position.x=2;p.position.y=0;p.position.z=2.4;p.velocity.x=0;p.velocity.y=0;p.velocity.z=0;p.grounded=true;});
+  await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame,p=game.player,offset=game.cameraController.config.chaseOffset;p.position.x=2;p.position.y=0;p.position.z=2.4;p.velocity.x=0;p.velocity.y=0;p.velocity.z=0;p.grounded=true;game.cameraController.yaw=-Math.atan2(offset.x,offset.z);game.cameraController.pitch=0;});
   await page.waitForTimeout(120);
   await walkTo({x:2,z:-1.25});
   await walkTo({x:-4.7,z:-1.25});
