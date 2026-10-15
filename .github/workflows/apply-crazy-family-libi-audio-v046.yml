@@ -10,20 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: RED - prove current Libi bank is still mixed
-        id: red
-        continue-on-error: true
+      - name: Verify mixed Libi bank exists before cleanup
         run: |
           node - <<'JS'
           const fs=require('fs');
           const s=fs.readFileSync('crazy-family.html','utf8');
+          if(s.includes("const LIBI_AUDIO_ORDER_V046='context-only-13-39'")) process.exit(0);
           const bank=s.match(/const libiReactionBank=\{(.*?)\};/s)?.[1]||'';
           const ids=[...bank.matchAll(/i:(\d+)/g)].map(m=>Number(m[1]));
-          if(ids.some(i=>i<12)) throw new Error('legacy Libi clips 1-12 are still active');
+          if(!ids.some(i=>i<12)) throw new Error('expected legacy Libi clips 1-12 in active bank before cleanup');
+          console.log('mixed legacy/contextual Libi bank confirmed');
           JS
-      - name: Confirm RED test actually failed
-        run: |
-          test "${{ steps.red.outcome }}" = "failure"
       - name: Separate Libi contextual voices
         run: |
           python - <<'PY'
@@ -50,46 +47,41 @@ const libiReactionBank={
  headphones:[{i:36,w:1},{i:37,w:1},{i:38,w:1}]
 };"""
 
-          pattern=r"const rareConfusedIndex=30;\s*const libiReactionBank=\{.*?\};"
-          s,n=re.subn(pattern,new_bank,s,count=1,flags=re.S)
-          if n!=1:
-              # Allow reruns after the marker exists.
+          if "const LIBI_AUDIO_ORDER_V046='context-only-13-39'" in s:
               pattern=r"const LIBI_AUDIO_ORDER_V046='context-only-13-39';\s*const libiReactionBank=\{.*?\};"
-              s,n=re.subn(pattern,new_bank,s,count=1,flags=re.S)
+          else:
+              pattern=r"const rareConfusedIndex=30;\s*const libiReactionBank=\{.*?\};"
+          s,n=re.subn(pattern,new_bank,s,count=1,flags=re.S)
           if n!=1:
               raise SystemExit('Libi reaction bank not found')
 
           s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.45','עולם הבית · שלב 1: מפגש אבא · v0.46',1)
           p.write_text(s,encoding='utf-8')
           PY
-      - name: GREEN - verify exact Libi voice ownership
+      - name: Verify exact Libi voice ownership
         run: |
           node - <<'JS'
           const fs=require('fs');
           const s=fs.readFileSync('crazy-family.html','utf8');
           if(!s.includes("const LIBI_AUDIO_ORDER_V046='context-only-13-39'")) throw new Error('v0.46 marker missing');
           const bank=s.match(/const libiReactionBank=\{(.*?)\};/s)?.[1]||'';
-          const expected={
-            call:[12,13],songWarning:[14,15,16],songStart:[17],songOngoing:[18,19,20],
-            chase:[21,22],danger:[23,24],missed:[25,26],confused:[27,28,29,30],
-            escaped:[31,32],songAgain:[33],sameSong:[34],dizzy:[35],headphones:[36,37,38]
-          };
+          const expected={call:[12,13],songWarning:[14,15,16],songStart:[17],songOngoing:[18,19,20],chase:[21,22],danger:[23,24],missed:[25,26],confused:[27,28,29,30],escaped:[31,32],songAgain:[33],sameSong:[34],dizzy:[35],headphones:[36,37,38]};
           for(const [name,ids] of Object.entries(expected)){
             const m=bank.match(new RegExp(name+':\\[(.*?)\\]','s'));
-            if(!m) throw new Error(`missing ${name}`);
+            if(!m) throw new Error('missing '+name);
             const got=[...m[1].matchAll(/i:(\d+)/g)].map(x=>Number(x[1]));
-            if(JSON.stringify(got)!==JSON.stringify(ids)) throw new Error(`${name}: ${got} != ${ids}`);
+            if(JSON.stringify(got)!==JSON.stringify(ids)) throw new Error(name+': '+got+' != '+ids);
           }
           const all=[...bank.matchAll(/i:(\d+)/g)].map(m=>Number(m[1]));
           const unique=[...new Set(all)].sort((a,b)=>a-b);
           const wanted=Array.from({length:27},(_,k)=>k+12);
-          if(JSON.stringify(unique)!==JSON.stringify(wanted)) throw new Error(`active clip set wrong: ${unique}`);
-          if(all.length!==27) throw new Error(`clips are reused across categories: ${all.length} entries`);
+          if(JSON.stringify(unique)!==JSON.stringify(wanted)) throw new Error('active clip set wrong: '+unique);
+          if(all.length!==27) throw new Error('clips reused across categories: '+all.length);
           const voice=s.match(/const libiVoiceClips=\[(.*?)\];\s*libiVoiceClips\.forEach/s)?.[1]||'';
           const refs=[...voice.matchAll(/libi-(\d{2})\.mp3/g)].map(m=>Number(m[1]));
           if(refs.length!==39 || refs[0]!==1 || refs[38]!==39) throw new Error('39 Libi source files must remain preserved');
-          if(!s.includes('const dadPreClips=[')) throw new Error('Dad dialogue was removed');
-          console.log('Libi contextual bank 13-39 is exclusive and ordered: PASS');
+          if(!s.includes('const dadPreClips=[')) throw new Error('Dad dialogue missing');
+          console.log('Libi contextual bank 13-39 exclusive: PASS');
           JS
       - name: Check inline JavaScript syntax
         run: |
