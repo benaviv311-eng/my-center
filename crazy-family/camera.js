@@ -1,101 +1,12 @@
-const DEFAULTS = Object.freeze({
-  exploreOffset: { x: 1.35, y: 1.45, z: 2.75 },
-  chaseOffset: { x: 1.7, y: 1.72, z: 3.4 },
-  interactionOffset: { x: 1.05, y: 1.3, z: 2.3 },
-  cinematicOffset: { x: -1.5, y: 1.65, z: 3.05 },
-  targetHeight: 0.68,
-  exploreFov: 49,
-  chaseFov: 53,
-  interactionFov: 46,
-  cinematicFov: 47,
-  smoothing: 7.5,
-  collisionPadding: 0.1,
-});
-
-function copy(v){ return {x:v.x,y:v.y,z:v.z}; }
-function mix(a,b,t){ return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t}; }
-function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
-
-export function createCameraController(config = {}) {
-  return {
-    config: { ...DEFAULTS, ...config },
-    position: null,
-    target: null,
-    fov: null,
-    mode: 'explore',
-  };
-}
-
-function modeSettings(config, mode){
-  switch(mode){
-    case 'chase': return {offset:config.chaseOffset,fov:config.chaseFov};
-    case 'interaction': return {offset:config.interactionOffset,fov:config.interactionFov};
-    case 'cinematic': return {offset:config.cinematicOffset,fov:config.cinematicFov};
-    default: return {offset:config.exploreOffset,fov:config.exploreFov};
-  }
-}
-
-function desiredTarget(player, dad, mode, height){
-  const p=player?.position || player || {x:0,y:0,z:0};
-  if(mode==='chase' && dad?.position){
-    const d=dad.position;
-    return {x:p.x+(d.x-p.x)*0.14,y:p.y+height,z:p.z+(d.z-p.z)*0.14};
-  }
-  return {x:p.x,y:p.y+height,z:p.z};
-}
-
-function shortenedByHit(target, desired, hit, padding){
-  if(!hit || !Number.isFinite(hit.fraction)) return desired;
-  const fraction=Math.max(0.12,Math.min(1,hit.fraction-padding));
-  return {
-    x:target.x+(desired.x-target.x)*fraction,
-    y:target.y+(desired.y-target.y)*fraction,
-    z:target.z+(desired.z-target.z)*fraction,
-  };
-}
-
-function insideVisualEnvelope(desired,envelope){
-  if(!envelope)return desired;
-  const margin=.04;
-  return {
-    x:clamp(desired.x,(envelope.minX??-Infinity)+margin,(envelope.maxX??Infinity)-margin),
-    y:clamp(desired.y,(envelope.minY??-Infinity)+margin,(envelope.maxY??Infinity)-margin),
-    z:clamp(desired.z,(envelope.minZ??-Infinity)+margin,(envelope.maxZ??Infinity)-margin),
-  };
-}
-
-export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=0.016,visualEnvelope=null}){
-  const config=controller.config;
-  const selected=modeSettings(config,mode);
-  const target=desiredTarget(player,dad,mode,config.targetHeight);
-  let desired={x:target.x+selected.offset.x,y:target.y+selected.offset.y,z:target.z+selected.offset.z};
-  const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers || []);
-  desired=shortenedByHit(target,desired,hit,config.collisionPadding);
-  desired=insideVisualEnvelope(desired,visualEnvelope);
-  const t=controller.position ? 1-Math.exp(-config.smoothing*Math.max(0,dt)) : 1;
-  controller.position=controller.position?mix(controller.position,desired,t):copy(desired);
-  controller.target=controller.target?mix(controller.target,target,t):copy(target);
-  controller.fov=controller.fov==null?selected.fov:controller.fov+(selected.fov-controller.fov)*t;
-  controller.mode=mode;
-  return {position:copy(controller.position),target:copy(controller.target),fov:controller.fov};
-}
-
-function segmentIntersectsRect2D(camera,target,o){
-  const minX=o.x-o.width/2,maxX=o.x+o.width/2,minZ=o.z-o.depth/2,maxZ=o.z+o.depth/2;
-  const dx=target.x-camera.x,dz=target.z-camera.z;
-  let t0=0,t1=1;
-  for(const [p,q] of [[-dx,camera.x-minX],[dx,maxX-camera.x],[-dz,camera.z-minZ],[dz,maxZ-camera.z]]){
-    if(Math.abs(p)<1e-9){if(q<0)return false;continue;}
-    const r=q/p;
-    if(p<0){if(r>t1)return false;if(r>t0)t0=r;}else{if(r<t0)return false;if(r<t1)t1=r;}
-  }
-  return t0<=t1 && t1>0.02 && t0<0.98;
-}
-
-export function chooseOccluders({camera,target,occluders=[]}){
-  return occluders
-    .filter(o=>o && o.kind!=='wall' && !String(o.id||'').includes('wall'))
-    .filter(o=>Number.isFinite(o.width)&&Number.isFinite(o.depth))
-    .filter(o=>segmentIntersectsRect2D(camera,target,o))
-    .map(o=>o.id);
-}
+const DEFAULTS=Object.freeze({exploreOffset:{x:1.35,y:1.45,z:2.75},chaseOffset:{x:1.7,y:1.72,z:3.4},interactionOffset:{x:1.05,y:1.3,z:2.3},cinematicOffset:{x:-1.5,y:1.65,z:3.05},targetHeight:.68,exploreFov:49,chaseFov:53,interactionFov:46,cinematicFov:47,smoothing:7.5,collisionPadding:.04,collisionRadius:.22,minDistance:.45,speedDistanceGain:.22});
+function copy(v){return{x:v.x,y:v.y,z:v.z}}function mix(a,b,t){return{x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t}}function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+export function createCameraController(config={}){return{config:{...DEFAULTS,...config},position:null,target:null,fov:null,mode:'explore',yaw:0,pitch:0}}
+export function orbitCamera(controller,{yawDelta=0,pitchDelta=0}={}){controller.yaw=(Number(controller.yaw)||0)+(Number(yawDelta)||0);controller.pitch=clamp((Number(controller.pitch)||0)+(Number(pitchDelta)||0),-.55,.32);return controller;}
+function modeSettings(c,m){switch(m){case'chase':return{offset:c.chaseOffset,fov:c.chaseFov};case'interaction':return{offset:c.interactionOffset,fov:c.interactionFov};case'cinematic':return{offset:c.cinematicOffset,fov:c.cinematicFov};default:return{offset:c.exploreOffset,fov:c.exploreFov}}}
+function desiredTarget(player,dad,mode,height){const p=player?.position||player||{x:0,y:0,z:0};if(mode==='chase'&&dad?.position){const d=dad.position;return{x:p.x+(d.x-p.x)*.14,y:p.y+height,z:p.z+(d.z-p.z)*.14}}return{x:p.x,y:p.y+height,z:p.z}}
+function orbitOffset(offset,yaw,pitch,speedScale){const horizontal=Math.hypot(offset.x,offset.z)*speedScale;const base=Math.atan2(offset.x,offset.z)+yaw;return{x:Math.sin(base)*horizontal,y:offset.y+Math.sin(pitch)*horizontal*.55,z:Math.cos(base)*horizontal};}
+function shortenedByHit(target,desired,hit,padding,minDistance){if(!hit||!Number.isFinite(hit.fraction))return desired;const dx=desired.x-target.x,dy=desired.y-target.y,dz=desired.z-target.z,total=Math.hypot(dx,dy,dz)||1,minFraction=Math.min(1,minDistance/total);const fraction=Math.max(minFraction,Math.min(1,hit.fraction-padding));return{x:target.x+dx*fraction,y:target.y+dy*fraction,z:target.z+dz*fraction}}
+function insideVisualEnvelope(desired,envelope){if(!envelope)return desired;const m=.04;return{x:clamp(desired.x,(envelope.minX??-Infinity)+m,(envelope.maxX??Infinity)-m),y:clamp(desired.y,(envelope.minY??-Infinity)+m,(envelope.maxY??Infinity)-m),z:clamp(desired.z,(envelope.minZ??-Infinity)+m,(envelope.maxZ??Infinity)-m)}}
+export function stepCamera(controller,{player,dad=null,world,mode='explore',dt=.016,visualEnvelope=null,speed=0}){const config=controller.config,selected=modeSettings(config,mode),target=desiredTarget(player,dad,mode,config.targetHeight);const speedScale=1+clamp((Number(speed)||0)/8,0,1)*config.speedDistanceGain;const offset=orbitOffset(selected.offset,Number(controller.yaw)||0,Number(controller.pitch)||0,speedScale);let desired={x:target.x+offset.x,y:target.y+offset.y,z:target.z+offset.z};const hit=world?.traceCameraSegment?.(target,desired,world.cameraBlockers||[],config.collisionRadius);desired=shortenedByHit(target,desired,hit,config.collisionPadding,config.minDistance);desired=insideVisualEnvelope(desired,visualEnvelope);const safeDt=Math.max(0,Number(dt)||0),t=controller.position?1-Math.exp(-config.smoothing*safeDt):1;controller.position=controller.position?mix(controller.position,desired,t):copy(desired);controller.target=controller.target?mix(controller.target,target,t):copy(target);controller.fov=controller.fov==null?selected.fov:controller.fov+(selected.fov-controller.fov)*t;controller.mode=mode;return{position:copy(controller.position),target:copy(controller.target),fov:controller.fov}}
+function segmentIntersectsRect2D(camera,target,o){const minX=o.x-o.width/2,maxX=o.x+o.width/2,minZ=o.z-o.depth/2,maxZ=o.z+o.depth/2,dx=target.x-camera.x,dz=target.z-camera.z;let t0=0,t1=1;for(const[p,q]of[[-dx,camera.x-minX],[dx,maxX-camera.x],[-dz,camera.z-minZ],[dz,maxZ-camera.z]]){if(Math.abs(p)<1e-9){if(q<0)return false;continue}const r=q/p;if(p<0){if(r>t1)return false;if(r>t0)t0=r}else{if(r<t0)return false;if(r<t1)t1=r}}return t0<=t1&&t1>.02&&t0<.98}
+export function chooseOccluders({camera,target,occluders=[]}){return occluders.filter(o=>o&&o.kind!=='wall'&&!String(o.id||'').includes('wall')).filter(o=>Number.isFinite(o.width)&&Number.isFinite(o.depth)).filter(o=>segmentIntersectsRect2D(camera,target,o)).map(o=>o.id)}
