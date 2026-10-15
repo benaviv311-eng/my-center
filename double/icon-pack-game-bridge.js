@@ -6,6 +6,10 @@
   let observer=null;
   const currentChoice=()=>P.getChoice?P.getChoice():P.getSelected();
   function ensureStyle(doc){
+    if(!doc.getElementById('double-premium-theme-link')){
+      const link=doc.createElement('link');link.id='double-premium-theme-link';link.rel='stylesheet';link.href='double/premium-theme.css?v=12';doc.head.appendChild(link);
+    }
+    doc.body?.classList.add('double-premium-game');
     if(doc.getElementById('double-icon-pack-game-style'))return;
     const style=doc.createElement('style');style.id='double-icon-pack-game-style';
     style.textContent=`.glyph.double-pack-sprite{display:inline-block!important;width:1.2em!important;height:1.2em!important;border-radius:22%;background-repeat:no-repeat!important;box-shadow:0 2px 8px rgba(0,0,0,.18);vertical-align:middle}.sym:has(.double-pack-sprite){padding:4px!important}`;
@@ -13,8 +17,6 @@
   }
   function restoreGlyph(glyph){
     if(!glyph?.dataset?.iconPack)return;
-    const button=glyph.closest('.sym'),id=button?.dataset?.symbolId;
-    if(id!=null)glyph.textContent='';
     glyph.classList.remove('double-pack-sprite');delete glyph.dataset.iconPack;delete glyph.dataset.iconIndex;
     ['backgroundImage','backgroundSize','backgroundPosition','backgroundRepeat','width','height','borderRadius','boxShadow','display'].forEach(k=>glyph.style[k]='');
   }
