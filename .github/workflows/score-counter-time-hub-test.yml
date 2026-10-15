@@ -1,0 +1,28 @@
+name: Score Counter time hub test
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'score-counter/index.html'
+      - 'score-counter/score-time-hub.js'
+      - 'score-counter/score-time-hub.css'
+      - 'score-counter/score-time-hub-regression.test.js'
+      - 'score-counter/score-time-center.js'
+      - 'score-counter/score-timed-rounds.js'
+      - 'score-counter/score-game-suite.js'
+      - '.github/workflows/score-counter-time-hub-test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Time Hub
+        run: |
+          node score-counter/score-time-hub-regression.test.js
+          node score-counter/score-time-center-regression.test.js
+          node score-counter/score-timed-rounds-regression.test.js
+          node score-counter/score-game-suite.test.js
+          node --check score-counter/score-time-hub.js
+          node --check score-counter/score-time-center.js
+          node --check score-counter/score-timed-rounds.js
+          node --check score-counter/score-game-suite.js
