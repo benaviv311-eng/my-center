@@ -43,7 +43,7 @@
     const reversalBrake=Number(options.reversalBrake)||1700;
     const reversalThreshold=Number(options.reversalThreshold)||-.6;
     const reversalMinSpeed=Number(options.reversalMinSpeed)||30;
-    const facingHysteresis=Math.max(0,Number(options.facingHysteresis)||.12);
+    const facingHysteresis=Math.max(0,Number(options.facingHysteresis)||.08);
     const radius=Number(options.radius)||24;
     const maxDt=Number(options.maxDt)||.05;
     let state={worldX:Number(spawn.x),worldY:Number(spawn.y),vx:0,vy:0,facing:options.facing||'down',moving:false,movedDistance:0,totalDistance:0,speed:0,speedRatio:0,turning:false,inputX:0,inputY:0};
