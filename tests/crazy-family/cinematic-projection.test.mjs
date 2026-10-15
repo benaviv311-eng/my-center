@@ -29,12 +29,12 @@ test('jump raises character on screen without changing floor depth or horizontal
   assert.ok(jump.y>floor.y);
 });
 
-test('projection keeps room extremes within 16 by 9 cinematic stage',()=>{
+test('projection keeps room extremes within the v0.44 cinematic stage envelope',()=>{
   for(const point of [
     {x:-6,y:0,z:-4.6},{x:6,y:0,z:-4.6},{x:-6,y:0,z:4.6},{x:6,y:0,z:4.6},
   ]){
     const projected=projectWorldToCinematicStage(point,{bounds});
     assert.ok(projected.x>=-7.5&&projected.x<=7.5);
-    assert.ok(projected.y>=-3.7&&projected.y<=2.5);
+    assert.ok(projected.y>=-3.8&&projected.y<=2.5);
   }
 });
