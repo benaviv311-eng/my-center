@@ -35,7 +35,7 @@ h1{margin:0;font-size:clamp(28px,4vw,44px);letter-spacing:-1px}.sub{color:var(--
 </head>
 <body>
 <main class="game-shell">
-  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.45</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
+  <div class="top"><div><h1>המשפחה המשגעת</h1><div class="sub">עולם הבית · שלב 1: מפגש אבא · v0.46</div></div><div style="display:flex;gap:8px;align-items:center"><button id="musicToggle" class="back" type="button">🎵 מוזיקה: פעילה</button><button id="audioTest" class="back" type="button">🔊 בדיקת קול</button><a class="back" href="index.html">← חזרה למרכז</a></div></div>
 
   <div class="worldbar">
     <div class="pill grow"><span id="sceneTitle">קומת קרקע</span> · <span id="roomTitle">סלון</span></div>
@@ -447,8 +447,22 @@ const libiVoiceClips=[
   new Audio('https://iwemlxvjyhffumzcqrxf.supabase.co/storage/v1/object/public/crazy-family-audio/libi-39.mp3')
 ];
 libiVoiceClips.forEach(a=>{a.preload='auto';a.volume=.98});
-const rareConfusedIndex=30;
-const libiReactionBank={call:[{i:0,w:3},{i:2,w:2},{i:3,w:3},{i:12,w:2},{i:13,w:2}],songWarning:[{i:1,w:4},{i:14,w:3},{i:15,w:3},{i:16,w:2},{i:11,w:1}],songStart:[{i:4,w:3},{i:2,w:3},{i:7,w:2},{i:17,w:2}],songOngoing:[{i:18,w:3},{i:19,w:3},{i:4,w:2},{i:20,w:2},{i:16,w:1}],chase:[{i:8,w:3},{i:21,w:3},{i:22,w:3},{i:9,w:1}],danger:[{i:9,w:3},{i:10,w:3},{i:23,w:3},{i:24,w:2},{i:11,w:1}],missed:[{i:25,w:4},{i:26,w:2},{i:6,w:1}],confused:[{i:27,w:4},{i:28,w:3},{i:29,w:3},{i:rareConfusedIndex,w:.35}],escaped:[{i:31,w:3},{i:32,w:3},{i:3,w:1}],songAgain:[{i:6,w:4},{i:5,w:3},{i:33,w:4},{i:2,w:1}],sameSong:[{i:7,w:4},{i:5,w:2},{i:34,w:5}],dizzy:[{i:35,w:5},{i:9,w:1},{i:10,w:1}],headphones:[{i:36,w:4},{i:37,w:3},{i:38,w:3}]};
+const LIBI_AUDIO_ORDER_V046='context-only-13-39';
+const libiReactionBank={
+ call:[{i:12,w:1},{i:13,w:1}],
+ songWarning:[{i:14,w:1},{i:15,w:1},{i:16,w:1}],
+ songStart:[{i:17,w:1}],
+ songOngoing:[{i:18,w:1},{i:19,w:1},{i:20,w:1}],
+ chase:[{i:21,w:1},{i:22,w:1}],
+ danger:[{i:23,w:1},{i:24,w:1}],
+ missed:[{i:25,w:1},{i:26,w:1}],
+ confused:[{i:27,w:1},{i:28,w:1},{i:29,w:1},{i:30,w:1}],
+ escaped:[{i:31,w:1},{i:32,w:1}],
+ songAgain:[{i:33,w:1}],
+ sameSong:[{i:34,w:1}],
+ dizzy:[{i:35,w:1}],
+ headphones:[{i:36,w:1},{i:37,w:1},{i:38,w:1}]
+};
 let libiRecentVoices=[];
 const libiEncounterMemory={songCount:0,currentSong:-1,lastSong:-1,lastSongEndedAt:0,lastSongStartedAt:0,heardSongs:[],wrongWaySince:0,lastConfusedAt:0,chaseSince:0,lastMissAt:0};
 let libiVoiceAudio=null,libiReactionToken=0,nextLibiReactionAt=0,libiLastDist=Infinity,libiSongInterruptAt=0,libiIdleReactionAt=0,libiDangerLatched=false,libiEscapeLatched=false,libiWasSongPlaying=false;
