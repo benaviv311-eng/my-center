@@ -52,7 +52,6 @@ function segmentBoxFraction(start, end, collider, padding = 0.1) {
 }
 
 export function createLivingRoomWorld() {
-  // Furniture/layout is canonical and fixed. Scenario state may move actors/items only.
   const objects = [
     box('floor', 0, 0, 12, 9.2, 0.08, { kind: 'floor', material: 'wood' }),
     box('sofa', -3.35, 0.55, 3.15, 1.25, 1.05, { kind: 'furniture', color: 0xc97e78, occluder: true, cameraBlocker: true }),
@@ -66,7 +65,13 @@ export function createLivingRoomWorld() {
     box('cushion-b', -2.8, 0.42, 0.62, 0.2, 0.48, { kind: 'dressing', color: 0x86b5ad, reactive: true }),
     box('toy-blocks', 2.7, 1.85, 0.8, 0.65, 0.32, { kind: 'dressing', color: 0x6ba6b8, reactive: true }),
   ];
-
+  const wallHeight = 3.2, wallThickness = 0.18;
+  const roomShell = [
+    box('wall-north', 0, ROOM_BOUNDS.maxZ + wallThickness / 2, 12 + wallThickness * 2, wallThickness, wallHeight, { kind: 'wall', cameraBlocker: true }),
+    box('wall-south', 0, ROOM_BOUNDS.minZ - wallThickness / 2, 12 + wallThickness * 2, wallThickness, wallHeight, { kind: 'wall', cameraBlocker: true }),
+    box('wall-east', ROOM_BOUNDS.maxX + wallThickness / 2, 0, wallThickness, 9.2, wallHeight, { kind: 'wall', cameraBlocker: true }),
+    box('wall-west', ROOM_BOUNDS.minX - wallThickness / 2, 0, wallThickness, 9.2, wallHeight, { kind: 'wall', cameraBlocker: true }),
+  ];
   const colliders = objects.filter(o => ['sofa', 'coffee-table', 'side-table'].includes(o.id));
   const interactables = [
     { id: 'headphones', action: 'take', label: 'לקחת אוזניות', x: -4.15, y: 1.08, z: 0.1, radius: 0.9, priority: 20, enabled: true, surfaceId: 'sofa' },
@@ -98,76 +103,40 @@ export function createLivingRoomWorld() {
     ],
   };
   const navBlockers = colliders.map(c => ({ id: c.id, x: c.x, z: c.z, width: c.width, depth: c.depth, clearance: c.id === 'coffee-table' ? 0.55 : 0.75 }));
-  const cameraBlockers = colliders.filter(c => c.cameraBlocker);
+  const cameraBlockers = [...colliders.filter(c => c.cameraBlocker), ...roomShell];
   const occluders = objects.filter(o => o.occluder);
+  const renderables = [...objects, ...roomShell];
 
   return {
-    id: 'living-room',
-    bounds: { ...ROOM_BOUNDS },
-    objects,
-    colliders,
-    interactables,
-    surfaces,
-    scenarioSpawns,
-    navBlockers,
-    cameraBlockers,
-    occluders,
+    id: 'living-room', bounds: { ...ROOM_BOUNDS }, objects, roomShell, renderables, colliders, interactables, surfaces, scenarioSpawns, navBlockers, cameraBlockers, occluders,
     groundHeightAt() { return 0; },
-    surfaceAt(x, z) {
-      const matches = surfaces.filter(s => x >= s.minX && x <= s.maxX && z >= s.minZ && z <= s.maxZ);
-      return matches.at(-1) || surfaces[0];
-    },
+    surfaceAt(x, z) { const matches = surfaces.filter(s => x >= s.minX && x <= s.maxX && z >= s.minZ && z <= s.maxZ); return matches.at(-1) || surfaces[0]; },
     resolveCharacterMove(from, to, capsule = { radius: 0.3 }) {
       const radius = Number(capsule.radius) || 0.3;
-      let resolved = {
-        x: Math.max(ROOM_BOUNDS.minX + radius, Math.min(ROOM_BOUNDS.maxX - radius, to.x)),
-        y: to.y,
-        z: Math.max(ROOM_BOUNDS.minZ + radius, Math.min(ROOM_BOUNDS.maxZ - radius, to.z)),
-      };
+      let resolved = { x: Math.max(ROOM_BOUNDS.minX + radius, Math.min(ROOM_BOUNDS.maxX - radius, to.x)), y: to.y, z: Math.max(ROOM_BOUNDS.minZ + radius, Math.min(ROOM_BOUNDS.maxZ - radius, to.z)) };
       for (const collider of colliders) resolved = pushOutside(from, resolved, collider, radius);
       return resolved;
     },
-    traceCameraSegment(start, end, blockers = cameraBlockers) {
+    traceCameraSegment(start, end, blockers = cameraBlockers, padding = 0.12) {
       let best = null;
       for (const blocker of blockers) {
-        const fraction = segmentBoxFraction(start, end, blocker, 0.12);
+        const fraction = segmentBoxFraction(start, end, blocker, padding);
         if (fraction == null || (best && fraction >= best.fraction)) continue;
-        best = {
-          id: blocker.id,
-          fraction,
-          point: {
-            x: start.x + (end.x - start.x) * fraction,
-            y: start.y + (end.y - start.y) * fraction,
-            z: start.z + (end.z - start.z) * fraction,
-          },
-        };
+        best = { id: blocker.id, fraction, point: { x: start.x + (end.x - start.x) * fraction, y: start.y + (end.y - start.y) * fraction, z: start.z + (end.z - start.z) * fraction } };
       }
       return best;
     },
     traceAttackSegment(start, end, attack = {}) {
-      let best = null;
-      const radius = Number(attack.radius) || 0.1;
+      let best = null; const radius = Number(attack.radius) || 0.1;
       for (const collider of colliders) {
         const attackY = Number(start.y) || 0;
         if (attackY - radius > collider.height) continue;
         const fraction = segmentBoxFraction(start, end, collider, radius * 0.75);
         if (fraction == null || (best && fraction >= best.fraction)) continue;
-        best = {
-          id: collider.id,
-          fraction,
-          point: {
-            x: start.x + (end.x - start.x) * fraction,
-            y: start.y + (end.y - start.y) * fraction,
-            z: start.z + (end.z - start.z) * fraction,
-          },
-        };
+        best = { id: collider.id, fraction, point: { x: start.x + (end.x - start.x) * fraction, y: start.y + (end.y - start.y) * fraction, z: start.z + (end.z - start.z) * fraction } };
       }
       return best;
     },
-    setInteractableEnabled(id, enabled) {
-      const item = interactables.find(i => i.id === id);
-      if (item) item.enabled = Boolean(enabled);
-      return item?.enabled ?? false;
-    },
+    setInteractableEnabled(id, enabled) { const item = interactables.find(i => i.id === id); if (item) item.enabled = Boolean(enabled); return item?.enabled ?? false; },
   };
 }
