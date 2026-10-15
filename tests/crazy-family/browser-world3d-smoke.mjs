@@ -14,27 +14,30 @@ async function moveKey(key,start,minimum=.16){
 }
 
 async function walkTo(target,{tolerance=.42,maxSteps=120}={}){
+  let lastNav=null;
   for(let step=0;step<maxSteps;step++){
     const nav=await page.evaluate(({target,tolerance})=>{
-      const game=window.__crazyFamilyMovieSetGame,p=game.player.position,pose=game.cameraPose;
+      const game=window.__crazyFamilyMovieSetGame,p=game.player.position,pose=game.cameraPose,snapshot=window.__crazyFamilyRetainedApi?.getSnapshot?.()||{};
       game.dadController.position.x=5.35;game.dadController.position.z=-4;game.dadController.velocity.x=0;game.dadController.velocity.z=0;game.dadController.path=[];game.dadController.pathIndex=0;
       const dx=target.x-p.x,dz=target.z-p.z,dist=Math.hypot(dx,dz);
       const inside=game.world.colliders.some(c=>Math.abs(p.x-c.x)<c.width/2+game.player.capsule.radius-.01&&Math.abs(p.z-c.z)<c.depth/2+game.player.capsule.radius-.01);
-      if(dist<=tolerance)return{done:true,inside,dist,position:{x:p.x,z:p.z}};
+      const retained={controlsReversed:Boolean(snapshot.controlsReversed),dadSinging:Boolean(snapshot.dad?.singing),dadState:snapshot.dad?.state||null,dizziness:Number(snapshot.dizziness)||0};
+      if(dist<=tolerance)return{done:true,inside,dist,position:{x:p.x,z:p.z},retained,dadFrame:game.dadFrame};
       const fl=Math.hypot(pose.target.x-pose.position.x,pose.target.z-pose.position.z)||1;
       const forward={x:(pose.target.x-pose.position.x)/fl,z:(pose.target.z-pose.position.z)/fl};
       const right={x:-forward.z,z:forward.x};
       const dl=dist||1,desired={x:dx/dl,z:dz/dl};
       const choices=[['ArrowUp',forward],['ArrowDown',{x:-forward.x,z:-forward.z}],['ArrowRight',right],['ArrowLeft',{x:-right.x,z:-right.z}]];
       choices.sort((a,b)=>(b[1].x*desired.x+b[1].z*desired.z)-(a[1].x*desired.x+a[1].z*desired.z));
-      return{done:false,inside,dist,key:choices[0][0],position:{x:p.x,z:p.z}};
+      return{done:false,inside,dist,key:choices[0][0],position:{x:p.x,z:p.z},retained,dadFrame:game.dadFrame};
     },{target,tolerance});
+    lastNav=nav;
     assert.equal(nav.inside,false,`player entered furniture while routing to ${JSON.stringify(target)} at ${JSON.stringify(nav.position)}`);
     if(nav.done)return nav.position;
     await page.keyboard.press(nav.key,{delay:70});
   }
   const end=await page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
-  assert.fail(`could not reach ${JSON.stringify(target)}; ended at ${JSON.stringify(end)}`);
+  assert.fail(`could not reach ${JSON.stringify(target)}; ended at ${JSON.stringify(end)}; diagnostics=${JSON.stringify(lastNav)}`);
 }
 
 try{
