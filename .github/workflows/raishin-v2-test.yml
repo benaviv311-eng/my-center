@@ -14,17 +14,39 @@ on:
 
 jobs:
   test:
+    name: ${{ matrix.test }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - raishin-asset-load-fallback.test.js
+          - raishin-dojo-atmosphere.test.js
+          - raishin-dojo-effects.test.js
+          - raishin-dojo-floor-plane-v2.test.js
+          - raishin-dojo-grounding.test.js
+          - raishin-dojo-interactions.test.js
+          - raishin-dojo-movement.test.js
+          - raishin-dojo-premium.test.js
+          - raishin-dojo-world.test.js
+          - raishin-left-grounding-v1.test.js
+          - raishin-legacy-v01.test.js
+          - raishin-legacy-walk.test.js
+          - raishin-professional-walk-up-v3.test.js
+          - raishin-up-grounding-v4.test.js
+          - raishin-up-grounding-v5.test.js
+          - raishin-v2-player-controller.test.js
+          - raishin-v2-player-view.test.js
+          - raishin-v2-professional-movement.test.js
+          - raishin-v2-scene-contract.test.js
+          - raishin-v2-shell.test.js
+          - raishin-v2-world-plane.test.js
+          - raishin-v2-world-systems.test.js
+          - raishin-walk-up-grounding-v2.test.js
+          - raishin-walk-up-v1.test.js
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Run Raishin Legacy tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          for test_file in tests/raishin-*.test.js; do
-            echo "Running ${test_file}"
-            node "${test_file}"
-          done
+      - run: node "tests/${{ matrix.test }}"
