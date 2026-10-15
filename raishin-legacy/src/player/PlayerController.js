@@ -29,8 +29,8 @@
     if(ax<=1e-9&&ay<=1e-9)return current;
     const horizontal=current==='left'||current==='right';
     const vertical=current==='up'||current==='down';
-    if(horizontal&&ay<=ax+hysteresis)return current;
-    if(vertical&&ax<=ay+hysteresis)return current;
+    if(horizontal&&ay<=ax+hysteresis)return vector.x>=0?'right':'left';
+    if(vertical&&ax<=ay+hysteresis)return vector.y>=0?'down':'up';
     if(ax>ay)return vector.x>=0?'right':'left';
     return vector.y>=0?'down':'up';
   }
@@ -76,7 +76,7 @@
       let speed=Math.hypot(state.vx,state.vy);
       if(speed>maxSpeed){state.vx=state.vx/speed*maxSpeed;state.vy=state.vy/speed*maxSpeed;speed=maxSpeed;}
 
-      if(active)state.facing=chooseFacing(vector,state.facing,facingHysteresis);
+      if(active&&!reversing)state.facing=chooseFacing(vector,state.facing,facingHysteresis);
 
       const current={x:state.worldX,y:state.worldY};
       const proposed={x:current.x+state.vx*safeDt,y:current.y+state.vy*safeDt};
