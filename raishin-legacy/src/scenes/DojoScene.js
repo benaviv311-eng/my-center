@@ -7,8 +7,8 @@
 
   function createDojoScene(Phaser,deps){
     if(!Phaser||!deps)throw new Error('DojoScene requires Phaser and dependencies');
-    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,RaikaAnimationData,DojoLayout}=deps;
-    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
+    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,CameraFollow,RaikaAnimationData,DojoLayout}=deps;
+    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!CameraFollow||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
     const framesPerDirection=RaikaAnimationData.framesPerDirection;
 
     return class DojoScene extends Phaser.Scene{
@@ -20,11 +20,14 @@
       }
 
       create(){
+        this.add.image(800,450,'dojo-bg').setDisplaySize(1640,924).setDepth(-10).setAlpha(.92);
         this.add.image(800,450,'dojo-bg').setDisplaySize(1600,900).setDepth(0);
         this.worldPlane=WorldPlane.create(DojoLayout);
         this.collision=CollisionMap.create(DojoLayout);
         this.controller=PlayerController.createPlayerController({spawn:{x:500,y:420}});
         this.animator=PlayerAnimator.create(RaikaAnimationData,{stride:24});
+        this.cameraFollow=CameraFollow.create({centerX:800,centerY:790,maxX:18,maxY:8,deadZoneX:170,deadZoneY:22,smoothing:7.5});
+        this.visualRotation=0;
 
         const texture=this.textures.get(RaikaAnimationData.textureKey);
         const source=texture.getSourceImage();
@@ -58,25 +61,32 @@
       }
 
       update(_time,delta){
+        const dt=Math.max(0,Math.min(.05,delta/1000));
         const input=this.collectInput();
         const state=this.controller.step({
           input,
-          dt:delta/1000,
+          dt,
           resolveMotion:(current,proposed,radius)=>this.collision.resolveMotion(current,proposed,radius)
         });
         const projection=this.worldPlane.project({x:state.worldX,y:state.worldY});
         const animation=this.animator.update({facing:state.facing,moving:state.moving,movedDistance:state.movedDistance});
-        const view=PlayerView.compute({projection,pivot:animation.pivot});
+        const view=PlayerView.compute({projection,pivot:animation.pivot,motion:state});
         const artScale=(355/this.frameHeight)*view.scale;
+        const rotationAlpha=1-Math.exp(-12*dt);
+        this.visualRotation+=(view.rotation-this.visualRotation)*rotationAlpha;
 
         this.raika.setFrame(`${animation.row}-${animation.frameIndex}`);
         this.raika.setOrigin(view.originX,view.originY);
         this.raika.setPosition(view.x,view.y);
         this.raika.setScale(artScale);
+        this.raika.setRotation(this.visualRotation);
         this.raika.setDepth(view.depth);
         this.shadow.setPosition(view.shadowX,view.shadowY);
-        this.shadow.setScale(view.scale);
+        this.shadow.setScale(view.scale*(.92+.08*(1-state.speedRatio)));
         this.shadow.setDepth(view.shadowDepth);
+
+        const camera=this.cameraFollow.update(projection,dt);
+        this.cameras.main.setScroll(camera.x,camera.y);
       }
     };
   }
