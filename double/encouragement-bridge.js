@@ -33,7 +33,7 @@
     const left=new Set([...cards[0].querySelectorAll('.sym')].map(x=>x.dataset.symbolId));
     return [...cards[1].querySelectorAll('.sym')].map(x=>x.dataset.symbolId).find(id=>left.has(id))??null;
   }
-  function onPointer(event){
+  function onClick(event){
     const sym=event.target?.closest?.('.sym');if(!sym||!document.getElementById('board')?.contains(sym))return;
     const common=commonSymbol();if(common==null||String(sym.dataset.symbolId)!==String(common))return;
     pendingSeconds=Math.max(.001,(now()-roundStart)/1000);pendingAt=now();
@@ -60,7 +60,7 @@
     notes.forEach((freq,i)=>{try{const o=ctx.createOscillator(),g=ctx.createGain();o.type=i%2?'triangle':'sine';o.frequency.setValueAtTime(freq*(isNewBest?1.08:1),start+i*.035);const gain=.018+(level*.008)+(isNewBest?.012:0);g.gain.setValueAtTime(.0001,start+i*.035);g.gain.exponentialRampToValueAtTime(gain,start+i*.035+.008);g.gain.exponentialRampToValueAtTime(.0001,start+i*.035+.13);o.connect(g).connect(ctx.destination);o.start(start+i*.035);o.stop(start+i*.035+.15)}catch(_){}});
   }
   function burst(level,isNewBest){
-    if(matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+    if(typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     const count=3+level*3+(isNewBest?5:0);
     for(let i=0;i<count;i++){
       const s=document.createElement('span');s.className='adaptive-reaction-spark';s.textContent=isNewBest&&i%3===0?'🏆':i%2?'✦':'★';
@@ -89,6 +89,5 @@
   ensureStyle();refreshRound();
   const board=document.getElementById('board');if(board)new MutationObserver(refreshRound).observe(board,{subtree:true,childList:true,attributes:true,attributeFilter:['data-symbol-id']});
   new MutationObserver(scan).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
-  document.addEventListener('pointerdown',onPointer,true);
-  document.addEventListener('click',onPointer,true);
+  document.addEventListener('click',onClick,true);
 })();
