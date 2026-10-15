@@ -33,7 +33,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='10';
+  const V='11';
   const head=document.head||document.documentElement;
   if(!document.querySelector('link[data-double-lobby]')){
     const link=document.createElement('link');
@@ -64,7 +64,8 @@
             load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))));
   }
   const loadBridge=()=>load('double/landing-music-bridge.js?v='+V,'data-double-landing-music-bridge',()=>false);
-  const loadCompetitiveFix=()=>load('double/competitive-landing-fix.js?v='+V,'data-double-competitive-landing-fix',()=>false,loadBridge);
+  const loadEncouragementLaunch=()=>load('double/encouragement-launch-bridge.js?v='+V,'data-double-encouragement-launch',()=>false,loadBridge);
+  const loadCompetitiveFix=()=>load('double/competitive-landing-fix.js?v='+V,'data-double-competitive-landing-fix',()=>false,loadEncouragementLaunch);
   const loadDailyUi=()=>load('double/daily-challenge-ui.js?v='+V,'data-double-daily-ui',()=>false,loadCompetitiveFix);
   const loadDailyCore=()=>load('double/daily-challenge-core.js?v='+V,'data-double-daily-core',()=>!!window.DoubleDailyChallenge,loadDailyUi);
   const loadStatsUi=()=>load('double/stats-ui.js?v='+V,'data-double-stats-ui',()=>false,loadDailyCore);
