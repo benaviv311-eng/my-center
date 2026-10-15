@@ -17,6 +17,15 @@ on:
       - 'score-counter/score-layout-stability.js'
       - 'score-counter/score-layout-menu-regression.test.js'
       - 'score-counter/score-live-regression.test.js'
+      - 'score-counter/score-time-hub.js'
+      - 'score-counter/score-time-hub.css'
+      - 'score-counter/score-time-hub-regression.test.js'
+      - 'score-counter/score-time-center.js'
+      - 'score-counter/score-time-center-regression.test.js'
+      - 'score-counter/score-timed-rounds.js'
+      - 'score-counter/score-timed-rounds-regression.test.js'
+      - 'score-counter/score-game-suite.js'
+      - 'score-counter/score-game-suite.test.js'
       - '.github/workflows/score-counter-live-tools-test.yml'
 jobs:
   test:
@@ -94,10 +103,19 @@ jobs:
           assert(index.includes('score-live.js'),'loader missing score-live.js');
           assert(index.includes('score-live.css'),'loader missing score-live.css');
           assert(index.includes('score-layout-stability.js'),'loader missing score-layout-stability.js');
+          assert(index.includes('score-time-hub.js?v=1'),'loader missing score-time-hub.js');
           NODE
           node score-counter/score-live-regression.test.js
           node score-counter/score-layout-menu-regression.test.js
+          node score-counter/score-time-hub-regression.test.js
+          node score-counter/score-time-center-regression.test.js
+          node score-counter/score-timed-rounds-regression.test.js
+          node score-counter/score-game-suite.test.js
           node --check score-counter/score-live-core.js
           node --check score-counter/score-live.js
           node --check score-counter/score-layout-menu.js
           node --check score-counter/score-layout-stability.js
+          node --check score-counter/score-time-hub.js
+          node --check score-counter/score-time-center.js
+          node --check score-counter/score-timed-rounds.js
+          node --check score-counter/score-game-suite.js
