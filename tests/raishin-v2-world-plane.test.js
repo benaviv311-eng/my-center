@@ -12,8 +12,8 @@ const WorldPlane=require(planePath);
 const layout=require(layoutPath);
 assert.equal(layout.WORLD_WIDTH,1000);
 assert.equal(layout.WORLD_HEIGHT,600);
-assert.deepStrictEqual(layout.floor.farLeft,{x:430,y:585});
-assert.deepStrictEqual(layout.floor.farRight,{x:1170,y:585});
+assert.deepStrictEqual(layout.floor.farLeft,{x:430,y:742});
+assert.deepStrictEqual(layout.floor.farRight,{x:1170,y:742});
 assert.deepStrictEqual(layout.floor.nearLeft,{x:165,y:835});
 assert.deepStrictEqual(layout.floor.nearRight,{x:1435,y:835});
 assert.equal(layout.floor.farScale,.72);
@@ -22,11 +22,11 @@ assert.equal(layout.floor.nearScale,1.06);
 const plane=WorldPlane.create(layout);
 function close(actual,expected,epsilon=1e-9){assert.ok(Math.abs(actual-expected)<=epsilon,`${actual} !== ${expected}`);}
 for(const [world,expected] of [
-  [{x:0,y:0},{x:430,y:585,scale:.72,depth:585}],
-  [{x:1000,y:0},{x:1170,y:585,scale:.72,depth:585}],
+  [{x:0,y:0},{x:430,y:742,scale:.72,depth:742}],
+  [{x:1000,y:0},{x:1170,y:742,scale:.72,depth:742}],
   [{x:0,y:600},{x:165,y:835,scale:1.06,depth:835}],
   [{x:1000,y:600},{x:1435,y:835,scale:1.06,depth:835}],
-  [{x:500,y:300},{x:800,y:710,scale:.89,depth:710}]
+  [{x:500,y:300},{x:800,y:788.5,scale:.89,depth:788.5}]
 ]){
   const projected=plane.project(world);
   for(const key of ['x','y','scale','depth'])close(projected[key],expected[key]);
