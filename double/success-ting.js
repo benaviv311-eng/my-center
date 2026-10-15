@@ -45,7 +45,7 @@
 
 (function(){
   if(typeof document==='undefined'||!document.getElementById('core')) return;
-  const V='9';
+  const V='11';
   const frame=document.getElementById('core');
 
   try{
@@ -125,6 +125,25 @@
     };
     doc.body.appendChild(rules);
   }
-  frame.addEventListener('load',injectCoreFix);
-  try{if(frame.contentDocument?.body)injectCoreFix()}catch(_){ }
+
+  function injectAdaptiveEncouragement(){
+    let doc;
+    try{doc=frame.contentDocument}catch(_){return}
+    if(!doc?.body||doc.querySelector('script[data-double-encouragement-engine]'))return;
+    const engine=doc.createElement('script');
+    engine.src='double/encouragement-engine.js?v='+V;
+    engine.setAttribute('data-double-encouragement-engine','1');
+    engine.onload=()=>{
+      if(doc.querySelector('script[data-double-encouragement-bridge]'))return;
+      const bridge=doc.createElement('script');
+      bridge.src='double/encouragement-bridge.js?v='+V;
+      bridge.setAttribute('data-double-encouragement-bridge','1');
+      doc.body.appendChild(bridge);
+    };
+    doc.body.appendChild(engine);
+  }
+
+  function injectCoreEnhancements(){injectCoreFix();injectAdaptiveEncouragement()}
+  frame.addEventListener('load',injectCoreEnhancements);
+  try{if(frame.contentDocument?.body)injectCoreEnhancements()}catch(_){ }
 })();
