@@ -20,9 +20,9 @@ test('background layers are never actor occluders',()=>{
   assert.equal(ids.size,0);
 });
 
-test('Dad and Libi can be evaluated independently',()=>{
+test('Dad and Libi can be evaluated independently with v0.44 body padding',()=>{
   const libi=resolveCinematicOcclusion({camera:{x:0,z:5},actor:{x:0,z:0},occluders:[sofa]});
-  const dad=resolveCinematicOcclusion({camera:{x:0,z:5},actor:{x:3.5,z:0},occluders:[sofa]});
+  const dad=resolveCinematicOcclusion({camera:{x:0,z:5},actor:{x:5,z:0},occluders:[sofa]});
   assert.equal(libi.has('cinematic-sofa'),true);
   assert.equal(dad.has('cinematic-sofa'),false);
 });
