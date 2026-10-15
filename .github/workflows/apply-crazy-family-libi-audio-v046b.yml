@@ -17,22 +17,25 @@ jobs:
           import re
           p=Path('crazy-family.html')
           s=p.read_text(encoding='utf-8')
-          bank="""const LIBI_AUDIO_ORDER_V046='context-only-13-39';
-const libiReactionBank={
- call:[{i:12,w:1},{i:13,w:1}],
- songWarning:[{i:14,w:1},{i:15,w:1},{i:16,w:1}],
- songStart:[{i:17,w:1}],
- songOngoing:[{i:18,w:1},{i:19,w:1},{i:20,w:1}],
- chase:[{i:21,w:1},{i:22,w:1}],
- danger:[{i:23,w:1},{i:24,w:1}],
- missed:[{i:25,w:1},{i:26,w:1}],
- confused:[{i:27,w:1},{i:28,w:1},{i:29,w:1},{i:30,w:1}],
- escaped:[{i:31,w:1},{i:32,w:1}],
- songAgain:[{i:33,w:1}],
- sameSong:[{i:34,w:1}],
- dizzy:[{i:35,w:1}],
- headphones:[{i:36,w:1},{i:37,w:1},{i:38,w:1}]
-};"""
+          lines=[
+              "const LIBI_AUDIO_ORDER_V046='context-only-13-39';",
+              "const libiReactionBank={",
+              " call:[{i:12,w:1},{i:13,w:1}],",
+              " songWarning:[{i:14,w:1},{i:15,w:1},{i:16,w:1}],",
+              " songStart:[{i:17,w:1}],",
+              " songOngoing:[{i:18,w:1},{i:19,w:1},{i:20,w:1}],",
+              " chase:[{i:21,w:1},{i:22,w:1}],",
+              " danger:[{i:23,w:1},{i:24,w:1}],",
+              " missed:[{i:25,w:1},{i:26,w:1}],",
+              " confused:[{i:27,w:1},{i:28,w:1},{i:29,w:1},{i:30,w:1}],",
+              " escaped:[{i:31,w:1},{i:32,w:1}],",
+              " songAgain:[{i:33,w:1}],",
+              " sameSong:[{i:34,w:1}],",
+              " dizzy:[{i:35,w:1}],",
+              " headphones:[{i:36,w:1},{i:37,w:1},{i:38,w:1}]",
+              "};"
+          ]
+          bank='\n'.join(lines)
           old=r"const rareConfusedIndex=30;\s*const libiReactionBank=\{.*?\};"
           current=r"const LIBI_AUDIO_ORDER_V046='context-only-13-39';\s*const libiReactionBank=\{.*?\};"
           pattern=current if "LIBI_AUDIO_ORDER_V046" in s else old
