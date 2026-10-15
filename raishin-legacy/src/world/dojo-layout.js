@@ -5,8 +5,8 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const floor=Object.freeze({
-    farLeft:Object.freeze({x:430,y:585}),
-    farRight:Object.freeze({x:1170,y:585}),
+    farLeft:Object.freeze({x:430,y:742}),
+    farRight:Object.freeze({x:1170,y:742}),
     nearLeft:Object.freeze({x:165,y:835}),
     nearRight:Object.freeze({x:1435,y:835}),
     farScale:.72,
