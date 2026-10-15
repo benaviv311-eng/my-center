@@ -1,0 +1,30 @@
+name: Raishin Legacy tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/raishin-*'
+      - 'fix/raishin-*'
+  pull_request:
+    paths:
+      - 'raishin-legacy/**'
+      - 'tests/raishin-*.test.js'
+      - '.github/workflows/raishin-v2-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Run Raishin Legacy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test_file in tests/raishin-*.test.js; do
+            echo "Running ${test_file}"
+            node "${test_file}"
+          done
