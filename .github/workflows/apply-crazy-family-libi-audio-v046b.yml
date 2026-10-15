@@ -1,0 +1,70 @@
+name: Apply Crazy Family Libi audio v0.46
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-crazy-family-libi-audio-v046b.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Libi contextual voice bank
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('crazy-family.html')
+          s=p.read_text(encoding='utf-8')
+          bank="""const LIBI_AUDIO_ORDER_V046='context-only-13-39';
+const libiReactionBank={
+ call:[{i:12,w:1},{i:13,w:1}],
+ songWarning:[{i:14,w:1},{i:15,w:1},{i:16,w:1}],
+ songStart:[{i:17,w:1}],
+ songOngoing:[{i:18,w:1},{i:19,w:1},{i:20,w:1}],
+ chase:[{i:21,w:1},{i:22,w:1}],
+ danger:[{i:23,w:1},{i:24,w:1}],
+ missed:[{i:25,w:1},{i:26,w:1}],
+ confused:[{i:27,w:1},{i:28,w:1},{i:29,w:1},{i:30,w:1}],
+ escaped:[{i:31,w:1},{i:32,w:1}],
+ songAgain:[{i:33,w:1}],
+ sameSong:[{i:34,w:1}],
+ dizzy:[{i:35,w:1}],
+ headphones:[{i:36,w:1},{i:37,w:1},{i:38,w:1}]
+};"""
+          old=r"const rareConfusedIndex=30;\s*const libiReactionBank=\{.*?\};"
+          current=r"const LIBI_AUDIO_ORDER_V046='context-only-13-39';\s*const libiReactionBank=\{.*?\};"
+          pattern=current if "LIBI_AUDIO_ORDER_V046" in s else old
+          s,n=re.subn(pattern,bank,s,count=1,flags=re.S)
+          if n != 1:
+              raise SystemExit('Libi bank not found')
+          s=s.replace('עולם הבית · שלב 1: מפגש אבא · v0.45','עולם הבית · שלב 1: מפגש אבא · v0.46',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify Libi contextual voice bank
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('crazy-family.html').read_text(encoding='utf-8')
+          assert "LIBI_AUDIO_ORDER_V046='context-only-13-39'" in s
+          b=re.search(r'const libiReactionBank=\{(.*?)\};',s,re.S).group(1)
+          ids=[int(x) for x in re.findall(r'i:(\d+)',b)]
+          assert len(ids)==27
+          assert len(set(ids))==27
+          assert sorted(ids)==list(range(12,39))
+          v=re.search(r'const libiVoiceClips=\[(.*?)\];\s*libiVoiceClips\.forEach',s,re.S).group(1)
+          refs=[int(x) for x in re.findall(r'libi-(\d{2})\.mp3',v)]
+          assert refs==list(range(1,40))
+          assert 'const dadPreClips=[' in s
+          print('PASS: Libi clips 13-39 are exclusive contextual reactions')
+          PY
+      - name: Commit Libi voice cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add crazy-family.html
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: separate Libi contextual voice clips v0.46"
+          git push
