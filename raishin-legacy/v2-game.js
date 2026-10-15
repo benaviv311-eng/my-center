@@ -7,7 +7,7 @@
   const deps=window.RaishinV2||{};
 
   function fail(){if(error)error.hidden=false;}
-  const required=['DojoLayout','WorldPlane','CollisionMap','PlayerController','InteractionSystem','RaikaAnimationData','PlayerAnimator','PlayerView','DojoScene'];
+  const required=['DojoLayout','WorldPlane','CollisionMap','PlayerController','InteractionSystem','CameraFollow','RaikaAnimationData','PlayerAnimator','PlayerView','DojoScene'];
   if(!mount||!error||!PhaserRef||required.some((name)=>!deps[name])){fail();return;}
 
   try{
