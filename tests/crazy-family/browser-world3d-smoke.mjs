@@ -13,7 +13,14 @@ async function moveKey(key,start,minimum=.16){
   return page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
 }
 
-async function walkTo(target,{tolerance=.42,maxSteps=120}={}){
+async function driveKey(key,holdMs=160){
+  await page.keyboard.down(key);
+  try{await page.waitForTimeout(holdMs);}
+  finally{await page.keyboard.up(key);}
+  await page.waitForTimeout(20);
+}
+
+async function walkTo(target,{tolerance=.42,maxSteps=80}={}){
   let lastNav=null;
   for(let step=0;step<maxSteps;step++){
     const nav=await page.evaluate(({target,tolerance})=>{
@@ -34,7 +41,7 @@ async function walkTo(target,{tolerance=.42,maxSteps=120}={}){
     lastNav=nav;
     assert.equal(nav.inside,false,`player entered furniture while routing to ${JSON.stringify(target)} at ${JSON.stringify(nav.position)}`);
     if(nav.done)return nav.position;
-    await page.keyboard.press(nav.key,{delay:70});
+    await driveKey(nav.key);
   }
   const end=await page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
   assert.fail(`could not reach ${JSON.stringify(target)}; ended at ${JSON.stringify(end)}; diagnostics=${JSON.stringify(lastNav)}`);
