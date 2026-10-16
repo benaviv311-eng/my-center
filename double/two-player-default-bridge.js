@@ -4,6 +4,8 @@
   if(!R||window.__doubleTwoPlayerDefaultBridge)return;
   window.__doubleTwoPlayerDefaultBridge=true;
 
+  function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
+
   function updateLegacy(){
     const section=document.getElementById('twoSection');
     if(!section)return;
@@ -14,15 +16,13 @@
     const deck=byVariant.get('deck');
     const duel=byVariant.get('duel');
     if(deck){
-      grid.insertBefore(deck,grid.firstElementChild);
-      const b=deck.querySelector('b'),s=deck.querySelector('small');
-      if(b)b.textContent='🃏 '+R.labelFor('deck');
-      if(s)s.textContent='המצב הרגיל · משחקים על כל החפיסה';
+      if(grid.firstElementChild!==deck)grid.insertBefore(deck,grid.firstElementChild);
+      setText(deck.querySelector('b'),'🃏 '+R.labelFor('deck'));
+      setText(deck.querySelector('small'),'המצב הרגיל · משחקים על כל החפיסה');
     }
     if(duel){
-      const b=duel.querySelector('b'),s=duel.querySelector('small');
-      if(b)b.textContent='🏁 '+R.labelFor('duel');
-      if(s)s.textContent='הראשון ל־10 נקודות';
+      setText(duel.querySelector('b'),'🏁 '+R.labelFor('duel'));
+      setText(duel.querySelector('small'),'הראשון ל־10 נקודות');
     }
   }
 
@@ -34,13 +34,13 @@
       const variant=original.dataset.variant;
       const title=card.querySelector('b'),sub=card.querySelector('small'),icon=card.querySelector('.mode-icon');
       if(variant==='deck'){
-        if(icon)icon.textContent='🃏';
-        if(title)title.textContent=R.labelFor('deck');
-        if(sub)sub.textContent='המצב הרגיל · כל החפיסה';
+        setText(icon,'🃏');
+        setText(title,R.labelFor('deck'));
+        setText(sub,'המצב הרגיל · כל החפיסה');
       }else if(variant==='duel'){
-        if(icon)icon.textContent='🏁';
-        if(title)title.textContent=R.labelFor('duel');
-        if(sub)sub.textContent='הראשון ל־10 נקודות';
+        setText(icon,'🏁');
+        setText(title,R.labelFor('duel'));
+        setText(sub,'הראשון ל־10 נקודות');
       }
     });
   }
@@ -48,6 +48,11 @@
   function refresh(){updateLegacy();updateEnhanced()}
   refresh();
   const target=document.getElementById('dropdown')||document.body;
-  const observer=new MutationObserver(refresh);
+  let queued=false;
+  const observer=new MutationObserver(()=>{
+    if(queued)return;
+    queued=true;
+    requestAnimationFrame(()=>{queued=false;refresh()});
+  });
   observer.observe(target,{subtree:true,childList:true});
 })();
