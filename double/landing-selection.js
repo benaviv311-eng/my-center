@@ -16,7 +16,7 @@
     };
   }
   function previewKey(state){
-    if(state.mode==='versus') return 'versus:'+(state.variant||'duel');
+    if(state.mode==='versus') return 'versus:'+(state.variant||'deck');
     if(state.mode==='sprint') return 'sprint:'+(state.target||5);
     return state.mode;
   }
@@ -33,15 +33,14 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='11';
+  const V='13';
   const head=document.head||document.documentElement;
-  if(!document.querySelector('link[data-double-lobby]')){
-    const link=document.createElement('link');
-    link.rel='stylesheet';
-    link.href='double/menu-lobby.css?v='+V;
-    link.dataset.doubleLobby='1';
-    head.appendChild(link);
+  function ensureCss(href,attr){
+    if(document.querySelector(`link[${attr}]`))return;
+    const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.setAttribute(attr,'1');head.appendChild(link);
   }
+  ensureCss('double/menu-lobby.css?v='+V,'data-double-lobby');
+  ensureCss('double/premium-theme.css?v='+V,'data-double-premium-theme');
   function load(src,attr,ready,next){
     if(ready&&ready()){next?.();return;}
     const existing=document.querySelector(`script[${attr}]`);
@@ -61,7 +60,9 @@
       load('double/icon-sprite-1.js?v='+V,'data-double-icon-sprite-1',()=>false,()=>
         load('double/icon-sprite-2.js?v='+V,'data-double-icon-sprite-2',()=>false,()=>
           load('double/icon-sprite-3.js?v='+V,'data-double-icon-sprite-3',()=>false,()=>
-            load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))));
+            load('double/dragonball-sprite-0.js?v='+V,'data-double-dragon-sprite-0',()=>false,()=>
+              load('double/dragonball-sprite-1.js?v='+V,'data-double-dragon-sprite-1',()=>false,()=>
+                load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))))));
   }
   const loadBridge=()=>load('double/landing-music-bridge.js?v='+V,'data-double-landing-music-bridge',()=>false);
   const loadEncouragementLaunch=()=>load('double/encouragement-launch-bridge.js?v='+V,'data-double-encouragement-launch',()=>false,loadBridge);
@@ -72,7 +73,9 @@
   const loadStatsStore=()=>load('double/stats-store.js?v='+V,'data-double-stats-store',()=>!!window.DoubleStatsStore,loadStatsUi);
   const loadPackUi=()=>load('double/icon-pack-ui.js?v='+V,'data-double-icon-pack-ui',()=>false,loadStatsStore);
   const loadLobby=()=>load('double/menu-lobby-v3.js?v='+V,'data-double-lobby-ui',()=>false,loadPackUi);
-  const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadLobby);
+  const loadTwoPlayerBridge=()=>load('double/two-player-default-bridge.js?v='+V,'data-double-two-player-default-bridge',()=>false,loadLobby);
+  const loadTwoPlayerRules=()=>load('double/two-player-mode-rules.js?v='+V,'data-double-two-player-mode-rules',()=>!!window.DoubleTwoPlayerModeRules,loadTwoPlayerBridge);
+  const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadTwoPlayerRules);
   const loadPacks=()=>loadSprite(loadRules);
   const loadMusic=()=>load('double/music-engine-state.js?v='+V,'data-double-music-state',()=>!!window.DoubleMusicState,()=>
     load('double/music-engine.js?v='+V,'data-double-music-engine',()=>!!window.DoubleMusic,loadPacks));

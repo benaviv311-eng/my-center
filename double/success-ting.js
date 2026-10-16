@@ -45,7 +45,7 @@
 
 (function(){
   if(typeof document==='undefined'||!document.getElementById('core')) return;
-  const V='11';
+  const V='13';
   const frame=document.getElementById('core');
 
   try{
@@ -143,7 +143,24 @@
     doc.body.appendChild(engine);
   }
 
-  function injectCoreEnhancements(){injectCoreFix();injectAdaptiveEncouragement()}
+  function injectReactionTime(){
+    let doc;
+    try{doc=frame.contentDocument}catch(_){return}
+    if(!doc?.body||doc.querySelector('script[data-double-reaction-time-model]'))return;
+    const model=doc.createElement('script');
+    model.src='double/reaction-time-model.js?v='+V;
+    model.setAttribute('data-double-reaction-time-model','1');
+    model.onload=()=>{
+      if(doc.querySelector('script[data-double-reaction-time-bridge]'))return;
+      const bridge=doc.createElement('script');
+      bridge.src='double/reaction-time-bridge.js?v='+V;
+      bridge.setAttribute('data-double-reaction-time-bridge','1');
+      doc.body.appendChild(bridge);
+    };
+    doc.body.appendChild(model);
+  }
+
+  function injectCoreEnhancements(){injectCoreFix();injectAdaptiveEncouragement();injectReactionTime()}
   frame.addEventListener('load',injectCoreEnhancements);
   try{if(frame.contentDocument?.body)injectCoreEnhancements()}catch(_){ }
 })();
