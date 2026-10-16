@@ -41,12 +41,12 @@ test('cinematic rewrite keeps item scenarios dynamic',()=>{
   assert.deepEqual({x:lastHeadphones.x,y:lastHeadphones.y,z:lastHeadphones.z},last.item.position);
 });
 
-test('cinematic mode is the primary scene path and keeps dynamic objects independent',async()=>{
+test('cinematic remains the default scene path and keeps dynamic objects independent',async()=>{
   const sceneSource=await fs.readFile(new URL('../../crazy-family/scene.js',import.meta.url),'utf8');
   const gameSource=await fs.readFile(new URL('../../crazy-family/game.js',import.meta.url),'utf8');
-  assert.match(sceneSource,/HYBRID_CINEMATIC_SET_V042/);
+  assert.match(sceneSource,/REFERENCE_GAME_RENDER_V043/);
   assert.match(sceneSource,/visualMode\s*=\s*'cinematic'/);
-  assert.match(sceneSource,/cinematic-home-v042\/manifest\.json/);
+  assert.match(sceneSource,/cinematic-home-v043\/manifest\.json/);
   assert.match(sceneSource,/objectsById\.set\('headphones'/);
   assert.match(sceneSource,/createToyBall\(def\)/);
   assert.match(sceneSource,/objectsById\.set\(def\.id,ball\)/);
@@ -54,8 +54,9 @@ test('cinematic mode is the primary scene path and keeps dynamic objects indepen
   assert.match(sceneSource,/OrthographicCamera/);
   assert.match(sceneSource,/projectWorldToCinematicStage/);
   assert.match(gameSource,/await\s+createLivingRoomScene/);
+  assert.match(gameSource,/resolveRendererMode/);
   assert.match(gameSource,/scenario\.item\.position/);
-  assert.match(gameSource,/sceneHandle\.projectWorld/);
+  assert.match(gameSource,/sceneHandle\.renderPosition/);
   const world=createLivingRoomWorld();
   assert.deepEqual(blockerSnapshot(world),[
     {id:'coffee-table',x:-0.25,z:0.55,width:2.15,depth:1.2,height:0.52},
