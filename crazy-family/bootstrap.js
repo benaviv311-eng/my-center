@@ -5,6 +5,11 @@ export function shouldUseLegacy(search = '') {
   return params.get('legacy') === '1';
 }
 
+export function resolveCrazyFamilyRenderer(search = '') {
+  const params = new URLSearchParams(search || '');
+  return params.get('renderer') === '3d' ? 'native3d' : 'cinematic';
+}
+
 export function renderUnsupported(root, error) {
   if (!root) return;
   const detail = error?.message ? ` — ${error.message}` : '';
@@ -29,6 +34,11 @@ function publishVersionLabel(root) {
   if (root?.dataset) root.dataset.gameVersion = CRAZY_FAMILY_VERSION;
 }
 
+async function createCinematicGame({ root, legacyAdapter }) {
+  const { createCrazyFamilyGame } = await import('./game.js');
+  return createCrazyFamilyGame({ root, legacyAdapter });
+}
+
 export async function bootCrazyFamily({ root, legacyAdapter }) {
   if (!root) throw new Error('movie-set root is required');
   publishVersionLabel(root);
@@ -37,8 +47,22 @@ export async function bootCrazyFamily({ root, legacyAdapter }) {
     renderUnsupported(root, error);
     throw error;
   }
-  const { createCrazyFamilyGame } = await import('./game.js');
-  const game = await createCrazyFamilyGame({ root, legacyAdapter });
+
+  const rendererMode = resolveCrazyFamilyRenderer(globalThis.location?.search || '');
+  let game;
+  if (rendererMode === 'native3d') {
+    try {
+      const { createCrazyFamilyGame3D } = await import('./game-3d.js');
+      game = await createCrazyFamilyGame3D({ root, legacyAdapter });
+    } catch (error) {
+      root.replaceChildren?.();
+      game = await createCinematicGame({ root, legacyAdapter });
+      game.native3dFallbackError = error;
+    }
+  } else {
+    game = await createCinematicGame({ root, legacyAdapter });
+  }
+
   globalThis.__crazyFamilyMovieSetGame = game;
   game.start?.();
   return game;
