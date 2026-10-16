@@ -13,11 +13,15 @@ async function moveKey(key,start,minimum=.16){
   return page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
 }
 
-async function driveKey(key,holdMs=120){
+async function driveKey(key,start,minimum=.12){
   await page.keyboard.down(key);
-  try{await page.waitForTimeout(holdMs);}
-  finally{await page.keyboard.up(key);}
-  await page.waitForTimeout(20);
+  try{
+    await page.waitForFunction(({x,z,minimum})=>{
+      const p=window.__crazyFamilyMovieSetGame?.player?.position;
+      return p&&Math.hypot(p.x-x,p.z-z)>=minimum;
+    },{x:start.x,z:start.z,minimum},{timeout:5000});
+  } finally { await page.keyboard.up(key); }
+  return page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
 }
 
 async function walkTo(target,{tolerance=.42,maxSteps=100}={}){
@@ -27,7 +31,7 @@ async function walkTo(target,{tolerance=.42,maxSteps=100}={}){
       const game=window.__crazyFamilyMovieSetGame,p=game.player.position,pose=game.cameraPose,snapshot=window.__crazyFamilyRetainedApi?.getSnapshot?.()||{};
       // The route smoke verifies keyboard navigation + collision, while acceleration/braking
       // are covered deterministically by movement.test.mjs. Reset horizontal inertia between
-      // steering pulses so a moving third-person camera cannot make the test driver orbit a waypoint.
+      // steering pulses; each pulse itself waits for real world-space displacement, not wall time.
       game.player.velocity.x=0;game.player.velocity.z=0;
       game.dadController.position.x=5.35;game.dadController.position.z=-4;game.dadController.velocity.x=0;game.dadController.velocity.z=0;game.dadController.path=[];game.dadController.pathIndex=0;
       const dx=target.x-p.x,dz=target.z-p.z,dist=Math.hypot(dx,dz);
@@ -45,7 +49,7 @@ async function walkTo(target,{tolerance=.42,maxSteps=100}={}){
     lastNav=nav;
     assert.equal(nav.inside,false,`player entered furniture while routing to ${JSON.stringify(target)} at ${JSON.stringify(nav.position)}`);
     if(nav.done)return nav.position;
-    await driveKey(nav.key);
+    await driveKey(nav.key,nav.position);
   }
   const end=await page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
   assert.fail(`could not reach ${JSON.stringify(target)}; ended at ${JSON.stringify(end)}; diagnostics=${JSON.stringify(lastNav)}`);
