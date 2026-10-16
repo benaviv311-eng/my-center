@@ -16,7 +16,7 @@
     };
   }
   function previewKey(state){
-    if(state.mode==='versus') return 'versus:'+(state.variant||'duel');
+    if(state.mode==='versus') return 'versus:'+(state.variant||'deck');
     if(state.mode==='sprint') return 'sprint:'+(state.target||5);
     return state.mode;
   }
@@ -33,7 +33,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='12';
+  const V='13';
   const head=document.head||document.documentElement;
   function ensureCss(href,attr){
     if(document.querySelector(`link[${attr}]`))return;
@@ -73,7 +73,9 @@
   const loadStatsStore=()=>load('double/stats-store.js?v='+V,'data-double-stats-store',()=>!!window.DoubleStatsStore,loadStatsUi);
   const loadPackUi=()=>load('double/icon-pack-ui.js?v='+V,'data-double-icon-pack-ui',()=>false,loadStatsStore);
   const loadLobby=()=>load('double/menu-lobby-v3.js?v='+V,'data-double-lobby-ui',()=>false,loadPackUi);
-  const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadLobby);
+  const loadTwoPlayerBridge=()=>load('double/two-player-default-bridge.js?v='+V,'data-double-two-player-default-bridge',()=>false,loadLobby);
+  const loadTwoPlayerRules=()=>load('double/two-player-mode-rules.js?v='+V,'data-double-two-player-mode-rules',()=>!!window.DoubleTwoPlayerModeRules,loadTwoPlayerBridge);
+  const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadTwoPlayerRules);
   const loadPacks=()=>loadSprite(loadRules);
   const loadMusic=()=>load('double/music-engine-state.js?v='+V,'data-double-music-state',()=>!!window.DoubleMusicState,()=>
     load('double/music-engine.js?v='+V,'data-double-music-engine',()=>!!window.DoubleMusic,loadPacks));
