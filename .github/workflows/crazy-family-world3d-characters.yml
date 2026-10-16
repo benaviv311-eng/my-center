@@ -1,0 +1,27 @@
+name: Crazy Family world3d volumetric characters
+
+on:
+  push:
+    branches:
+      - feat/crazy-family-world3d-characters
+  pull_request:
+    paths:
+      - 'crazy-family/**'
+      - 'tests/crazy-family/**'
+      - '.github/workflows/crazy-family-world3d-characters.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: World3D character integration
+        run: node tests/crazy-family/world3d-characters.test.mjs
+      - name: Existing Crazy Family node regressions
+        run: node --test tests/crazy-family/*.test.mjs
