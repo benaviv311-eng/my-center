@@ -1,0 +1,37 @@
+name: Crazy Family v0.47 True 3D
+
+on:
+  push:
+    branches:
+      - feat/crazy-family-v047-3d
+  pull_request:
+    paths:
+      - 'crazy-family/**'
+      - 'crazy-family.html'
+      - 'tests/crazy-family*'
+      - '.github/workflows/test-crazy-family-v047.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: v0.47 renderer selection
+        run: node tests/crazy-family-v047-renderer-selection.test.mjs
+      - name: v0.47 volumetric characters
+        run: node tests/crazy-family-v047-characters-3d.test.mjs
+      - name: v0.47 perspective scene
+        run: node tests/crazy-family-v047-scene-3d.test.mjs
+      - name: v0.47 native integration
+        run: node tests/crazy-family-v047-native-integration.test.mjs
+      - name: v0.47 acceptance
+        run: node tests/crazy-family-v047-acceptance.test.mjs
+      - name: v0.44 cinematic fallback regression
+        run: node tests/crazy-family-v044.test.mjs
+      - name: Dad blocked-audio retry regression
+        run: node tests/crazy-family-cinematic-song-audio-retry.test.js
+      - name: Dad audio order regression
+        run: node tests/crazy-family-dad-audio-order.test.js
