@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createWorld3DCharacterVisual } from './characters-world3d-adapter.js';
 
 export const APPROVED_LIBI_ASSET = 'assets/libi-sprites-v025.png';
 export const APPROVED_DAD_ASSET = 'assets/crazy-family/dad-sprites-v028.png';
@@ -9,6 +10,10 @@ function assetFor(kind, approvedAssetUrl) {
 }
 
 export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
+  if (scene?.name === 'world3d-stage') {
+    return createWorld3DCharacterVisual({ scene, kind });
+  }
+
   const url = assetFor(kind, approvedAssetUrl);
   const texture = new THREE.TextureLoader().load(url);
   texture.colorSpace = THREE.SRGBColorSpace;
