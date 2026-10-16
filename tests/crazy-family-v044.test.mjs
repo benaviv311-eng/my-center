@@ -37,6 +37,9 @@ const active = occlusion.resolveCinematicOcclusion({
 assert.equal(active.has('coffee-table'), true, 'default actor body padding should keep near-edge furniture occlusion stable');
 
 const bootstrapSource = await readSource('crazy-family/bootstrap.js');
-assert.match(bootstrapSource, /v0\.44/, 'boot layer must publish the visible v0.44 label');
+assert.match(bootstrapSource, /export const CRAZY_FAMILY_VERSION\s*=\s*'v0\.\d+'/,
+  'boot layer must continue publishing a visible Crazy Family version label');
+assert.match(bootstrapSource, /\.\/game\.js/,
+  'cinematic game module must remain available as the stable fallback');
 
-console.log('v0.44 character integration tests passed');
+console.log('v0.44 cinematic character regression tests passed');
