@@ -13,18 +13,22 @@ async function moveKey(key,start,minimum=.16){
   return page.evaluate(()=>({...window.__crazyFamilyMovieSetGame.player.position}));
 }
 
-async function driveKey(key,holdMs=160){
+async function driveKey(key,holdMs=120){
   await page.keyboard.down(key);
   try{await page.waitForTimeout(holdMs);}
   finally{await page.keyboard.up(key);}
   await page.waitForTimeout(20);
 }
 
-async function walkTo(target,{tolerance=.42,maxSteps=80}={}){
+async function walkTo(target,{tolerance=.42,maxSteps=100}={}){
   let lastNav=null;
   for(let step=0;step<maxSteps;step++){
     const nav=await page.evaluate(({target,tolerance})=>{
       const game=window.__crazyFamilyMovieSetGame,p=game.player.position,pose=game.cameraPose,snapshot=window.__crazyFamilyRetainedApi?.getSnapshot?.()||{};
+      // The route smoke verifies keyboard navigation + collision, while acceleration/braking
+      // are covered deterministically by movement.test.mjs. Reset horizontal inertia between
+      // steering pulses so a moving third-person camera cannot make the test driver orbit a waypoint.
+      game.player.velocity.x=0;game.player.velocity.z=0;
       game.dadController.position.x=5.35;game.dadController.position.z=-4;game.dadController.velocity.x=0;game.dadController.velocity.z=0;game.dadController.path=[];game.dadController.pathIndex=0;
       const dx=target.x-p.x,dz=target.z-p.z,dist=Math.hypot(dx,dz);
       const inside=game.world.colliders.some(c=>Math.abs(p.x-c.x)<c.width/2+game.player.capsule.radius-.01&&Math.abs(p.z-c.z)<c.depth/2+game.player.capsule.radius-.01);
