@@ -16,6 +16,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,3 +26,25 @@ jobs:
         run: node tests/crazy-family/world3d-characters.test.mjs
       - name: Existing Crazy Family node regressions
         run: node --test tests/crazy-family/*.test.mjs
+      - name: Install Chromium smoke-test runtime
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/crazy-family-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/crazy-family.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/crazy-family-server.log
+          exit 1
+      - name: Browser verification — true volumetric actors
+        run: node tests/crazy-family/browser-world3d-characters-smoke.mjs
+      - name: Upload volumetric character screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crazy-family-world3d-volumetric-characters
+          path: artifacts/crazy-family-world3d-volumetric-characters.png
+          if-no-files-found: ignore
