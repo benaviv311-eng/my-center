@@ -3,28 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#15152a">
+  <meta name="theme-color" content="#b8e9ff">
   <title>DOUBLE — משחק</title>
   <style>
     *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1025}
-    #core{width:100%;height:100%;border:0;display:block;background:#0b1025}
-    .end-overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 32%,#4d4f9955,transparent 32%),linear-gradient(#090f22e8,#070b18f5);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:.22s ease}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#c8e9ff}
+    #core{width:100%;height:100%;border:0;display:block;background:#c8e9ff}
+    .end-overlay{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:rgba(108,74,168,.24);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:.22s ease}
     .end-overlay.open{opacity:1;visibility:visible}
-    .end-card{width:min(460px,92vw);padding:26px 22px;border-radius:28px;border:1px solid #ffffff24;background:linear-gradient(180deg,#ffffff16,#ffffff09);box-shadow:0 28px 80px #000a;text-align:center;color:#fff}
-    .end-card .trophy{font-size:52px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 0 16px #ffd84d88)}
+    .end-card{width:min(460px,92vw);padding:26px 22px;border-radius:30px;border:4px solid #fff;background:linear-gradient(180deg,#fff,#faf4ff);box-shadow:0 13px 0 rgba(106,73,166,.14),0 28px 60px rgba(86,53,141,.22);text-align:center;color:#58467f}
+    .end-card .trophy{font-size:52px;line-height:1;margin-bottom:10px;filter:drop-shadow(0 4px 0 #f0b42655)}
     .end-card h1{margin:0 0 8px;font-size:clamp(30px,8vw,48px)}
     .end-card p{margin:0 0 20px;opacity:.78;font-weight:700;line-height:1.45}
     .end-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .end-actions button{border:0;border-radius:18px;padding:14px 16px;font-weight:1000;font-size:17px;cursor:pointer}
-    .end-actions [data-end-action="replay"]{background:#ffd84d;color:#171717}
-    .end-actions [data-end-action="return"]{background:#ffffff18;color:#fff;border:1px solid #ffffff25}
+    .end-actions button{border:3px solid #fff;border-radius:20px;padding:14px 16px;font-weight:1000;font-size:17px;cursor:pointer}
+    .end-actions [data-end-action="replay"]{background:linear-gradient(180deg,#7df195,#55df78);color:#174c2b;box-shadow:0 6px 0 #24a94e}
+    .end-actions [data-end-action="return"]{background:linear-gradient(180deg,#fff,#f3efff);color:#5c4b80;box-shadow:0 6px 0 rgba(103,74,163,.12)}
   </style>
+  <link rel="stylesheet" href="double/premium-theme.css?v=14">
 </head>
-<body>
+<body class="toy-wrapper">
   <iframe id="core" title="DOUBLE" allow="autoplay"></iframe>
 
-  <section id="endOverlay" class="end-overlay" aria-hidden="true">
+  <section id="endOverlay" class="end-overlay toy-end-overlay" aria-hidden="true">
     <div class="end-card">
       <div class="trophy">🏆</div>
       <h1 id="endOverlayTitle">המשחק הסתיים</h1>
@@ -36,7 +37,7 @@
     </div>
   </section>
 
-  <script src="double/success-ting.js?v=13"></script>
+  <script src="double/success-ting.js?v=14"></script>
   <script>
     (()=>{
       'use strict';
@@ -67,10 +68,10 @@
         btn.style.padding='0';
         btn.style.fontSize='30px';
         btn.style.lineHeight='1';
-        btn.style.color='#ff4d5f';
-        btn.style.background='rgba(8,15,32,.82)';
-        btn.style.border='1px solid rgba(255,77,95,.65)';
-        btn.style.boxShadow='0 0 0 3px rgba(255,77,95,.10),0 8px 26px rgba(0,0,0,.45)';
+        btn.style.color='#a84271';
+        btn.style.background='linear-gradient(180deg,#fff,#fff2f7)';
+        btn.style.border='3px solid #fff';
+        btn.style.boxShadow='0 6px 0 rgba(188,75,121,.15),0 13px 24px rgba(128,56,99,.12)';
       }
       styleOuterBackButton(true);
 
