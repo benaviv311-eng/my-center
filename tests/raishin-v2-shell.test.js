@@ -22,8 +22,11 @@ assert.match(html,/\.\/styles\.css/,'preview must reuse local styles');
 assert.match(html,/id="phaserGame"/,'preview must expose Phaser mount point');
 assert.match(html,/inazuma-main-hall-clean\.png/,'preview must reference the approved dojo background');
 assert.match(html,/raika-walk-4dir-8f\.png/,'preview must reference the existing Raika movement sheet');
+for(const modulePath of ['./src/world/WorldModel.js','./src/systems/CameraRig.js','./src/systems/DepthSystem.js'])assert.ok(html.includes(modulePath),`v2 shell missing world-core module ${modulePath}`);
+assert.doesNotMatch(html,/\.\/src\/systems\/CameraFollow\.js/,'v2 preview must not load legacy tiny-camera adapter');
+for(const name of ['WorldModel','CameraRig','DepthSystem'])assert.ok(js.includes(`'${name}'`),`v2 bootstrap must require ${name}`);
 for(const marker of ['Health','Raihatsu','Objective','Jump','Dodge','Interact','minimap']) assert.ok(html.includes(marker),`missing HUD marker: ${marker}`);
 assert.doesNotMatch(`${html}\n${js}`,/image_gen|generated.*sprite|new.*asset/i,'preview must not create or request new visual art');
 
 assert.match(liveHtml,/\.\/movement\.js[\s\S]*\.\/dojo-world\.js[\s\S]*\.\/dojo-effects\.js[\s\S]*\.\/game\.js/,'live route must remain on legacy engine until v2 visual approval');
-console.log('PASS: isolated Raishin movement v2 preview shell');
+console.log('PASS: isolated Raishin world-core v2 preview shell with legacy migration guard');
