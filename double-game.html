@@ -45,7 +45,8 @@
       const params=new URLSearchParams(location.search);
       params.delete('v');
       const qs=params.toString();
-      const coreBase='double-game-core.html?v=1'+(qs?'&'+qs:'');
+      const coreFile=params.get('launch')==='classic'?'double-classic-core.html?v=1':'double-game-core.html?v=1';
+      const coreBase=coreFile+(qs?'&'+qs:'');
       frame.src=coreBase;
 
       const endOverlay=document.getElementById('endOverlay');
