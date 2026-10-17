@@ -2,7 +2,9 @@ const fs = require('fs');
 
 const charactersPath = 'crazy-family/characters.js';
 const canonPath = 'crazy-family/character-canon.js';
+const gamePath = 'crazy-family/game.js';
 const characters = fs.readFileSync(charactersPath, 'utf8');
+const game = fs.readFileSync(gamePath, 'utf8');
 const canonExists = fs.existsSync(canonPath);
 const canon = canonExists ? fs.readFileSync(canonPath, 'utf8') : '';
 
@@ -15,6 +17,8 @@ const checks = [
   ['characters renderer imports canonical definitions', characters.includes("from './character-canon.js'")],
   ['runtime asset override is disabled', !characters.includes('approvedAssetUrl')],
   ['renderer resolves asset only from canon', characters.includes('getCanonicalCharacter(kind)')],
+  ['game no longer imports approved asset constants', !game.includes('APPROVED_LIBI_ASSET') && !game.includes('APPROVED_DAD_ASSET')],
+  ['game cannot pass a character asset override', !game.includes('approvedAssetUrl:')],
 ];
 
 const failed = checks.filter(([, ok]) => !ok);
