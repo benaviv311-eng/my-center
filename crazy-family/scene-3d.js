@@ -51,7 +51,7 @@ export async function createLivingRoom3DScene({canvas,world}){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   const scene=new THREE.Scene();scene.background=new THREE.Color(0x8b7165);
-  const camera=new THREE.PerspectiveCamera(54,16/10,.08,60);camera.position.set(1.4,2.36,3.35);scene.add(camera);
+  const camera=new THREE.PerspectiveCamera(50,16/10,.08,60);camera.position.set(1.4,2.36,3.35);scene.add(camera);
   const visualStage=new THREE.Group();visualStage.name='world3d-stage';scene.add(visualStage);
   scene.add(new THREE.HemisphereLight(0xfff0df,0x5d5362,1.6));
   const key=new THREE.DirectionalLight(0xffc88d,2.1);key.position.set(-4,7,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.near=.1;key.shadow.camera.far=24;scene.add(key);
@@ -67,7 +67,7 @@ export async function createLivingRoom3DScene({canvas,world}){
   const contactEffects=createContactEffects(visualStage,{THREE,screenStage:false});
   const renderPosition=position=>({x:Number(position?.x)||0,y:Number(position?.y)||0,z:Number(position?.z)||0});
   function resize(width,height){const w=Math.max(1,Math.floor(width)),h=Math.max(1,Math.floor(height));camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
-  function applyCameraPose(pose,shake=0,now=0){if(!pose)return camera;const sx=Math.sin(now*.041)*shake*.02,sy=Math.cos(now*.053)*shake*.012;camera.position.set(pose.position.x+sx,pose.position.y+sy,pose.position.z);camera.fov=pose.fov||54;camera.updateProjectionMatrix();camera.lookAt(pose.target.x,pose.target.y,pose.target.z);return camera;}
+  function applyCameraPose(pose,shake=0,now=0){if(!pose)return camera;const sx=Math.sin(now*.041)*shake*.02,sy=Math.cos(now*.053)*shake*.012;camera.position.set(pose.position.x+sx,pose.position.y+sy,pose.position.z);camera.fov=pose.fov||50;camera.updateProjectionMatrix();camera.lookAt(pose.target.x,pose.target.y,pose.target.z);return camera;}
   function setObjectOpacity(id,value){const object=objectsById.get(id)||scene.getObjectByName(id);if(!object)return false;setOpacity(object,value);return true;}
   function applyReactiveTransforms(controller){if(!controller?.transforms)return;for(const[id,t]of Object.entries(controller.transforms)){const object=objectsById.get(id);if(!object)continue;const base=object.userData.baseTransform;if(!base)continue;object.position.set(base.position.x+(t.x||0),base.position.y+(t.y||0),base.position.z+(t.z||0));object.rotation.set(base.rotation.x,base.rotation.y+(t.rotY||0),base.rotation.z+(t.rotZ||0));object.scale.set(base.scale.x,base.scale.y*(t.scaleY??1),base.scale.z);}}
   return {scene,renderer,camera,visualStage,objectsById,cinematicSet:null,contactEffects,visualMode:'world3d',visualEnvelope:null,proceduralGroup:visualStage,screenStage:false,renderPosition,projectWorld:renderPosition,
