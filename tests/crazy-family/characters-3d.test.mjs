@@ -43,6 +43,12 @@ test('native actor transform uses world position and Y rotation', () => {
   assert.match(source, /lastHeading/);
 });
 
+test('native actor publishes canonical height and landing returns to a fixed torso baseline', () => {
+  assert.match(source, /root\.userData\.height\s*=\s*canon\.height/);
+  assert.match(source, /torsoBaseY/);
+  assert.doesNotMatch(source, /parts\.torso\.position\.y\s*\+=/);
+});
+
 test('unknown 3d character kind is rejected', () => {
   assert.throws(() => getCharacter3DCanon('other'), /Unknown 3D character kind/);
 });
