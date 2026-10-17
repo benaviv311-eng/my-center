@@ -38,6 +38,7 @@ jobs:
           - raishin-v2-camera-rig.test.js
           - raishin-v2-collision-primitives.test.js
           - raishin-v2-depth-system.test.js
+          - raishin-v2-open-world-scene.test.js
           - raishin-v2-player-controller.test.js
           - raishin-v2-player-view.test.js
           - raishin-v2-professional-movement.test.js
