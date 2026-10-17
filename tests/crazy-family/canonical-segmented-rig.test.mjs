@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import test from 'node:test';
@@ -7,9 +8,13 @@ import test from 'node:test';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '../..');
 const profilePath = path.join(repoRoot, 'crazy-family/character-rig-profile.js');
+const rigPath = path.join(repoRoot, 'crazy-family/character-rig.js');
 const moduleExists = existsSync(profilePath);
+const rigExists = existsSync(rigPath);
 let rigProfile = null;
+let rigModule = null;
 if (moduleExists) rigProfile = await import(pathToFileURL(profilePath));
+if (rigExists) rigModule = await import(pathToFileURL(rigPath));
 
 const expectedPartNames = [
   'torso','head',
@@ -66,5 +71,59 @@ if (moduleExists) {
       assert.ok(dad.motion[key], `dad motion.${key} missing`);
     }
     assert.throws(() => rigProfile.getCharacterRigProfile('unknown'), /Unknown Crazy Family rig profile/);
+  });
+}
+
+test('segmented rig implementation module exists', () => {
+  assert.equal(rigExists, true, 'character-rig.js must exist before extraction tests can pass');
+});
+
+if (rigExists) {
+  test('cropRectToPixels maps normalized crops inside one frame of the 5x2 canonical sheet', () => {
+    const rect = rigModule.cropRectToPixels(
+      {x:.25,y:.20,width:.50,height:.40},
+      0,
+      1000,
+      400,
+      5,
+      2,
+    );
+    assert.deepEqual(rect, {x:50,y:40,width:100,height:80});
+
+    const secondRowLastFrame = rigModule.cropRectToPixels(
+      {x:0,y:0,width:1,height:1},
+      9,
+      1000,
+      400,
+      5,
+      2,
+    );
+    assert.deepEqual(secondRowLastFrame, {x:800,y:200,width:200,height:200});
+  });
+
+  test('segmented rig factory fails closed when the canonical source image is unavailable', async () => {
+    await assert.rejects(
+      rigModule.createCanonicalSegmentedRig({
+        kind: 'libi',
+        canonical: {asset:'assets/libi-sprites-v025.png',version:'v025',width:.9,height:1.34,spriteColumns:5,spriteRows:2},
+        sourceImage: {naturalWidth:0,naturalHeight:0},
+        documentRef: {},
+        THREERef: {},
+      }),
+      /Crazy Family segmented rig: canonical image unavailable/,
+    );
+  });
+
+  test('rig implementation is canon-only and keeps canvas extraction out of pose updates', async () => {
+    const source = await readFile(rigPath, 'utf8');
+    assert.match(source, /canonical\.asset/);
+    assert.match(source, /canonical\.version/);
+    assert.match(source, /canonical-segmented-rig/);
+    assert.doesNotMatch(source, /libi-sprites-v0(?!25)|dad-sprites-v0(?!28)/);
+    const poseStart = source.indexOf('function applyPoseToRig');
+    if (poseStart >= 0) {
+      const poseSection = source.slice(poseStart, source.indexOf('\n}', poseStart) + 2);
+      assert.doesNotMatch(poseSection, /drawImage|createElement\(['"]canvas['"]\)/);
+    }
   });
 }
