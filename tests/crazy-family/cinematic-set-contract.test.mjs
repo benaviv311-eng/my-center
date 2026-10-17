@@ -12,9 +12,9 @@ function blockerSnapshot(world){
 }
 
 test('cinematic rewrite keeps canonical Libi and Dad assets',async()=>{
-  const source=await fs.readFile(new URL('../../crazy-family/characters.js',import.meta.url),'utf8');
-  assert.match(source,/APPROVED_LIBI_ASSET\s*=\s*'assets\/libi-sprites-v025\.png'/);
-  assert.match(source,/APPROVED_DAD_ASSET\s*=\s*'assets\/crazy-family\/dad-sprites-v028\.png'/);
+  const source=await fs.readFile(new URL('../../crazy-family/character-canon.js',import.meta.url),'utf8');
+  assert.match(source,/asset:\s*'assets\/libi-sprites-v025\.png'/);
+  assert.match(source,/asset:\s*'assets\/crazy-family\/dad-sprites-v028\.png'/);
 });
 
 test('cinematic rewrite keeps fixed blocker geometry unchanged',()=>{
