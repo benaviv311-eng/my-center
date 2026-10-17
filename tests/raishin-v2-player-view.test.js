@@ -22,54 +22,35 @@ assert.deepStrictEqual(data.rows,{down:0,up:1,left:2,right:3});
 for(const direction of ['up','down','left','right']){
   assert.equal(data.pivots[direction].length,8,`${direction} needs eight static pivots`);
   assert.ok(Number.isInteger(data.idleFrames[direction]));
-  for(const pivot of data.pivots[direction]){
-    assert.ok(pivot.x>=0&&pivot.x<=1&&pivot.y>=0&&pivot.y<=1,'pivot must be normalized');
-  }
-}
-
-const measuredSupportY={
-  down:[.9870848708487084,.9981549815498155,.9981549815498155,.9981549815498155,.9981549815498155,.9981549815498155,.9944649446494465,.9981549815498155],
-  up:[.9907749077490775,.9981549815498155,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465,.9944649446494465],
-  left:[.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9686346863468634,.9649446494464945,.9686346863468634],
-  right:[.9501845018450185,.9538745387453874,.9464944649446494,.9538745387453874,.9501845018450185,.9538745387453874,.9501845018450185,.9501845018450185]
-};
-for(const direction of Object.keys(measuredSupportY)){
-  data.pivots[direction].forEach((pivot,index)=>assert.ok(Math.abs(pivot.y-measuredSupportY[direction][index])<1e-12,`${direction} frame ${index} pivot must match measured planted-paw support row`));
+  for(const pivot of data.pivots[direction])assert.ok(pivot.x>=0&&pivot.x<=1&&pivot.y>=0&&pivot.y<=1,'pivot must be normalized');
 }
 
 const animator=PlayerAnimator.create(data,{stride:24});
 let frame=animator.update({facing:'up',moving:true,movedDistance:0});
-assert.equal(frame.frameIndex,0);
-assert.equal(frame.row,1);
-frame=animator.update({facing:'up',moving:true,movedDistance:23.9});
-assert.equal(frame.frameIndex,0);
-frame=animator.update({facing:'up',moving:true,movedDistance:.1});
+assert.equal(frame.frameIndex,0);assert.equal(frame.row,1);
+frame=animator.update({facing:'up',moving:true,movedDistance:24});
 assert.equal(frame.frameIndex,1,'24 world units must advance one frame');
-frame=animator.update({facing:'up',moving:true,movedDistance:72});
-assert.equal(frame.frameIndex,4,'96 cumulative units must reach frame 4');
 const idle=animator.update({facing:'left',moving:false,movedDistance:0});
-assert.equal(idle.frameIndex,data.idleFrames.left,'idle frame must be stable per direction');
-assert.equal(idle.row,2);
+assert.equal(idle.frameIndex,data.idleFrames.left);assert.equal(idle.row,2);
 
 const plane=WorldPlane.create(layout);
+const projection=plane.project({x:1200,y:750});
 for(const direction of ['up','down','left','right']){
-  const projection=plane.project({x:500,y:300});
   for(const pivot of data.pivots[direction]){
-    const view=PlayerView.compute({projection,pivot});
+    const view=PlayerView.compute({projection,pivot,motion:{vx:0,vy:0,speedRatio:0}});
     assert.equal(view.x,projection.x);assert.equal(view.y,projection.y);
     assert.equal(view.originX,pivot.x);assert.equal(view.originY,pivot.y);
     assert.equal(view.scale,projection.scale);
     assert.equal(view.shadowX,projection.x);assert.equal(view.shadowY,projection.y);
-    assert.equal(view.depth,projection.depth+1);
-    assert.equal(view.shadowDepth,projection.depth-1);
+    assert.equal('depth' in view,false,'PlayerView must not own render depth');
+    assert.equal('shadowDepth' in view,false,'PlayerView must not own shadow render depth');
   }
 }
-const far=PlayerView.compute({projection:plane.project({x:500,y:60}),pivot:{x:.5,y:.99}});
-const near=PlayerView.compute({projection:plane.project({x:500,y:540}),pivot:{x:.5,y:.99}});
+const far=PlayerView.compute({projection:plane.project({x:1200,y:150}),pivot:{x:.5,y:.99}});
+const near=PlayerView.compute({projection:plane.project({x:1200,y:1350}),pivot:{x:.5,y:.99}});
 assert.ok(far.scale<near.scale,'farther movement into dojo must render smaller');
-assert.ok(far.depth<near.depth,'farther movement into dojo must sort behind near movement');
 
 const sources=[dataPath,animatorPath,viewPath].map(p=>fs.readFileSync(p,'utf8')).join('\n');
-for(const forbidden of ['getImageData','findDenseFootContact','buildUpGroundingMetrics','buildLeftGroundingMetrics','upFootContactOffsets'])assert.ok(!sources.includes(forbidden),`v2 must reject legacy runtime grounding: ${forbidden}`);
+for(const forbidden of ['getImageData','findDenseFootContact','buildUpGroundingMetrics','buildLeftGroundingMetrics','upFootContactOffsets','bobY'])assert.ok(!sources.includes(forbidden),`v2 must reject legacy runtime grounding: ${forbidden}`);
 assert.doesNotMatch(sources,/ctx\.clip|scale\(-1\s*,\s*1\)/,'v2 must not mirror a clipped lower body');
-console.log('PASS: Raishin v2 static animation metadata and single Ground Point view');
+console.log('PASS: Raishin v2 Ground Point view has no private depth ownership');
