@@ -1,102 +1,117 @@
-# Crazy Family — True 3D Characters Design
+# Crazy Family — Fixed Overhead Room Camera + True 3D Characters
 
-Date: 2026-10-16
-Status: Approved direction, written spec for review
+Date: 2026-10-17
+Status: Design approved in chat; written spec for review
 Target slice: v0.47
 
 ## 1. Goal
 
-Remove the flat-character look from `crazy-family.html` by replacing the current projected sprite characters with true 3D character bodies and a real perspective third-person camera, while preserving the gameplay systems that already work.
+Turn the `?renderer=3d` version of `crazy-family.html` into an actual playable 3D game view rather than a cinematic card presentation.
 
-The acceptance test is visual and structural: when Libi or Dad turns, the player must be able to read front / side / back depth from the model itself. Neither character may be a `PlaneGeometry`, billboard, camera-facing card, or screen-projected sprite in the true-3D path.
+The two defining requirements are:
+
+1. **Camera A — fixed overhead 3/4 room view:** the player sees almost the entire living room at once from a high, stable perspective camera. The camera does not chase Libi, does not zoom for sprint/chase/interaction, and does not automatically change angle during gameplay.
+2. **True volumetric characters:** Libi and Dad are real 3D mesh hierarchies with readable front/side/back volume. They may not be sprite cards, billboards, layered planes, or camera-facing stacks.
+
+Success means the game feels like a small open playable world inside the living room: the room stays spatially readable while Libi moves freely through it.
 
 ## 2. Current state and exact problem
 
-The current gameplay logic already tracks Libi and Dad in logical world coordinates (`x/y/z`) and the existing movement, Dad AI, attacks, audio, stamina, interactions, and collision systems depend on those logical positions.
+The current world3d path already has a real `THREE.PerspectiveCamera`, world-space room geometry, collisions, wood/rug ground treatment, lighting and gameplay movement.
 
-The visible character path is still flat:
+The remaining character problem is structural:
 
-- `crazy-family/characters.js` creates each actor with `THREE.PlaneGeometry` and a sprite-sheet texture.
-- `crazy-family/game.js` converts logical world positions through `sceneHandle.projectWorld(...)` before drawing actors.
-- `crazy-family/scene.js` uses an `OrthographicCamera` for the cinematic screen-stage.
-- `crazy-family/cinematic-projection.js` performs fake depth scaling and floor projection for that 2D presentation.
+- `crazy-family/characters.js` still builds Libi and Dad from `THREE.PlaneGeometry`.
+- In world3d it creates seven sprite planes layered through a small Z depth, plus an invisible box proxy.
+- The visible stack is still rotated toward the camera to keep the canonical sprite readable.
+- Therefore the result is 2.5D, not a true 3D actor.
 
-That architecture is the reason the characters appear pasted into the room even though their gameplay state is already spatial.
+The current camera is also still a player-relative camera controller. Even after recent stabilization, its architecture is based on following a player target and supporting orbit/collision. That is not the requested room-overview presentation.
 
-## 3. Scope
+## 3. Product direction
+
+The world3d mode should visually read closer to a **high-angle room exploration game** than a third-person action camera.
+
+The room is the stable frame. Libi moves inside the frame.
+
+The camera relationship is therefore:
+
+`room -> camera`
+
+not:
+
+`Libi -> camera`
+
+The player remains fully controllable in world space. Only the visual framing changes.
+
+## 4. Scope
 
 ### In scope for v0.47
 
-- Add a true-3D render path behind an explicit renderer switch.
-- Libi becomes a true 3D mesh hierarchy with visible depth from every viewing direction.
-- Dad becomes a true 3D mesh hierarchy with visible depth from every viewing direction.
-- Add a perspective third-person camera that follows Libi in world space.
-- Feed character visuals directly from logical world positions; no cinematic projection for actors in the true-3D path.
-- Preserve all current gameplay state and systems: movement, run, crouch, jump, stamina, Dad AI, song timing, Dad attacks, spatial audio, damage, inventory, interactions, scenario spawn logic, and retained v0.46 audio behavior.
-- Preserve the existing v0.46 screen-stage path as a safe fallback.
-- Add automated regression tests proving that the 3D path does not instantiate sprite planes and does not call the cinematic character projection path.
+- Keep `?renderer=3d` as the acceptance path.
+- Replace the current layered sprite stack with real volumetric Libi and Dad meshes.
+- Preserve canonical identity cues from the locked character canon while moving to procedural 3D proxies.
+- Add a fixed high 3/4 perspective camera that frames nearly the full living room.
+- Camera position, rotation and target remain stable during ordinary gameplay.
+- Camera does not react to sprint, Dad chase state, Dad song state, attacks, interactions or Libi movement.
+- Camera may recompute framing only on viewport resize so the living room remains visible on different aspect ratios.
+- Keep player movement, jump, crouch, collision, Dad AI, songs, attacks, stamina, damage, inventory, interactions, scenario logic and audio authoritative and unchanged.
+- Keep cinematic mode available as fallback during acceptance.
+- Preserve the Character Lock for the current approved sprite assets; the fallback sprites remain canonical and must not be altered by this work.
 
 ### Out of scope for this slice
 
-- Rebuilding the full living room as final native 3D geometry.
-- Re-authoring every furniture asset.
-- Rewriting gameplay physics or Dad AI.
-- Final production-quality sculpted character art.
-- Facial animation, lip sync, fingers, cloth simulation, or inverse kinematics.
-- Removing the current cinematic renderer before the new path is accepted.
+- Final sculpted/rigged production GLB characters.
+- Facial animation, lip sync, fingers, cloth physics or IK.
+- Re-authoring the entire living room as production-quality furniture art.
+- Rewriting movement physics or Dad AI.
+- Removing cinematic mode.
+- Manual orbit/mouse-look in the overhead mode.
 
-## 4. Character art strategy
+## 5. Character canon and 3D identity
 
-v0.47 uses authored procedural low-poly 3D proxy characters built from real volumetric Three.js geometry. They are not placeholder cards.
+The locked canon remains the identity source:
 
-The proxy must preserve the approved identity cues strongly enough that the player can immediately distinguish Libi and Dad:
+- Libi fallback asset: `assets/libi-sprites-v025.png`
+- Dad fallback asset: `assets/crazy-family/dad-sprites-v028.png`
 
-### Libi
+Those files remain untouched.
 
-- child proportions and smaller world scale,
-- brown hair with two pigtail masses,
+The new 3D actors are procedural volumetric proxies that reproduce the main identity cues rather than texture-projecting the sprite onto planes.
+
+### Libi identity cues
+
+- child proportions,
+- smaller overall scale than Dad,
+- brown hair,
+- two pigtail masses,
 - pink flower accent,
 - coral/pink top,
 - teal/turquoise overalls,
 - striped sock cue,
 - pink high-top shoe cue.
 
-### Dad
+### Dad identity cues
 
 - visibly taller and broader than Libi,
 - dark-brown tousled hair,
-- stubble/beard cue,
+- beard/stubble cue,
 - teal/blue-green overshirt,
 - light undershirt,
 - pajama-pants silhouette,
 - brown slipper cue.
 
-The proxy is a technical and visual 3D milestone, not the final locked sculpt. The current approved sprite art remains available as fallback and must not be deleted.
+The proxy is a technical and gameplay milestone. Its interface must remain compatible with later GLB/GLTF replacement without changing gameplay code.
 
-The character interface must be asset-agnostic so later GLB/GLTF rigged models can replace the procedural proxies without changing gameplay code.
+## 6. True 3D character module
 
-## 5. Renderer selection and safety
-
-Introduce a renderer mode selector with two modes:
-
-- `cinematic` — current v0.46 screen-stage behavior.
-- `native3d` — new true-3D character/camera path.
-
-During development and acceptance, `native3d` is enabled with `?renderer=3d`. The default route remains the stable current renderer until the new path passes tests and visual approval.
-
-If the new path cannot initialize WebGL or throws during startup, the bootstrap layer must fall back to the current cinematic renderer rather than leaving a blank game.
-
-## 6. New 3D character interface
-
-Create a new focused module, `crazy-family/characters-3d.js`.
-
-It exports:
+Create or introduce a dedicated volumetric character path, preferably `crazy-family/characters-3d.js`, with this interface:
 
 ```js
 createCharacter3D({ scene, kind })
 ```
 
-The returned handle exposes:
+Returned handle:
 
 ```js
 {
@@ -108,174 +123,197 @@ The returned handle exposes:
 }
 ```
 
-`root` is a real `THREE.Group` containing volumetric meshes. No `PlaneGeometry` is allowed anywhere in the actor hierarchy.
+Requirements:
 
-`setTransform(...)` consumes logical world coordinates directly. It must not consume `projectWorldToCinematicStage(...)` output.
+- `root` is a `THREE.Group`.
+- Every visible body part uses volumetric geometry such as box, capsule, sphere, cylinder or rounded equivalents.
+- No visible descendant may use `THREE.PlaneGeometry`.
+- No billboard behavior.
+- No camera-facing rotation.
+- No negative-X sprite flip for facing.
+- Logical world `x/y/z` is written directly to `root.position`.
+- Facing is a Y-axis world rotation.
 
-The module owns visual animation only. It does not own movement, collision, Dad behavior, damage, inventory, or audio.
+The module owns visual construction and animation only. It does not own gameplay rules.
 
-## 7. Procedural character construction
+## 7. Character hierarchy and animation
 
-The first volumetric models are assembled from a small number of Three.js primitives with shared materials and named body groups:
+Each actor should expose named articulated groups for at least:
 
 - torso,
 - head,
 - hair,
 - upper/lower arms,
 - upper/lower legs,
-- shoes,
+- shoes/feet,
 - character-specific clothing/accent meshes.
 
-Limbs are parented so simple procedural animation can rotate joints without changing gameplay positions.
+Minimum readable states:
 
-Required states:
+- idle,
+- walk/run,
+- jump/airborne,
+- landing,
+- crouch,
+- Dad chase,
+- Dad sing,
+- Dad pant,
+- Dad yawn,
+- Dad sneeze.
 
-- `idle` / `ground`,
-- `walk`,
-- `run`,
-- `jump`,
-- `crouch`,
-- Dad `chase`,
-- Dad `sing`,
-- Dad `pant`,
-- Dad `yawn`,
-- Dad `sneeze`.
+Animation remains procedural and lightweight. Opposing arm/leg swing, body bob, crouch compression, airborne pose and Dad song sway are enough for this slice.
 
-Animation may be simple but must read as volumetric motion: opposing arm/leg swing while moving, body bob, jump pose, crouch compression, and Dad song sway.
+## 8. Fixed overhead 3/4 camera
 
-## 8. Native 3D scene path
+The world3d camera is a `THREE.PerspectiveCamera` positioned high above one corner/side of the living room and aimed toward a stable room target near the center of the playable floor.
 
-Create `crazy-family/scene-3d.js` as the native scene owner.
+### Required behavior
 
-Responsibilities:
+- High 3/4 angle: clearly above the characters, not eye-level third person.
+- Shows almost all of the living room simultaneously.
+- Stable world-space position and target during gameplay.
+- Stable FOV during gameplay.
+- No automatic zoom based on speed.
+- No chase pullback.
+- No interaction close-up.
+- No automatic yaw/pitch recentering.
+- No pointer-drag orbit in this mode.
+- Libi can move from one side of the room to another without the camera following her.
 
-- create `THREE.WebGLRenderer`,
-- create a `THREE.PerspectiveCamera`,
-- create native world-space lighting,
-- provide a stable floor and simple world-space reference geometry sufficient to ground the characters,
-- expose scene/camera/renderer handles,
-- resize correctly,
-- apply camera poses,
-- render and dispose resources.
+### Responsive framing
 
-The existing cinematic room may remain visible only if it can be used as a non-authoritative background without re-flattening actor coordinates. The native path must not project actors into that image plane.
+A fixed camera may still need deterministic resize adaptation so the room is not cropped badly on a narrow/mobile viewport.
 
-For v0.47, a simplified floor / room envelope is acceptable if needed to prove true 3D characters and camera behavior. The goal of this slice is to remove flat actors, not to finish the entire native 3D house.
+Resize adaptation may change **only one controlled framing parameter** (for example distance or FOV) from a predefined range based on viewport aspect ratio. It must not depend on gameplay state or character position.
 
-## 9. Third-person camera
+The visual result should still feel like one fixed room camera.
 
-Add a native camera controller interface or native branch to the existing controller.
+## 9. Camera collision policy
 
-The target behavior:
+Because the overhead camera is room-anchored rather than player-following, normal player-relative camera collision is unnecessary.
 
-- perspective camera,
-- follows behind and above Libi,
-- uses Libi world position as the anchor,
-- looks slightly ahead of Libi rather than directly at her feet,
-- smooths position and target movement,
-- chase mode pulls back modestly when Dad is close or singing,
-- no manual mouse-look in this slice.
+The camera should be placed outside/above furniture occluders by design. If a wall would block the room, that wall may use the existing occlusion/fade mechanism or be omitted from the rendered envelope for this camera.
 
-The camera must make character depth obvious. It may not be orthographic in `native3d` mode.
+Do not let furniture collision move the camera during play. The frame itself must remain stable.
 
-## 10. Game-loop integration
+## 10. Native scene integration
 
-`crazy-family/game.js` remains the gameplay coordinator.
+The existing `crazy-family/scene-3d.js` remains the native scene owner.
 
-The new renderer path changes only the visual integration point:
+It keeps:
 
-### Current cinematic actor flow
+- `THREE.WebGLRenderer`,
+- `THREE.PerspectiveCamera`,
+- wood floor and rug treatment,
+- native lights and shadows,
+- room/furniture geometry,
+- resize/render/dispose lifecycle.
 
-`logical position -> projectWorld(...) -> sprite PlaneGeometry`
+The character integration changes from:
 
-### New native3d actor flow
+`logical position -> layered canonical sprite planes -> face camera`
 
-`logical position -> createCharacter3D.setTransform(...) -> volumetric meshes`
+into:
 
-The current movement state, Dad frame, song state, attack state, interaction resolution, stamina, audio, and retained-system calls stay authoritative.
+`logical position -> volumetric actor root -> world rotation`
 
-The true-3D path must not duplicate or fork gameplay rules.
+No cinematic projection is allowed in the native actor path.
 
-## 11. Facing and animation rules
+## 11. Game-loop integration
 
-Character facing is world-space rotation around Y, not negative X scale on a sprite.
+The existing gameplay loop remains authoritative.
 
-For Libi:
+World3d may either use the existing `game.js` coordinator with a 3D character adapter, or a focused `game-3d.js` adapter that imports and reuses the same gameplay systems. It must not duplicate movement, Dad logic, attack cadence, stamina or interaction rules.
 
-- derive facing direction from horizontal velocity when moving,
-- retain last facing while idle,
-- rotate smoothly enough to avoid instant 180-degree snapping.
+Character state strings are mapped into the visual animator, while logical positions and collisions remain unchanged.
 
-For Dad:
+The fixed camera is applied independently from Libi position.
 
-- use the direction already provided by the Dad controller / target relation,
-- heavier turn smoothing than Libi.
+## 12. Facing and movement readability
 
-Animation speed follows logical movement speed so footsteps and body motion remain visually coherent.
+Libi:
 
-## 12. Lighting and grounding
+- movement direction determines Y rotation while moving,
+- idle keeps the last finite facing,
+- turns are smoothed enough to avoid instant snapping,
+- front/side/back silhouette must remain readable from the overhead camera.
 
-Both characters must share the same 3D lighting environment.
+Dad:
 
-Minimum lighting:
+- uses his controller/target direction for facing,
+- rotates around Y,
+- uses slightly heavier turn smoothing,
+- remains clearly larger than Libi.
+
+## 13. Lighting and grounding
+
+Both characters share the room's existing 3D lighting.
+
+Minimum requirements:
 
 - hemisphere/ambient fill,
 - warm directional key,
-- soft shadows enabled.
+- soft character shadows,
+- floor receives shadows.
 
-Both actor roots cast shadows. The floor receives shadows.
+Shadows and changing surface lighting are mandatory depth cues for the volumetric actors.
 
-This is mandatory because contact shadow and changing surface shading are primary cues that the characters are no longer flat cards.
+## 14. Backward compatibility and Character Lock
 
-## 13. Backward compatibility
+This work must not modify:
 
-The following must remain unchanged in behavior in cinematic mode:
+- `assets/libi-sprites-v025.png`,
+- `assets/crazy-family/dad-sprites-v028.png`,
+- their Character Lock hashes unless the user explicitly requests `Update canonical character`.
 
-- v0.46 Libi contextual audio mapping,
-- Dad song and pre-song behavior,
-- Dad attack cadence and damage,
+Cinematic mode must retain current behavior for:
+
+- Libi contextual audio,
+- Dad song/pre-song behavior,
+- Dad attacks/damage,
 - stamina,
 - controls,
-- current scenario spawning,
-- inventory and headphones goal,
+- scenario spawning,
+- inventory/headphones goal,
 - interaction prompts,
 - mobile controls.
 
-The existing `characters.js`, `cinematic-projection.js`, and cinematic scene code remain until native3d is accepted.
+## 15. Automated tests
 
-## 14. Tests
+Required assertions:
 
-Add regression coverage for the new path.
+1. `createCharacter3D` returns a `THREE.Group`.
+2. No visible descendant geometry is `PlaneGeometry`.
+3. Libi and Dad are differently proportioned, with Dad larger.
+4. `setTransform` writes world `x/y/z` directly.
+5. Facing changes `rotation.y` rather than sprite scale.
+6. Zero-speed idle preserves a finite last facing.
+7. World3d uses a `PerspectiveCamera`.
+8. Overhead camera position/target/FOV do not change when Libi moves, sprints, Dad chases/sings, or an interaction becomes active.
+9. Resize adaptation depends only on viewport dimensions/aspect ratio.
+10. Native actor code contains no `faceCamera`/billboard dependency.
+11. Native actor code contains no cinematic projection dependency.
+12. Character Lock tests continue to pass.
+13. Existing movement/Dad/attack/audio regressions continue to pass.
+14. Browser smoke verifies both volumetric actors render and the fixed room view survives movement around furniture.
 
-Required automated assertions:
+## 16. Browser acceptance
 
-1. `createCharacter3D` returns a `THREE.Group` with volumetric child geometry.
-2. No descendant geometry type is `PlaneGeometry`.
-3. Libi and Dad have different configured heights/scales, with Dad larger.
-4. `setTransform` writes logical `x/y/z` directly to the actor root.
-5. Facing changes `rotation.y`, not signed sprite scale.
-6. Native scene camera is `PerspectiveCamera`.
-7. `?renderer=3d` selects native3d while the default remains cinematic during acceptance.
-8. Native actor updates do not call `projectWorldToCinematicStage`.
-9. Existing v0.46 audio tests continue to pass.
-10. Existing movement / Dad / attack tests continue to pass.
+The milestone is accepted when `crazy-family.html?renderer=3d` demonstrates all of the following:
 
-## 15. Acceptance checklist
+- the camera starts high above the living room at a 3/4 angle,
+- nearly the whole living room is visible in one stable frame,
+- walking Libi across the room does not move or re-angle the camera,
+- sprint/chase/song/interaction do not change the camera framing,
+- Libi is visibly volumetric from the fixed view,
+- turning Libi changes actual 3D orientation and reveals side/back form,
+- Dad is also volumetric and remains larger,
+- Libi can walk, run, jump and crouch with the same gameplay collisions,
+- Dad can chase/sing/attack with existing behavior,
+- both characters cast contact shadows onto the room floor,
+- no sprite-plane stack is visible in native mode,
+- the bare `crazy-family.html` cinematic fallback still works.
 
-The milestone is accepted when all of the following are true:
+## 17. Follow-up
 
-- opening the game with `?renderer=3d` shows Libi and Dad as actual volumetric characters,
-- rotating/moving around them visibly reveals side and back depth,
-- the camera is perspective and follows Libi in third person,
-- Libi can walk, run, jump, and crouch without reverting to screen projection,
-- Dad can chase and sing while remaining volumetric,
-- existing audio and gameplay still work,
-- shadows visibly ground both characters,
-- current stable renderer still works without the query flag,
-- automated regression suite passes.
-
-## 16. Follow-up after v0.47
-
-After this slice is visually approved, the next milestone is to replace the cinematic environment layers with native room geometry and furniture while keeping the same logical world and 3D character interfaces.
-
-A later character-art milestone can swap the procedural models for final rigged GLB/GLTF assets without changing gameplay code.
+After this acceptance slice, the next visual milestone can improve the production quality of the room and replace procedural character proxies with final rigged GLB/GLTF models while preserving the same world coordinates, camera contract and gameplay systems.

@@ -1,4 +1,4 @@
-name: Crazy Family world3d Milestone A
+name: Crazy Family overhead true3d acceptance
 
 on:
   push:
@@ -40,12 +40,12 @@ jobs:
           exit 1
       - name: Existing cinematic browser smoke
         run: node tests/crazy-family/browser-smoke.mjs
-      - name: Milestone A world3d browser smoke
+      - name: Fixed overhead true3d browser smoke
         run: node tests/crazy-family/browser-world3d-smoke.mjs
-      - name: Upload world3d screenshot
+      - name: Upload overhead true3d screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: crazy-family-world3d-milestone-a
-          path: artifacts/crazy-family-world3d-milestone-a.png
+          name: crazy-family-overhead-true3d
+          path: artifacts/crazy-family-overhead-true3d.png
           if-no-files-found: ignore
