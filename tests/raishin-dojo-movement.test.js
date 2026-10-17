@@ -8,4 +8,18 @@ const capped=movement.smoothVelocity({x:240,y:0},{x:1,y:0},1,500,650,245);assert
 const largeDt=movement.smoothVelocity({x:0,y:0},{x:1,y:0},1,500,650,245);assert.ok(largeDt.x<=25.001,'large dt must be clamped');
 const slowing=movement.smoothVelocity({x:100,y:0},{x:0,y:0},0.05,500,400,245);assert.ok(slowing.x<100&&slowing.x>0);
 assert.strictEqual(movement.frameAt(0.35,true,8,10),3);assert.ok(movement.scaleForDepth(340,340,830)<movement.scaleForDepth(830,340,830));
-console.log('PASS: smooth dojo movement');
+
+const professional=require(path.join(__dirname,'..','raishin-legacy','professional-movement-live.js'));
+professional.install(movement);
+assert.strictEqual(typeof movement.chooseFacing,'function','professional live movement must expose chooseFacing');
+assert.strictEqual(movement.chooseFacing({x:.68,y:.73},'right',.08),'right','facing hysteresis must prevent diagonal jitter');
+assert.strictEqual(movement.chooseFacing({x:.3,y:.9},'right',.08),'down','clear vertical intent must still change facing');
+const reversing=movement.smoothVelocity({x:160,y:0},{x:-1,y:0},.05,900,1100,245);
+assert.ok(reversing.x>0&&reversing.x<100,'opposite input must brake before reversing direction');
+assert.strictEqual(reversing.reversing,true,'reversal state must be exposed');
+const diagonal=movement.smoothVelocity({x:0,y:0},{x:1,y:1},.05,900,1100,245);
+assert.ok(Math.hypot(diagonal.x,diagonal.y)<=50.001,'diagonal acceleration must be normalized');
+let live={x:0,y:0};for(let i=0;i<30;i+=1)live=movement.smoothVelocity(live,{x:1,y:0},.05,900,1100,245);
+assert.ok(live.x<=210.001,'live movement must use the approved v2 speed cap');
+assert.strictEqual(professional.install(movement),movement,'install must be idempotent');
+console.log('PASS: smooth dojo movement + professional live controller');
