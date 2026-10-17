@@ -11,6 +11,7 @@
   const VERSUS_KEYS_KEY='double-versus-keys-v1';
   const LANG={british:'en-GB',american:'en-US',arcade:'en-US',russian:'ru-RU',italian:'it-IT',japanese:'ja-JP'};
   const SYMBOL_SELECTOR='.sym,.symbol';
+  const PRIORITY_KINDS=new Set(['level','boss','bossWin','win','finish','record']);
   let roundStart=now(),lastFingerprint='',audioCtx=null,adaptiveSpeaking=false,legacySpeechMuteUntil=0,lastFeedbackKey='';
 
   function now(){return typeof performance!=='undefined'&&performance.now?performance.now():Date.now()}
@@ -43,11 +44,15 @@
     try{const raw=JSON.parse(get(VERSUS_KEYS_KEY,'{}'))||{};return {p1:{...def.p1,...raw.p1},p2:{...def.p2,...raw.p2}}}catch(_){return def}
   }
   function nativeAudioOwner(){return !!document.querySelector('script[src*="double/game.js"],script[src*="daily-challenge-game.js"]')}
+  function priorityMoment(){
+    const callout=document.getElementById('announcerCallout');
+    return !!((callout?.textContent||'').trim()&&PRIORITY_KINDS.has(callout?.dataset?.kind||''));
+  }
 
   function ensureStyle(){
     if(document.getElementById('double-adaptive-encouragement-style'))return;
     const style=document.createElement('style');style.id='double-adaptive-encouragement-style';
-    style.textContent=`#encouragement:not(.adaptive-owned){display:none!important}#adaptiveEncouragement{position:fixed;left:50%;top:27%;transform:translate(-50%,-50%);z-index:40;pointer-events:none;text-align:center;min-width:min(92vw,560px);font-weight:1000;opacity:0}#adaptiveEncouragement.show{animation:adaptivePop .86s cubic-bezier(.18,.9,.2,1)}#adaptiveEncouragement .adaptive-main{display:block;font-size:clamp(34px,10vw,88px);line-height:.95;background:linear-gradient(90deg,#fff7a8,#fff,#ffd95c,#fff);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 5px 12px #0007)}#adaptiveEncouragement .adaptive-meta{display:block;margin-top:8px;font-size:clamp(14px,2.6vw,21px);color:#fff;filter:drop-shadow(0 2px 7px #0009)}#adaptiveEncouragement.level-5 .adaptive-main{font-size:clamp(44px,13vw,108px)}#adaptiveEncouragement.new-best .adaptive-meta{color:#fff1a8}@keyframes adaptivePop{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}74%{opacity:1;transform:translate(-50%,-58%) scale(1)}100%{opacity:0;transform:translate(-50%,-72%) scale(.9)}}.adaptive-reaction-spark{position:fixed;z-index:39;pointer-events:none;left:50%;top:28%;font-size:20px;animation:adaptiveSpark .72s ease-out forwards}@keyframes adaptiveSpark{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}16%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--rx)),calc(-50% + var(--ry))) scale(1.35) rotate(190deg)}}@media(prefers-reduced-motion:reduce){#adaptiveEncouragement.show{animation-duration:.01ms!important}.adaptive-reaction-spark{display:none!important}}`;
+    style.textContent=`#encouragement:not(.adaptive-owned){display:none!important}#announcerCallout[data-kind="versusSuccess"],#announcerCallout[data-kind="combo"],#announcerCallout[data-kind="gold"]{display:none!important}#adaptiveEncouragement{position:fixed;left:50%;top:27%;transform:translate(-50%,-50%);z-index:40;pointer-events:none;text-align:center;min-width:min(92vw,560px);font-weight:1000;opacity:0}#adaptiveEncouragement.show{animation:adaptivePop .86s cubic-bezier(.18,.9,.2,1)}#adaptiveEncouragement .adaptive-main{display:block;font-size:clamp(34px,10vw,88px);line-height:.95;background:linear-gradient(90deg,#fff7a8,#fff,#ffd95c,#fff);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 5px 12px #0007)}#adaptiveEncouragement .adaptive-meta{display:block;margin-top:8px;font-size:clamp(14px,2.6vw,21px);color:#fff;filter:drop-shadow(0 2px 7px #0009)}#adaptiveEncouragement.level-5 .adaptive-main{font-size:clamp(44px,13vw,108px)}#adaptiveEncouragement.new-best .adaptive-meta{color:#fff1a8}@keyframes adaptivePop{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}74%{opacity:1;transform:translate(-50%,-58%) scale(1)}100%{opacity:0;transform:translate(-50%,-72%) scale(.9)}}.adaptive-reaction-spark{position:fixed;z-index:39;pointer-events:none;left:50%;top:28%;font-size:20px;animation:adaptiveSpark .72s ease-out forwards}@keyframes adaptiveSpark{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}16%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--rx)),calc(-50% + var(--ry))) scale(1.35) rotate(190deg)}}@media(prefers-reduced-motion:reduce){#adaptiveEncouragement.show{animation-duration:.01ms!important}.adaptive-reaction-spark{display:none!important}}`;
     document.head.appendChild(style);
   }
   function ensureFeedbackEl(){
@@ -75,7 +80,7 @@
     try{
       const synth=window.speechSynthesis;if(!synth||synth.__doubleAdaptivePatched)return;
       const original=synth.speak.bind(synth);synth.__doubleAdaptiveOriginalSpeak=original;
-      synth.speak=function(utterance){if(!adaptiveSpeaking&&now()<legacySpeechMuteUntil)return;return original(utterance)};
+      synth.speak=function(utterance){if(!adaptiveSpeaking&&now()<legacySpeechMuteUntil&&!priorityMoment())return;return original(utterance)};
       synth.__doubleAdaptivePatched=true;
     }catch(_){ }
   }
@@ -86,7 +91,7 @@
     }catch(_){ }
   }
   function speak(result){
-    if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined')return;
+    if(priorityMoment()||!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined')return;
     const pack=announcer(),text=E.phraseFor(pack,result.level),lang=LANG[pack]||'en-GB',profile=E.voiceProfile(result.level,pack);
     try{
       const synth=window.speechSynthesis;synth.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.volume=profile.volume;u.rate=profile.rate;u.pitch=profile.pitch;
