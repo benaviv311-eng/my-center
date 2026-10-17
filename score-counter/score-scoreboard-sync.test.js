@@ -2,20 +2,19 @@ const fs=require('fs');
 const path=require('path');
 const root=__dirname;
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const live=read('score-live.js');
-const suite=read('score-game-suite.js');
+const bridge=read('score-scoreboard-sync.js');
 const index=read('index.html');
 
 function has(source,needle,message){
   if(!source.includes(needle)) throw new Error(message);
 }
 
-has(live,"scoreboard:scorechange",'scoreboard layer must publish a shared score-change event');
-has(live,"scoreDisplay.value=scoreSourceValue()",'visible scoreboard value must resync from the legacy score source');
-has(suite,"function scoreNodeValue(node)",'game suite must read scores through an input-aware helper');
-has(suite,"node.value",'game suite score reader must support input.value');
-has(suite,"scoreboard:scorechange",'game suite must listen to shared scoreboard score changes');
-has(index,'score-live.js?v=10','loader must bust the score-live cache after sync fix');
-has(index,'score-game-suite.js?v=2','loader must bust the game-suite cache after sync fix');
+has(bridge,"const EVENT='scoreboard:scorechange'",'bridge must publish one shared score-change event');
+has(bridge,"Object.defineProperty(display,'textContent'",'legacy game readers must see the visible input value through textContent');
+has(bridge,'syncDisplayFromSource','game/button changes must flow back into the visible scoreboard');
+has(bridge,'syncSourceFromDisplay','manual scoreboard edits must flow back into the legacy score source');
+has(bridge,".score-board-plus,.score-board-minus,.score-card-mega",'bridge must observe all scoring controls');
+has(bridge,'.score-suite-live-team','shared score changes must update the active game view too');
+has(index,'score-scoreboard-sync.js?v=1','loader must include the scoreboard/game bridge');
 
 console.log('scoreboard/game sync regression checks passed');
