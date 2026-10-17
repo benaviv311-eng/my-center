@@ -4,12 +4,13 @@ import { getCanonicalCharacter, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from '
 export { APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET };
 
 export function createCharacterVisual(options = {}) {
-  if ('approvedAssetUrl' in options || 'assetUrl' in options || 'asset' in options) {
+  const { scene, kind } = options;
+  const canonical = getCanonicalCharacter(kind);
+  const requestedAsset = options.approvedAssetUrl || options.assetUrl || options.asset || null;
+  if (requestedAsset && requestedAsset !== canonical.asset) {
     throw new Error('Character canon is locked. Use an explicit canonical-character update instead of a runtime asset override.');
   }
 
-  const { scene, kind } = options;
-  const canonical = getCanonicalCharacter(kind);
   const url = canonical.asset;
   const texture = new THREE.TextureLoader().load(url);
   texture.colorSpace = THREE.SRGBColorSpace;
