@@ -20,7 +20,7 @@
     .end-actions [data-end-action="replay"]{background:linear-gradient(180deg,#7df195,#55df78);color:#174c2b;box-shadow:0 6px 0 #24a94e}
     .end-actions [data-end-action="return"]{background:linear-gradient(180deg,#fff,#f3efff);color:#5c4b80;box-shadow:0 6px 0 rgba(103,74,163,.12)}
   </style>
-  <link rel="stylesheet" href="double/premium-theme.css?v=14">
+  <link rel="stylesheet" href="double/premium-theme.css?v=16">
 </head>
 <body class="toy-wrapper">
   <iframe id="core" title="DOUBLE" allow="autoplay"></iframe>
@@ -37,7 +37,7 @@
     </div>
   </section>
 
-  <script src="double/success-ting.js?v=14"></script>
+  <script src="double/success-ting.js?v=16"></script>
   <script>
     (()=>{
       'use strict';
@@ -45,7 +45,7 @@
       const params=new URLSearchParams(location.search);
       params.delete('v');
       const qs=params.toString();
-      const coreFile=params.get('launch')==='classic'?'double-classic-core.html?v=1':'double-game-core.html?v=1';
+      const coreFile=params.get('launch')==='classic'?'double-classic-core.html?v=16':'double-game-core.html?v=16';
       const coreBase=coreFile+(qs?'&'+qs:'');
       frame.src=coreBase;
 
