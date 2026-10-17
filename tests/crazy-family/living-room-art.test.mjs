@@ -26,7 +26,7 @@ test('final art registry builds semantic multi-part living room assemblies', asy
   for(const id of ['floor','wall-north','wall-south','wall-east','wall-west','sofa','coffee-table','rug','side-table','lamp','cushion-a','cushion-b','toy-blocks','toy-ball','doorway','mystery-stool']){
     const root=art.objectsById.get(id);assert.ok(root,`missing ${id}`);assert.equal(root.name,id);assert.equal(root.userData.semanticId,id);assert.equal(root.userData.artMode,'stylized-final-v1');assert.ok(root.userData.baseTransform,`${id} baseTransform`);
   }
-  const sofa=art.objectsById.get('sofa');assert.ok(meshCount(sofa)>=10,'sofa should be visibly multi-part');assert.equal(sofa.isMesh,true,false);
+  const sofa=art.objectsById.get('sofa');assert.ok(meshCount(sofa)>=10,'sofa should be visibly multi-part');assert.notEqual(sofa.isMesh,true,'sofa semantic root must be a group, not one mesh');
   assert.ok(meshCount(art.objectsById.get('coffee-table'))>=3);assert.ok(meshCount(art.objectsById.get('side-table'))>=3);assert.ok(meshCount(art.objectsById.get('lamp'))>=4);assert.ok(meshCount(art.objectsById.get('doorway'))>=3);
   assert.notEqual(art.objectsById.get('cushion-a'),art.objectsById.get('cushion-b'));
   assert.ok(meshCount(art.objectsById.get('mystery-stool'))>=1,'unknown renderables need fallback art');
