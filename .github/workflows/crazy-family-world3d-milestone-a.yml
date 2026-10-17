@@ -42,6 +42,13 @@ jobs:
         run: node tests/crazy-family/browser-smoke.mjs
       - name: Canonical segmented rig browser smoke
         run: node tests/crazy-family/browser-segmented-rig-smoke.mjs
+      - name: Upload segmented rig preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crazy-family-segmented-rig-preview
+          path: artifacts/crazy-family-canonical-segmented-rig.png
+          if-no-files-found: ignore
       - name: Milestone A world3d browser smoke
         run: node tests/crazy-family/browser-world3d-smoke.mjs
       - name: Upload world3d screenshots
