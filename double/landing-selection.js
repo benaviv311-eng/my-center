@@ -33,8 +33,9 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='13';
+  const V='14';
   const head=document.head||document.documentElement;
+  document.querySelector('.landing')?.classList.add('toy-arcade');
   function ensureCss(href,attr){
     if(document.querySelector(`link[${attr}]`))return;
     const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.setAttribute(attr,'1');head.appendChild(link);
@@ -77,7 +78,8 @@
   const loadTwoPlayerRules=()=>load('double/two-player-mode-rules.js?v='+V,'data-double-two-player-mode-rules',()=>!!window.DoubleTwoPlayerModeRules,loadTwoPlayerBridge);
   const loadRules=()=>load('double/competitive-rules.js?v='+V,'data-double-competitive-rules',()=>!!window.DoubleCompetitiveRules,loadTwoPlayerRules);
   const loadPacks=()=>loadSprite(loadRules);
-  const loadMusic=()=>load('double/music-engine-state.js?v='+V,'data-double-music-state',()=>!!window.DoubleMusicState,()=>
+  const loadMusicEngine=()=>load('double/toy-music-model.js?v='+V,'data-double-toy-music-model',()=>!!window.DoubleToyMusicModel,()=>
     load('double/music-engine.js?v='+V,'data-double-music-engine',()=>!!window.DoubleMusic,loadPacks));
+  const loadMusic=()=>load('double/music-engine-state.js?v='+V,'data-double-music-state',()=>!!window.DoubleMusicState,loadMusicEngine);
   load('double/menu-lobby-state.js?v='+V,'data-double-lobby-state',()=>!!window.DoubleMenuLobbyState,loadMusic);
 })();
