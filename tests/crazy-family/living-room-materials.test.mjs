@@ -62,7 +62,7 @@ test('rounded box helper returns bounded softened buffer geometry', () => {
 
 test('living room material system exposes shared stylized material families', () => {
   const materials = createLivingRoomMaterialSystem({ THREE, anisotropy: Number.NaN });
-  const names = ['floorWood','furnitureWood','sofaFabric','cushionWarm','cushionCool','wall','rug','toyPlastic','metal','lampShade','lampGlow'];
+  const names = ['floorWood','furnitureWood','sofaFabric','cushionWarm','cushionCool','wall','rug','toyPlastic','metal','lampShade','lampGlow','windowGlass','curtainFabric','plantLeaf','ceramic','tvScreen'];
   for (const name of names) {
     const material = materials.get(name);
     assert.ok(material?.isMeshStandardMaterial, name);
@@ -72,6 +72,9 @@ test('living room material system exposes shared stylized material families', ()
   assert.ok(materials.get('rug').roughness > 0.8);
   assert.ok(materials.get('metal').metalness > 0.2);
   assert.ok(materials.get('lampGlow').emissiveIntensity > 0);
+  assert.ok(materials.get('tvScreen').emissiveIntensity > 0);
+  assert.ok(materials.get('windowGlass').roughness < materials.get('wall').roughness);
+  assert.deepEqual(materials.textures.floorWood.repeatValue,[4,3]);
   assert.doesNotThrow(() => materials.dispose());
   assert.doesNotThrow(() => materials.dispose());
 });
