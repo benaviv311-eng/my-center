@@ -71,14 +71,15 @@ try {
     assert.deepEqual(actor.parts,[...expectedParts].sort());
   }
 
-  const beforeWalk=await page.evaluate(()=>{
-    const rig=window.__crazyFamilyMovieSetGame.playerVisual.mesh.children.find(child=>child.userData?.renderMode==='canonical-segmented-rig');
+  await page.keyboard.down('ArrowUp');
+  await page.waitForFunction(()=>{
+    const game=window.__crazyFamilyMovieSetGame;
+    const rig=game?.playerVisual?.mesh?.children?.find(child=>child.userData?.renderMode==='canonical-segmented-rig');
+    if(!rig||!['walk','run'].includes(rig.userData.poseState))return false;
     const arm=rig.getObjectByName('libi-leftUpperArm');
     const leg=rig.getObjectByName('libi-leftUpperLeg');
-    return {arm:arm.rotation.z,leg:leg.rotation.z};
-  });
-  await page.keyboard.down('ArrowUp');
-  await page.waitForTimeout(260);
+    return arm&&leg&&Math.abs(arm.rotation.z)>.06&&Math.abs(leg.rotation.z)>.06&&arm.rotation.z*leg.rotation.z<0;
+  },null,{timeout:5000});
   const duringWalk=await page.evaluate(()=>{
     const game=window.__crazyFamilyMovieSetGame;
     const rig=game.playerVisual.mesh.children.find(child=>child.userData?.renderMode==='canonical-segmented-rig');
@@ -92,13 +93,17 @@ try {
     };
   });
   await page.keyboard.up('ArrowUp');
-  assert.ok(Math.abs(duringWalk.arm-beforeWalk.arm)>.015,'Libi arm must articulate while moving');
-  assert.ok(Math.abs(duringWalk.leg-beforeWalk.leg)>.015,'Libi leg must articulate while moving');
+  assert.ok(['walk','run'].includes(duringWalk.state),'Libi must enter an articulated locomotion state');
+  assert.ok(Math.abs(duringWalk.arm)>.06,'Libi arm must articulate while moving');
+  assert.ok(Math.abs(duringWalk.leg)>.06,'Libi leg must articulate while moving');
   assert.ok(duringWalk.arm*duringWalk.leg<0,'same-side arm and leg must oppose each other');
   assert.ok(Math.abs(duringWalk.delta)<=25*Math.PI/180+1e-6,'visible yaw must remain within canonical readable range');
 
   await page.keyboard.down('c');
-  await page.waitForTimeout(100);
+  await page.waitForFunction(()=>{
+    const rig=window.__crazyFamilyMovieSetGame?.playerVisual?.mesh?.children?.find(child=>child.userData?.renderMode==='canonical-segmented-rig');
+    return rig?.userData?.poseState==='crouch'&&rig?.userData?.poseDiagnostics?.rootYOffset<0;
+  },null,{timeout:3000});
   const crouch=await page.evaluate(()=>{
     const rig=window.__crazyFamilyMovieSetGame.playerVisual.mesh.children.find(child=>child.userData?.renderMode==='canonical-segmented-rig');
     return {state:rig.userData.poseState,diag:rig.userData.poseDiagnostics};
