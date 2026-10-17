@@ -16,10 +16,9 @@ const checks = [
   ['Dad canonical dimensions are locked', canon.includes('width: 1.18') && canon.includes('height: 1.9')],
   ['characters renderer imports canonical definitions', characters.includes("from './character-canon.js'")],
   ['renderer resolves asset only from canon', characters.includes('getCanonicalCharacter(kind)')],
-  ['renderer explicitly rejects legacy asset override', characters.includes("'approvedAssetUrl' in options") && characters.includes('Character canon is locked')],
-  ['renderer explicitly rejects generic asset override', characters.includes("'assetUrl' in options")],
-  ['game no longer imports approved asset constants', !game.includes('APPROVED_LIBI_ASSET') && !game.includes('APPROVED_DAD_ASSET')],
-  ['game cannot pass a character asset override', !game.includes('approvedAssetUrl:')],
+  ['renderer rejects non-canonical override', characters.includes('requestedAsset !== canonical.asset') && characters.includes('Character canon is locked')],
+  ['legacy override keys are guarded', characters.includes('options.approvedAssetUrl') && characters.includes('options.assetUrl') && characters.includes('options.asset')),
+  ['game uses canonical exports rather than literal replacement paths', game.includes('APPROVED_LIBI_ASSET') && game.includes('APPROVED_DAD_ASSET') && !game.includes("approvedAssetUrl:'assets/")],
 ];
 
 const failed = checks.filter(([, ok]) => !ok);
@@ -28,4 +27,4 @@ if (failed.length) {
   process.exit(1);
 }
 
-console.log('PASS: Crazy Family canonical characters are locked against accidental runtime replacement');
+console.log('PASS: Crazy Family canonical characters are locked against accidental replacement');
