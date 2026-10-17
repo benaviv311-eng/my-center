@@ -35,6 +35,7 @@ jobs:
           - raishin-professional-walk-up-v3.test.js
           - raishin-up-grounding-v4.test.js
           - raishin-up-grounding-v5.test.js
+          - raishin-v2-camera-rig.test.js
           - raishin-v2-collision-primitives.test.js
           - raishin-v2-depth-system.test.js
           - raishin-v2-player-controller.test.js
