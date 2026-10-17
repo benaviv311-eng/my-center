@@ -250,7 +250,9 @@ function createPartMesh({ THREERef, kind, name, canonical, profilePart, frontCan
   const centerY = frameTop - height / 2;
   const pivotX = frameLeft + profilePart.pivot.x * width;
   const pivotY = frameTop - profilePart.pivot.y * height;
-  pivot.position.set(pivotX, pivotY, profilePart.zOrder * .002);
+  const pivotZ = profilePart.zOrder * .002;
+  pivot.position.set(pivotX, pivotY, pivotZ);
+  pivot.userData.neutralPosition = { x: pivotX, y: pivotY, z: pivotZ };
   mesh.position.set(centerX - pivotX, centerY - pivotY, 0);
   pivot.add(mesh);
 
@@ -321,6 +323,8 @@ export async function createCanonicalSegmentedRig({
     presentationRoot.position.y = pose.rootYOffset;
     for (const name of CHARACTER_RIG_PART_NAMES) {
       const pivot = parts[name];
+      const neutralPosition = pivot.userData.neutralPosition;
+      if (neutralPosition) pivot.position.set(neutralPosition.x, neutralPosition.y, neutralPosition.z);
       const joint = pose.joints[name] || { x: 0, y: 0, z: 0 };
       pivot.rotation.set(joint.x || 0, joint.y || 0, joint.z || 0);
     }
@@ -328,12 +332,12 @@ export async function createCanonicalSegmentedRig({
     torso.rotation.x += pose.torso.rotationX || 0;
     torso.rotation.y += pose.torso.rotationY || 0;
     torso.rotation.z += pose.torso.rotationZ || 0;
-    torso.position.y += pose.torso.offsetY || 0;
+    torso.position.y = torso.userData.neutralPosition.y + (pose.torso.offsetY || 0);
     const head = parts.head;
     head.rotation.x += pose.head.rotationX || 0;
     head.rotation.y += pose.head.rotationY || 0;
     head.rotation.z += pose.head.rotationZ || 0;
-    head.position.y += pose.head.offsetY || 0;
+    head.position.y = head.userData.neutralPosition.y + (pose.head.offsetY || 0);
 
     root.userData.poseState = pose.state;
     root.userData.poseDiagnostics = {
@@ -345,7 +349,7 @@ export async function createCanonicalSegmentedRig({
     return pose;
   }
 
-  let lastMovementYaw = 0;
+  let lastMovementYaw = null;
   return {
     root,
     parts,
