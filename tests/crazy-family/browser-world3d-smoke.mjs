@@ -69,9 +69,12 @@ try{
   assert.ok(initial.libi.types.length>8&&initial.dad.types.length>6);assert.equal(initial.libi.types.includes('PlaneGeometry'),false);assert.equal(initial.dad.types.includes('PlaneGeometry'),false);
   assert.deepEqual(initial.camera.position,{x:7.2,y:11.5,z:8});assert.deepEqual(initial.camera.target,{x:0,y:.45,z:0});assert.equal(initial.camera.fov,48);
 
-  const movedRight=await moveKey('ArrowRight',initial.player),movedUp=await moveKey('ArrowUp',movedRight);await page.waitForTimeout(180);
+  const movedRight=await moveKey('ArrowRight',initial.player);await page.waitForTimeout(180);
+  const afterRight=await page.evaluate(()=>({rotationY:window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y,heading:window.__crazyFamilyMovieSetGame.player.heading}));
+  const movedUp=await moveKey('ArrowUp',movedRight);await page.waitForTimeout(180);
   assert.ok(Math.hypot(movedRight.x-initial.player.x,movedRight.z-initial.player.z)>.16);assert.ok(Math.hypot(movedUp.x-movedRight.x,movedUp.z-movedRight.z)>.16);
-  const afterMove=await page.evaluate(()=>({camera:window.__crazyFamilyMovieSetGame.cameraPose,rotationY:window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y}));
+  const afterMove=await page.evaluate(()=>({camera:window.__crazyFamilyMovieSetGame.cameraPose,rotationY:window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y,heading:window.__crazyFamilyMovieSetGame.player.heading}));
+  console.log('ROTATION_DIAG',JSON.stringify({initial:initial.libi.rotationY,afterRight,afterMove}));
   assert.equal(poseNear(initial.camera,afterMove.camera),true,'camera moved while Libi moved');assert.ok(Math.abs(afterMove.rotationY-initial.libi.rotationY)>.03,'3d Libi did not rotate in world space');
 
   await page.keyboard.press('Space');await page.waitForFunction(()=>{const g=window.__crazyFamilyMovieSetGame;return g.player.position.y>.08&&g.playerVisual.root.position.y>.05;},null,{timeout:3000});
