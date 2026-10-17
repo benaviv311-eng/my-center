@@ -40,6 +40,7 @@ jobs:
           - raishin-v2-professional-movement.test.js
           - raishin-v2-scene-contract.test.js
           - raishin-v2-shell.test.js
+          - raishin-v2-world-model.test.js
           - raishin-v2-world-plane.test.js
           - raishin-v2-world-systems.test.js
           - raishin-walk-up-grounding-v2.test.js
