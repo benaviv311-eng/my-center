@@ -19,6 +19,14 @@ test('3d scene uses perspective camera and no cinematic projection',async()=>{
  assert.match(source,/screenStage:\s*false/);
 });
 
+test('3d scene exposes a dedicated native character layer', async()=>{
+ const source=await fs.readFile(new URL('../../crazy-family/scene-3d.js',import.meta.url),'utf8');
+ assert.match(source,/const characterLayer=new THREE\.Group\(\)/);
+ assert.match(source,/characterLayer\.name='world3d-characters'/);
+ assert.match(source,/visualStage\.add\(characterLayer\)/);
+ assert.match(source,/characterLayer,/);
+});
+
 test('cinematic scene exposes shared renderPosition alias',async()=>{
  const source=await fs.readFile(new URL('../../crazy-family/scene.js',import.meta.url),'utf8');
  assert.match(source,/renderPosition/);
