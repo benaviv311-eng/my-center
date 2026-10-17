@@ -94,6 +94,7 @@ export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
   const height = kind === 'dad' ? 1.9 : 1.34;
   const width = kind === 'dad' ? 1.18 : 0.9;
   const isWorld3D = scene?.name === 'world3d-stage';
+  const canonicalReveal = kind === 'dad' ? 0.14 : 0.12;
   const visual = isWorld3D
     ? createCanonical3DStack({ texture, width, height, kind, url })
     : createCinematicSprite({ texture, width, height, kind, url });
@@ -112,7 +113,16 @@ export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
       mesh.userData.state = state;
     },
     faceCamera(cameraPosition) {
-      if (isWorld3D || !cameraPosition) return;
+      if (!cameraPosition) return;
+      if (isWorld3D) {
+        const dx = cameraPosition.x - mesh.position.x;
+        const dz = cameraPosition.z - mesh.position.z;
+        const cameraYaw = Math.atan2(dx, dz);
+        const revealDirection = facing < 0 ? -1 : 1;
+        mesh.rotation.set(0, cameraYaw + revealDirection * canonicalReveal, 0);
+        mesh.userData.canonicalReveal = canonicalReveal;
+        return;
+      }
       const target = new THREE.Vector3(cameraPosition.x, mesh.position.y + height * 0.45, cameraPosition.z);
       mesh.lookAt(target);
     },
