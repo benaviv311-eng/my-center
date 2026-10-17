@@ -14,11 +14,18 @@ test('world3d uses volumetric actors and the room-anchored overhead camera', asy
   assert.match(source,/from '\.\/overhead-camera\.js'/);
   assert.match(source,/createCharacter3D\(\{scene:sceneHandle\.characterLayer,kind:'libi'\}\)/);
   assert.match(source,/createCharacter3D\(\{scene:sceneHandle\.characterLayer,kind:'dad'\}\)/);
-  assert.match(source,/createOverheadCameraPose\(\{width,height\}\)/);
   assert.match(source,/heading:player\.heading/);
   assert.match(source,/Math\.atan2\(dadFrame\.velocity\.x,-dadFrame\.velocity\.z\)/);
   assert.match(source,/playerVisual\.update\(dt,now\)/);
   assert.match(source,/dadVisual\.update\(dt,now\)/);
+});
+
+test('world3d overhead framing responds to the real viewport rather than the fixed stage aspect', async()=>{
+  const source=await fs.readFile(new URL('../../crazy-family/game.js',import.meta.url),'utf8');
+  assert.match(source,/framingWidth\s*=\s*globalThis\.innerWidth\s*\|\|\s*width/);
+  assert.match(source,/framingHeight\s*=\s*globalThis\.innerHeight\s*\|\|\s*height/);
+  assert.match(source,/createOverheadCameraPose\(\{width:framingWidth,height:framingHeight\}\)/);
+  assert.match(source,/sceneHandle\.resize\(width,height\)/,'renderer still sizes to the actual game root');
 });
 
 test('world3d no longer uses billboard or player-follow camera presentation', async()=>{
