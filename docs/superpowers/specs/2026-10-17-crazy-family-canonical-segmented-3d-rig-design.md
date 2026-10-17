@@ -1,7 +1,7 @@
 # Crazy Family — Canonical Segmented 3D Rig Design
 
 Date: 2026-10-17
-Status: Design approved in chat; written spec awaiting user review
+Status: Approved by user on 2026-10-17
 Target: Crazy Family `world3d` renderer
 
 ## 1. Goal
