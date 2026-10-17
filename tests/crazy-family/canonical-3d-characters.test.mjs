@@ -15,6 +15,11 @@ test('world3d uses a volumetric canonical character path instead of a camera-fac
   assert.match(characters, /depth/i);
 });
 
+test('world3d keeps canonical artwork readable while revealing depth', () => {
+  assert.match(characters, /canonicalReveal/i);
+  assert.match(characters, /Math\.atan2/);
+});
+
 test('cinematic sprite fallback remains available', () => {
   assert.match(characters, /PlaneGeometry/);
 });
