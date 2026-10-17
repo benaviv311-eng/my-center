@@ -27,7 +27,7 @@
 1. **Unknown or newly added world renderables:** must still appear through a generic procedural fallback rather than silently disappearing. Task 3 pins this.
 2. **Future asset resolver returns `null`, throws, or returns an untagged Object3D:** v1 must fall back safely or normalize the returned root without changing gameplay IDs. Task 3 pins this.
 3. **Reactive transforms on grouped furniture:** must apply to the semantic group root from its stable `baseTransform`, not drift child meshes or break cushion reactions. Tasks 3 and 5 pin this.
-4. **Scenario item placement on styled furniture:** headphones/projected props must retain the existing anchor semantics and remain visible after art replacement. Task 5 pins this in browser smoke.
+4. **Scenario item placement and collection on styled furniture:** headphones/projected props must retain existing anchors and collect/disappear through the existing interaction flow. Task 6 pins this in browser smoke.
 5. **Narrow/mobile viewport and SwiftShader/WebGL:** art and lighting must remain visible, fixed-camera framing must remain unchanged, and context must stay alive. Task 6 pins this.
 
 ---
@@ -43,7 +43,7 @@
 - Consumes: `createLivingRoomWorld()` and current fixed overhead camera contract.
 - Produces: regression assertions that later art tasks must satisfy without editing gameplay data.
 
-- [ ] **Step 1: Write the failing/guard test for unchanged gameplay geometry**
+- [ ] **Step 1: Write the characterization test for unchanged gameplay geometry**
 
 Add `living-room-final-art-contract.test.mjs` with assertions that the current collider snapshot is exactly:
 
@@ -57,15 +57,15 @@ Add `living-room-final-art-contract.test.mjs` with assertions that the current c
 
 and that the existing interactable IDs/actions remain `headphones/take`, `sofa/climb`, `toy-ball/push`, `doorway/open` with their current radii.
 
-- [ ] **Step 2: Add a camera source guard to the same test**
+- [ ] **Step 2: Add a camera contract guard to the same test**
 
-Assert that `overhead-camera.js` still pins base position `{x:7.2,y:11.5,z:8}`, target `{x:0,y:.45,z:0}`, and FOV `48` (using the existing exported API/source contract rather than changing it).
+Import/use `OVERHEAD_ROOM_CAMERA` and assert base position `{x:7.2,y:11.5,z:8}`, target `{x:0,y:.45,z:0}`, FOV `48`, desktop aspect `1.35`, and max narrow-screen distance scale `1.45`.
 
 - [ ] **Step 3: Run the contract test**
 
 Run: `node --test tests/crazy-family/living-room-final-art-contract.test.mjs`
 
-Expected: PASS on the pre-art branch; this is a characterization gate, not a behavior change.
+Expected: PASS on the pre-art branch; this task establishes a guardrail rather than changing behavior.
 
 - [ ] **Step 4: Commit**
 
@@ -83,7 +83,8 @@ git commit -m "test(crazy-family): lock living room gameplay invariants"
 
 **Interfaces:**
 - Consumes: `THREE`; renderer max anisotropy is optional.
-- Produces: `createRoundedBoxGeometry(THREE, options)` and `createLivingRoomMaterialSystem({ THREE, anisotropy }) -> { get(name), textures, dispose() }`.
+- Produces: `createRoundedBoxGeometry(THREE, options)` and `createLivingRoomMaterialSystem({ THREE, anisotropy, textureFactory }) -> { get(name), textures, dispose() }`.
+- `textureFactory` is optional in production; tests pass `textureFactory: () => new THREE.Texture()` so Node does not require a DOM/canvas.
 
 - [ ] **Step 1: Write failing geometry/material contract tests**
 
@@ -93,7 +94,8 @@ Tests must assert:
 - `get(name)` returns shared `MeshStandardMaterial` instances, not a fresh material on every call;
 - material roughness/metalness families differ (fabric/rug high roughness, metal > 0 metalness, lampGlow emissive > 0);
 - `dispose()` disposes owned textures/materials once and is safe to call twice;
-- `anisotropy` omitted or non-finite falls back without throwing.
+- omitted/non-finite `anisotropy` falls back without throwing;
+- the Node test path works with the injected `textureFactory` and never accesses `document`.
 
 - [ ] **Step 2: Run tests to verify RED**
 
@@ -105,9 +107,9 @@ Expected: FAIL because the new modules/exports do not exist.
 
 In `stylized-geometry.js`, create a local rounded/beveled box helper using Three.js core geometry only. Required options: `{ width, height, depth, radius = 0.06, bevel = 0.015, curveSegments = 4 }`. Clamp radius/bevel so degenerate small props cannot create invalid geometry.
 
-- [ ] **Step 4: Implement `createLivingRoomMaterialSystem({ THREE, anisotropy = 4 })`**
+- [ ] **Step 4: Implement `createLivingRoomMaterialSystem({ THREE, anisotropy = 4, textureFactory = null })`**
 
-Move/refine the current procedural wood/rug canvas-texture behavior out of `scene-3d.js`, add subtle reusable fabric/wall/toy procedural maps, and expose the named shared materials from Step 1. Keep texture frequencies low enough for the overhead camera.
+Move/refine the current procedural wood/rug canvas-texture behavior out of `scene-3d.js`, add subtle reusable fabric/wall/toy maps, and expose the named shared materials from Step 1. When `textureFactory` is supplied, use it instead of DOM-backed `CanvasTexture` creation; production defaults to the procedural canvas textures. Keep texture frequencies low enough for the overhead camera.
 
 - [ ] **Step 5: Run tests to verify GREEN**
 
@@ -129,7 +131,7 @@ git commit -m "feat(crazy-family): add stylized room geometry and materials"
 - Create: `tests/crazy-family/living-room-art.test.mjs`
 
 **Interfaces:**
-- Consumes: `createLivingRoomWorld()` data; `createRoundedBoxGeometry`; a material system exposing `get(name)`; optional `resolveAsset(id, def)`.
+- Consumes: `createLivingRoomWorld()` data; `createRoundedBoxGeometry`; a material system exposing `get(name)`; optional async `resolveAsset(id, def)`.
 - Produces: `async createLivingRoomArt({ THREE, world, materials, quality = 'high', resolveAsset = null }) -> { root, dressingRoot, objectsById, resolveArtObject(id), dispose() }`.
 
 - [ ] **Step 1: Write failing semantic/art-assembly tests**
@@ -137,19 +139,20 @@ git commit -m "feat(crazy-family): add stylized room geometry and materials"
 With a real `THREE` import and lightweight stub materials, assert:
 - `objectsById` contains `floor`, four walls, `sofa`, `coffee-table`, `rug`, `side-table`, `lamp`, `cushion-a`, `cushion-b`, `toy-blocks`, `toy-ball`, `doorway`;
 - every gameplay-relevant root has `name === id`, `userData.semanticId === id`, `userData.artMode === 'stylized-final-v1'`, and a stable `baseTransform`;
-- sofa root contains at least base, back, two arms, three seat cushions, and separate decorative/back cushion geometry; it is not a single `BoxGeometry` mesh;
+- sofa root contains base, back, two arms, three seat cushions, and readable cushion/back geometry; it is not a single `BoxGeometry` mesh;
 - coffee/side tables contain separate top/support geometry;
 - lamp contains base/stem/shade/glow geometry;
 - doorway contains frame/trim/opening treatment rather than one slab;
+- wall art roots include baseboard/trim geometry instead of a single wall box only;
 - `cushion-a` and `cushion-b` remain separate roots addressable in `objectsById`;
-- dressing-only props live below `dressingRoot` and are absent from `world.colliders`/`world.interactables`;
+- dressing-only props live below `dressingRoot` and their `dressing-*` IDs are absent from `world.colliders` and `world.interactables`;
 - an unknown synthetic world renderable receives a generic stylized fallback group rather than disappearing.
 
 - [ ] **Step 2: Add future asset-resolver failure/normalization tests**
 
 Test three cases for `resolveAsset`:
 - returns `null` -> procedural builder is used;
-- throws -> procedural fallback is used and the error is captured in `root.userData.assetFallbacks` (no uncaught rejection);
+- throws -> procedural fallback is used and the error is recorded in `root.userData.assetFallbacks` without an uncaught rejection;
 - returns a `THREE.Group` without semantic metadata -> returned group is normalized to the requested ID and gets `baseTransform`/shadow configuration.
 
 - [ ] **Step 3: Run tests to verify RED**
@@ -160,11 +163,11 @@ Expected: FAIL because `living-room-art.js` does not exist.
 
 - [ ] **Step 4: Implement `createLivingRoomArt(...)` and the builder registry**
 
-Use a builder map keyed by semantic ID/category. Procedural builders cover sofa, coffee table, side table, lamp, doorway/walls, floor/rug, toy ball/blocks, cushions; all other renderables use the generic rounded fallback. Keep each hero object inside the existing logical envelope and place it from the matching world definition.
+Use a builder map keyed by semantic ID/category. Procedural builders cover sofa, coffee table, side table, lamp, doorway/walls, floor/rug, toy ball/blocks, cushions; all other renderables use the generic rounded fallback. Keep hero visuals inside the existing logical envelopes closely enough that collision remains visually trustworthy.
 
 - [ ] **Step 5: Implement non-gameplay dressing**
 
-Add a restrained fixed dressing set under `dressingRoot` (for example book stack, basket, extra blocks/frame) positioned outside nav paths. Give dressing IDs prefixed `dressing-` and never add them to `objectsById` entries used by gameplay.
+Add a restrained fixed dressing set under `dressingRoot` (book stack, basket, extra blocks/frame are enough) positioned outside nav paths. Give dressing IDs prefix `dressing-` and never add them to gameplay collider/interactable data.
 
 - [ ] **Step 6: Run tests to verify GREEN**
 
@@ -206,7 +209,7 @@ Expected: FAIL because the module does not exist.
 
 - [ ] **Step 3: Implement `createLivingRoomLighting(...)`**
 
-Use the spec’s warm daylight key + soft hemispheric fill + local warm lamp point light. Name roots/lights (`living-room-lighting`, `living-room-key`, `living-room-lamp-light`) for browser diagnostics.
+Use the spec’s warm daylight key + soft hemispheric fill + local warm lamp point light. Name roots/lights `living-room-lighting`, `living-room-key`, `living-room-lamp-light` for browser diagnostics.
 
 - [ ] **Step 4: Run test to verify GREEN**
 
@@ -280,7 +283,7 @@ git add crazy-family/scene-3d.js tests/crazy-family/scene-3d.test.mjs
 git commit -m "feat(crazy-family): render final art living room in world3d"
 ```
 
-### Task 6: Browser acceptance, screenshot artifact, version, and CI gate
+### Task 6: Browser acceptance, interaction proof, screenshot artifact, version, and CI gate
 
 **Files:**
 - Modify: `tests/crazy-family/browser-world3d-smoke.mjs`
@@ -290,9 +293,9 @@ git commit -m "feat(crazy-family): render final art living room in world3d"
 
 **Interfaces:**
 - Consumes: integrated scene from Task 5.
-- Produces: visual browser acceptance evidence, stable deployment cache version `v0.48`, and CI artifact `crazy-family-living-room-final-art-v1`.
+- Produces: visual/browser acceptance evidence, stable deployment cache version `v0.48`, and CI artifact `crazy-family-living-room-final-art-v1`.
 
-- [ ] **Step 1: Write the failing browser Final Art assertions**
+- [ ] **Step 1: Write failing browser Final Art assertions**
 
 Extend `browser-world3d-smoke.mjs` initial diagnostics to assert:
 - `objectsById.get('sofa').userData.artMode === 'stylized-final-v1'` and sofa has at least 8 mesh descendants;
@@ -300,17 +303,27 @@ Extend `browser-world3d-smoke.mjs` initial diagnostics to assert:
 - `cushion-a` and `cushion-b` exist as separate semantic roots;
 - scene has `living-room-key` and `living-room-lamp-light`;
 - no hero object is a single plain `BoxGeometry` root mesh;
-- headphones exist and remain visible after scenario projection.
+- the scenario item visual exists at the projected/logical world position and starts visible.
 
-- [ ] **Step 2: Preserve all existing world3d behavioral smoke assertions**
+- [ ] **Step 2: Add real world3d interaction/collection proof**
 
-Keep the current checks for volumetric Libi/Dad, fixed camera through movement/pointer drag, jump, furniture routing, collision, portrait resize, and WebGL context health. Do not weaken tolerances to make the art pass succeed.
+Use the same deterministic scenario (`cinematic-seed=1`) and the existing interaction flow:
+- place Libi at the reachable side of `game.scenario.item.position` without changing the item/world anchor;
+- wait for `.movie-set-action-prompt` to become visible;
+- press `Enter`;
+- assert the matching world interactable becomes `enabled === false` and the `objectsById` visual becomes `visible === false`.
 
-- [ ] **Step 3: Change screenshot output**
+This test must pass in world3d in addition to the existing cinematic collection proof.
 
-Capture desktop Final Art evidence before portrait resize to `artifacts/crazy-family-living-room-final-art-v1.png`; optionally keep the portrait screenshot only if it helps debug framing, but the uploaded primary artifact must be the desktop art-review image.
+- [ ] **Step 3: Preserve all existing world3d behavioral smoke assertions**
 
-- [ ] **Step 4: Run browser smoke to verify RED before scene integration is considered complete**
+Keep checks for volumetric Libi/Dad, fixed camera through movement/pointer drag, jump, furniture routing, collision, portrait resize, and WebGL context health. Do not weaken tolerances to make the art pass succeed.
+
+- [ ] **Step 4: Change screenshot output**
+
+Capture desktop Final Art evidence before portrait resize to `artifacts/crazy-family-living-room-final-art-v1.png`. The uploaded primary artifact must be the desktop art-review image.
+
+- [ ] **Step 5: Run browser smoke to verify RED before scene integration is considered complete**
 
 Run (after Playwright Chromium/runtime is available):
 
@@ -321,18 +334,18 @@ node tests/crazy-family/browser-world3d-smoke.mjs
 
 Expected before Task 5 integration: FAIL on missing `stylized-final-v1` art diagnostics. After Task 5: PASS.
 
-- [ ] **Step 5: Bump Crazy Family cache/version marker**
+- [ ] **Step 6: Bump Crazy Family cache/version marker**
 
 Change `CRAZY_FAMILY_VERSION` in `crazy-family/bootstrap.js` from `v0.47` to `v0.48` and update any exact-version contract test if one exists.
 
-- [ ] **Step 6: Update the acceptance workflow artifact/step names**
+- [ ] **Step 7: Update the acceptance workflow artifact/step names**
 
 In `.github/workflows/crazy-family-world3d-milestone-a.yml`:
 - keep Node suite + Chromium install + static server + cinematic smoke;
 - rename world3d step to `Living Room Final Art v1 browser smoke`;
 - upload artifact name `crazy-family-living-room-final-art-v1` from `artifacts/crazy-family-living-room-final-art-v1.png`.
 
-- [ ] **Step 7: Run both browser smokes locally/CI-equivalent**
+- [ ] **Step 8: Run both browser smokes locally/CI-equivalent**
 
 Run:
 
@@ -341,9 +354,9 @@ node tests/crazy-family/browser-smoke.mjs
 node tests/crazy-family/browser-world3d-smoke.mjs
 ```
 
-Expected: both PASS; no fatal page errors or WebGL context loss.
+Expected: both PASS; world3d collects the scenario item; no fatal page errors or WebGL context loss.
 
-- [ ] **Step 8: Run final Node/lock verification**
+- [ ] **Step 9: Run final Node/lock verification**
 
 Run:
 
@@ -354,7 +367,7 @@ node --test tests/crazy-family-character-lock.test.js tests/crazy-family-charact
 
 Expected: all PASS.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add tests/crazy-family/browser-world3d-smoke.mjs .github/workflows/crazy-family-world3d-milestone-a.yml crazy-family/bootstrap.js
@@ -371,9 +384,9 @@ git commit -m "test(crazy-family): gate living room final art v1"
 - Consumes: complete feature branch.
 - Produces: merge-ready PR only after code and visual gates pass.
 
-- [ ] **Step 1: Rebase/merge latest `main` into the feature branch without force-pushing over concurrent work**
+- [ ] **Step 1: Synchronize latest `main` into the feature branch without force-pushing over concurrent work**
 
-Verify only Crazy Family/plan files differ from `main`; resolve any concurrent changes deliberately.
+Verify only Crazy Family/plan files differ from `main`; resolve concurrent changes deliberately.
 
 - [ ] **Step 2: Open/update PR against `main`**
 
