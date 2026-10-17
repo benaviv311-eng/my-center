@@ -1,4 +1,4 @@
-export const CRAZY_FAMILY_VERSION = 'v0.47';
+export const CRAZY_FAMILY_VERSION = 'v0.48';
 
 export function shouldUseLegacy(search = '') {
   const params = new URLSearchParams(search || '');
