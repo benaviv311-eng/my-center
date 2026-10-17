@@ -44,7 +44,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='15';
+  const V='16';
   const head=document.head||document.documentElement;
   const S=window.DoubleLandingSelection;
   document.querySelector('.landing')?.classList.add('toy-arcade');
@@ -115,7 +115,7 @@
       try{
         const url=new URL(frame.src,location.href);
         if(!url.pathname.endsWith('/double-game.html'))return;
-        url.searchParams.set('v','15');
+        url.searchParams.set('v','16');
         frame.src=url.toString();
       }catch(_){ }
     },0);
