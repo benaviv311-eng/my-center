@@ -70,12 +70,12 @@ try{
   assert.deepEqual(initial.camera.position,{x:7.2,y:11.5,z:8});assert.deepEqual(initial.camera.target,{x:0,y:.45,z:0});assert.equal(initial.camera.fov,48);
 
   const movedRight=await moveKey('ArrowRight',initial.player);await page.waitForTimeout(180);
-  const afterRight=await page.evaluate(()=>({rotationY:window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y,heading:window.__crazyFamilyMovieSetGame.player.heading}));
+  const afterRight=await page.evaluate(()=>window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y);
+  assert.ok(Math.abs(afterRight-initial.libi.rotationY)>.03,'3d Libi did not rotate in world space');
   const movedUp=await moveKey('ArrowUp',movedRight);await page.waitForTimeout(180);
   assert.ok(Math.hypot(movedRight.x-initial.player.x,movedRight.z-initial.player.z)>.16);assert.ok(Math.hypot(movedUp.x-movedRight.x,movedUp.z-movedRight.z)>.16);
-  const afterMove=await page.evaluate(()=>({camera:window.__crazyFamilyMovieSetGame.cameraPose,rotationY:window.__crazyFamilyMovieSetGame.playerVisual.root.rotation.y,heading:window.__crazyFamilyMovieSetGame.player.heading}));
-  console.log('ROTATION_DIAG',JSON.stringify({initial:initial.libi.rotationY,afterRight,afterMove}));
-  assert.equal(poseNear(initial.camera,afterMove.camera),true,'camera moved while Libi moved');assert.ok(Math.abs(afterMove.rotationY-initial.libi.rotationY)>.03,'3d Libi did not rotate in world space');
+  const afterMove=await page.evaluate(()=>window.__crazyFamilyMovieSetGame.cameraPose);
+  assert.equal(poseNear(initial.camera,afterMove),true,'camera moved while Libi moved');
 
   await page.keyboard.press('Space');await page.waitForFunction(()=>{const g=window.__crazyFamilyMovieSetGame;return g.player.position.y>.08&&g.playerVisual.root.position.y>.05;},null,{timeout:3000});
   await page.waitForFunction(()=>Math.abs(window.__crazyFamilyMovieSetGame.player.position.y)<.02,null,{timeout:15000});
@@ -90,9 +90,8 @@ try{
   const collision=await page.evaluate(()=>{const g=window.__crazyFamilyMovieSetGame,w=g.world,sofa=w.colliders.find(o=>o.id==='sofa');const from={x:-1.6,y:0,z:2},to={x:-4,y:0,z:.55},r=w.resolveCharacterMove(from,to,{radius:.32});return{inside:Math.abs(r.x-sofa.x)<sofa.width/2+.32&&Math.abs(r.z-sofa.z)<sofa.depth/2+.32};});assert.equal(collision.inside,false);
 
   await page.setViewportSize({width:430,height:820});await page.waitForTimeout(180);
-  const narrow=await page.evaluate(()=>{const root=document.getElementById('movieSetRoot'),rect=root.getBoundingClientRect(),game=window.__crazyFamilyMovieSetGame;return{pose:game.cameraPose,aspect:game.scene.camera.aspect,visible:game.playerVisual.root.visible,root:{width:rect.width,height:rect.height}};});
+  const narrow=await page.evaluate(()=>({pose:window.__crazyFamilyMovieSetGame.cameraPose,aspect:window.__crazyFamilyMovieSetGame.scene.camera.aspect,visible:window.__crazyFamilyMovieSetGame.playerVisual.root.visible}));
   const baseDistance=Math.hypot(initial.camera.position.x,initial.camera.position.y-.45,initial.camera.position.z),narrowDistance=Math.hypot(narrow.pose.position.x,narrow.pose.position.y-.45,narrow.pose.position.z);
-  console.log('NARROW_DIAG',JSON.stringify({narrow,baseDistance,narrowDistance}));
   await fs.mkdir('artifacts',{recursive:true});await page.locator('.stage').screenshot({path:'artifacts/crazy-family-overhead-true3d.png'});
   assert.ok(Number.isFinite(narrow.aspect)&&narrow.aspect>0);assert.equal(narrow.visible,true);assert.deepEqual(narrow.pose.target,initial.camera.target);assert.equal(narrow.pose.fov,48);
   assert.ok(narrowDistance>baseDistance&&narrowDistance<=baseDistance*1.45+1e-6);
