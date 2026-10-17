@@ -15,6 +15,8 @@ assert.match(encouragement,/DoubleAdaptiveEncouragement/,'one adaptive feedback 
 assert.match(encouragement,/DoubleSuccessTing/,'wrapper duplicate success ting must be suppressed');
 assert.match(encouragement,/addEventListener\('keydown'/,'two-player keyboard success must feed the same system');
 assert.match(encouragement,/voiceProfile/,'voice intensity must come from the shared model');
+assert.match(encouragement,/PRIORITY_KINDS/,'level, boss and victory announcer moments must survive success filtering');
+assert.match(encouragement,/announcerCallout\[data-kind="versusSuccess"\]/,'routine versus success callout must be replaced by adaptive feedback');
 assert.match(reaction,/getElementById\('board'\).*getElementById\('cards'\)/s,'reaction timer must support both game boards');
 assert.match(reaction,/\.sym,\.symbol/,'reaction timer must support both symbol classes');
 assert.match(reaction,/stats\.parentElement\)stats\.parentElement\.appendChild\(badge\)/,'reaction badge must survive stats.innerHTML rerenders');
