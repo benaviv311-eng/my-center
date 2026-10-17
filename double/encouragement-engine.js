@@ -44,10 +44,20 @@
     const source=PHRASES[pack]||PHRASES.british;
     return source[Math.max(1,Math.min(5,Number(level)||1))]||source[1];
   }
-  function evaluate({seconds,difficulty='normal',previousBestMs=null}={}){
+  function playerLabel(player){return Number(player)===1?'שחקן 2':'שחקן 1'}
+  function voiceProfile(level,pack='british'){
+    const n=Math.max(1,Math.min(5,Number(level)||1));
+    return {
+      rate:.92+n*.04,
+      volume:Math.min(1,.68+n*.064),
+      pitch:pack==='arcade'?1.08+n*.045:.96+n*.025
+    };
+  }
+  function evaluate({seconds,difficulty='normal',previousBestMs=null,player=null}={}){
     const s=Math.max(.001,Number(seconds)||0),timeMs=Math.round(s*1000),d=normalizeDifficulty(difficulty),base=baseLevel(s,d);
     const prev=Number(previousBestMs),isNewBest=Number.isFinite(prev)&&prev>0&&timeMs<prev;
     const level=Math.min(5,base+(isNewBest?1:0)),meta=DIFFICULTY_META[d];
+    const playerMeta=player==null?'':' · '+playerLabel(player);
     return {
       seconds:s,
       timeMs,
@@ -56,10 +66,11 @@
       difficulty:d,
       difficultyLabel:meta.label,
       difficultyIcon:meta.icon,
+      player:player==null?null:Number(player),
       isNewBest,
-      meta:`${s.toFixed(2)} שנ׳ · ${meta.label} ${meta.icon}${isNewBest?' · 🏆 NEW BEST':''}`
+      meta:`${s.toFixed(2)} שנ׳ · ${meta.label} ${meta.icon}${playerMeta}${isNewBest?' · 🏆 NEW BEST':''}`
     };
   }
 
-  return {THRESHOLDS,DIFFICULTY_META,normalizeDifficulty,baseLevel,nextBestMs,phraseFor,evaluate};
+  return {THRESHOLDS,DIFFICULTY_META,normalizeDifficulty,baseLevel,nextBestMs,phraseFor,playerLabel,voiceProfile,evaluate};
 });
