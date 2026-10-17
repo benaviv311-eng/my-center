@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(23);
+select plan(24);
 
 select has_table('public', 'exercises', 'exercises table exists');
 select has_table('public', 'exercise_versions', 'exercise versions table exists');
@@ -42,6 +42,17 @@ select ok(
   and has_function_privilege('authenticated', 'public.can_read_exercise(uuid)', 'EXECUTE')
   and has_function_privilege('authenticated', 'public.owns_exercise(uuid)', 'EXECUTE'),
   'authenticated role retains helper function access'
+);
+select ok(
+  not exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in ('is_active_coach', 'owns_group', 'can_read_exercise', 'owns_exercise')
+      and p.prosecdef
+  ),
+  'RLS helper functions execute as invoker'
 );
 select ok(
   exists (
