@@ -53,20 +53,29 @@ try{
 
   const initial=await page.evaluate(()=>{
     const game=window.__crazyFamilyMovieSetGame,libiTypes=[],dadTypes=[];
+    const meshCount=root=>{let count=0;root?.traverse(node=>{if(node.isMesh)count++;});return count;};
     game.playerVisual.root.traverse(node=>{if(node.isMesh)libiTypes.push(node.geometry?.type||'');});
     game.dadVisual.root.traverse(node=>{if(node.isMesh)dadTypes.push(node.geometry?.type||'');});
+    const sofa=game.scene.objectsById.get('sofa'),coffee=game.scene.objectsById.get('coffee-table'),side=game.scene.objectsById.get('side-table'),lamp=game.scene.objectsById.get('lamp'),doorway=game.scene.objectsById.get('doorway');
+    const artRoot=game.scene.scene.getObjectByName('living-room-final-art'),dressing=game.scene.scene.getObjectByName('living-room-dressing');
+    const key=game.scene.scene.getObjectByName('living-room-key'),lampLight=game.scene.scene.getObjectByName('living-room-lamp-light');
     return {
       rendererMode:game.rendererMode,visualMode:game.scene.visualMode,screenStage:game.scene.screenStage,
       perspective:Boolean(game.scene.camera.isPerspectiveCamera),orthographic:Boolean(game.scene.camera.isOrthographicCamera),
       player:{...game.player.position},camera:game.cameraPose,
       libi:{mode:game.playerVisual.root.userData.renderMode,height:game.playerVisual.root.userData.height,types:libiTypes,rotationY:game.playerVisual.root.rotation.y,visible:game.playerVisual.root.visible},
       dad:{mode:game.dadVisual.root.userData.renderMode,height:game.dadVisual.root.userData.height,types:dadTypes,visible:game.dadVisual.root.visible},
+      art:{mode:artRoot?.userData?.artMode,sofaMode:sofa?.userData?.artMode,sofaMeshes:meshCount(sofa),coffeeMeshes:meshCount(coffee),sideMeshes:meshCount(side),lampMeshes:meshCount(lamp),doorwayMeshes:meshCount(doorway),dressingCount:dressing?.children?.length||0},
+      lighting:{key:Boolean(key?.isDirectionalLight),keyShadow:Boolean(key?.castShadow),lamp:Boolean(lampLight?.isPointLight),lampShadow:Boolean(lampLight?.castShadow)},
+      scenarioItem:{...game.scenario.item.position,id:game.scenario.item.id,visible:game.scene.objectsById.get(game.scenario.item.id)?.visible},
       contextLost:game.scene.renderer.getContext().isContextLost(),
     };
   });
   assert.equal(initial.rendererMode,'world3d');assert.equal(initial.visualMode,'world3d');assert.equal(initial.screenStage,false);assert.equal(initial.perspective,true);assert.equal(initial.orthographic,false);assert.equal(initial.contextLost,false);
   assert.equal(initial.libi.mode,'volumetric-3d');assert.equal(initial.dad.mode,'volumetric-3d');assert.ok(initial.dad.height>initial.libi.height);assert.equal(initial.libi.visible,true);assert.equal(initial.dad.visible,true);
   assert.ok(initial.libi.types.length>8&&initial.dad.types.length>6);assert.equal(initial.libi.types.includes('PlaneGeometry'),false);assert.equal(initial.dad.types.includes('PlaneGeometry'),false);
+  assert.equal(initial.art.mode,'stylized-final-v1');assert.equal(initial.art.sofaMode,'stylized-final-v1');assert.ok(initial.art.sofaMeshes>=10);assert.ok(initial.art.coffeeMeshes>=3);assert.ok(initial.art.sideMeshes>=3);assert.ok(initial.art.lampMeshes>=4);assert.ok(initial.art.doorwayMeshes>=3);assert.ok(initial.art.dressingCount>=3);
+  assert.deepEqual(initial.lighting,{key:true,keyShadow:true,lamp:true,lampShadow:false});assert.equal(initial.scenarioItem.visible,true);
   assert.deepEqual(initial.camera.position,{x:7.2,y:11.5,z:8});assert.deepEqual(initial.camera.target,{x:0,y:.45,z:0});assert.equal(initial.camera.fov,48);
 
   const movedRight=await moveKey('ArrowRight',initial.player);await page.waitForTimeout(180);
@@ -89,13 +98,21 @@ try{
 
   const collision=await page.evaluate(()=>{const g=window.__crazyFamilyMovieSetGame,w=g.world,sofa=w.colliders.find(o=>o.id==='sofa');const from={x:-1.6,y:0,z:2},to={x:-4,y:0,z:.55},r=w.resolveCharacterMove(from,to,{radius:.32});return{inside:Math.abs(r.x-sofa.x)<sofa.width/2+.32&&Math.abs(r.z-sofa.z)<sofa.depth/2+.32};});assert.equal(collision.inside,false);
 
+  await fs.mkdir('artifacts',{recursive:true});await page.locator('.stage').screenshot({path:'artifacts/crazy-family-living-room-final-art-v1.png'});
+
+  await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame,p=game.player.position,item=game.scenario.item.position;p.x=item.x;p.y=0;p.z=item.z-.65;game.player.velocity.x=0;game.player.velocity.z=0;game.dadController.position.x=5.35;game.dadController.position.z=-4;});
+  await page.waitForFunction(()=>Boolean(document.querySelector('.movie-set-action-prompt:not([hidden])')),null,{timeout:5000});
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>{const game=window.__crazyFamilyMovieSetGame;return game.world.interactables.find(entry=>entry.id===game.scenario.item.id)?.enabled===false;},null,{timeout:5000});
+  const collected=await page.evaluate(()=>{const game=window.__crazyFamilyMovieSetGame;return{enabled:game.world.interactables.find(entry=>entry.id===game.scenario.item.id)?.enabled,visible:game.scene.objectsById.get(game.scenario.item.id)?.visible};});
+  assert.deepEqual(collected,{enabled:false,visible:false},'scenario headphones must still collect and disappear with final art');
+
   await page.setViewportSize({width:430,height:820});await page.waitForTimeout(180);
-  const narrow=await page.evaluate(()=>({pose:window.__crazyFamilyMovieSetGame.cameraPose,aspect:window.__crazyFamilyMovieSetGame.scene.camera.aspect,visible:window.__crazyFamilyMovieSetGame.playerVisual.root.visible}));
+  const narrow=await page.evaluate(()=>({pose:window.__crazyFamilyMovieSetGame.cameraPose,aspect:window.__crazyFamilyMovieSetGame.scene.camera.aspect,visible:window.__crazyFamilyMovieSetGame.playerVisual.root.visible,contextLost:window.__crazyFamilyMovieSetGame.scene.renderer.getContext().isContextLost()}));
   const baseDistance=Math.hypot(initial.camera.position.x,initial.camera.position.y-.45,initial.camera.position.z),narrowDistance=Math.hypot(narrow.pose.position.x,narrow.pose.position.y-.45,narrow.pose.position.z);
-  await fs.mkdir('artifacts',{recursive:true});await page.locator('.stage').screenshot({path:'artifacts/crazy-family-overhead-true3d.png'});
-  assert.ok(Number.isFinite(narrow.aspect)&&narrow.aspect>0);assert.equal(narrow.visible,true);assert.deepEqual(narrow.pose.target,initial.camera.target);assert.equal(narrow.pose.fov,48);
+  assert.ok(Number.isFinite(narrow.aspect)&&narrow.aspect>0);assert.equal(narrow.visible,true);assert.equal(narrow.contextLost,false);assert.deepEqual(narrow.pose.target,initial.camera.target);assert.equal(narrow.pose.fov,48);
   assert.ok(narrowDistance>baseDistance&&narrowDistance<=baseDistance*1.45+1e-6);
 
   const fatal=pageErrors.filter(message=>!/play\(\) request was interrupted|AbortError|media/i.test(message));assert.deepEqual(fatal,[],`browser page errors: ${fatal.join(' | ')}`);
-  console.log('PASS: fixed overhead world3d rendered volumetric Libi and Dad, stayed stable through movement, jump, furniture routing, pointer drag, collision, and portrait resize');
+  console.log('PASS: Living Room Final Art v1 rendered stylized multi-part furniture and fixed lighting while preserving volumetric actors, interaction, movement, jump, collision, fixed camera and portrait resize');
 }finally{await browser.close();}

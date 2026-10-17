@@ -1,4 +1,4 @@
-name: Crazy Family overhead true3d acceptance
+name: Crazy Family Living Room Final Art v1 acceptance
 
 on:
   push:
@@ -40,12 +40,12 @@ jobs:
           exit 1
       - name: Existing cinematic browser smoke
         run: node tests/crazy-family/browser-smoke.mjs
-      - name: Fixed overhead true3d browser smoke
+      - name: Living Room Final Art v1 world3d browser smoke
         run: node tests/crazy-family/browser-world3d-smoke.mjs
-      - name: Upload overhead true3d screenshot
+      - name: Upload Living Room Final Art v1 screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: crazy-family-overhead-true3d
-          path: artifacts/crazy-family-overhead-true3d.png
+          name: crazy-family-living-room-final-art-v1
+          path: artifacts/crazy-family-living-room-final-art-v1.png
           if-no-files-found: ignore
