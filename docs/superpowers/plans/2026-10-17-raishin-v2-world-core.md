@@ -24,11 +24,11 @@
 
 ## Review Focus
 
-- Extreme camera positions: camera clamps without exposing empty space at all four world edges.
-- Long diagonal movement into a corner: collision resolves deterministically and never tunnels outside the walkable floor.
-- Direction changes during animation: all four direction pivots keep the same authoritative ground point without visual foot drift.
-- Resize / 16:9 FIT scaling: world framing remains valid and gameplay coordinates are unaffected by viewport scaling.
-- Interaction prompts while camera scrolls/zooms: nearest-item selection stays world-space while prompt render position tracks projection.
+- Extreme camera positions: camera clamps without exposing empty space at all four world edges — pinned in Task 4 camera tests.
+- Long diagonal movement into a corner: collision resolves deterministically and never tunnels outside the walkable floor — pinned in Task 3 collision tests.
+- Direction changes during animation: all four direction pivots keep the same authoritative ground point without visual foot drift — pinned in Task 2 player-view tests.
+- Resize / 16:9 FIT scaling: world framing remains valid and gameplay coordinates are unaffected by viewport scaling — pinned in Task 5 scene/shell contracts.
+- Interaction prompts while camera scrolls/zooms: nearest-item selection stays world-space while prompt render position tracks projection — pinned in Task 6 integration tests.
 
 ---
 
@@ -87,7 +87,7 @@ git commit -m "feat(raishin): define explorable v2 dojo world"
 - `project({x,y})` returns `{x,y,scale,depth}` and round-trips through `unproject`.
 - `DepthSystem.depthFor(projection, depthBias=0)` returns `projection.y + depthBias`.
 - `DepthSystem.fixedBand(name)` returns fixed bands for background/floor/foreground architecture.
-- `PlayerView.compute({projection,pivot,motion})` keeps `x/y` exactly at the projected ground point and receives depth through the shared depth rule rather than private offsets.
+- `PlayerView.compute({projection,pivot,motion})` returns only player visual transform and ground/shadow positions; it does **not** own render depth. Scene code obtains player/shadow depth from `DepthSystem`.
 
 - [ ] **Step 1: Rewrite projection tests for the 2400×1500 world**
 
@@ -100,15 +100,15 @@ Assert that two objects with the same bias sort by projected ground Y, bias chan
 - [ ] **Step 3: Run the projection/player/depth tests and confirm failure**
 
 Run: `node tests/raishin-v2-world-plane.test.js && node tests/raishin-v2-player-view.test.js && node tests/raishin-v2-depth-system.test.js`
-Expected: FAIL on old 1000×600 calibration and missing `DepthSystem`.
+Expected: FAIL on old 1000×600 calibration, current `PlayerView` depth ownership, and missing `DepthSystem`.
 
 - [ ] **Step 4: Implement recalibrated `WorldPlane` and `DepthSystem`**
 
 Keep projection formulas pure. Use one calibrated perspective mapping for the full world and expose enough render bounds for camera clamping; do not insert camera offsets into projection.
 
-- [ ] **Step 5: Keep Raika’s Ground Point invariant**
+- [ ] **Step 5: Keep Raika’s Ground Point invariant and remove private depth ownership**
 
-Update `PlayerView` so each pivot is only an origin inside the frame; `view.x/view.y` and shadow ground position must remain exactly the projection of `worldX/worldY` for all four directions and all eight frames.
+Update `PlayerView` so each pivot is only an origin inside the frame; `view.x/view.y` and shadow ground position must remain exactly the projection of `worldX/worldY` for all four directions and all eight frames. Remove `view.depth` / `view.shadowDepth`; those values come from `DepthSystem` in the scene.
 
 - [ ] **Step 6: Run tests and add the new depth test to CI**
 
@@ -166,7 +166,7 @@ git commit -m "feat(raishin): add world-space dojo collision primitives"
 
 **Files:**
 - Create: `raishin-legacy/src/systems/CameraRig.js`
-- Remove v2 usage of: `raishin-legacy/src/systems/CameraFollow.js` (keep file temporarily only if legacy tests still import it)
+- Remove v2 usage of: `raishin-legacy/src/systems/CameraFollow.js` (keep file temporarily only because current tests may still import it until this task updates them)
 - Modify: `raishin-legacy/v2.html`
 - Modify: `tests/raishin-v2-professional-movement.test.js`
 - Create: `tests/raishin-v2-camera-rig.test.js`
@@ -212,6 +212,7 @@ git commit -m "feat(raishin): add real scrolling camera rig"
 - Modify: `raishin-legacy/v2-game.js`
 - Modify: `raishin-legacy/v2.html`
 - Modify: `tests/raishin-v2-scene-contract.test.js`
+- Modify: `tests/raishin-v2-shell.test.js`
 - Create: `tests/raishin-v2-open-world-scene.test.js`
 - Modify: `.github/workflows/raishin-v2-test.yml`
 
@@ -223,13 +224,13 @@ git commit -m "feat(raishin): add real scrolling camera rig"
 
 Require `WorldModel`, `CameraRig`, and `DepthSystem`; remove the obsolete assertion that the camera must remain static; forbid legacy adapters and forbid two full-screen duplicate `dojo-bg` images as the world representation.
 
-- [ ] **Step 2: Add a failing open-world scene source contract**
+- [ ] **Step 2: Add failing open-world and resize/source contracts**
 
-Assert that scene setup creates separate environment groups/layers, configures Phaser camera bounds/zoom from the world model, uses world render objects with ground anchors, creates Raika + shadow at the projected spawn, and keeps canonical sprite sheet/frame metadata.
+Assert that scene setup creates separate environment groups/layers, configures Phaser camera bounds/zoom from the world model, uses world render objects with ground anchors, creates Raika + shadow at the projected spawn, and keeps canonical sprite sheet/frame metadata. Keep `v2-game.js` at Phaser `Scale.FIT` 1600×900 and assert viewport scaling is only renderer configuration: neither `WorldModel` nor `PlayerController` consumes DOM viewport dimensions.
 
 - [ ] **Step 3: Run the scene tests and confirm failure**
 
-Run: `node tests/raishin-v2-scene-contract.test.js && node tests/raishin-v2-open-world-scene.test.js`
+Run: `node tests/raishin-v2-scene-contract.test.js && node tests/raishin-v2-shell.test.js && node tests/raishin-v2-open-world-scene.test.js`
 Expected: FAIL because current scene still draws the same 1600×900 background twice and scrolls only a few pixels.
 
 - [ ] **Step 4: Build the minimal layered dojo**
@@ -242,7 +243,7 @@ Use one `heroScale`/base-height calibration so Raika at spawn occupies 28–36% 
 
 - [ ] **Step 6: Wire camera and depth**
 
-Set Phaser scroll/zoom from `CameraRig`; update Raika and world props through `DepthSystem`; verify at least one prop can sort both in front of and behind Raika based on planted world Y.
+Set Phaser scroll/zoom from `CameraRig`; obtain Raika, shadow, and prop depths from `DepthSystem`; verify at least one prop can sort both in front of and behind Raika based on planted world Y.
 
 - [ ] **Step 7: Run scene tests and add new test to CI**
 
@@ -251,22 +252,20 @@ Expected: PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add raishin-legacy/src/scenes/DojoScene.js raishin-legacy/v2-game.js raishin-legacy/v2.html tests/raishin-v2-scene-contract.test.js tests/raishin-v2-open-world-scene.test.js .github/workflows/raishin-v2-test.yml
+git add raishin-legacy/src/scenes/DojoScene.js raishin-legacy/v2-game.js raishin-legacy/v2.html tests/raishin-v2-scene-contract.test.js tests/raishin-v2-shell.test.js tests/raishin-v2-open-world-scene.test.js .github/workflows/raishin-v2-test.yml
 git commit -m "feat(raishin): compose scrolling layered Inazuma scene"
 ```
 
-### Task 6: Preserve world-space interactions and create the visual-acceptance build
+### Task 6: Lock world-space interactions and the visual-acceptance build
 
 **Files:**
-- Modify: `raishin-legacy/src/systems/InteractionSystem.js` only if needed to separate gameplay lookup from prompt render projection
 - Modify: `tests/raishin-v2-world-systems.test.js`
 - Create: `tests/raishin-v2-world-core-integration.test.js`
-- Modify: `tests/raishin-v2-shell.test.js`
 - Modify: `.github/workflows/raishin-v2-test.yml`
 
 **Interfaces:**
-- `InteractionSystem.nearest(worldPoint,maxDistance)` remains independent of camera scroll/zoom.
-- `InteractionSystem.projectPrompt(item)` returns the world projection; screen placement is camera/render responsibility.
+- Existing `InteractionSystem.nearest(worldPoint,maxDistance)` remains independent of camera scroll/zoom.
+- Existing `InteractionSystem.projectPrompt(item)` returns the world projection; screen placement remains camera/render responsibility.
 
 - [ ] **Step 1: Write integration assertions before final calibration**
 
@@ -274,24 +273,20 @@ Simulate world-space traversal in all four directions; require collision-safe po
 
 - [ ] **Step 2: Add interaction camera-independence assertions**
 
-For identical player/item world coordinates, nearest interaction result must be unchanged across arbitrary camera scroll/zoom snapshots.
+For identical player/item world coordinates, nearest interaction result must be unchanged across arbitrary camera scroll/zoom snapshots; prompt world projection must also remain identical before camera transformation.
 
-- [ ] **Step 3: Keep the shell migration guard**
-
-`tests/raishin-v2-shell.test.js` must continue asserting that `/raishin-legacy/index.html` stays Legacy until the user visually accepts v2; only `/raishin-legacy/v2.html` receives this milestone.
-
-- [ ] **Step 4: Run the focused v2 suite**
+- [ ] **Step 3: Run the focused v2 suite**
 
 Run all v2 tests in the workflow matrix plus the newly added tests. Expected: PASS with no changes required to Legacy rendering tests.
 
-- [ ] **Step 5: Run browser/Chromium smoke if the repository runner supports it**
+- [ ] **Step 4: Run browser/Chromium smoke if the repository runner supports it**
 
 Verify: v2 loads; Raika is visibly ~28–36% of viewport height at spawn; WASD/arrows traverse enough distance to scroll the dojo; no empty area is exposed; feet remain planted in four directions; collision stops at solids/boundaries; at least one occluder changes front/back ordering.
 
-- [ ] **Step 6: Commit the acceptance checkpoint**
+- [ ] **Step 5: Commit the acceptance checkpoint**
 
 ```bash
-git add raishin-legacy/src/systems/InteractionSystem.js tests/raishin-v2-world-systems.test.js tests/raishin-v2-world-core-integration.test.js tests/raishin-v2-shell.test.js .github/workflows/raishin-v2-test.yml
+git add tests/raishin-v2-world-systems.test.js tests/raishin-v2-world-core-integration.test.js .github/workflows/raishin-v2-test.yml
 git commit -m "test(raishin): lock v2 world-core acceptance checkpoint"
 ```
 
