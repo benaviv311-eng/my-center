@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(23);
 
 select has_table('public', 'exercises', 'exercises table exists');
 select has_table('public', 'exercise_versions', 'exercise versions table exists');
@@ -18,6 +18,41 @@ select enum_has_labels(
   'public', 'progression_stage',
   array['isolated', 'fixed', 'complex', 'game-situation'],
   'progression stages are constrained'
+);
+
+select ok(
+  not has_function_privilege('anon', 'public.is_active_coach()', 'EXECUTE'),
+  'anon cannot execute is_active_coach'
+);
+select ok(
+  not has_function_privilege('anon', 'public.owns_group(uuid)', 'EXECUTE'),
+  'anon cannot execute owns_group'
+);
+select ok(
+  not has_function_privilege('anon', 'public.can_read_exercise(uuid)', 'EXECUTE'),
+  'anon cannot execute can_read_exercise'
+);
+select ok(
+  not has_function_privilege('anon', 'public.owns_exercise(uuid)', 'EXECUTE'),
+  'anon cannot execute owns_exercise'
+);
+select ok(
+  has_function_privilege('authenticated', 'public.is_active_coach()', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.owns_group(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.can_read_exercise(uuid)', 'EXECUTE')
+  and has_function_privilege('authenticated', 'public.owns_exercise(uuid)', 'EXECUTE'),
+  'authenticated role retains helper function access'
+);
+select ok(
+  exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname = 'reject_exercise_version_mutation'
+      and coalesce(p.proconfig, '{}'::text[]) && array['search_path=pg_catalog, public', 'search_path=public, pg_temp']::text[]
+  ),
+  'immutable-version trigger function pins its search_path'
 );
 
 insert into auth.users (
