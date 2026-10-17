@@ -9,10 +9,23 @@ export type OfflineGroupSummary = {
   ageGradeLabel: string;
   typicalPlayerCount: number;
   generalLevel: string;
-  notes: string;
+};
+
+type OfflineGroupSource = OfflineGroupSummary & {
+  notes?: string;
 };
 
 const LAST_GROUP_PREFIX = "season-design:last-group:";
+
+export function toOfflineGroupSummary(group: OfflineGroupSource): OfflineGroupSummary {
+  return {
+    id: group.id,
+    name: group.name,
+    ageGradeLabel: group.ageGradeLabel,
+    typicalPlayerCount: group.typicalPlayerCount,
+    generalLevel: group.generalLevel,
+  };
+}
 
 export function OfflineGroupSnapshot({
   userId,
@@ -20,7 +33,7 @@ export function OfflineGroupSnapshot({
   updatedAt,
 }: {
   userId: string;
-  group: OfflineGroupSummary;
+  group: OfflineGroupSource;
   updatedAt: string;
 }) {
   const [offline, setOffline] = useState(false);
@@ -37,7 +50,8 @@ export function OfflineGroupSnapshot({
   }, []);
 
   useEffect(() => {
-    void putOfflineSnapshot(`${userId}:group:${group.id}`, group, updatedAt).then(() => {
+    const summary = toOfflineGroupSummary(group);
+    void putOfflineSnapshot(`${userId}:group:${group.id}`, summary, updatedAt).then(() => {
       window.localStorage.setItem(`${LAST_GROUP_PREFIX}${userId}`, group.id);
     });
   }, [group, updatedAt, userId]);
