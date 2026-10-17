@@ -12,16 +12,16 @@ function rgbaTexture(THREE,size,painter,anisotropy){
 }
 function makeTextures(THREE,anisotropy){
   const wood=rgbaTexture(THREE,64,(x,y)=>{
-    const board=Math.floor(x/8),grain=Math.sin((y+board*11)*.34)*7+Math.sin((y+x)*.11)*3;
-    const bases=[[184,137,103],[168,118,86],[193,146,109],[176,126,91]];const base=bases[board%bases.length];
-    const seam=x%8===0?-18:0;return[base[0]+grain+seam,base[1]+grain*.65+seam,base[2]+grain*.45+seam,255];
-  },anisotropy);wood.name='final-art-wood';wood.repeat.set?.(7,5);
+    const board=Math.floor(x/16),grain=Math.sin((y+board*13)*.20)*3+Math.sin((y+x)*.075)*1.5;
+    const bases=[[194,154,121],[186,143,108],[201,162,128],[190,149,114]];const base=bases[board%bases.length];
+    const seam=x%16===0?-8:0;return[base[0]+grain+seam,base[1]+grain*.7+seam,base[2]+grain*.5+seam,255];
+  },anisotropy);wood.name='final-art-wood';wood.repeat.set?.(4,3);
   const rug=rgbaTexture(THREE,64,(x,y)=>{
-    const border=x<5||y<5||x>58||y>58;const weave=((x+y)%4===0)?6:0;const diamond=Math.abs((x%16)-8)+Math.abs((y%16)-8)<5;
-    return border?[229+weave,182+weave,150,255]:diamond?[190+weave,103,92,255]:[174+weave,83,78,255];
-  },anisotropy);rug.name='final-art-rug';rug.repeat.set?.(2.2,1.25);
-  const fabric=rgbaTexture(THREE,32,(x,y)=>{const weave=(x%3===0?7:0)+(y%4===0?5:0);return[196+weave,118+weave*.35,116+weave*.2,255];},anisotropy);fabric.name='final-art-fabric';fabric.repeat.set?.(5,5);
-  const wall=rgbaTexture(THREE,32,(x,y)=>{const noise=((x*17+y*29)%11)-5;return[239+noise,222+noise,205+noise,255];},anisotropy);wall.name='final-art-wall';wall.repeat.set?.(5,4);
+    const border=x<5||y<5||x>58||y>58;const weave=((x+y)%5===0)?4:0;const diamond=Math.abs((x%16)-8)+Math.abs((y%16)-8)<5;
+    return border?[234+weave,194+weave,164,255]:diamond?[196+weave,112,99,255]:[181+weave,91,85,255];
+  },anisotropy);rug.name='final-art-rug';rug.repeat.set?.(2,1.15);
+  const fabric=rgbaTexture(THREE,32,(x,y)=>{const weave=(x%4===0?4:0)+(y%5===0?3:0);const base=222+weave;return[base,base,base,255];},anisotropy);fabric.name='final-art-fabric';fabric.repeat.set?.(4,4);
+  const wall=rgbaTexture(THREE,32,(x,y)=>{const noise=((x*17+y*29)%7)-3;return[248+noise,242+noise,234+noise,255];},anisotropy);wall.name='final-art-wall';wall.repeat.set?.(4,3);
   return{floorWood:wood,rug,fabric,wall};
 }
 export function createLivingRoomMaterialSystem({THREE,anisotropy=4}={}){
@@ -29,17 +29,22 @@ export function createLivingRoomMaterialSystem({THREE,anisotropy=4}={}){
   const textures=makeTextures(THREE,anisotropy);
   const make=(options)=>new THREE.MeshStandardMaterial(options);
   const materials=new Map([
-    ['floorWood',make({map:textures.floorWood,color:0xffffff,roughness:.72,metalness:0})],
-    ['furnitureWood',make({map:textures.floorWood,color:0x8d624b,roughness:.64,metalness:0})],
-    ['sofaFabric',make({map:textures.fabric,color:0xc77e79,roughness:.9,metalness:0})],
-    ['cushionWarm',make({map:textures.fabric,color:0xe6ad8e,roughness:.91,metalness:0})],
-    ['cushionCool',make({map:textures.fabric,color:0x82aaa6,roughness:.9,metalness:0})],
-    ['wall',make({map:textures.wall,color:0xf0dfcf,roughness:.94,metalness:0})],
-    ['rug',make({map:textures.rug,color:0xffffff,roughness:.95,metalness:0})],
-    ['toyPlastic',make({color:0xf2b94c,roughness:.46,metalness:.02})],
-    ['metal',make({color:0x66717a,roughness:.35,metalness:.5})],
-    ['lampShade',make({color:0xf0c982,roughness:.82,metalness:0})],
-    ['lampGlow',make({color:0xffcf83,emissive:0xffa94f,emissiveIntensity:1.7,roughness:.45,metalness:0})],
+    ['floorWood',make({map:textures.floorWood,color:0xfff3e5,roughness:.76,metalness:0})],
+    ['furnitureWood',make({map:textures.floorWood,color:0x8b6049,roughness:.67,metalness:0})],
+    ['sofaFabric',make({map:textures.fabric,color:0xc96f68,roughness:.91,metalness:0})],
+    ['cushionWarm',make({map:textures.fabric,color:0xf0b58f,roughness:.92,metalness:0})],
+    ['cushionCool',make({map:textures.fabric,color:0x78aaa5,roughness:.91,metalness:0})],
+    ['wall',make({map:textures.wall,color:0xfff7ed,roughness:.95,metalness:0})],
+    ['rug',make({map:textures.rug,color:0xfff5ed,roughness:.96,metalness:0})],
+    ['toyPlastic',make({color:0xf3ba50,roughness:.48,metalness:.02})],
+    ['metal',make({color:0x66717a,roughness:.37,metalness:.5})],
+    ['lampShade',make({color:0xf2d19a,roughness:.84,metalness:0})],
+    ['lampGlow',make({color:0xffd89a,emissive:0xffb45d,emissiveIntensity:1.35,roughness:.45,metalness:0})],
+    ['windowGlass',make({color:0x9fc9d4,roughness:.18,metalness:.03,transparent:true,opacity:.62})],
+    ['curtainFabric',make({map:textures.fabric,color:0xe8c3ad,roughness:.95,metalness:0})],
+    ['plantLeaf',make({color:0x668d68,roughness:.88,metalness:0})],
+    ['ceramic',make({color:0xd99570,roughness:.8,metalness:.02})],
+    ['tvScreen',make({color:0x17242a,emissive:0x15313c,emissiveIntensity:.5,roughness:.25,metalness:.08})],
   ]);
   let disposed=false;
   return{
