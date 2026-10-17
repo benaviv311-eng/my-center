@@ -28,7 +28,7 @@ test('final art registry builds semantic multi-part living room assemblies', asy
   }
   const sofa=art.objectsById.get('sofa');assert.ok(meshCount(sofa)>=14,'sofa should have cushions, arms, body and visible feet');assert.notEqual(sofa.isMesh,true,'sofa semantic root must be a group, not one mesh');
   assert.ok(meshCount(art.objectsById.get('coffee-table'))>=4);assert.ok(meshCount(art.objectsById.get('side-table'))>=3);assert.ok(meshCount(art.objectsById.get('lamp'))>=4);assert.ok(meshCount(art.objectsById.get('doorway'))>=3);
-  const rug=art.objectsById.get('rug');assert.ok(rug.children[0].position.y>.06,'rug visual surface must sit above the floor without moving its logical root');
+  const rug=art.objectsById.get('rug'),rugDef=world.objects.find(object=>object.id==='rug');assert.equal(rug.position.y,rugDef.y,'rug semantic root must stay on its locked logical world coordinate');
   const cushionA=art.objectsById.get('cushion-a'),cushionB=art.objectsById.get('cushion-b');assert.notEqual(cushionA,cushionB);assert.ok(cushionA.children[0].position.y>.2);assert.ok(cushionB.children[0].position.y>.2);
   assert.ok(meshCount(art.objectsById.get('mystery-stool'))>=1,'unknown renderables need fallback art');
   const dressingIds=art.dressingRoot.children.map(child=>child.name);
