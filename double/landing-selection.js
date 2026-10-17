@@ -33,7 +33,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='14';
+  const V='15';
   const head=document.head||document.documentElement;
   document.querySelector('.landing')?.classList.add('toy-arcade');
   function ensureCss(href,attr){
@@ -65,6 +65,40 @@
               load('double/dragonball-sprite-1.js?v='+V,'data-double-dragon-sprite-1',()=>false,()=>
                 load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))))));
   }
+  function syncClassicCopy(){
+    const tag=document.getElementById('previewTag');
+    if(tag?.textContent?.includes('קלאסי')){
+      const title=document.getElementById('selectedTitle'),sub=document.getElementById('selectedSub');
+      if(title)title.textContent='קלאסי מהיר';
+      if(sub)sub.textContent='20 התאמות · הזמן המהיר ביותר';
+    }
+    document.querySelectorAll('.lobby-mode').forEach(card=>{
+      const label=(card.querySelector('b')?.textContent||'').trim();
+      if(label==='קלאסי'){
+        const small=card.querySelector('small');
+        if(small)small.textContent='20 התאמות · הזמן המהיר ביותר';
+      }
+    });
+  }
+  let copyQueued=false;
+  new MutationObserver(()=>{
+    if(copyQueued)return;copyQueued=true;
+    requestAnimationFrame(()=>{copyQueued=false;syncClassicCopy()});
+  }).observe(document.querySelector('.landing')||document.body,{subtree:true,childList:true,characterData:true});
+  document.addEventListener('click',event=>{
+    if(!event.target?.closest?.('#playSelected'))return;
+    setTimeout(()=>{
+      const frame=document.getElementById('gameFrame');
+      if(!frame?.src||frame.src==='about:blank')return;
+      try{
+        const url=new URL(frame.src,location.href);
+        if(!url.pathname.endsWith('/double-game.html'))return;
+        url.searchParams.set('v','15');
+        frame.src=url.toString();
+      }catch(_){ }
+    },0);
+  });
+  syncClassicCopy();
   const loadBridge=()=>load('double/landing-music-bridge.js?v='+V,'data-double-landing-music-bridge',()=>false);
   const loadEncouragementLaunch=()=>load('double/encouragement-launch-bridge.js?v='+V,'data-double-encouragement-launch',()=>false,loadBridge);
   const loadCompetitiveFix=()=>load('double/competitive-landing-fix.js?v='+V,'data-double-competitive-landing-fix',()=>false,loadEncouragementLaunch);
