@@ -141,6 +141,24 @@ export function cropRectToPixels(crop, frame, imageWidth, imageHeight, columns, 
   };
 }
 
+export function extractRowSilhouetteBounds(imageData, width, height, alphaThreshold = 32) {
+  const data = imageData?.data;
+  if (!data || !(width > 0) || !(height > 0)) return [];
+  const rows = [];
+  for (let y = 0; y < height; y += 1) {
+    let left = -1;
+    let right = -1;
+    for (let x = 0; x < width; x += 1) {
+      const alpha = data[(y * width + x) * 4 + 3] || 0;
+      if (alpha <= alphaThreshold) continue;
+      if (left < 0) left = x;
+      right = x;
+    }
+    if (left >= 0) rows.push({ y, left, right });
+  }
+  return rows;
+}
+
 function imageSize(sourceImage) {
   return {
     width: Number(sourceImage?.naturalWidth || sourceImage?.videoWidth || sourceImage?.width || 0),
@@ -222,6 +240,71 @@ function createTexture(THREERef, canvas) {
   return texture;
 }
 
+function appendQuad(positions, a, b, c, d) {
+  positions.push(
+    a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2],
+    a[0], a[1], a[2], c[0], c[1], c[2], d[0], d[1], d[2],
+  );
+}
+
+function buildSilhouetteSideGeometry({ THREERef, imageData, pixelWidth, pixelHeight, worldWidth, worldHeight, depth }) {
+  const geometry = new THREERef.BufferGeometry();
+  const rows = extractRowSilhouetteBounds(imageData, pixelWidth, pixelHeight, 32);
+  const positions = [];
+  if (!rows.length) {
+    geometry.setAttribute('position', new THREERef.Float32BufferAttribute([], 3));
+    return geometry;
+  }
+
+  const halfDepth = depth / 2;
+  const point = (x, y, z) => [
+    ((x + .5) / pixelWidth - .5) * worldWidth,
+    (.5 - (y + .5) / pixelHeight) * worldHeight,
+    z,
+  ];
+  const sampleStep = Math.max(1, Math.floor(pixelHeight / 64));
+  const sampled = rows.filter((_, index) => index % sampleStep === 0 || index === rows.length - 1);
+
+  for (let index = 0; index < sampled.length - 1; index += 1) {
+    const current = sampled[index];
+    const next = sampled[index + 1];
+    if (next.y - current.y > sampleStep * 3) continue;
+
+    const leftFront = point(current.left, current.y, halfDepth);
+    const leftBack = point(current.left, current.y, -halfDepth);
+    const nextLeftBack = point(next.left, next.y, -halfDepth);
+    const nextLeftFront = point(next.left, next.y, halfDepth);
+    appendQuad(positions, leftFront, leftBack, nextLeftBack, nextLeftFront);
+
+    const rightFront = point(current.right, current.y, halfDepth);
+    const nextRightFront = point(next.right, next.y, halfDepth);
+    const nextRightBack = point(next.right, next.y, -halfDepth);
+    const rightBack = point(current.right, current.y, -halfDepth);
+    appendQuad(positions, rightFront, nextRightFront, nextRightBack, rightBack);
+  }
+
+  const first = sampled[0];
+  const last = sampled[sampled.length - 1];
+  appendQuad(
+    positions,
+    point(first.left, first.y, halfDepth),
+    point(first.right, first.y, halfDepth),
+    point(first.right, first.y, -halfDepth),
+    point(first.left, first.y, -halfDepth),
+  );
+  appendQuad(
+    positions,
+    point(last.left, last.y, halfDepth),
+    point(last.left, last.y, -halfDepth),
+    point(last.right, last.y, -halfDepth),
+    point(last.right, last.y, halfDepth),
+  );
+
+  geometry.setAttribute('position', new THREERef.Float32BufferAttribute(positions, 3));
+  geometry.computeVertexNormals?.();
+  return geometry;
+}
+
 function createPartMesh({ THREERef, kind, name, canonical, profilePart, frontCanvas, frontContext, documentRef }) {
   const width = profilePart.crop.width * canonical.width;
   const height = profilePart.crop.height * canonical.height;
@@ -229,17 +312,62 @@ function createPartMesh({ THREERef, kind, name, canonical, profilePart, frontCan
   const frontTexture = createTexture(THREERef, frontCanvas);
   const backTexture = createTexture(THREERef, mirrorCanvas(documentRef, frontCanvas));
   const sideColor = deriveEdgeColor(frontContext, frontCanvas.width, frontCanvas.height);
-  const sideMaterial = new THREERef.MeshStandardMaterial({ color: sideColor, roughness: .88, metalness: 0 });
-  const topMaterial = sideMaterial.clone();
-  const bottomMaterial = sideMaterial.clone();
-  const frontMaterial = new THREERef.MeshStandardMaterial({ map: frontTexture, transparent: true, alphaTest: .08, roughness: .82, metalness: 0 });
-  const backMaterial = new THREERef.MeshStandardMaterial({ map: backTexture, transparent: true, alphaTest: .08, roughness: .82, metalness: 0 });
-  const geometry = new THREERef.BoxGeometry(width, height, depth);
-  const mesh = new THREERef.Mesh(geometry, [sideMaterial, sideMaterial.clone(), topMaterial, bottomMaterial, frontMaterial, backMaterial]);
-  mesh.name = `${kind}-${name}-mesh`;
-  mesh.userData.semanticPart = name;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+
+  const frontMaterial = new THREERef.MeshStandardMaterial({
+    map: frontTexture,
+    transparent: true,
+    alphaTest: .08,
+    roughness: .82,
+    metalness: 0,
+    side: THREERef.FrontSide,
+  });
+  const backMaterial = new THREERef.MeshStandardMaterial({
+    map: backTexture,
+    transparent: true,
+    alphaTest: .08,
+    roughness: .82,
+    metalness: 0,
+    side: THREERef.FrontSide,
+  });
+  const sideMaterial = new THREERef.MeshStandardMaterial({ color: sideColor, roughness: .88, metalness: 0, side: THREERef.DoubleSide });
+
+  const frontGeometry = new THREERef.PlaneGeometry(width, height);
+  const backGeometry = new THREERef.PlaneGeometry(width, height);
+  const imageData = frontContext.getImageData?.(0, 0, frontCanvas.width, frontCanvas.height);
+  const sideGeometry = buildSilhouetteSideGeometry({
+    THREERef,
+    imageData,
+    pixelWidth: frontCanvas.width,
+    pixelHeight: frontCanvas.height,
+    worldWidth: width,
+    worldHeight: height,
+    depth,
+  });
+
+  const surface = new THREERef.Group();
+  surface.name = `${kind}-${name}-surface`;
+  surface.userData.semanticPart = name;
+
+  const front = new THREERef.Mesh(frontGeometry, frontMaterial);
+  front.name = `${kind}-${name}-front`;
+  front.position.z = depth / 2;
+  front.castShadow = true;
+  front.receiveShadow = true;
+  surface.add(front);
+
+  const back = new THREERef.Mesh(backGeometry, backMaterial);
+  back.name = `${kind}-${name}-back`;
+  back.position.z = -depth / 2;
+  back.rotation.y = Math.PI;
+  back.castShadow = true;
+  back.receiveShadow = true;
+  surface.add(back);
+
+  const sides = new THREERef.Mesh(sideGeometry, sideMaterial);
+  sides.name = `${kind}-${name}-sides`;
+  sides.castShadow = true;
+  sides.receiveShadow = true;
+  surface.add(sides);
 
   const pivot = new THREERef.Group();
   pivot.name = `${kind}-${name}`;
@@ -253,15 +381,15 @@ function createPartMesh({ THREERef, kind, name, canonical, profilePart, frontCan
   const pivotZ = profilePart.zOrder * .002;
   pivot.position.set(pivotX, pivotY, pivotZ);
   pivot.userData.neutralPosition = { x: pivotX, y: pivotY, z: pivotZ };
-  mesh.position.set(centerX - pivotX, centerY - pivotY, 0);
-  pivot.add(mesh);
+  surface.position.set(centerX - pivotX, centerY - pivotY, 0);
+  pivot.add(surface);
 
   return {
     pivot,
-    mesh,
+    mesh: surface,
     resources: {
-      geometries: [geometry],
-      materials: mesh.material,
+      geometries: [frontGeometry, backGeometry, sideGeometry],
+      materials: [frontMaterial, backMaterial, sideMaterial],
       textures: [frontTexture, backTexture],
     },
   };
@@ -278,7 +406,7 @@ export async function createCanonicalSegmentedRig({
   if (!(size.width > 0) || !(size.height > 0)) {
     throw new Error('Crazy Family segmented rig: canonical image unavailable');
   }
-  if (!THREERef?.Group || !THREERef?.Mesh || !THREERef?.BoxGeometry) {
+  if (!THREERef?.Group || !THREERef?.Mesh || !THREERef?.PlaneGeometry || !THREERef?.BufferGeometry || !THREERef?.Float32BufferAttribute) {
     throw new Error('Crazy Family segmented rig: Three.js unavailable');
   }
 
