@@ -4,6 +4,130 @@ function clampInt(value, minimum, maximum) {
   return Math.max(minimum, Math.min(maximum, Math.round(value)));
 }
 
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
+function normalizeAngle(angle) {
+  let normalized = Number(angle) || 0;
+  while (normalized >= Math.PI) normalized -= Math.PI * 2;
+  while (normalized < -Math.PI) normalized += Math.PI * 2;
+  return normalized;
+}
+
+export function resolveReadableYaw({ cameraFacingYaw = 0, movementYaw = cameraFacingYaw, limitRadians = 25 * Math.PI / 180 } = {}) {
+  const movementDelta = normalizeAngle(movementYaw - cameraFacingYaw);
+  const visibleDelta = clamp(movementDelta, -Math.abs(limitRadians), Math.abs(limitRadians));
+  return {
+    yaw: normalizeAngle(cameraFacingYaw + visibleDelta),
+    visibleDelta,
+    movementDelta,
+  };
+}
+
+function neutralJoints() {
+  const joints = Object.create(null);
+  for (const name of CHARACTER_RIG_PART_NAMES) joints[name] = { x: 0, y: 0, z: 0 };
+  return joints;
+}
+
+function resolvePoseState(state, speed, grounded, crouching) {
+  if (crouching || state === 'crouch') return 'crouch';
+  if (!grounded || state === 'jump' || state === 'airborne') return 'jump';
+  if (state === 'chase') return 'run';
+  if (state === 'run') return 'run';
+  if (state === 'walk') return 'walk';
+  if (state === 'ground') {
+    if (speed > 4.6) return 'run';
+    if (speed > .18) return 'walk';
+  }
+  return 'idle';
+}
+
+export function calculateRigPose({
+  kind,
+  state = 'idle',
+  timeSeconds = 0,
+  speed = 0,
+  grounded = true,
+  crouching = false,
+} = {}) {
+  const profile = getCharacterRigProfile(kind);
+  const joints = neutralJoints();
+  const resolvedState = resolvePoseState(state, Number(speed) || 0, grounded !== false, Boolean(crouching));
+  const result = {
+    state: resolvedState,
+    rootYOffset: 0,
+    torso: { rotationX: 0, rotationY: 0, rotationZ: 0, offsetY: 0 },
+    head: { rotationX: 0, rotationY: 0, rotationZ: 0, offsetY: 0 },
+    joints,
+  };
+
+  if (resolvedState === 'idle') {
+    const motion = profile.motion.idle;
+    const phase = timeSeconds * motion.frequency;
+    const breath = Math.sin(phase) * motion.breath;
+    result.rootYOffset = breath * .16;
+    result.torso.offsetY = breath;
+    result.head.offsetY = breath * .45;
+    result.head.rotationZ = Math.sin(phase * .63) * motion.head;
+    joints.leftUpperArm.z = -motion.arm + Math.sin(phase * .72) * motion.arm * .2;
+    joints.rightUpperArm.z = motion.arm - Math.sin(phase * .72) * motion.arm * .2;
+    return result;
+  }
+
+  if (resolvedState === 'walk' || resolvedState === 'run') {
+    const motion = profile.motion[resolvedState];
+    const phase = timeSeconds * motion.frequency;
+    const swing = Math.sin(phase);
+    const opposite = -swing;
+    joints.leftUpperArm.z = swing * motion.armSwing;
+    joints.rightUpperArm.z = opposite * motion.armSwing;
+    joints.leftLowerArm.z = swing * motion.armSwing * .34;
+    joints.rightLowerArm.z = opposite * motion.armSwing * .34;
+    joints.leftUpperLeg.z = opposite * motion.legSwing;
+    joints.rightUpperLeg.z = swing * motion.legSwing;
+    joints.leftLowerLeg.z = Math.max(0, swing) * motion.kneeBend;
+    joints.rightLowerLeg.z = Math.max(0, opposite) * motion.kneeBend;
+    result.torso.rotationY = swing * motion.torsoTwist;
+    result.torso.rotationX = -(motion.lean || 0);
+    result.head.rotationY = -result.torso.rotationY * .38;
+    result.rootYOffset = Math.abs(Math.sin(phase * 2)) * (resolvedState === 'run' ? .018 : .010);
+    return result;
+  }
+
+  if (resolvedState === 'jump') {
+    const motion = profile.motion.jump;
+    result.torso.rotationX = -motion.torsoLean;
+    result.head.rotationX = motion.torsoLean * .25;
+    joints.leftUpperArm.z = motion.armLift;
+    joints.rightUpperArm.z = -motion.armLift;
+    joints.leftLowerArm.z = motion.armLift * .28;
+    joints.rightLowerArm.z = -motion.armLift * .28;
+    joints.leftUpperLeg.z = -motion.legTuck;
+    joints.rightUpperLeg.z = motion.legTuck;
+    joints.leftLowerLeg.z = motion.legTuck * .85;
+    joints.rightLowerLeg.z = -motion.legTuck * .85;
+    return result;
+  }
+
+  if (resolvedState === 'crouch') {
+    const motion = profile.motion.crouch;
+    result.rootYOffset = -motion.hipDrop;
+    result.torso.rotationX = motion.torsoLean;
+    result.head.rotationX = -motion.torsoLean * .25;
+    joints.leftUpperLeg.z = -.16;
+    joints.rightUpperLeg.z = .16;
+    joints.leftLowerLeg.z = motion.kneeBend;
+    joints.rightLowerLeg.z = -motion.kneeBend;
+    joints.leftUpperArm.z = -.08;
+    joints.rightUpperArm.z = .08;
+    return result;
+  }
+
+  return result;
+}
+
 export function cropRectToPixels(crop, frame, imageWidth, imageHeight, columns, rows) {
   const frameWidth = imageWidth / columns;
   const frameHeight = imageHeight / rows;
@@ -165,6 +289,11 @@ export async function createCanonicalSegmentedRig({
   root.userData.renderMode = 'canonical-segmented-rig';
   root.userData.requestedFrame = 0;
 
+  const presentationRoot = new THREERef.Group();
+  presentationRoot.name = `${kind}-rig-presentation`;
+  presentationRoot.userData.semanticPart = 'presentationRoot';
+  root.add(presentationRoot);
+
   const parts = Object.create(null);
   const resources = { geometries: [], materials: [], textures: [] };
 
@@ -180,28 +309,74 @@ export async function createCanonicalSegmentedRig({
     );
     const { canvas, context } = drawCanonicalPart({ documentRef, sourceImage, sourceRect });
     const built = createPartMesh({ THREERef, kind, name, canonical, profilePart, frontCanvas: canvas, frontContext: context, documentRef });
-    root.add(built.pivot);
+    presentationRoot.add(built.pivot);
     parts[name] = built.pivot;
     resources.geometries.push(...built.resources.geometries);
     resources.materials.push(...built.resources.materials);
     resources.textures.push(...built.resources.textures);
   }
 
-  function applyPoseToRig() {
-    // Task 3 owns articulation. Keeping this function canvas-free is intentional.
+  function applyPoseToRig(poseInput = {}) {
+    const pose = calculateRigPose({ kind, ...poseInput });
+    presentationRoot.position.y = pose.rootYOffset;
+    for (const name of CHARACTER_RIG_PART_NAMES) {
+      const pivot = parts[name];
+      const joint = pose.joints[name] || { x: 0, y: 0, z: 0 };
+      pivot.rotation.set(joint.x || 0, joint.y || 0, joint.z || 0);
+    }
+    const torso = parts.torso;
+    torso.rotation.x += pose.torso.rotationX || 0;
+    torso.rotation.y += pose.torso.rotationY || 0;
+    torso.rotation.z += pose.torso.rotationZ || 0;
+    torso.position.y += pose.torso.offsetY || 0;
+    const head = parts.head;
+    head.rotation.x += pose.head.rotationX || 0;
+    head.rotation.y += pose.head.rotationY || 0;
+    head.rotation.z += pose.head.rotationZ || 0;
+    head.position.y += pose.head.offsetY || 0;
+
+    root.userData.poseState = pose.state;
+    root.userData.poseDiagnostics = {
+      state: pose.state,
+      rootYOffset: pose.rootYOffset,
+      leftUpperArm: pose.joints.leftUpperArm.z,
+      leftUpperLeg: pose.joints.leftUpperLeg.z,
+    };
+    return pose;
   }
 
+  let lastMovementYaw = 0;
   return {
     root,
     parts,
+    presentationRoot,
     setPoseState(pose = {}) {
-      root.userData.poseState = pose.state || 'idle';
-      applyPoseToRig(pose);
+      if (Number.isFinite(pose.movementYaw)) lastMovementYaw = pose.movementYaw;
+      return applyPoseToRig(pose);
     },
     setFrame(frame = 0) {
       root.userData.requestedFrame = Math.max(0, Math.floor(Number(frame) || 0));
     },
-    faceCamera() {},
+    faceCamera(input = {}) {
+      const cameraPosition = input?.cameraPosition || input;
+      const characterPosition = input?.characterPosition || root.position;
+      if (!cameraPosition || !characterPosition) return null;
+      const dx = Number(cameraPosition.x) - Number(characterPosition.x);
+      const dz = Number(cameraPosition.z) - Number(characterPosition.z);
+      if (!Number.isFinite(dx) || !Number.isFinite(dz)) return null;
+      const cameraFacingYaw = Math.atan2(dx, dz);
+      const movementYaw = Number.isFinite(input?.movementYaw) ? input.movementYaw : lastMovementYaw;
+      const resolved = resolveReadableYaw({
+        cameraFacingYaw,
+        movementYaw: Number.isFinite(movementYaw) ? movementYaw : cameraFacingYaw,
+        limitRadians: profile.readableYawLimitRadians,
+      });
+      root.rotation.y = resolved.yaw;
+      root.userData.cameraFacingYaw = cameraFacingYaw;
+      root.userData.visibleYawDelta = resolved.visibleDelta;
+      root.userData.movementYaw = movementYaw;
+      return resolved;
+    },
     dispose() {
       for (const geometry of resources.geometries) geometry.dispose?.();
       for (const material of resources.materials) material.dispose?.();
