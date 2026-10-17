@@ -26,11 +26,13 @@ test('final art registry builds semantic multi-part living room assemblies', asy
   for(const id of ['floor','wall-north','wall-south','wall-east','wall-west','sofa','coffee-table','rug','side-table','lamp','cushion-a','cushion-b','toy-blocks','toy-ball','doorway','mystery-stool']){
     const root=art.objectsById.get(id);assert.ok(root,`missing ${id}`);assert.equal(root.name,id);assert.equal(root.userData.semanticId,id);assert.equal(root.userData.artMode,'stylized-final-v1');assert.ok(root.userData.baseTransform,`${id} baseTransform`);
   }
-  const sofa=art.objectsById.get('sofa');assert.ok(meshCount(sofa)>=10,'sofa should be visibly multi-part');assert.notEqual(sofa.isMesh,true,'sofa semantic root must be a group, not one mesh');
-  assert.ok(meshCount(art.objectsById.get('coffee-table'))>=3);assert.ok(meshCount(art.objectsById.get('side-table'))>=3);assert.ok(meshCount(art.objectsById.get('lamp'))>=4);assert.ok(meshCount(art.objectsById.get('doorway'))>=3);
-  assert.notEqual(art.objectsById.get('cushion-a'),art.objectsById.get('cushion-b'));
+  const sofa=art.objectsById.get('sofa');assert.ok(meshCount(sofa)>=14,'sofa should have cushions, arms, body and visible feet');assert.notEqual(sofa.isMesh,true,'sofa semantic root must be a group, not one mesh');
+  assert.ok(meshCount(art.objectsById.get('coffee-table'))>=4);assert.ok(meshCount(art.objectsById.get('side-table'))>=3);assert.ok(meshCount(art.objectsById.get('lamp'))>=4);assert.ok(meshCount(art.objectsById.get('doorway'))>=3);
+  const cushionA=art.objectsById.get('cushion-a'),cushionB=art.objectsById.get('cushion-b');assert.notEqual(cushionA,cushionB);assert.ok(cushionA.children[0].position.y>.2);assert.ok(cushionB.children[0].position.y>.2);
   assert.ok(meshCount(art.objectsById.get('mystery-stool'))>=1,'unknown renderables need fallback art');
-  assert.ok(art.dressingRoot.children.length>=3);
+  const dressingIds=art.dressingRoot.children.map(child=>child.name);
+  for(const id of ['dressing-books','dressing-basket','dressing-frame','dressing-window','dressing-console','dressing-plant'])assert.ok(dressingIds.includes(id),`missing ${id}`);
+  assert.ok(art.dressingRoot.children.length>=6);
   for(const dressing of art.dressingRoot.children){assert.match(dressing.name,/^dressing-/);assert.equal(world.colliders.some(c=>c.id===dressing.name),false);assert.equal(world.interactables.some(i=>i.id===dressing.name),false);}
   art.dispose();
 });
@@ -44,8 +46,8 @@ test('future asset resolver falls back safely and normalizes successful assets',
     if(id==='side-table')return external;
     return null;
   }});
-  assert.ok(meshCount(art.objectsById.get('sofa'))>=10,'null asset must use procedural sofa');
-  assert.ok(meshCount(art.objectsById.get('coffee-table'))>=3,'thrown asset must use procedural table');
+  assert.ok(meshCount(art.objectsById.get('sofa'))>=14,'null asset must use procedural sofa');
+  assert.ok(meshCount(art.objectsById.get('coffee-table'))>=4,'thrown asset must use procedural table');
   assert.ok(art.root.userData.assetFallbacks.some(entry=>entry.id==='coffee-table'&&/asset unavailable/.test(entry.message)));
   assert.equal(art.objectsById.get('side-table'),external);assert.equal(external.name,'side-table');assert.equal(external.userData.semanticId,'side-table');assert.equal(external.userData.artMode,'stylized-final-v1');assert.ok(external.userData.baseTransform);
   art.dispose();
