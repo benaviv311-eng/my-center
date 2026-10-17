@@ -14,6 +14,18 @@ assert.strictEqual(upgraded.isNewBest,true);
 assert.strictEqual(upgraded.timeMs,1200);
 assert.strictEqual(upgraded.meta,'1.20 שנ׳ · בינוני ⚡ · 🏆 NEW BEST');
 
+const versus=E.evaluate({seconds:.84,difficulty:'hard',player:0});
+assert.strictEqual(versus.level,4);
+assert.strictEqual(versus.meta,'0.84 שנ׳ · קשה 🔥 · שחקן 1');
+assert.strictEqual(E.playerLabel(1),'שחקן 2');
+
+const lowVoice=E.voiceProfile(1,'british');
+const highVoice=E.voiceProfile(5,'british');
+assert(highVoice.rate>lowVoice.rate,'higher reinforcement should speak faster');
+assert(highVoice.volume>lowVoice.volume,'higher reinforcement should be louder');
+assert(highVoice.pitch>=lowVoice.pitch,'higher reinforcement should not lower pitch');
+assert(highVoice.volume<=1,'speech volume must stay in browser range');
+
 const first=E.evaluate({seconds:2.20,difficulty:'easy',previousBestMs:null});
 assert.strictEqual(first.isNewBest,false,'first recorded response seeds the best without bonus');
 assert.strictEqual(first.level,1);
