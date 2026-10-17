@@ -10,7 +10,7 @@
   const PROFILE_KEY='double-profile-v1';
   const $=id=>document.getElementById(id);
 
-  let deck=buildDeck(),pair=[],matches=0,combo=0,startedAt=0,timerId=null,running=false;
+  let deck=buildDeck(),pair=[],matches=0,combo=0,startedAt=0,roundStartedAt=0,timerId=null,running=false;
   const difficulty=R.normalizeDifficulty(safeGet(DIFF_KEY)||'normal');
   const difficultyMeta={easy:['🌱','קל'],normal:['⚡','בינוני'],hard:['🔥','קשה']}[difficulty];
 
@@ -61,9 +61,20 @@
     el.className='encouragement level-1';el.textContent=text;el.style.animation='none';void el.offsetWidth;el.style.animation='';
     clearTimeout(el._t);el._t=setTimeout(()=>{if(!el.querySelector('.adaptive-meta'))el.textContent=''},850);
   }
+  function ensurePill(id,className=''){
+    let el=$(id);
+    if(!el){el=document.createElement('div');el.id=id;el.className=('pill '+className).trim();$('stats').appendChild(el)}
+    return el;
+  }
   function updateHud(){
     const best=currentBest(),profile=readProfile(),elapsed=elapsedSeconds();
-    $('stats').innerHTML=`<div class="pill target-pill">🎯 ${matches}/${R.TARGET}</div><div class="pill elapsed-pill">⏲️ ${elapsed.toFixed(2)}</div><div class="pill best-pill">👑 ${best?R.formatSeconds(best):'—'}</div><div class="pill">🪙 ${profile.coins||0}</div>${combo>1?`<div class="pill combo-pill">🔥 ${combo}</div>`:''}`;
+    ensurePill('classicTargetPill','target-pill').textContent=`🎯 ${matches}/${R.TARGET}`;
+    ensurePill('classicElapsedPill','elapsed-pill').textContent=`⏲️ ${elapsed.toFixed(2)}`;
+    ensurePill('classicBestPill','best-pill').textContent=`👑 ${best?R.formatSeconds(best):'—'}`;
+    ensurePill('classicCoinsPill').textContent=`🪙 ${profile.coins||0}`;
+    let comboPill=$('classicComboPill');
+    if(combo>1){if(!comboPill)comboPill=ensurePill('classicComboPill','combo-pill');comboPill.textContent=`🔥 ${combo}`}
+    else comboPill?.remove();
     $('challengeText').textContent=`20 התאמות · אין הגבלת זמן · המטרה: הזמן המהיר ביותר${best?' · שיא '+R.formatSeconds(best):''}`;
   }
   function symbolSize(){
@@ -85,7 +96,7 @@
     if(!running)return;
     let a=deck[Math.floor(Math.random()*deck.length)],b;
     do b=deck[Math.floor(Math.random()*deck.length)];while(b===a);
-    pair=[a,b];
+    pair=[a,b];roundStartedAt=performance.now();
     const board=$('board');board.innerHTML='';board.append(renderCard(a,0),renderCard(b,1));
   }
   function choose(button,id){
@@ -109,7 +120,7 @@
     $('classicAgain')?.addEventListener('click',start);
   }
   function start(){
-    matches=0;combo=0;running=true;startedAt=performance.now();$('start').style.display='none';document.body.dataset.mode='classic';
+    matches=0;combo=0;running=true;startedAt=performance.now();roundStartedAt=startedAt;$('start').style.display='none';document.body.dataset.mode='classic';
     $('modeName').textContent=`קלאסי מהיר · ${difficultyMeta[0]} ${difficultyMeta[1]}`;
     clearInterval(timerId);timerId=setInterval(updateHud,50);updateHud();renderRound();
   }
