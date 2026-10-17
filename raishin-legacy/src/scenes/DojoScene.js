@@ -7,8 +7,8 @@
 
   function createDojoScene(Phaser,deps){
     if(!Phaser||!deps)throw new Error('DojoScene requires Phaser and dependencies');
-    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,DepthSystem,CameraFollow,RaikaAnimationData,DojoLayout}=deps;
-    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!DepthSystem||!CameraFollow||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
+    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,DepthSystem,CameraRig,RaikaAnimationData,DojoLayout}=deps;
+    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!DepthSystem||!CameraRig||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
     const framesPerDirection=RaikaAnimationData.framesPerDirection;
 
     return class DojoScene extends Phaser.Scene{
@@ -26,7 +26,10 @@
         this.collision=CollisionMap.create(DojoLayout);
         this.controller=PlayerController.createPlayerController({spawn:{x:500,y:420}});
         this.animator=PlayerAnimator.create(RaikaAnimationData,{stride:24});
-        this.cameraFollow=CameraFollow.create({centerX:800,centerY:790,maxX:18,maxY:8,deadZoneX:170,deadZoneY:22,smoothing:7.5});
+        this.cameraRig=CameraRig.create({
+          viewportWidth:1600,viewportHeight:900,worldBounds:DojoLayout.renderBounds,zoom:1,
+          deadZoneX:96,deadZoneY:54,smoothing:8,lookAheadX:120,lookAheadY:70
+        });
         this.visualRotation=0;
 
         const texture=this.textures.get(RaikaAnimationData.textureKey);
@@ -42,6 +45,10 @@
         const startProjection=this.worldPlane.project({x:500,y:420});
         this.shadow=this.add.ellipse(startProjection.x,startProjection.y,72,24,0x24170d,.38).setDepth(DepthSystem.depthFor(startProjection,-1));
         this.raika=this.add.sprite(startProjection.x,startProjection.y,RaikaAnimationData.textureKey,'0-0').setOrigin(.5,.985).setDepth(DepthSystem.depthFor(startProjection,1));
+        const cameraStart=this.cameraRig.reset(startProjection);
+        this.cameras.main.setBounds(DojoLayout.renderBounds.x,DojoLayout.renderBounds.y,DojoLayout.renderBounds.width,DojoLayout.renderBounds.height);
+        this.cameras.main.setScroll(cameraStart.scrollX,cameraStart.scrollY);
+        this.cameras.main.setZoom(cameraStart.zoom);
         this.cursors=this.input.keyboard.createCursorKeys();
         this.wasd=this.input.keyboard.addKeys('W,A,S,D');
         this.game.canvas.setAttribute('aria-label','Raika movement engine v2');
@@ -85,8 +92,9 @@
         this.shadow.setScale(view.scale*(.92+.08*(1-state.speedRatio)));
         this.shadow.setDepth(DepthSystem.depthFor(projection,-1));
 
-        const camera=this.cameraFollow.update(projection,dt);
-        this.cameras.main.setScroll(camera.x,camera.y);
+        const camera=this.cameraRig.update({groundProjection:projection,velocity:{x:state.vx,y:state.vy},dt});
+        this.cameras.main.setScroll(camera.scrollX,camera.scrollY);
+        this.cameras.main.setZoom(camera.zoom);
       }
     };
   }
