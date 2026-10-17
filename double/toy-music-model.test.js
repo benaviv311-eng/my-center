@@ -1,0 +1,10 @@
+const assert=require('assert');
+const M=require('./toy-music-model.js');
+assert.equal(M.BPM,108);
+assert.deepEqual(M.sceneProfile('lobby'),{rate:.96,volume:.42,layers:1});
+assert.deepEqual(M.sceneProfile('play'),{rate:1.02,volume:.55,layers:2});
+assert.deepEqual(M.sceneProfile('tension'),{rate:1.08,volume:.64,layers:3});
+assert.equal(M.instrumentSet.includes('marimba'),true);
+assert.equal(M.instrumentSet.includes('sparkle'),true);
+assert.equal(M.instrumentSet.includes('soft-bass'),true);
+console.log('toy music model OK');
