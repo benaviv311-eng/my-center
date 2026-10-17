@@ -84,8 +84,8 @@ Hands remain visually attached to lower-arm regions. Feet remain visually attach
 Each part is a shallow 3D segment with:
 
 - canonical front texture cut from the approved sprite source
-- matching back surface using the same canonical pixels where possible
-- shallow side depth using neutral edge material derived from the canonical part, never a newly designed costume texture
+- back surface using the same canonical part texture mirrored horizontally; no alternate back design is introduced
+- side surfaces using a flat material whose color is computed once from opaque edge pixels of that canonical part
 - its own pivot group for joint rotation
 - shadow casting enabled
 
@@ -95,13 +95,15 @@ This module contains geometry metadata only, not replacement art.
 
 For each character it defines normalized values for:
 
-- source frame used as the canonical rig base
+- source frame index
 - crop rectangles for each body part
 - joint/pivot positions
 - depth per part
 - overlap margins so joints do not open visible gaps
 - default z-order between parts
 - per-character motion amplitudes
+
+For this milestone the canonical rig source frame is **frame index 0** for both Libi and Dad, matching the default first frame already used by the existing character renderer before animation advances.
 
 The profile may differ between Libi and Dad because their approved proportions differ.
 
@@ -114,10 +116,11 @@ The rig uses the approved sprite sheet as its only visible source.
 At initialization:
 
 1. Load the canonical texture.
-2. Select the approved neutral source frame from the 5x2 sheet.
-3. Extract each part using normalized crop data.
+2. Select frame index 0 from the 5x2 sheet.
+3. Extract each part using normalized crop data from `character-rig-profile.js`.
 4. Create a transparent part texture on an offscreen canvas.
 5. Apply that texture to the part's front/back mesh surfaces.
+6. Compute the side-material color from the opaque edge pixels of that extracted canonical part.
 
 No generated image model, replacement PNG or external character asset is introduced.
 
@@ -131,20 +134,20 @@ Unchanged. It keeps the current canonical sprite path.
 
 `characters.js` delegates construction to `character-rig.js` instead of `createCanonical3DStack()`.
 
-The old stack implementation remains available behind an internal fallback during development until the new rig passes acceptance tests, then may be removed in a later cleanup.
+The old stack implementation remains available as an internal failure fallback during this milestone. It is not removed until the segmented rig has passed live acceptance.
 
 ## 6. Character orientation
 
-The character root is oriented in world space according to movement direction rather than behaving as a full billboard.
+The segmented rig remains readable instead of exposing invented side/back facial detail.
 
-To protect visual identity from unsupported extreme angles:
+Orientation rule:
 
-- normal gameplay yaw is allowed
-- the camera-facing correction is limited, not absolute
-- the rig avoids showing an invented fully lateral facial surface
-- if camera yaw exceeds the approved readable range, the root blends toward a canonical readable angle instead of exposing a nonexistent side design
+1. Compute movement yaw from the current horizontal movement direction when movement is significant.
+2. Compute camera-facing yaw from character position to camera position.
+3. Clamp the character root's visible yaw to **±25 degrees from camera-facing yaw**.
+4. Use the unclamped movement yaw to drive torso lean, hip counter-rotation and left/right gait emphasis.
 
-This preserves real movement direction while keeping the approved face readable.
+This gives the body directional motion and real depth while preventing the camera from seeing an unsupported full side or back design.
 
 ## 7. Animation model
 
@@ -165,7 +168,7 @@ Animation is procedural and driven from existing gameplay state. No gameplay log
 
 ### Run
 
-- larger arm/leg swing
+- larger arm/leg swing than walk
 - stronger forward torso lean
 - faster cadence
 - clear Dad-vs-Libi amplitude differences
@@ -192,9 +195,13 @@ Dad's existing retained state remains authoritative. The rig maps those states t
 
 `setFrame()` remains supported so the external character-visual API is not broken.
 
-For the segmented rig, frame changes may influence expression/pose accent data, but they must not swap in a different character asset.
+For the segmented rig in this milestone:
 
-The first implementation may use one canonical neutral source frame for the segmented surfaces and procedural motion for locomotion. Existing sprite-frame animation remains the fallback path until equivalent rig motion is verified.
+- visible segmented surfaces stay sourced from canonical frame index 0
+- `setFrame()` records the requested frame and may drive pose/expression accents, but does not replace the rig's source asset or create a second character design
+- the existing sprite-frame animation remains available only in the cinematic and stack-fallback paths
+
+This makes the rig deterministic while keeping the public visual API compatible.
 
 ## 9. Collision and gameplay separation
 
@@ -262,9 +269,10 @@ The change is acceptable only if all of the following are true:
 7. Jump changes leg and torso pose without changing gameplay position ownership.
 8. Crouch lowers the visible rig while gameplay crouch/capsule logic remains existing code.
 9. No runtime asset path other than the locked canonical path is accepted.
-10. Chromium world3d smoke test completes without console errors.
-11. Screenshot review confirms Libi and Dad still match the approved characters and do not visually collapse at an oblique camera angle.
-12. Existing Crazy Family audio and gameplay regression tests remain green.
+10. Character visible yaw never exceeds 25 degrees from camera-facing yaw.
+11. Chromium world3d smoke test completes without console errors.
+12. Screenshot review confirms Libi and Dad still match the approved characters and do not visually collapse at an oblique camera angle.
+13. Existing Crazy Family audio and gameplay regression tests remain green.
 
 ## 14. Out of scope
 
