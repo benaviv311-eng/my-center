@@ -1,7 +1,7 @@
 # Crazy Family — Living Room Final Art v1 Design
 
 ## Status
-Approved direction; written design pending implementation-plan approval.
+Written design complete; pending user review before implementation planning.
 
 ## Goal
 Transform the existing `?renderer=3d` living room from a graybox/prototype into a polished stylized game environment while preserving all existing gameplay, collision, fixed overhead camera behavior, and locked character canon.
