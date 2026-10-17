@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(17);
 
 select has_table('public', 'exercises', 'exercises table exists');
 select has_table('public', 'exercise_versions', 'exercise versions table exists');
@@ -52,10 +52,13 @@ set local role authenticated;
 select is((select count(*)::int from public.exercises), 2, 'coach sees canonical plus own personal exercise');
 select is((select count(*)::int from public.exercises where id = 'cccccccc-3333-3333-3333-333333333333'), 0, 'coach cannot read another coach personal exercise');
 select is((select count(*)::int from public.exercise_versions), 2, 'version visibility follows exercise visibility');
-select throws_ok(
-  $$ update public.exercise_versions set description = 'mutated' where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111' and version_number = 1 $$,
-  '42501',
-  null,
+update public.exercise_versions
+set description = 'mutated'
+where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111'
+  and version_number = 1;
+select is(
+  (select description from public.exercise_versions where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111' and version_number = 1),
+  'גרסה ראשונה',
   'authenticated coach cannot mutate immutable exercise versions'
 );
 reset role;
@@ -67,6 +70,12 @@ select lives_ok(
 );
 select is((select count(*)::int from public.exercise_versions where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111'), 2, 'old version remains after appending a new version');
 select is((select description from public.exercise_versions where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111' and version_number = 1), 'גרסה ראשונה', 'old version content remains unchanged');
+select throws_ok(
+  $$ update public.exercise_versions set description = 'service mutation' where exercise_id = 'aaaaaaaa-1111-1111-1111-111111111111' and version_number = 1 $$,
+  '55000',
+  'exercise versions are immutable',
+  'service context cannot rewrite an existing immutable version'
+);
 select is((select source_tab from public.exercises where id = 'aaaaaaaa-1111-1111-1111-111111111111'), 'תחתית', 'canonical exercise stores source tab metadata');
 select is((select source_row from public.exercises where id = 'aaaaaaaa-1111-1111-1111-111111111111'), 4, 'canonical exercise stores source row metadata');
 
