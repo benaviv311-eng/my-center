@@ -4,7 +4,7 @@
 
 **Goal:** Make `crazy-family.html?renderer=3d` play from one fixed high 3/4 living-room camera while rendering Libi and Dad as true volumetric 3D actors instead of layered sprite planes.
 
-**Architecture:** Keep `crazy-family/game.js` as the single gameplay coordinator so movement, Dad AI, attacks, audio, stamina, interactions and scenario state are not forked. The cinematic path keeps `characters.js` + `camera.js`; the world3d path gets two focused visual modules: `characters-3d.js` for volumetric actors and `overhead-camera.js` for a room-anchored fixed camera. `scene-3d.js` remains the PerspectiveCamera/room owner and gains a dedicated character layer only.
+**Architecture:** Keep `crazy-family/game.js` as the single gameplay coordinator so movement, Dad AI, attacks, audio, stamina, interactions and scenario state are not forked. The cinematic path keeps `characters.js` + `camera.js`; the world3d path gets two focused visual modules: `characters-3d.js` for volumetric actors and `overhead-camera.js` for a room-anchored fixed camera. `scene-3d.js` remains the PerspectiveCamera/room owner and gains a dedicated character layer only. The new 3D character proportions/colors are centralized in `character-3d-canon.js` and added to the existing Character Lock so parallel chats cannot casually drift the models.
 
 **Tech Stack:** Vanilla JavaScript ES modules, Three.js 0.180.0 through the existing import map, Node `node:test`/`assert`, Playwright Chromium browser smoke tests, GitHub Actions.
 
@@ -14,6 +14,7 @@
 
 - `?renderer=3d` remains the world3d acceptance path; the bare route remains cinematic during acceptance.
 - Locked fallback assets remain unchanged: `assets/libi-sprites-v025.png` and `assets/crazy-family/dad-sprites-v028.png`.
+- New 3D proportions/colors/identity markers live only in `crazy-family/character-3d-canon.js` and are covered by the Character Lock workflow.
 - World3d visible actors may not use `THREE.PlaneGeometry`, layered planes, billboards, `faceCamera`, negative-X sprite flips, or cinematic projection.
 - The overhead camera is a `THREE.PerspectiveCamera` with one stable high 3/4 room framing; it does not follow Libi or react to sprint, Dad chase/song, attacks, interactions, or room reactions.
 - Responsive camera adaptation may depend only on viewport dimensions/aspect ratio and may change only camera distance along the same fixed room-view ray; target, angle and FOV remain fixed.
@@ -27,7 +28,7 @@
 - Narrow/portrait or tiny viewport: camera framing stays finite and deterministic, with only distance scaling changing and no NaN/Infinity pose values; pinned in Task 1 tests.
 - Zero-speed/idle actor state: Libi and Dad keep the last finite Y rotation without jitter or snapping to NaN; pinned in Task 2 tests.
 - Dad song/chase, sprint, interaction and reactive camera-shake state: world3d camera pose remains byte-for-byte stable across frame updates; pinned in Task 4 source/behavior contracts and Task 5 browser smoke.
-- A future edit accidentally reintroduces `PlaneGeometry`, `faceCamera`, sprite flipping or cinematic projection into native actors: source and browser assertions fail; pinned in Tasks 2, 4 and 5.
+- A future edit accidentally changes the new 3D canon or reintroduces `PlaneGeometry`, `faceCamera`, sprite flipping or cinematic projection: Character Lock, source and browser assertions fail; pinned in Tasks 2, 4 and 5.
 - Cinematic fallback or locked sprite canon regresses while world3d changes: dedicated cinematic smoke + Character Lock + existing Node suite catch it; pinned in Task 5.
 
 ---
@@ -75,13 +76,15 @@ git add crazy-family/overhead-camera.js tests/crazy-family/overhead-camera.test.
 git commit -m "feat(crazy-family): add fixed overhead room camera"
 ```
 
-### Task 2: Canonical volumetric Libi and Dad proxies
+### Task 2: Locked volumetric Libi and Dad proxies
 
 **Files:**
 - Create: `crazy-family/character-3d-canon.js`
 - Create: `crazy-family/characters-3d.js`
 - Create: `tests/crazy-family/characters-3d.test.mjs`
 - Modify: `tests/crazy-family/canonical-3d-characters.test.mjs`
+- Modify: `tests/crazy-family-character-lock.test.js`
+- Modify: `.github/workflows/crazy-family-character-lock.yml`
 
 **Interfaces:**
 - Produces: `getCharacter3DCanon(kind)` for exactly `'libi' | 'dad'`.
@@ -92,7 +95,7 @@ git commit -m "feat(crazy-family): add fixed overhead room camera"
   - Dad: height `1.78`, broader torso, dark-brown hair `0x3a251d`, beard/stubble marker, teal overshirt `0x2f7f7c`, light undershirt `0xf0e8d5`, pajama-pants marker, brown slippers `0x7b5037`.
 - Visible geometry may use `BoxGeometry`, `SphereGeometry`, `CylinderGeometry` and other true-volume primitives, but never `PlaneGeometry`.
 
-- [ ] **Step 1: Write the failing pure canon and source-contract tests**
+- [ ] **Step 1: Write the failing pure canon, renderer and Character Lock tests**
 
 In `characters-3d.test.mjs`, import only `character-3d-canon.js` for runtime assertions and read `characters-3d.js` as source text. Assert:
 - Libi/Dad heights and named identity markers match the values above.
@@ -103,14 +106,22 @@ In `characters-3d.test.mjs`, import only `character-3d-canon.js` for runtime ass
 
 Update `canonical-3d-characters.test.mjs` so it no longer requires the old `canonical-3d-stack`; instead assert `characters.js` remains the locked cinematic sprite fallback and native actors live in `characters-3d.js`.
 
+Extend `tests/crazy-family-character-lock.test.js` to require `character-3d-canon.js`, assert the exact Libi/Dad 3D heights and locked identity colors above, and assert `characters-3d.js` imports `getCharacter3DCanon` rather than defining replacement colors/proportions inline.
+
+Extend `.github/workflows/crazy-family-character-lock.yml` path filters to include `crazy-family/character-3d-canon.js`, `crazy-family/characters-3d.js`, and `tests/crazy-family/characters-3d.test.mjs`.
+
 - [ ] **Step 2: Run the tests and confirm RED**
 
-Run: `node --test tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs`
-Expected: FAIL because the new modules do not exist and the old test still describes the layered stack.
+Run:
+```bash
+node --test tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs
+node tests/crazy-family-character-lock.test.js
+```
+Expected: FAIL because the new 3D canon/renderer modules do not exist and the old test still describes the layered stack.
 
 - [ ] **Step 3: Implement `character-3d-canon.js`**
 
-Create immutable per-character visual configuration for dimensions, materials/colors and named identity cues. Throw for unknown `kind`.
+Create immutable per-character visual configuration for dimensions, materials/colors and named identity cues. Throw for unknown `kind`. Do not import or mutate the fallback sprite assets.
 
 - [ ] **Step 4: Implement `createCharacter3D` with articulated volumetric groups**
 
@@ -120,16 +131,20 @@ Required visual state mapping:
 - Libi: `idle`, `run`, `sprint`, `crouch`, `airborne`, `landing`.
 - Dad: `idle`, `chase`, `sing`, `pant`, `yawn`, `sneeze`.
 
-- [ ] **Step 5: Run the character tests and confirm GREEN**
+- [ ] **Step 5: Run character and lock tests and confirm GREEN**
 
-Run: `node --test tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs`
+Run:
+```bash
+node --test tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs
+node tests/crazy-family-character-lock.test.js
+```
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add crazy-family/character-3d-canon.js crazy-family/characters-3d.js tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs
-git commit -m "feat(crazy-family): add true volumetric family actors"
+git add crazy-family/character-3d-canon.js crazy-family/characters-3d.js tests/crazy-family/characters-3d.test.mjs tests/crazy-family/canonical-3d-characters.test.mjs tests/crazy-family-character-lock.test.js .github/workflows/crazy-family-character-lock.yml
+git commit -m "feat(crazy-family): add locked volumetric family actors"
 ```
 
 ### Task 3: Dedicated world3d character layer
@@ -232,6 +247,7 @@ Delete/stop using world3d signed-X scale, frame stepping and `faceCamera` calls.
 Run:
 ```bash
 node --test tests/crazy-family/world3d-game-contract.test.mjs tests/crazy-family/camera.test.mjs tests/crazy-family/movement.test.mjs tests/crazy-family/dad.test.mjs tests/crazy-family/attacks.test.mjs tests/crazy-family/interaction.test.mjs
+node tests/crazy-family-character-lock.test.js
 ```
 Expected: PASS.
 
@@ -265,7 +281,7 @@ Keep existing startup, movement in two directions, jump, furniture-route collisi
 - after resize, verify target/angle/FOV remain stable and only camera distance changes deterministically;
 - traverse Libi and Dad roots and assert at least one visible mesh each, no visible descendant has geometry type `PlaneGeometry`, and both roots are `THREE.Group`;
 - rotate/move Libi and verify `root.rotation.y` changes while `root.scale.x` stays positive;
-- verify Dad's measured configured/world height is larger than Libi's;
+- verify Dad's configured/world height is larger than Libi's;
 - verify both actor contact shadows/effects remain active;
 - capture screenshot to `artifacts/crazy-family-world3d-overhead-true3d.png`.
 
@@ -279,7 +295,7 @@ Expected: FAIL until Tasks 1-4 integration is fully present in the browser path 
 
 - [ ] **Step 3: Update the dedicated workflow as the acceptance gate**
 
-Rename the workflow display name to `Crazy Family world3d Overhead True3D`; keep Node tests + cinematic browser smoke + world3d browser smoke. Update the screenshot artifact path/name. Keep PR path filtering on `crazy-family/**`, `tests/crazy-family/**` and the workflow itself.
+Rename the workflow display name to `Crazy Family world3d Overhead True3D`; change its feature-branch push trigger to `feature/crazy-family-overhead-true3d`; keep Node tests + cinematic browser smoke + world3d browser smoke. Update the screenshot artifact path/name. Keep PR path filtering on `crazy-family/**`, `tests/crazy-family/**` and the workflow itself.
 
 - [ ] **Step 4: Publish `v0.47`**
 
@@ -290,8 +306,10 @@ Change `CRAZY_FAMILY_VERSION` in `crazy-family/bootstrap.js` from `v0.44` to `v0
 Run:
 ```bash
 node --test tests/crazy-family/*.test.mjs
+node tests/crazy-family-character-lock.test.js
+node tests/crazy-family-character-asset-integrity.test.js
 ```
-Expected: all Crazy Family Node tests PASS, including Character Lock and the new overhead/3D contracts.
+Expected: all Crazy Family Node tests and both Character Lock checks PASS.
 
 - [ ] **Step 6: Run both browser acceptance paths**
 
@@ -304,7 +322,7 @@ Expected: both PASS.
 
 - [ ] **Step 7: Verify protected canonical assets are untouched**
 
-Compare the branch diff and confirm neither `assets/libi-sprites-v025.png` nor `assets/crazy-family/dad-sprites-v028.png` changed, and run the existing Character Lock CI/test path.
+Compare the branch diff and confirm neither `assets/libi-sprites-v025.png` nor `assets/crazy-family/dad-sprites-v028.png` changed. Confirm `character-3d-canon.js` changes are exactly the newly approved v0.47 3D canon and no unrelated character replacement is present.
 
 - [ ] **Step 8: Commit**
 
@@ -317,6 +335,6 @@ git commit -m "test(crazy-family): gate overhead true 3d acceptance"
 
 - **Spec coverage:** fixed high room camera, resize-only adaptation, true volumetric Libi/Dad, world-space Y rotation, no billboard/projection, shared 3D lighting/shadows, unchanged gameplay, cinematic fallback, Character Lock and browser acceptance all have an owning task.
 - **Step scan:** every implementation task has RED, minimal implementation, GREEN and commit boundaries; no task requires inventing a new gameplay system.
-- **Interface consistency:** Task 1 produces `createOverheadCameraPose`; Task 2 produces `createCharacter3D`; Task 3 produces `sceneHandle.characterLayer`; Task 4 is the single integration consumer; Task 5 exercises the resulting public/browser contract.
-- **Review Focus:** narrow viewport, idle heading stability, gameplay-state camera stability, reintroduced flat rendering, and cinematic/canon regressions are each pinned to explicit tests.
+- **Interface consistency:** Task 1 produces `createOverheadCameraPose`; Task 2 produces locked `getCharacter3DCanon` + `createCharacter3D`; Task 3 produces `sceneHandle.characterLayer`; Task 4 is the single integration consumer; Task 5 exercises the resulting public/browser contract.
+- **Review Focus:** narrow viewport, idle heading stability, gameplay-state camera stability, accidental 3D-canon/flat-rendering drift, and cinematic/canon regressions are each pinned to explicit tests.
 - **Scope discipline:** no final GLB sculpt, room-art rebuild, physics rewrite, Dad AI fork, facial animation or manual camera control is included.
