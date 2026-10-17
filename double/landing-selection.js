@@ -28,13 +28,25 @@
     if(state.target!=null) p.set('target',String(state.target));
     return p.toString();
   }
-  return {createState,selectGame,previewKey,launchQuery};
+  function classicPreview(){
+    return {
+      title:'קלאסי מהיר',
+      sub:'20 התאמות · הזמן המהיר ביותר',
+      targetLabel:'יעד',
+      targetValue:'20',
+      timeLabel:'ללא הגבלה',
+      timeValue:'∞',
+      extra:'20 התאמות · הכי מהר שאפשר'
+    };
+  }
+  return {createState,selectGame,previewKey,launchQuery,classicPreview};
 });
 
 (function(){
   if(typeof document==='undefined') return;
   const V='15';
   const head=document.head||document.documentElement;
+  const S=window.DoubleLandingSelection;
   document.querySelector('.landing')?.classList.add('toy-arcade');
   function ensureCss(href,attr){
     if(document.querySelector(`link[${attr}]`))return;
@@ -65,18 +77,28 @@
               load('double/dragonball-sprite-1.js?v='+V,'data-double-dragon-sprite-1',()=>false,()=>
                 load('double/icon-packs.js?v='+V,'data-double-icon-packs',()=>!!window.DoubleIconPacks,next)))))));
   }
+  function setLabel(el,label){if(el?.firstChild)el.firstChild.textContent=label}
   function syncClassicCopy(){
     const tag=document.getElementById('previewTag');
     if(tag?.textContent?.includes('קלאסי')){
-      const title=document.getElementById('selectedTitle'),sub=document.getElementById('selectedSub');
-      if(title)title.textContent='קלאסי מהיר';
-      if(sub)sub.textContent='20 התאמות · הזמן המהיר ביותר';
+      const copy=S?.classicPreview?.();
+      if(copy){
+        const title=document.getElementById('selectedTitle'),sub=document.getElementById('selectedSub');
+        if(title)title.textContent=copy.title;
+        if(sub)sub.textContent=copy.sub;
+        const h1=document.getElementById('hud1'),h1v=document.getElementById('hud1Value');
+        const ht=document.getElementById('hudTime'),htv=document.getElementById('hudTimeValue');
+        setLabel(h1,copy.targetLabel);if(h1v)h1v.textContent=copy.targetValue;
+        setLabel(ht,copy.timeLabel);if(htv)htv.textContent=copy.timeValue;
+        const extra=document.getElementById('modeExtra');
+        if(extra)extra.innerHTML=`<span class="flash">${copy.extra}</span>`;
+      }
     }
     document.querySelectorAll('.lobby-mode').forEach(card=>{
       const label=(card.querySelector('b')?.textContent||'').trim();
       if(label==='קלאסי'){
         const small=card.querySelector('small');
-        if(small)small.textContent='20 התאמות · הזמן המהיר ביותר';
+        if(small)small.textContent=S?.classicPreview?.().sub||'20 התאמות · הזמן המהיר ביותר';
       }
     });
   }
