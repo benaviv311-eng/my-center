@@ -1,0 +1,22 @@
+name: Score Counter scoreboard sync test
+
+on:
+  push:
+    paths:
+      - 'score-counter/score-live.js'
+      - 'score-counter/score-game-suite.js'
+      - 'score-counter/score-scoreboard-sync.test.js'
+      - 'score-counter/index.html'
+      - '.github/workflows/score-counter-score-sync-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify scoreboard sync
+        run: |
+          node score-counter/score-scoreboard-sync.test.js
+          node --check score-counter/score-live.js
+          node --check score-counter/score-game-suite.js
