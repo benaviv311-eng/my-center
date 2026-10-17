@@ -42,10 +42,14 @@ jobs:
         run: node tests/crazy-family/browser-smoke.mjs
       - name: Milestone A world3d browser smoke
         run: node tests/crazy-family/browser-world3d-smoke.mjs
-      - name: Upload world3d screenshot
+      - name: Canonical segmented rig browser smoke
+        run: node tests/crazy-family/browser-segmented-rig-smoke.mjs
+      - name: Upload world3d screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: crazy-family-world3d-milestone-a
-          path: artifacts/crazy-family-world3d-milestone-a.png
+          path: |
+            artifacts/crazy-family-world3d-milestone-a.png
+            artifacts/crazy-family-canonical-segmented-rig.png
           if-no-files-found: ignore
