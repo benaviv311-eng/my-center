@@ -17,7 +17,7 @@ const checks = [
   ['characters renderer imports canonical definitions', characters.includes("from './character-canon.js'")],
   ['renderer resolves asset only from canon', characters.includes('getCanonicalCharacter(kind)')],
   ['renderer rejects non-canonical override', characters.includes('requestedAsset !== canonical.asset') && characters.includes('Character canon is locked')],
-  ['legacy override keys are guarded', characters.includes('options.approvedAssetUrl') && characters.includes('options.assetUrl') && characters.includes('options.asset')),
+  ['legacy override keys are guarded', characters.includes('options.approvedAssetUrl') && characters.includes('options.assetUrl') && characters.includes('options.asset')],
   ['game uses canonical exports rather than literal replacement paths', game.includes('APPROVED_LIBI_ASSET') && game.includes('APPROVED_DAD_ASSET') && !game.includes("approvedAssetUrl:'assets/")],
 ];
 
