@@ -15,6 +15,11 @@ function disposeStandaloneObject(object){
   const materials=new Set();object?.traverse?.(node=>{node.geometry?.dispose?.();if(node.material){for(const mat of(Array.isArray(node.material)?node.material:[node.material]))materials.add(mat);}});for(const mat of materials)mat?.dispose?.();
 }
 function setOpacity(object,value){const opacity=Math.max(0,Math.min(1,Number(value)));object.traverse(node=>{if(!node.isMesh||!node.material)return;for(const mat of(Array.isArray(node.material)?node.material:[node.material])){mat.transparent=opacity<.999;mat.opacity=opacity;mat.needsUpdate=true;}});}
+function applyFinalArtSurfaceOffsets(objectsById){
+  const rug=objectsById.get('rug');
+  const rugSurface=rug?.children?.[0];
+  if(rugSurface)rugSurface.position.y=.085;
+}
 
 export async function createLivingRoom3DScene({canvas,world}){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -29,6 +34,7 @@ export async function createLivingRoom3DScene({canvas,world}){
   const art=await createLivingRoomArt({THREE,world,materials:materialSystem,quality:'high'});
   visualStage.add(art.root);
   const objectsById=art.objectsById;
+  applyFinalArtSurfaceOffsets(objectsById);
   const lighting=createLivingRoomLighting({THREE,scene,world,quality:'high'});
 
   const headphones=createHeadphones();visualStage.add(headphones);objectsById.set('headphones',headphones);
