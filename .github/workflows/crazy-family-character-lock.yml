@@ -1,0 +1,32 @@
+name: Crazy Family Character Lock
+
+on:
+  pull_request:
+    paths:
+      - 'crazy-family/character-canon.js'
+      - 'crazy-family/characters.js'
+      - 'crazy-family/game.js'
+      - 'assets/libi-sprites-v025.png'
+      - 'assets/crazy-family/dad-sprites-v028.png'
+      - 'tests/crazy-family-character-lock.test.js'
+      - 'tests/crazy-family-character-asset-integrity.test.js'
+      - '.github/workflows/crazy-family-character-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  character-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify canonical character contract
+        run: node tests/crazy-family-character-lock.test.js
+      - name: Verify canonical character asset bytes
+        run: node tests/crazy-family-character-asset-integrity.test.js

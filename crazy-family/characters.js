@@ -1,24 +1,26 @@
 import * as THREE from 'three';
+import { getCanonicalCharacter, APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET } from './character-canon.js';
 
-export const APPROVED_LIBI_ASSET = 'assets/libi-sprites-v025.png';
-export const APPROVED_DAD_ASSET = 'assets/crazy-family/dad-sprites-v028.png';
+export { APPROVED_LIBI_ASSET, APPROVED_DAD_ASSET };
 
-function assetFor(kind, approvedAssetUrl) {
-  if (approvedAssetUrl) return approvedAssetUrl;
-  return kind === 'dad' ? APPROVED_DAD_ASSET : APPROVED_LIBI_ASSET;
-}
+export function createCharacterVisual(options = {}) {
+  const { scene, kind } = options;
+  const canonical = getCanonicalCharacter(kind);
+  const requestedAsset = options.approvedAssetUrl || options.assetUrl || options.asset || null;
+  if (requestedAsset && requestedAsset !== canonical.asset) {
+    throw new Error('Character canon is locked. Use an explicit canonical-character update instead of a runtime asset override.');
+  }
 
-export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
-  const url = assetFor(kind, approvedAssetUrl);
+  const url = canonical.asset;
   const texture = new THREE.TextureLoader().load(url);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.repeat.set(1 / 5, 1 / 2);
-  texture.offset.set(0, 1 / 2);
+  texture.repeat.set(1 / canonical.spriteColumns, 1 / canonical.spriteRows);
+  texture.offset.set(0, 1 / canonical.spriteRows);
 
-  const height = kind === 'dad' ? 1.9 : 1.34;
-  const width = kind === 'dad' ? 1.18 : 0.9;
+  const height = canonical.height;
+  const width = canonical.width;
   const geometry = new THREE.PlaneGeometry(width, height);
   geometry.translate(0, height / 2, 0);
   const material = new THREE.MeshStandardMaterial({
@@ -32,7 +34,8 @@ export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = kind === 'dad' ? 'dad-character' : 'libi-character';
   mesh.userData.semanticId = mesh.name;
-  mesh.userData.approvedAssetUrl = url;
+  mesh.userData.canonicalAssetUrl = url;
+  mesh.userData.characterCanonVersion = canonical.version;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   scene.add(mesh);
@@ -40,6 +43,7 @@ export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
   let facing = 1;
   return {
     mesh,
+    canonicalAssetUrl: url,
     approvedAssetUrl: url,
     setPose({ position, facing: nextFacing = facing, jumpHeight = 0, state = 'idle' }) {
       facing = nextFacing || facing || 1;
@@ -54,9 +58,10 @@ export function createCharacterVisual({ scene, kind, approvedAssetUrl }) {
     },
     setVisible(value) { mesh.visible = Boolean(value); },
     setFrame(frame = 0) {
-      const clamped = Math.max(0, Math.min(9, Math.floor(frame)));
-      texture.offset.x = (clamped % 5) / 5;
-      texture.offset.y = Math.floor(clamped / 5) === 0 ? 1 / 2 : 0;
+      const frameCount = canonical.spriteColumns * canonical.spriteRows;
+      const clamped = Math.max(0, Math.min(frameCount - 1, Math.floor(frame)));
+      texture.offset.x = (clamped % canonical.spriteColumns) / canonical.spriteColumns;
+      texture.offset.y = Math.floor(clamped / canonical.spriteColumns) === 0 ? 1 / canonical.spriteRows : 0;
     },
     dispose() {
       scene.remove(mesh);
