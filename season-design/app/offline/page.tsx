@@ -40,7 +40,6 @@ export default function OfflinePage() {
             <p>
               {cachedGroup.value.ageGradeLabel || "קבוצה"} · {cachedGroup.value.typicalPlayerCount} שחקנים · רמה {cachedGroup.value.generalLevel}
             </p>
-            {cachedGroup.value.notes ? <p>{cachedGroup.value.notes}</p> : null}
             <small>המידע נשמר ב־{new Date(cachedGroup.updatedAt).toLocaleString("he-IL")}</small>
           </section>
         ) : (
