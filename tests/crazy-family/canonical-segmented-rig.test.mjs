@@ -126,4 +126,65 @@ if (rigExists) {
       assert.doesNotMatch(poseSection, /drawImage|createElement\(['"]canvas['"]\)/);
     }
   });
+
+  test('pose and yaw helpers are exported for deterministic articulation tests', () => {
+    assert.equal(typeof rigModule.calculateRigPose, 'function');
+    assert.equal(typeof rigModule.resolveReadableYaw, 'function');
+  });
+
+  if (typeof rigModule.calculateRigPose === 'function') {
+    test('walk swings each arm opposite its matching leg', () => {
+      const pose = rigModule.calculateRigPose({kind:'libi',state:'walk',timeSeconds:.19,speed:1,grounded:true});
+      assert.ok(pose.joints.leftUpperArm.z * pose.joints.leftUpperLeg.z < 0);
+      assert.ok(pose.joints.rightUpperArm.z * pose.joints.rightUpperLeg.z < 0);
+      assert.ok(Math.abs(pose.joints.leftUpperArm.z) > .01);
+    });
+
+    test('run amplitude is greater than walk at the same phase', () => {
+      const walk = rigModule.calculateRigPose({kind:'libi',state:'walk',timeSeconds:.19,speed:1,grounded:true});
+      const run = rigModule.calculateRigPose({kind:'libi',state:'run',timeSeconds:.19,speed:1,grounded:true});
+      assert.ok(Math.abs(run.joints.leftUpperArm.z) > Math.abs(walk.joints.leftUpperArm.z));
+      assert.ok(Math.abs(run.joints.leftUpperLeg.z) > Math.abs(walk.joints.leftUpperLeg.z));
+    });
+
+    test('jump and crouch alter visual pose without owning world position', () => {
+      const jump = rigModule.calculateRigPose({kind:'libi',state:'jump',timeSeconds:.3,speed:0,grounded:false});
+      const crouch = rigModule.calculateRigPose({kind:'libi',state:'crouch',timeSeconds:.3,speed:0,grounded:true,crouching:true});
+      assert.ok(Math.abs(jump.torso.rotationX) > 0 || Math.abs(jump.joints.leftUpperLeg.z) > 0);
+      assert.ok(crouch.rootYOffset < 0);
+      assert.ok(Math.abs(crouch.joints.leftLowerLeg.z) > .1);
+      assert.equal('worldPosition' in jump, false);
+      assert.equal('worldPosition' in crouch, false);
+    });
+
+    test('pose calculation resets from neutral and Dad/Libi use different motion amplitudes', () => {
+      const run = rigModule.calculateRigPose({kind:'libi',state:'run',timeSeconds:.19,speed:1,grounded:true});
+      const idle = rigModule.calculateRigPose({kind:'libi',state:'idle',timeSeconds:0,speed:0,grounded:true});
+      assert.notEqual(run.joints.leftUpperArm.z, idle.joints.leftUpperArm.z);
+      assert.ok(Math.abs(idle.joints.leftUpperLeg.z) < .001);
+      const dadRun = rigModule.calculateRigPose({kind:'dad',state:'run',timeSeconds:.19,speed:1,grounded:true});
+      assert.notEqual(Math.abs(dadRun.joints.leftUpperArm.z), Math.abs(run.joints.leftUpperArm.z));
+    });
+  }
+
+  if (typeof rigModule.resolveReadableYaw === 'function') {
+    test('readable yaw clamps extreme movement requests to plus or minus 25 degrees', () => {
+      const limit = 25 * Math.PI / 180;
+      const positive = rigModule.resolveReadableYaw({cameraFacingYaw:0,movementYaw:Math.PI/2,limitRadians:limit});
+      const negative = rigModule.resolveReadableYaw({cameraFacingYaw:0,movementYaw:-Math.PI/2,limitRadians:limit});
+      assert.ok(positive.visibleDelta <= limit + 1e-9 && positive.visibleDelta >= limit - 1e-9);
+      assert.ok(negative.visibleDelta >= -limit - 1e-9 && negative.visibleDelta <= -limit + 1e-9);
+    });
+
+    test('readable yaw uses shortest angular delta across the plus/minus pi wrap', () => {
+      const limit = 25 * Math.PI / 180;
+      const result = rigModule.resolveReadableYaw({
+        cameraFacingYaw: Math.PI - .08,
+        movementYaw: -Math.PI + .08,
+        limitRadians: limit,
+      });
+      assert.ok(Math.abs(result.visibleDelta) < limit);
+      assert.ok(Math.abs(result.visibleDelta - .16) < .001);
+    });
+  }
 }
