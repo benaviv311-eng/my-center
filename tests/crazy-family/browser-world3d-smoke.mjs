@@ -90,11 +90,13 @@ try{
   const collision=await page.evaluate(()=>{const g=window.__crazyFamilyMovieSetGame,w=g.world,sofa=w.colliders.find(o=>o.id==='sofa');const from={x:-1.6,y:0,z:2},to={x:-4,y:0,z:.55},r=w.resolveCharacterMove(from,to,{radius:.32});return{inside:Math.abs(r.x-sofa.x)<sofa.width/2+.32&&Math.abs(r.z-sofa.z)<sofa.depth/2+.32};});assert.equal(collision.inside,false);
 
   await page.setViewportSize({width:430,height:820});await page.waitForTimeout(180);
-  const narrow=await page.evaluate(()=>({pose:window.__crazyFamilyMovieSetGame.cameraPose,aspect:window.__crazyFamilyMovieSetGame.scene.camera.aspect,visible:window.__crazyFamilyMovieSetGame.playerVisual.root.visible}));
-  assert.ok(Number.isFinite(narrow.aspect)&&narrow.aspect>0);assert.equal(narrow.visible,true);assert.deepEqual(narrow.pose.target,initial.camera.target);assert.equal(narrow.pose.fov,48);
-  const baseDistance=Math.hypot(initial.camera.position.x,initial.camera.position.y-.45,initial.camera.position.z),narrowDistance=Math.hypot(narrow.pose.position.x,narrow.pose.position.y-.45,narrow.pose.position.z);assert.ok(narrowDistance>baseDistance&&narrowDistance<=baseDistance*1.45+1e-6);
-
+  const narrow=await page.evaluate(()=>{const root=document.getElementById('movieSetRoot'),rect=root.getBoundingClientRect(),game=window.__crazyFamilyMovieSetGame;return{pose:game.cameraPose,aspect:game.scene.camera.aspect,visible:game.playerVisual.root.visible,root:{width:rect.width,height:rect.height}};});
+  const baseDistance=Math.hypot(initial.camera.position.x,initial.camera.position.y-.45,initial.camera.position.z),narrowDistance=Math.hypot(narrow.pose.position.x,narrow.pose.position.y-.45,narrow.pose.position.z);
+  console.log('NARROW_DIAG',JSON.stringify({narrow,baseDistance,narrowDistance}));
   await fs.mkdir('artifacts',{recursive:true});await page.locator('.stage').screenshot({path:'artifacts/crazy-family-overhead-true3d.png'});
+  assert.ok(Number.isFinite(narrow.aspect)&&narrow.aspect>0);assert.equal(narrow.visible,true);assert.deepEqual(narrow.pose.target,initial.camera.target);assert.equal(narrow.pose.fov,48);
+  assert.ok(narrowDistance>baseDistance&&narrowDistance<=baseDistance*1.45+1e-6);
+
   const fatal=pageErrors.filter(message=>!/play\(\) request was interrupted|AbortError|media/i.test(message));assert.deepEqual(fatal,[],`browser page errors: ${fatal.join(' | ')}`);
   console.log('PASS: fixed overhead world3d rendered volumetric Libi and Dad, stayed stable through movement, jump, furniture routing, pointer drag, collision, and portrait resize');
 }finally{await browser.close();}
