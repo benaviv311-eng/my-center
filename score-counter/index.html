@@ -70,6 +70,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const audioJs='<script src="score-audio.js?v=5"><\/script>';
   const habaitaJs='<script src="score-habaita-refrain.js?v=1"><\/script>';
   const gameSuiteJs='<script src="score-game-suite.js?v=1"><\/script>';
+  const scoreSyncJs='<script src="score-scoreboard-sync.js?v=1"><\/script>';
   const testLabJs='<script src="score-test-lab.js?v=2"><\/script>';
   const timeCenterGuardJs='<script src="score-time-center-guard.js?v=1"><\/script>';
   const timeCenterJs='<script src="score-time-center.js?v=1"><\/script>';
@@ -91,7 +92,7 @@ small{display:block;margin-top:8px;color:#94a3b8;font-weight:500}
   const humanVoiceJs='<script src="score-human-voice-pack.js?v=1"><\/script>';
   const testLabLiveStatusJs='<script src="score-test-lab-live-status.js?v=2"><\/script>';
 
-  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+timeHubCss+pressureCss+pressureHomeCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+operationsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+pressureHomeJs+pressureCounterJs+timedRoundsJs+timeHubJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+remoteDisplayJs+cloudSyncJs+dataHubJs+humanVoiceJs+testLabLiveStatusJs+"</body>");
+  html=html.replace("</head>",sharpCss+liveCss+patchCss+containCss+layoutCss+surfaceCss+audioCss+gameSuiteCss+testLabCss+timeCenterCss+timeHubCss+pressureCss+pressureHomeCss+timedRoundsCss+fourTeamCss+spiegelCss+coreGamesCss+trainingGamesCss+competitionGamesCss+flexibleGamesCss+operationsCss+"</head>").replace("<body>","<body>"+sharpHtml).replace("</body>",sharpJs+liveCoreJs+liveJs+patchJs+containJs+leaderJs+layoutJs+stabilityJs+surfaceJs+lowerJs+leaderOrderJs+audioJs+habaitaJs+gameSuiteJs+scoreSyncJs+testLabJs+timeCenterGuardJs+timeCenterJs+pressureJs+pressureHomeJs+pressureCounterJs+timedRoundsJs+timeHubJs+fourTeamJs+spiegelJs+coreGamesJs+trainingGamesJs+competitionGamesJs+flexibleGuardJs+flexibleGamesJs+remoteDisplayJs+cloudSyncJs+dataHubJs+humanVoiceJs+testLabLiveStatusJs+"</body>");
   html=html.replaceAll("icon-192.png","../team-score/icon.svg").replaceAll("icon-512.png","../team-score/icon.svg");
   document.open();document.write(html);document.close();
 })().catch(e=>{
