@@ -18,7 +18,6 @@ const phaserIndex=html.indexOf(phaser);
 assert.ok(phaserIndex>=0,'preview must load pinned Phaser 4.2.1');
 assert.ok(phaserIndex<html.indexOf('./v2-game.js'),'Phaser must load before the v2 bootstrap');
 assert.match(html,/data-game-aspect="16:9"/,'preview must preserve 16:9 shell');
-assert.match(html,/\.\/styles\.css/,'preview must reuse local styles');
 assert.match(html,/id="phaserGame"/,'preview must expose Phaser mount point');
 assert.match(html,/inazuma-main-hall-clean\.png/,'preview must reference the approved dojo background');
 assert.match(html,/raika-walk-4dir-8f\.png/,'preview must reference the existing Raika movement sheet');
@@ -28,5 +27,14 @@ for(const name of ['WorldModel','CameraRig','DepthSystem'])assert.ok(js.includes
 for(const marker of ['Health','Raihatsu','Objective','Jump','Dodge','Interact','minimap']) assert.ok(html.includes(marker),`missing HUD marker: ${marker}`);
 assert.doesNotMatch(`${html}\n${js}`,/image_gen|generated.*sprite|new.*asset/i,'preview must not create or request new visual art');
 
+const buildTag='raishin-world-core-v1';
+const cacheBusted=[
+  './styles.css',
+  './src/world/dojo-layout.js','./src/world/WorldModel.js','./src/world/WorldPlane.js','./src/world/CollisionMap.js',
+  './src/player/PlayerController.js','./src/systems/InteractionSystem.js','./src/systems/CameraRig.js','./src/systems/DepthSystem.js',
+  './src/player/raika-animation-data.js','./src/player/PlayerAnimator.js','./src/player/PlayerView.js','./src/scenes/DojoScene.js','./v2-game.js'
+];
+for(const asset of cacheBusted)assert.ok(html.includes(`${asset}?v=${buildTag}`),`v2 preview must cache-bust ${asset}`);
+
 assert.match(liveHtml,/\.\/movement\.js[\s\S]*\.\/dojo-world\.js[\s\S]*\.\/dojo-effects\.js[\s\S]*\.\/game\.js/,'live route must remain on legacy engine until v2 visual approval');
-console.log('PASS: isolated Raishin world-core v2 preview shell with legacy migration guard');
+console.log('PASS: isolated cache-busted Raishin world-core v2 preview with legacy migration guard');
