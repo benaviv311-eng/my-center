@@ -6,24 +6,26 @@
   'use strict';
 
   const PROFILE=Object.freeze({
-    playerScale:1.18,
-    contactCorrectionPx:6.5,
-    shadowAlphaFloor:.38,
-    shadowWidthFloor:1.03,
+    // Third-person framing: the hero must read as the subject of the scene,
+    // not as a small token moving over a large background.
+    playerScale:1.45,
+    contactCorrectionPx:15,
+    shadowAlphaFloor:.46,
+    shadowWidthFloor:1.08,
     camera:Object.freeze({
       centerX:800,
-      centerY:632,
-      deadZoneX:105,
-      deadZoneY:46,
-      maxX:88,
-      maxY:54,
-      followStrength:6.8
+      centerY:650,
+      deadZoneX:92,
+      deadZoneY:42,
+      maxX:58,
+      maxY:30,
+      followStrength:8.2
     })
   });
 
   function install(movement,effects,profile=PROFILE){
     if(!movement||!effects)throw new Error('Raishin movement and dojo effects are required');
-    if(movement.__openWorldPresentation)return profile;
+    if(movement.__openWorldPresentationV2)return profile;
 
     const baseScaleForDepth=movement.scaleForDepth.bind(movement);
     const baseGroundingMotion=effects.groundingMotion.bind(effects);
@@ -36,14 +38,15 @@
     effects.groundingMotion=function openWorldGroundingMotion(walkTime,moving,speed,scale=1){
       const base=baseGroundingMotion(walkTime,moving,speed,scale);
       const speedRatio=Math.max(0,Math.min(1,(Number(speed)||0)/245));
-      const correction=profile.contactCorrectionPx*Math.max(.78,Math.min(1.28,Number(scale)||1));
+      const correction=profile.contactCorrectionPx*Math.max(.82,Math.min(1.24,Number(scale)||1));
       return{
         ...base,
+        // Keep the rendered feet visually planted instead of applying a vertical walk bounce.
         bobY:correction,
         shadowAlpha:Math.max(profile.shadowAlphaFloor,base.shadowAlpha||0),
         shadowScaleX:Math.max(profile.shadowWidthFloor,base.shadowScaleX||0),
-        shadowScaleY:.96+.04*(base.footPlant??1),
-        footPlant:Math.max(.88,base.footPlant??1),
+        shadowScaleY:.98,
+        footPlant:1,
         speedRatio
       };
     };
@@ -52,7 +55,7 @@
       return baseUpdateCamera(camera,player,dt,{...options,...profile.camera});
     };
 
-    Object.defineProperty(movement,'__openWorldPresentation',{value:true,enumerable:false});
+    Object.defineProperty(movement,'__openWorldPresentationV2',{value:true,enumerable:false});
     return profile;
   }
 
