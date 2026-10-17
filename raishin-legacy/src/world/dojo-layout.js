@@ -7,12 +7,12 @@
 
   const WORLD_WIDTH=2400,WORLD_HEIGHT=1500;
   const floor=Object.freeze({
-    farLeft:Object.freeze({x:430,y:742}),
-    farRight:Object.freeze({x:1170,y:742}),
-    nearLeft:Object.freeze({x:165,y:835}),
-    nearRight:Object.freeze({x:1435,y:835}),
+    farLeft:Object.freeze({x:300,y:360}),
+    farRight:Object.freeze({x:3300,y:360}),
+    nearLeft:Object.freeze({x:0,y:1600}),
+    nearRight:Object.freeze({x:3600,y:1600}),
     farScale:.72,
-    nearScale:1.06
+    nearScale:1.1
   });
   const spawn=Object.freeze({x:1200,y:1050});
   const walkablePolygons=Object.freeze([

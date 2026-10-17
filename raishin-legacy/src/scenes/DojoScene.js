@@ -7,8 +7,8 @@
 
   function createDojoScene(Phaser,deps){
     if(!Phaser||!deps)throw new Error('DojoScene requires Phaser and dependencies');
-    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,CameraFollow,RaikaAnimationData,DojoLayout}=deps;
-    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!CameraFollow||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
+    const {WorldPlane,PlayerController,CollisionMap,PlayerAnimator,PlayerView,DepthSystem,CameraFollow,RaikaAnimationData,DojoLayout}=deps;
+    if(!WorldPlane||!PlayerController||!CollisionMap||!PlayerAnimator||!PlayerView||!DepthSystem||!CameraFollow||!RaikaAnimationData||!DojoLayout)throw new Error('DojoScene dependencies are incomplete');
     const framesPerDirection=RaikaAnimationData.framesPerDirection;
 
     return class DojoScene extends Phaser.Scene{
@@ -40,8 +40,8 @@
         }
 
         const startProjection=this.worldPlane.project({x:500,y:420});
-        this.shadow=this.add.ellipse(startProjection.x,startProjection.y,72,24,0x24170d,.38).setDepth(startProjection.depth-1);
-        this.raika=this.add.sprite(startProjection.x,startProjection.y,RaikaAnimationData.textureKey,'0-0').setOrigin(.5,.985).setDepth(startProjection.depth+1);
+        this.shadow=this.add.ellipse(startProjection.x,startProjection.y,72,24,0x24170d,.38).setDepth(DepthSystem.depthFor(startProjection,-1));
+        this.raika=this.add.sprite(startProjection.x,startProjection.y,RaikaAnimationData.textureKey,'0-0').setOrigin(.5,.985).setDepth(DepthSystem.depthFor(startProjection,1));
         this.cursors=this.input.keyboard.createCursorKeys();
         this.wasd=this.input.keyboard.addKeys('W,A,S,D');
         this.game.canvas.setAttribute('aria-label','Raika movement engine v2');
@@ -80,10 +80,10 @@
         this.raika.setPosition(view.x,view.y);
         this.raika.setScale(artScale);
         this.raika.setRotation(this.visualRotation);
-        this.raika.setDepth(view.depth);
+        this.raika.setDepth(DepthSystem.depthFor(projection,1));
         this.shadow.setPosition(view.shadowX,view.shadowY);
         this.shadow.setScale(view.scale*(.92+.08*(1-state.speedRatio)));
-        this.shadow.setDepth(view.shadowDepth);
+        this.shadow.setDepth(DepthSystem.depthFor(projection,-1));
 
         const camera=this.cameraFollow.update(projection,dt);
         this.cameras.main.setScroll(camera.x,camera.y);

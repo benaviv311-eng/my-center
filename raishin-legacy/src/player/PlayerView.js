@@ -18,10 +18,8 @@
       originX:pivot.x,
       originY:pivot.y,
       scale:projection.scale,
-      depth:projection.depth+1,
       shadowX:projection.x,
       shadowY:projection.y,
-      shadowDepth:projection.depth-1,
       rotation
     });
   }
