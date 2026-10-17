@@ -82,6 +82,7 @@ export function createCharacter3D({ scene, kind }) {
   root.userData.semanticId = root.name;
   root.userData.renderMode = 'volumetric-3d';
   root.userData.canonKind = kind;
+  root.userData.height = canon.height;
 
   const colors = canon.colors;
   const mats = Object.fromEntries(Object.entries(colors).map(([key, color]) => [key, material(color)]));
@@ -90,6 +91,7 @@ export function createCharacter3D({ scene, kind }) {
   else buildDad(root, canon, mats, parts);
   scene.add(root);
 
+  const torsoBaseY = parts.torso?.position.y ?? 0;
   let state = 'idle';
   let speed = 0;
   let grounded = true;
@@ -123,7 +125,7 @@ export function createCharacter3D({ scene, kind }) {
     if (parts.torso) {
       parts.torso.rotation.z = state === 'sing' ? Math.sin((Number(now) || 0) * 0.006) * 0.08 : 0;
       parts.torso.scale.y = state === 'crouch' ? 0.76 : state === 'pant' ? 0.94 + Math.sin((Number(now) || 0) * 0.012) * 0.05 : 1;
-      parts.torso.position.y += state === 'landing' ? -0.01 : 0;
+      parts.torso.position.y = torsoBaseY + (state === 'landing' ? -0.01 : 0);
     }
     if (parts.head) {
       parts.head.rotation.x = state === 'yawn' ? -0.16 : state === 'sneeze' ? 0.24 : 0;
