@@ -15,8 +15,9 @@ const checks = [
   ['Libi canonical dimensions are locked', canon.includes('width: 0.9') && canon.includes('height: 1.34')],
   ['Dad canonical dimensions are locked', canon.includes('width: 1.18') && canon.includes('height: 1.9')],
   ['characters renderer imports canonical definitions', characters.includes("from './character-canon.js'")],
-  ['runtime asset override is disabled', !characters.includes('approvedAssetUrl')],
   ['renderer resolves asset only from canon', characters.includes('getCanonicalCharacter(kind)')],
+  ['renderer explicitly rejects legacy asset override', characters.includes("'approvedAssetUrl' in options") && characters.includes('Character canon is locked')],
+  ['renderer explicitly rejects generic asset override', characters.includes("'assetUrl' in options")],
   ['game no longer imports approved asset constants', !game.includes('APPROVED_LIBI_ASSET') && !game.includes('APPROVED_DAD_ASSET')],
   ['game cannot pass a character asset override', !game.includes('approvedAssetUrl:')],
 ];
