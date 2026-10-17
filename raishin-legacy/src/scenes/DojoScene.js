@@ -114,6 +114,7 @@
           deadZoneX:96,deadZoneY:54,smoothing:8,lookAheadX:120,lookAheadY:70
         });
         this.visualRotation=0;
+        this.interactionPrompt=document.getElementById('interactionPrompt');
         this.createEnvironment();
 
         const texture=this.textures.get(RaikaAnimationData.textureKey);
@@ -152,6 +153,26 @@
         return PlayerController.inputFromKeys(keys);
       }
 
+      updateInteractionPrompt(state,camera){
+        if(!this.interactionPrompt)return;
+        const item=this.interactions.nearest({x:state.worldX,y:state.worldY},180);
+        if(!item){
+          this.interactionPrompt.hidden=true;
+          this.interactionPrompt.removeAttribute('data-interaction-id');
+          return;
+        }
+        const promptProjection=this.interactions.projectPrompt(item);
+        const screenX=(promptProjection.x-camera.scrollX)*camera.zoom;
+        const screenY=(promptProjection.y-camera.scrollY)*camera.zoom;
+        this.interactionPrompt.textContent=`E · ${item.prompt}`;
+        this.interactionPrompt.dataset.interactionId=item.id;
+        this.interactionPrompt.style.position='absolute';
+        this.interactionPrompt.style.left=`${Math.round(screenX)}px`;
+        this.interactionPrompt.style.top=`${Math.round(screenY-36)}px`;
+        this.interactionPrompt.style.transform='translate(-50%,-100%)';
+        this.interactionPrompt.hidden=screenX<-80||screenX>VIEWPORT_WIDTH+80||screenY<-80||screenY>VIEWPORT_HEIGHT+80;
+      }
+
       update(_time,delta){
         const dt=Math.max(0,Math.min(.05,delta/1000));
         const input=this.collectInput();
@@ -181,6 +202,7 @@
         const camera=this.cameraRig.update({groundProjection:projection,velocity:{x:state.vx,y:state.vy},dt});
         this.cameras.main.setScroll(camera.scrollX,camera.scrollY);
         this.cameras.main.setZoom(camera.zoom);
+        this.updateInteractionPrompt(state,camera);
       }
     };
   }
