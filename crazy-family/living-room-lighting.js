@@ -7,10 +7,10 @@ export function createLivingRoomLighting({THREE,scene,world,quality='high'}={}){
   root.name='living-room-lighting';
   root.userData.quality=quality;
 
-  const fill=new THREE.HemisphereLight(0xfff2e6,0x5a5361,1.35);
+  const fill=new THREE.HemisphereLight(0xfff8ef,0x77707b,1.45);
   fill.name='living-room-hemisphere';
 
-  const keyLight=new THREE.DirectionalLight(0xffc88d,2.0);
+  const keyLight=new THREE.DirectionalLight(0xffdfc1,1.65);
   keyLight.name='living-room-key';
   keyLight.position.set(-4.2,7.4,5.1);
   keyLight.castShadow=true;
@@ -26,9 +26,12 @@ export function createLivingRoomLighting({THREE,scene,world,quality='high'}={}){
   keyLight.shadow.normalBias=.025;
 
   const lampDef=(world.objects||[]).find(object=>object.id==='lamp');
-  const lampLight=new THREE.PointLight(0xffb56b,5.2,4.4,2);
+  const lampX=Number.isFinite(Number(lampDef?.x))?Number(lampDef.x):-5.05;
+  const lampY=Number.isFinite(Number(lampDef?.y))?Number(lampDef.y):.875;
+  const lampZ=Number.isFinite(Number(lampDef?.z))?Number(lampDef.z):.25;
+  const lampLight=new THREE.PointLight(0xffc27d,2.9,3.7,2);
   lampLight.name='living-room-lamp-light';
-  lampLight.position.set(Number(lampDef?.x)??-5.05,(Number(lampDef?.y)||.875)+.42,Number(lampDef?.z)??.25);
+  lampLight.position.set(lampX,lampY+.42,lampZ);
   lampLight.castShadow=false;
 
   root.add(fill,keyLight,lampLight);
