@@ -18,8 +18,8 @@ function setOpacity(object,value){const opacity=Math.max(0,Math.min(1,Number(val
 
 export async function createLivingRoom3DScene({canvas,world}){
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  const scene=new THREE.Scene();scene.background=new THREE.Color(0x9b8276);
+  renderer.setPixelRatio(Math.min(globalThis.devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.04;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xb7aaa3);
   const camera=new THREE.PerspectiveCamera(50,16/10,.08,60);camera.position.set(1.4,2.36,3.35);scene.add(camera);
   const visualStage=new THREE.Group();visualStage.name='world3d-stage';scene.add(visualStage);
   const characterLayer=new THREE.Group();characterLayer.name='world3d-characters';visualStage.add(characterLayer);
