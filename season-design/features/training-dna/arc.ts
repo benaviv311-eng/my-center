@@ -37,7 +37,8 @@ function distributeSeconds(total: number, weights: number[]): number[] {
   const residual = weights.map((weight, index) => ({
     index, fraction: total * weight / sum - allocated[index],
   })).sort((a,b) => b.fraction - a.fraction || a.index - b.index);
-  for (let i = 0; i < total - allocated.reduce((a,b) => a+b, 0); i++) {
+  const remaining = total - allocated.reduce((a,b) => a+b, 0);
+  for (let i = 0; i < remaining; i++) {
     allocated[residual[i].index] += 1;
   }
   return allocated;
