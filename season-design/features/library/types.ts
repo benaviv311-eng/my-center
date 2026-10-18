@@ -61,6 +61,7 @@ export interface ExerciseVersion {
   variations: string;
   contentHash: string;
   sourceSnapshot: Record<string, unknown>;
+  planningMetadata?: Record<string, unknown> | null;
   createdAt: string;
 }
 
