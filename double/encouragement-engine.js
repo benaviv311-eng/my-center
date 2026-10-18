@@ -16,12 +16,20 @@
     hard:{label:'קשה',icon:'🔥'}
   };
   const PHRASES={
-    british:{1:'Good!',2:'Great!',3:'Amazing!',4:'Incredible!',5:'Legendary!'},
-    american:{1:'Good!',2:'Great!',3:'Amazing!',4:'Incredible!',5:'Legendary!'},
-    arcade:{1:'Nice!',2:'Great!',3:'Awesome!',4:'Incredible!',5:'LEGENDARY!'},
+    british:{1:'Nicely done.',2:'Well played!',3:'Brilliant!',4:'Outstanding!',5:'Absolutely legendary!'},
+    american:{1:'Nice!',2:"Let's go!",3:'Awesome!',4:'Unreal!',5:'That was legendary!'},
+    arcade:{1:'Good hit!',2:'Combo up!',3:'Power play!',4:'MEGA MATCH!',5:'ULTRA LEGEND!'},
     russian:{1:'Хорошо!',2:'Отлично!',3:'Потрясающе!',4:'Невероятно!',5:'Легендарно!'},
     italian:{1:'Bene!',2:'Grande!',3:'Fantastico!',4:'Incredibile!',5:'Leggendario!'},
     japanese:{1:'いいね！',2:'すごい！',3:'最高！',4:'信じられない！',5:'伝説級！'}
+  };
+  const ANNOUNCER_PROFILES={
+    british:{rateBase:.84,rateStep:.045,volumeBase:.68,volumeStep:.055,pitchBase:.88,pitchStep:.020},
+    american:{rateBase:.91,rateStep:.055,volumeBase:.72,volumeStep:.056,pitchBase:.96,pitchStep:.026},
+    arcade:{rateBase:.96,rateStep:.060,volumeBase:.76,volumeStep:.050,pitchBase:1.12,pitchStep:.050},
+    russian:{rateBase:.76,rateStep:.044,volumeBase:.75,volumeStep:.050,pitchBase:.72,pitchStep:.028},
+    italian:{rateBase:.88,rateStep:.055,volumeBase:.72,volumeStep:.054,pitchBase:1.00,pitchStep:.032},
+    japanese:{rateBase:.87,rateStep:.048,volumeBase:.69,volumeStep:.050,pitchBase:.99,pitchStep:.030}
   };
 
   function normalizeDifficulty(value){return THRESHOLDS[value]?value:'normal'}
@@ -40,17 +48,18 @@
     if(!Number.isFinite(prev)||prev<=0)return cur;
     return Math.min(prev,cur);
   }
+  function normalizePack(value){return PHRASES[value]?value:'british'}
   function phraseFor(pack,level){
-    const source=PHRASES[pack]||PHRASES.british;
+    const source=PHRASES[normalizePack(pack)];
     return source[Math.max(1,Math.min(5,Number(level)||1))]||source[1];
   }
   function playerLabel(player){return Number(player)===1?'שחקן 2':'שחקן 1'}
   function voiceProfile(level,pack='british'){
-    const n=Math.max(1,Math.min(5,Number(level)||1));
+    const n=Math.max(1,Math.min(5,Number(level)||1)),p=ANNOUNCER_PROFILES[normalizePack(pack)];
     return {
-      rate:.92+n*.04,
-      volume:Math.min(1,.68+n*.064),
-      pitch:pack==='arcade'?1.08+n*.045:.96+n*.025
+      rate:Math.min(2,Number((p.rateBase+n*p.rateStep).toFixed(3))),
+      volume:Math.min(1,Number((p.volumeBase+n*p.volumeStep).toFixed(3))),
+      pitch:Math.max(.5,Math.min(2,Number((p.pitchBase+n*p.pitchStep).toFixed(3))))
     };
   }
   function evaluate({seconds,difficulty='normal',previousBestMs=null,player=null}={}){
@@ -72,5 +81,5 @@
     };
   }
 
-  return {THRESHOLDS,DIFFICULTY_META,normalizeDifficulty,baseLevel,nextBestMs,phraseFor,playerLabel,voiceProfile,evaluate};
+  return {THRESHOLDS,DIFFICULTY_META,PHRASES,ANNOUNCER_PROFILES,normalizeDifficulty,normalizePack,baseLevel,nextBestMs,phraseFor,playerLabel,voiceProfile,evaluate};
 });
