@@ -44,7 +44,7 @@
 
 (function(){
   if(typeof document==='undefined') return;
-  const V='16';
+  const V='17';
   const head=document.head||document.documentElement;
   const S=window.DoubleLandingSelection;
   document.querySelector('.landing')?.classList.add('toy-arcade');
