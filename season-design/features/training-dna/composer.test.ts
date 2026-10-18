@@ -17,7 +17,7 @@ describe("exact practice duration", () => {
       dimensions: { goal: 5, progression: 3, density: 3, transfer: 3, flow: 3 }, penalties: {} };
     const result = composePractice(context, slots, slots.map(() => [ranked]));
     expect(result).not.toHaveProperty("ok", false);
-    if ("ok" in result && result.ok === false) return;
+    if ("code" in result) throw new Error("Expected an exact-duration practice");
     expect(result.blocks[0].seconds).toBe(1455);
     expect(result.blocks[0].locked).toBe(true);
     expect(result.blocks.reduce((sum, b) => sum + b.seconds, 0)).toBe(5400);
