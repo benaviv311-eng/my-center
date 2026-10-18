@@ -3,7 +3,7 @@
   const frame=document.getElementById('gameFrame');
   if(!frame||window.__doubleEncouragementLaunchBridge)return;
   window.__doubleEncouragementLaunchBridge=true;
-  const V='16';
+  const V='17';
 
   function load(doc,src,attr,ready,next){
     if(ready?.()){next?.();return}
