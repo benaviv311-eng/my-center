@@ -25,7 +25,7 @@ export function generatePractice(context: PracticeContext): GenerationResult {
     return ranked;
   });
   const composition = composePractice(context, slots, pools);
-  if ("ok" in composition && composition.ok === false) return composition;
+  if ("code" in composition) return composition;
   const balanced = balanceLoad(composition.blocks, context);
   const proposed: GeneratedPractice = { ...composition,
     blocks: balanced.blocks, warnings: [...warnings,...balanced.warnings] };
