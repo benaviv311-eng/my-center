@@ -84,6 +84,8 @@ export const candidateExerciseSchema = z.object({
   skillSlugs: z.array(z.enum(slugValues)),
   stage: z.enum(PROGRESSION_STAGES).nullable(),
   metadata: planningMetadataSchema.nullable(),
+  minPlayers: positiveInt.nullable(),
+  maxPlayers: positiveInt.nullable(),
   title: z.string().min(1),
   description: z.string(),
   coachingCues: z.array(z.string()),
