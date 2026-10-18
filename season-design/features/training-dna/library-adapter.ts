@@ -21,6 +21,8 @@ export function toCandidateExercise(exercise: Exercise, version: ExerciseVersion
     skillSlugs: exercise.skillSlug ? [exercise.skillSlug] : [],
     stage: exercise.progressionStage,
     metadata,
+    minPlayers: metadata?.minPlayers ?? exercise.minPlayers ?? null,
+    maxPlayers: metadata?.maxPlayers ?? exercise.maxPlayers ?? null,
     title: version.title,
     description: version.description,
     coachingCues: (version.coachingCues ?? "").split(/\r?\n|;/u).map((cue) => cue.trim()).filter(Boolean),
