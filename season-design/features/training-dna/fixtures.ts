@@ -33,6 +33,8 @@ export function fixtureExercise(overrides: Partial<CandidateExercise> = {}): Can
     skillSlugs: ["reception"],
     stage: "fixed",
     metadata: null,
+    minPlayers: null,
+    maxPlayers: null,
     title: "קבלה למטרה",
     description: "קבלת כדור לאזור מוגדר",
     coachingCues: ["מוקדם לכדור"],
