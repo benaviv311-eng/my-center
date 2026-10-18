@@ -56,6 +56,8 @@ export interface CandidateExercise {
   skillSlugs: SkillSlug[];
   stage: ProgressionStage | null;
   metadata: PlanningMetadata | null;
+  minPlayers: number | null;
+  maxPlayers: number | null;
   title: string;
   description: string;
   coachingCues: string[];
