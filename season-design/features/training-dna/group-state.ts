@@ -28,11 +28,13 @@ export function buildGroupState(
 }
 
 export function deriveProblems(feedback: FocusEvidence[]): ProblemEvidence[] {
-  return feedback.filter((entry) => entry.note.trim().length > 0).map((entry) => ({
-    id: entry.id,
-    focus: entry.focus,
-    problem: entry.note.trim(),
-    kind: entry.kind,
-    confidence: entry.kind === "coach-reported" ? "high" : "low",
-  }));
+  return feedback
+    .filter((entry) => entry.note.trim().length > 0 || (entry.score !== null && entry.score <= 2))
+    .map((entry) => ({
+      id: entry.id,
+      focus: entry.focus,
+      problem: entry.note.trim() || `דירוג ביצוע ${entry.score}/5`,
+      kind: entry.kind,
+      confidence: entry.kind === "coach-reported" ? "high" : "low",
+    }));
 }
