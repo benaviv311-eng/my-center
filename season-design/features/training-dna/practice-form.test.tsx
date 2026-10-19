@@ -22,7 +22,7 @@ describe("PracticeForm", () => {
     expect(payload.focuses).toEqual(["reception", "attack"]);
     expect(payload.durationSeconds).toBe(5400);
     expect(payload.warmup.mode).toBe("fixed");
-    expect(payload.warmup.fixedBlocks.reduce((sum: number, block: { seconds: number }) => sum + block.seconds, 0)).toBe(1455);
+    expect((payload.warmup.fixedBlocks ?? []).reduce((sum: number, block: { seconds: number }) => sum + block.seconds, 0)).toBe(1455);
     expect(screen.getByRole("alert")).toHaveTextContent("אין תרגילים");
   });
 
