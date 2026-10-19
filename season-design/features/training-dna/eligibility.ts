@@ -6,6 +6,7 @@ export function filterEligible(
   context: PracticeContext,
 ): { candidates: CandidateExercise[]; warnings: ValidationIssue[] } {
   const warnings: ValidationIssue[] = [];
+  let hasUnknownCapacity = false;
   const eligible = context.exercises.filter((exercise) => {
     if (!exercise.skillSlugs.includes(slot.focus)) return false;
     if (context.intent.sourcePolicy === "library-only" && exercise.source === "generated") return false;
@@ -17,9 +18,7 @@ export function filterEligible(
     if (count !== null && ((min !== null && count < min) || (max !== null && count > max))) {
       return false;
     }
-    if (min === null || max === null) {
-      warnings.push({ code: "UNKNOWN_CAPACITY", message: "מספר השחקנים המתאים לתרגיל אינו ידוע במלואו" });
-    }
+    if (min === null || max === null) hasUnknownCapacity = true;
 
     const knownEquipment = context.equipment ?? context.group?.equipment ?? null;
     if (knownEquipment !== null && exercise.metadata?.equipment !== null &&
@@ -37,5 +36,8 @@ export function filterEligible(
     }
     return true;
   });
+  if (hasUnknownCapacity) {
+    warnings.push({ code: "UNKNOWN_CAPACITY", message: "מספר השחקנים המתאים לחלק מהתרגילים אינו ידוע במלואו" });
+  }
   return { candidates: eligible, warnings };
 }
