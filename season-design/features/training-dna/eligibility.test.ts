@@ -6,6 +6,14 @@ import type { ArcSlot } from "./types";
 const slot: ArcSlot = { role: "stabilize", focus: "reception", targetSeconds: 600, required: true };
 
 describe("hard exercise eligibility", () => {
+  it("summarizes unknown capacity once even with a large Sheets library", () => {
+    const exercises = Array.from({ length: 58 }, (_, i) =>
+      fixtureExercise({ exerciseId: `exercise-${i}` }));
+    const context = fixtureContext({ exercises });
+    const result = filterEligible(slot, context);
+    expect(result.candidates).toHaveLength(58);
+    expect(result.warnings.filter((x) => x.code === "UNKNOWN_CAPACITY")).toHaveLength(1);
+  });
   it("rejects a known six-player cap for an 18-player team", () => {
     const exercise = fixtureExercise({ maxPlayers: 6 });
     const context = fixtureContext({ group: {
