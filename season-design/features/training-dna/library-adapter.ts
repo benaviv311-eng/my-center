@@ -18,7 +18,14 @@ export function toCandidateExercise(exercise: Exercise, version: ExerciseVersion
     versionNumber: version.versionNumber,
     source: exercise.source,
     kind: exercise.kind,
-    skillSlugs: exercise.skillSlug ? [exercise.skillSlug] : [],
+    skillSlugs: !exercise.skillSlug
+      ? []
+      : exercise.skillSlug === "forearm_pass" && (
+          exercise.progressionStage !== "game-situation" ||
+          /קבל|סרב|מוסר|פריבול/u.test(version.title + " " + version.description)
+        )
+        ? ["forearm_pass", "reception"]
+        : [exercise.skillSlug],
     stage: exercise.progressionStage,
     metadata,
     minPlayers: metadata?.minPlayers ?? exercise.minPlayers ?? null,
