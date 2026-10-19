@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { PracticePreview } from "./practice-preview";
 import type { GeneratedPractice } from "./types";
+
+afterEach(cleanup);
 
 const practice: GeneratedPractice = {
   id: "p-1",
