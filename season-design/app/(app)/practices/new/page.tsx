@@ -1,11 +1,19 @@
-export default function NewPracticePlaceholder() {
+import { listGroupsAction } from "@/features/groups/actions";
+import { PracticeForm } from "@/features/training-dna/practice-form";
+
+export default async function NewPracticePage() {
+  const groups = await listGroupsAction();
   return (
     <main className="shell pageStack">
-      <div>
-        <p className="eyebrow">צור אימון</p>
-        <h1 className="pageTitle">מחולל האימונים בדרך</h1>
-        <p className="heroCopy">הקבוצות והרמות כבר מוכנות. בשלב הבא יתחבר כאן מחולל האימונים ההיברידי.</p>
-      </div>
+      <header className="hero">
+        <p className="eyebrow">SeasonDesign · Training DNA</p>
+        <h1 className="pageTitle">בנה את האימון הבא</h1>
+        <p className="heroCopy">
+          בחר קבוצה, מטרה ודגשים. המנוע יתכנן רצף מקצועי לפי רמה,
+          זמן מדויק, תרגילים זמינים והתנסות במצבי משחק.
+        </p>
+      </header>
+      <PracticeForm groups={groups.map(({ id, name }) => ({ id, name }))} />
     </main>
   );
 }
