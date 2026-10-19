@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: seasondesign
+    runtime: node
+    plan: free
+    region: frankfurt
+    repo: https://github.com/benaviv311-eng/my-center
+    branch: feature/season-design-library-sync
+    rootDir: season-design
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm run start -- --hostname 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SEASON_DESIGN_ALLOWED_EMAILS
+        sync: false
