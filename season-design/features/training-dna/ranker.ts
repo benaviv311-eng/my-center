@@ -45,7 +45,8 @@ export function rankExercises(
   selected: CandidateExercise[],
 ): RankedExercise[] {
   const [goal,progression,density,transfer,flow] = weights[context.intent.style];
-  const seen = new Set(context.history.slice(-4).flatMap((row) => row.exerciseIds));
+  // Context history is newest first (as loaded by the repository).
+  const seen = new Set(context.history.slice(0,4).flatMap((row) => row.exerciseIds));
   const selectedFamilies = new Set(selected.map((item) => item.metadata?.familyKey).filter(Boolean));
   return eligible.map((exercise) => {
     const dimensions = scoreDimensions(slot, exercise);
