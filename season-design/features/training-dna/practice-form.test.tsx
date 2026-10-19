@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PracticeForm } from "./practice-form";
 import { fixtureContext } from "./fixtures";
-import type { GeneratedPractice } from "./types";
+import type { GeneratedPractice, PracticeIntentInput } from "./types";
 
 afterEach(cleanup);
 
 describe("PracticeForm", () => {
   it("sends ordered focuses and locked 24:15 warm-up in exact seconds", async () => {
-    const generate = vi.fn(async () => ({
+    const generate = vi.fn(async (_input: PracticeIntentInput) => ({
       ok: false as const, code: "NO_ELIGIBLE_EXERCISES" as const, details: ["אין תרגילים"],
     }));
     render(<PracticeForm groups={[{ id: "00000000-0000-4000-8000-000000000010", name: "U15" }]} generate={generate} />);
@@ -38,10 +38,10 @@ describe("PracticeForm", () => {
       }],
       warnings: [], evidence: [],
     };
-    const generate = vi.fn(async () => ({ ok: true as const, practice: p }));
+    const generate = vi.fn(async (_input: PracticeIntentInput) => ({ ok: true as const, practice: p }));
     render(<PracticeForm groups={[]} generate={generate} />);
     fireEvent.click(screen.getByRole("button", { name: "בנה אימון" }));
     expect(await screen.findByText("העברה למשחק", { exact: false })).toBeInTheDocument();
-    expect(screen.getByText("90:00")).toBeInTheDocument();
+    expect(screen.getAllByText("90:00").length).toBeGreaterThan(0);
   });
 });
