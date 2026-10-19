@@ -61,6 +61,19 @@ export function buildTrainingArc(
   if (fixed > 0) roles = roles.filter((item) => item.role !== "prepare");
   const first = intent.focuses[0];
   if (!first) return [];
+  // Difficulty reported in the main focus calls for a short technical reset,
+  // even during a game-based practice. Preserve competitive transfer later.
+  if (_problems.some((problem) => problem.focus === first)) {
+    roles = roles.map((item) => item.role === "solve"
+      ? { ...item, weight: item.weight + 15 }
+      : item.role === "compete"
+        ? { ...item, weight: Math.max(5, item.weight - 10) }
+        : { ...item });
+    if (!roles.some((item) => item.role === "solve")) {
+      const prepare = roles.findIndex((item) => item.role === "prepare");
+      roles.splice(prepare < 0 ? 0 : prepare + 1, 0, { role: "solve", weight: 15 });
+    }
+  }
   const rows = roles.map((item) => ({ ...item, focus: first }));
   // Secondary focuses are integrated near game-context work, not given isolated sequences.
   intent.focuses.slice(1).forEach((focus) => rows.splice(
