@@ -15,8 +15,8 @@ services:
       - key: NODE_VERSION
         value: "22"
       - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
+        value: https://iwemlxvjyhffumzcqrxf.supabase.co
       - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-        sync: false
+        value: sb_publishable_pU7OWc6Yoba6xQIYYROAxg_pJAliQDk
       - key: SEASON_DESIGN_ALLOWED_EMAILS
         sync: false
