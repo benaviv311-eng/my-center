@@ -10,6 +10,14 @@ const advanced: GroupPlanningSnapshot = {
 };
 
 describe("Training Arc", () => {
+  it("reinforces a reported weak reception focus before a game-based progression", () => {
+    const intent = { ...BASIC_RECEPTION_INTENT, style: "game-based" as const };
+    const normal = buildTrainingArc(intent, null, []);
+    const adapted = buildTrainingArc(intent, null, [{ id: "low", focus: "reception", problem: "2/5", kind: "coach-reported", confidence: "high" }]);
+    expect(normal.some((slot) => slot.role === "solve")).toBe(false);
+    expect(adapted.some((slot) => slot.role === "solve")).toBe(true);
+    expect(adapted.reduce((n,slot) => n + slot.targetSeconds, 0)).toBe(5400);
+  });
   it("allocates exact duration with the primary focus dominant", () => {
     const intent = { ...BASIC_RECEPTION_INTENT, durationSeconds: 3600,
       focuses: ["reception", "attack"] as typeof BASIC_RECEPTION_INTENT.focuses };
