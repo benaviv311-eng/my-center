@@ -8,6 +8,12 @@ const group = {
 } as Group;
 
 describe("planning evidence", () => {
+  it("converts a low structured rating to evidence even without a typed note", () => {
+    const result = deriveProblems([{ id: "low", focus: "reception", score: 2, note: "", createdAt: "2026-10-19", kind: "coach-reported" }]);
+    expect(result).toHaveLength(1);
+    expect(result[0].problem).toContain("2/5");
+    expect(result[0].kind).toBe("coach-reported");
+  });
   it("uses approved coach level without invented recent issues", () => {
     const value = buildGroupState(group, { reception: "basic" }, [], []);
     expect(value?.approvedLevels.reception).toBe("basic");
