@@ -22,6 +22,21 @@ const version = {
 } as ExerciseVersion;
 
 describe("versioned exercise adapter", () => {
+  it("allows platform fundamentals to support reception without changing the Sheets skill", () => {
+    const candidate = toCandidateExercise({
+      ...exercise, skillSlug: "forearm_pass", progressionStage: "fixed",
+    }, { ...version, title: "ספליט בהתקדמות" });
+    expect(candidate.skillSlugs).toEqual(["forearm_pass", "reception"]);
+    expect(candidate.source).toBe("sheets");
+  });
+
+  it("does not mislabel a defensive floor-save game situation as serve reception", () => {
+    const candidate = toCandidateExercise({
+      ...exercise, skillSlug: "forearm_pass", progressionStage: "game-situation",
+    }, { ...version, title: "ריצה להצלת כדור", description: "" });
+    expect(candidate.skillSlugs).toEqual(["forearm_pass"]);
+  });
+
   it("keeps Hebrew and canonical source/version identity", () => {
     const candidate = toCandidateExercise(exercise, version);
     expect(candidate.title).toBe("קבלה חיה");
