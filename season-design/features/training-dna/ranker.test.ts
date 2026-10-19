@@ -21,4 +21,20 @@ describe("deterministic scoring", () => {
     expect(ranked.find((r) => r.exercise.exerciseId === "a")!.score)
       .toBeLessThan(ranked.find((r) => r.exercise.exerciseId === "b")!.score);
   });
+  it("penalizes the newest practices, not the oldest, in descending history", () => {
+    const recent = fixtureExercise({ exerciseId: "recent" });
+    const stale = fixtureExercise({ exerciseId: "stale" });
+    const history = [
+      { id: "newest", groupId: null, focuses: ["reception" as const], exerciseIds: ["recent"], createdAt: "2026-10-19" },
+      ...[18, 17, 16].map((day) => ({
+        id: String(day), groupId: null, focuses: ["reception" as const],
+        exerciseIds: ["different"], createdAt: `2026-10-${day}`,
+      })),
+      { id: "oldest", groupId: null, focuses: ["reception" as const], exerciseIds: ["stale"], createdAt: "2026-09-01" },
+    ];
+    const context = fixtureContext({ history });
+    const ranked = rankExercises(slot, context, [recent, stale], []);
+    expect(ranked.find((r) => r.exercise.exerciseId === "recent")?.penalties.recentRepeat).toBe(15);
+    expect(ranked.find((r) => r.exercise.exerciseId === "stale")?.penalties.recentRepeat).toBeUndefined();
+  });
 });
