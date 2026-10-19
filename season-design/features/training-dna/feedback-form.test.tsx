@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { FeedbackForm } from "./feedback-form";
 import type { GeneratedPractice } from "./types";
+import type { PracticeFeedback } from "./feedback";
 
 afterEach(cleanup);
 
@@ -25,7 +26,7 @@ const practice: GeneratedPractice = {
 
 describe("FeedbackForm", () => {
   it("records skipped blocks separately and proposes a next-session focus", async () => {
-    const submit = vi.fn(async () => ({
+    const submit = vi.fn(async (_feedback: PracticeFeedback) => ({
       evidence: [],
       recommendations: [{
         groupId: null, targetFocus: "reception" as const, action: "reinforce" as const,
