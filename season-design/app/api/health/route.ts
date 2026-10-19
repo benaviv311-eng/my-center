@@ -9,6 +9,7 @@ export function GET(): Response {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     process.env.SEASON_DESIGN_ALLOWED_EMAILS,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
   ].every((value) => typeof value === "string" && value.trim().length > 0);
 
   return Response.json(
