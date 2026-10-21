@@ -24,7 +24,7 @@ assert.match(launch,/const V='34'/,'landing feedback assets must use the current
 assert.match(launch,/reaction-time-model\.js/);
 assert.match(launch,/reaction-time-bridge\.js/);
 assert.match(wrapper,/const V='34'/,'wrapper enhancement bootstrap must use the current cache version');
-assert.match(daily,/encouragement-engine\.js\?v=17/,'daily challenge must load adaptive encouragement');
-assert.match(daily,/reaction-time-bridge\.js\?v=17/,'daily challenge must show reaction time');
+assert.match(daily,/encouragement-engine\.js\?v=34/,'daily challenge must load adaptive encouragement');
+assert.match(daily,/reaction-time-bridge\.js\?v=34/,'daily challenge must show reaction time');
 
 console.log('feedback integration tests OK');
