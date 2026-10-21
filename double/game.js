@@ -11,6 +11,7 @@
   const VERSUS_AVATARS_KEY='double-versus-avatars-v1';
   const ANNOUNCER_KEY='double-announcer-pack-v1';
   const MAX_STAGE=20;
+  const VersusRules=window.DoubleTwoPlayerModeRules||null;
 
   const AVATAR_CATEGORIES={
     all:'הכול',emoji:'אימוג׳י',animals:'חיות',people:'אנשים',realistic:'ריאליסטי',robots:'רובוטים',
@@ -102,7 +103,7 @@
   let sprintTarget=5, sprintStartedAt=0;
   let versusKeys=readVersusKeys(), versusCursor=[0,0], versusLocked=false;
   let versusAvatars=readVersusAvatars();
-  let versusVariant='duel', versusTarget=10, versusLives=[3,3], versusRound=0, versusDeckOrder=[], versusDeckIndex=0, versusStreak=[0,0];
+  let versusVariant='duel', versusTarget=10, versusLives=[3,3], versusRound=0, versusDeckOrder=[], versusDeckPairs=[], versusDeckIndex=0, versusStreak=[0,0];
   let difficulty=readDifficulty(), roundStartedAt=nowMs();
   let profile=readProfile();
   let lastAnnouncerLine='';
@@ -863,7 +864,10 @@
       versusTarget=versusVariant==='race'?15:versusVariant==='combo'?5:10;
       if(versusVariant==='deck'){
         versusDeckOrder=shuffle(buildDeck());
-        versusDeckIndex=1;
+        versusDeckPairs=VersusRules?.deckRoundPairs
+          ? VersusRules.deckRoundPairs(versusDeckOrder)
+          : versusDeckOrder.slice(0,-1).map((card,i)=>[card,versusDeckOrder[i+1]]);
+        versusDeckIndex=0;
       }
     }
   }
@@ -1016,12 +1020,11 @@
 
     let a,b;
     if(mode==='versus'&&versusVariant==='deck'){
-      if(versusDeckIndex>=versusDeckOrder.length){
+      if(versusDeckIndex>=versusDeckPairs.length){
         endVersusMatch();
         return;
       }
-      a=versusDeckOrder[0];
-      b=versusDeckOrder[versusDeckIndex++];
+      [a,b]=versusDeckPairs[versusDeckIndex++];
     }else{
       a=deck[Math.floor(Math.random()*deck.length)];
       do b=deck[Math.floor(Math.random()*deck.length)];while(b===a);
@@ -1170,6 +1173,17 @@
       selected.classList.add('versus-winner');
       avatarReact(player===0?'p1':'p2','win',700);
       const earned=rewardVersusSuccess(player,selected,points);
+      if(versusVariant==='knockout'){
+        versusLives=VersusRules?.knockoutLivesAfterRound
+          ? VersusRules.knockoutLivesAfterRound(versusLives,player)
+          : versusLives.map((life,i)=>i===1-player?Math.max(0,life-1):life);
+        const knockoutWinner=VersusRules?.knockoutWinner?VersusRules.knockoutWinner(versusLives):(versusLives[0]<=0?1:versusLives[1]<=0?0:null);
+        flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב · חיים '+versusLives[0]+' : '+versusLives[1]+' · 🪙+'+earned);
+        update();
+        if(knockoutWinner!==null){endVersusMatch(knockoutWinner);return}
+        setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
+        return;
+      }
       flash((player===0?'🔵':'🔴')+' שחקן '+(player+1)+' ניצח בסיבוב!'+(points>1?' +'+points+' נק׳ ⭐':'')+' · 🪙+'+earned);
       update();
       if(checkVersusEnd()) return;
@@ -1181,13 +1195,21 @@
       playEventSound('wrong');
       if(Math.random()<.35) announceMoment('wrong',player);
       if(versusVariant==='knockout'){
-        versusLives[player]=Math.max(0,versusLives[player]-1);
-        flash((player===0?'🔵':'🔴')+' טעות — נשארו '+versusLives[player]+' חיים');
+        versusLocked=true;
+        const roundWinner=1-player;
+        versusLives=VersusRules?.knockoutLivesAfterRound
+          ? VersusRules.knockoutLivesAfterRound(versusLives,roundWinner)
+          : versusLives.map((life,i)=>i===player?Math.max(0,life-1):life);
+        const knockoutWinner=VersusRules?.knockoutWinner?VersusRules.knockoutWinner(versusLives):(versusLives[0]<=0?1:versusLives[1]<=0?0:null);
+        flash((player===0?'🔵':'🔴')+' טעות — הפסד בסיבוב · חיים '+versusLives[0]+' : '+versusLives[1]);
         update();
-        if(versusLives[player]<=0){endVersusMatch(1-player);return;}
+        if(knockoutWinner!==null){endVersusMatch(knockoutWinner);return;}
+        setTimeout(()=>{if(active&&mode==='versus')newRound()},650);
+        return;
       }else if(versusVariant==='sudden'){
-        flash('💥 טעות! שחקן '+(2-player)+' מנצח');
-        endVersusMatch(1-player);
+        const suddenWinner=VersusRules?.suddenWinnerOnWrong?VersusRules.suddenWinnerOnWrong(player):1-player;
+        flash('💥 טעות! שחקן '+(suddenWinner+1)+' מנצח');
+        endVersusMatch(suddenWinner);
         return;
       }else{
         flash((player===0?'🔵':'🔴')+' לא זה — המשך לחפש');
@@ -1202,11 +1224,11 @@
 
   function checkVersusEnd(){
     if(versusVariant==='deck'){
-      if(versusDeckIndex>=versusDeckOrder.length){endVersusMatch();return true}
+      if(versusDeckIndex>=versusDeckPairs.length){endVersusMatch();return true}
       return false;
     }
     if(versusVariant==='knockout') return false;
-    if(versusVariant==='sudden'){endVersusMatch(claim);return true}
+    if(versusVariant==='sudden') return VersusRules?.suddenEndsOnCorrect?VersusRules.suddenEndsOnCorrect():false
     if(versusVariant==='combo'){
       if(versusStreak[claim]>=versusTarget){endVersusMatch(claim);return true}
       return false;
@@ -1448,7 +1470,7 @@
       s.innerHTML='<div class="pill">🎯 '+matches+'/'+sprintTarget+'</div><div class="pill">⏱️ '+time.toFixed(1)+'</div><div class="pill">🪙 '+profile.coins+'</div>'+(combo?'<div class="pill combo-pill">'+combo+'</div>':'');
     }else{
       let center='';
-      if(versusVariant==='deck') center='<div class="pill">🃏 '+Math.max(0,versusDeckOrder.length-versusDeckIndex)+' נותרו</div>';
+      if(versusVariant==='deck') center='<div class="pill">🃏 '+Math.max(0,versusDeckPairs.length-versusDeckIndex)+' נותרו</div>';
       else if(versusVariant==='knockout') center='<div class="pill">❤️ '+versusLives[0]+' : '+versusLives[1]+'</div>';
       else if(versusVariant==='combo') center='<div class="pill">🔥 '+versusStreak[0]+' : '+versusStreak[1]+'</div>';
       else center='<div class="pill">🎯 '+(versusVariant==='race'?15:versusVariant==='gold'?15:10)+'</div>';
@@ -1468,7 +1490,7 @@
       const sprintBest=getSprintBest();
       challenge.textContent='השלם '+sprintTarget+' התאמות בזמן הקצר ביותר'+(sprintBest?' · השיא שלך '+sprintBest.toFixed(2)+' שנ׳':'');
     }else if(mode==='versus'){
-      const details={duel:'הראשון ל־10 נקודות',deck:'כל החפיסה · בלי הגבלת זמן',knockout:'3 חיים לכל שחקן · טעות מורידה חיים',race:'הראשון ל־15 נקודות',combo:'הראשון שמגיע לרצף של 5',sudden:'סיבוב אחד · טעות אחת ואתה בחוץ',gold:'כל סיבוב חמישי שווה 3 נקודות'};
+      const details={duel:'הראשון ל־10 נקודות',deck:'56 סיבובים · שני הקלפים מתחלפים',knockout:'3 חיים · המפסיד בכל סיבוב מאבד חיים',race:'הראשון ל־15 נקודות',combo:'הראשון שמגיע לרצף של 5',sudden:'ממשיכים עד הטעות הראשונה',gold:'כל סיבוב חמישי שווה 3 נקודות'};
       challenge.textContent=versusVariantLabel()+' · '+details[versusVariant];
     }else{
       challenge.textContent='100 בסיס · בונוס מהירות · מכפיל קושי · קומבו'+(best?' · '+best:'');
