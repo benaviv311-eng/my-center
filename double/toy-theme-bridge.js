@@ -2,7 +2,7 @@
   'use strict';
   if(window.__doubleToyThemeBridge)return;
   window.__doubleToyThemeBridge=true;
-  const V='14';
+  const V='34';
   const head=document.head||document.documentElement;
   if(!document.querySelector('link[data-double-toy-theme]')){
     const link=document.createElement('link');
