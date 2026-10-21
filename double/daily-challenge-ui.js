@@ -12,7 +12,7 @@
     try{window.DoubleMusic?.stop?.()}catch(_){ }
     document.getElementById('closeBtn')?.click();
     const shell=document.getElementById('gameShell'),frame=document.getElementById('gameFrame');if(!shell||!frame)return;
-    shell.classList.add('open');shell.setAttribute('aria-hidden','false');frame.src='double-daily.html?v=10';
+    shell.classList.add('open');shell.setAttribute('aria-hidden','false');frame.src='double-daily.html?v=34';
   }
   function inject(){
     ensureStyle();
