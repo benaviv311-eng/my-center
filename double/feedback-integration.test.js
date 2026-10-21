@@ -20,10 +20,10 @@ assert.match(encouragement,/announcerCallout\[data-kind="versusSuccess"\]/,'rout
 assert.match(reaction,/getElementById\('board'\).*getElementById\('cards'\)/s,'reaction timer must support both game boards');
 assert.match(reaction,/\.sym,\.symbol/,'reaction timer must support both symbol classes');
 assert.match(reaction,/stats\.parentElement\)stats\.parentElement\.appendChild\(badge\)/,'reaction badge must survive stats.innerHTML rerenders');
-assert.match(launch,/const V='17'/,'landing feedback assets must use the current cache version');
+assert.match(launch,/const V='34'/,'landing feedback assets must use the current cache version');
 assert.match(launch,/reaction-time-model\.js/);
 assert.match(launch,/reaction-time-bridge\.js/);
-assert.match(wrapper,/const V='17'/,'wrapper enhancement bootstrap must use the current cache version');
+assert.match(wrapper,/const V='34'/,'wrapper enhancement bootstrap must use the current cache version');
 assert.match(daily,/encouragement-engine\.js\?v=17/,'daily challenge must load adaptive encouragement');
 assert.match(daily,/reaction-time-bridge\.js\?v=17/,'daily challenge must show reaction time');
 
