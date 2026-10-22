@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { forearmRows, warmupRows } from "./fixtures/core-tabs";
 
-const configModule = new URL("./config.ts", import.meta.url);
-const parserModule = new URL("./core-parser.ts", import.meta.url);
-
 async function loadModules() {
-  expect(existsSync(fileURLToPath(configModule))).toBe(true);
-  expect(existsSync(fileURLToPath(parserModule))).toBe(true);
+  expect(existsSync("features/library/sync/config.ts")).toBe(true);
+  expect(existsSync("features/library/sync/core-parser.ts")).toBe(true);
 
   const configPath = "./config";
   const parserPath = "./core-parser";
@@ -17,7 +13,7 @@ async function loadModules() {
   return { config, parser };
 }
 
-// RED: parser/config files must exist before behavior can pass.\n\ndescribe("core Sheet configuration", () => {
+describe("core Sheet configuration", () => {
   it("maps every approved core tab and the additional-bank tab exactly", async () => {
     const { config } = await loadModules();
 
