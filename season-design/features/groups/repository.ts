@@ -4,6 +4,7 @@ import type { Group, GroupSkillLevel, SkillLevel } from "./types";
 export type CoachAccess = {
   id: string;
   accessStatus: "active" | "disabled";
+  invited: boolean;
 };
 
 export type SkillLevelHistoryInput = {
@@ -42,7 +43,7 @@ export interface GroupDataSource {
 }
 
 function assertCoachAccess(coach: CoachAccess) {
-  if (coach.accessStatus !== "active") {
+  if (coach.accessStatus !== "active" || !coach.invited) {
     throw new Error("COACH_ACCESS_DISABLED");
   }
 }
