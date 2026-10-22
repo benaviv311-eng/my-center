@@ -11,13 +11,9 @@ export type OfflineGroupSummary = {
   generalLevel: string;
 };
 
-type OfflineGroupSource = OfflineGroupSummary & {
-  notes?: string;
-};
-
 const LAST_GROUP_PREFIX = "season-design:last-group:";
 
-export function toOfflineGroupSummary(group: OfflineGroupSource): OfflineGroupSummary {
+export function toOfflineGroupSummary(group: OfflineGroupSummary & Record<string, unknown>): OfflineGroupSummary {
   return {
     id: group.id,
     name: group.name,
@@ -33,7 +29,7 @@ export function OfflineGroupSnapshot({
   updatedAt,
 }: {
   userId: string;
-  group: OfflineGroupSource;
+  group: OfflineGroupSummary;
   updatedAt: string;
 }) {
   const [offline, setOffline] = useState(false);
