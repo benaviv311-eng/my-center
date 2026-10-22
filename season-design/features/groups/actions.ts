@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { isInvitedEmail } from "@/lib/auth/invitation";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { createGroupRepository, type GroupDataSource, type SkillLevelHistoryInput } from "./repository";
 import { groupInputSchema, type GroupInput } from "./schema";
@@ -158,6 +159,7 @@ async function buildRepository() {
   return createGroupRepository(source, {
     id: user.id,
     accessStatus: profile.access_status as "active" | "disabled",
+    invited: isInvitedEmail(user.email),
   });
 }
 
