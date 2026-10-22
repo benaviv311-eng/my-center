@@ -17,7 +17,7 @@ async function loadModules() {
   return { config, parser };
 }
 
-describe("core Sheet configuration", () => {
+// RED: parser/config files must exist before behavior can pass.\n\ndescribe("core Sheet configuration", () => {
   it("maps every approved core tab and the additional-bank tab exactly", async () => {
     const { config } = await loadModules();
 
