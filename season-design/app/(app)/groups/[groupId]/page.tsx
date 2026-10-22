@@ -52,7 +52,6 @@ export default async function GroupPage({ params }: { params: Promise<{ groupId:
           ageGradeLabel: group.ageGradeLabel,
           typicalPlayerCount: group.typicalPlayerCount,
           generalLevel: group.generalLevel,
-          notes: group.notes,
         }}
       />
       <Link className="backLink" href="/groups">חזרה לקבוצות</Link>
