@@ -10,6 +10,7 @@ import {
 const coachA: CoachAccess = {
   id: "11111111-1111-4111-8111-111111111111",
   accessStatus: "active",
+  invited: true,
 };
 
 class MemoryGroupSource implements GroupDataSource {
@@ -154,10 +155,22 @@ describe("group repository", () => {
     ]);
   });
 
+  it("rejects all repository access when an active coach is no longer invited", async () => {
+    const repository = createGroupRepository(new MemoryGroupSource(), {
+      id: "22222222-2222-4222-8222-222222222222",
+      accessStatus: "active",
+      invited: false,
+    });
+
+    await expect(repository.listGroups()).rejects.toThrow("COACH_ACCESS_DISABLED");
+    await expect(repository.createGroup(validInput)).rejects.toThrow("COACH_ACCESS_DISABLED");
+  });
+
   it("rejects all repository access for an inactive profile", async () => {
     const repository = createGroupRepository(new MemoryGroupSource(), {
       id: "33333333-3333-4333-8333-333333333333",
       accessStatus: "disabled",
+      invited: true,
     });
 
     await expect(repository.listGroups()).rejects.toThrow("COACH_ACCESS_DISABLED");
