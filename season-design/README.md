@@ -31,7 +31,7 @@ SeasonDesign is a standalone volleyball coaching application for planning practi
 
 ## Deployment
 
-Create a Vercel project whose Root Directory is `season-design`. Add the four environment variables from `.env.example`, configure the production Supabase Google OAuth redirect to the deployed `/auth/callback`, and keep the Supabase service-role key server-only.
+Deploy through the repository-root `render.yaml` Blueprint on `main` (service branch: `feature/season-design-library-sync`, root directory: `season-design`). Build with `npm install --no-audit --no-fund && npm run build`; `npm ci` cannot work until `season-design/package-lock.json` is committed. In Render, securely enter `SEASON_DESIGN_ALLOWED_EMAILS` and `SUPABASE_SERVICE_ROLE_KEY` (never in GitHub/chat), sync the Blueprint and check the deployed `/api/health` endpoint. Enable Google Auth and allow `https://seasondesign.onrender.com/auth/callback` in Supabase Authentication URL Configuration. Do not call the site live until Render reports a healthy deploy.
 
 ## Foundation scope
 
