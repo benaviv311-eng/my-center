@@ -7,7 +7,7 @@ services:
     repo: https://github.com/benaviv311-eng/my-center
     branch: feature/season-design-library-sync
     rootDir: season-design
-    buildCommand: npm ci --no-audit --no-fund && npm run build
+    buildCommand: npm install --no-audit --no-fund && npm run build
     startCommand: npm run start -- --hostname 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     autoDeployTrigger: checksPass
