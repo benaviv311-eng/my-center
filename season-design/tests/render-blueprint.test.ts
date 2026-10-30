@@ -12,6 +12,12 @@ describe("Render Blueprint deployment contract", () => {
     expect(!buildCommand.includes("npm ci") || lockExists).toBe(true);
   });
 
+  it("upgrades the bundled npm 10 before installing the Vite/Vitest peer graph", () => {
+    // Render Node 22 bundles npm 10, which may crash on current Vite peer deps
+    // with "Cannot read properties of null (reading edgesOut)".
+    expect(buildCommand).toMatch(/^npm install --global npm@11(?:\\.\\d+){0,2} && npm /);
+  });
+
   it("targets the standalone Next.js directory and health endpoint", () => {
     expect(blueprint).toContain("rootDir: season-design");
     expect(blueprint).toContain("healthCheckPath: /api/health");
