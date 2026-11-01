@@ -60,7 +60,7 @@ test('editorial redesign preserves all core library destinations and actions',()
 
 test('editorial layer is cache-busted and syntactically valid',()=>{
   const html=read('library.html');
-  assert.match(html,/library-premium\.css\?v=2/);
-  assert.match(html,/library-premium-ui\.js\?v=3/);
+  assert.match(html,/library-premium\.css\?v=3/);
+  assert.match(html,/library-premium-ui\.js\?v=4/);
   assert.doesNotThrow(()=>new vm.Script(read('library-premium-ui.js')));
 });
