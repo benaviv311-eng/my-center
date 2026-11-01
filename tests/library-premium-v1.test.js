@@ -11,7 +11,7 @@ test('premium library shell keeps core views and current editorial assets',()=>{
   const html=read('library.html');
   assert.match(html,/library-premium\.css\?v=2/);
   assert.match(html,/library-premium-ui\.js\?v=3/);
-  assert.match(html,/library-editorial-header/);
+  assert.match(html,/library-professional-masthead/);
   assert.match(html,/id="library-continue-section"/);
   assert.match(html,/id="library-shelves"/);
   for(const view of ['today','books','archive','favorites']){
