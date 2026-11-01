@@ -107,5 +107,31 @@ assert.ok(gamesHtml.includes('מאגר כרטיסיות'), 'flashcards should be
 assert.ok(gamesHtml.includes('language-vocabulary-bank.js'), 'games page should load the large vocabulary bank');
 assert.ok(gamesHtml.includes('language-game-pool.js'), 'games page should load the non-repeating word pool');
 assert.ok(gamesHtml.includes('language-audio.js'), 'card repository should support pronunciation audio');
+assert.ok(gamesHtml.includes('language-core.js'), 'sentence builder should load the full core sentence courses');
+assert.ok(gamesHtml.includes('language-topic-expansion.js'), 'sentence builder should load expanded topic sentences');
+assert.ok(gamesHtml.includes('language-sentence-extras.js'), 'sentence builder should load extra everyday sentences');
+
+const sentenceExtras = require('../language-sentence-extras.js');
+['ar','it','ru','es'].forEach(lang => {
+  assert.ok(sentenceExtras[lang].length >= 28, `${lang} should add a substantial everyday sentence set`);
+});
+const expansion = require('../language-topic-expansion.js');
+['ar','it','ru','es'].forEach(lang => {
+  const expandedCount = Object.values(expansion.COURSES[lang]).reduce((sum,course)=>sum+(course.sentences||[]).length,0);
+  assert.ok(expandedCount >= 60, `${lang} should expose at least 60 expanded-topic sentences`);
+});
+
+const gamesJsSource = fs.readFileSync(path.join(__dirname,'..','language-games.js'),'utf8');
+assert.ok(gamesJsSource.includes("function sentenceDirection(lang)"), 'sentence builder should set direction from the target language');
+assert.ok(gamesJsSource.includes("lang==='ar'?'rtl':'ltr'"), 'Arabic should be RTL while Italian/Russian/Spanish builders are LTR');
+assert.ok(gamesJsSource.includes('function buildSentenceSession'), 'sentence builder should keep a continuous non-repeating sentence session');
+assert.ok(gamesJsSource.includes('data-sentence-progress'), 'sentence builder should show sentence-by-sentence progress');
+assert.ok(gamesJsSource.includes('data-sentence-hint'), 'sentence builder should offer a hint');
+assert.ok(gamesJsSource.includes('data-sentence-skip'), 'sentence builder should allow skipping');
+assert.ok(gamesJsSource.includes('sentenceAdvanceTimer=setTimeout'), 'correct answers should advance automatically to the next sentence');
+
+const gamesCssSource = fs.readFileSync(path.join(__dirname,'..','language-games.css'),'utf8');
+assert.ok(gamesCssSource.includes('.sentence-answer[dir="ltr"]'), 'LTR sentence answers should render in natural left-to-right order');
+assert.ok(gamesCssSource.includes('.sentence-answer[dir="rtl"]'), 'RTL sentence answers should render in natural right-to-left order');
 
 console.log('language feed + games tests: OK');

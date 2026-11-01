@@ -22,6 +22,8 @@
   let speedTimer=null;
   let rushTimer=null;
   let rushMode='60';
+  let sentenceAdvanceTimer=null;
+  let sentenceSession=null;
   let mixIndex=-1;
   let cardTopic='all';
   let cardPool=null;
@@ -35,6 +37,82 @@
   function languageName(lang){return lang==='all'?'כל השפות':M.LANGUAGES[lang].name;}
   function shuffle(list){return list.slice().sort(()=>Math.random()-.5);}
   function normalise(value){return String(value||'').trim().toLowerCase();}
+  function sentenceDirection(lang){return lang==='ar'?'rtl':'ltr';}
+  function sentenceKey(lang,target){return lang+'|'+normalise(target).replace(/[.,!?¿؟،؛:'"״׳־-]/g,'').replace(/\s+/g,' ');}
+  function addSentence(out,seen,lang,row,source,index){
+    if(!row)return;
+    let id,target,pron,he,scenario;
+    if(Array.isArray(row)){[id,target,pron,he,scenario]=row;}
+    else{id=row.id;target=row.target;pron=row.pron||row.translit||'';he=row.he||row.translation||'';scenario=row.scenario||row.situation||'';}
+    if(!target)return;
+    const key=sentenceKey(lang,target);
+    if(!key||seen.has(key))return;
+    seen.add(key);
+    out.push({id:String(id||source+'-'+index),lang,target:String(target),pron:String(pron||''),he:String(he||''),scenario:String(scenario||''),source});
+  }
+  function allSentenceItems(){
+    const langs=M.LANGUAGE_CODES.includes(filter)?[filter]:M.LANGUAGE_CODES;
+    const out=[],seen=new Set();
+    langs.forEach(lang=>{
+      const courses=window.LanguageCore?.COURSES?.[lang]||{};
+      Object.entries(courses).forEach(([topic,course])=>{
+        (course.sentences||[]).forEach((row,index)=>addSentence(out,seen,lang,row,'course:'+topic,index));
+      });
+      (window.LanguageSentenceExtras?.[lang]||[]).forEach((row,index)=>addSentence(out,seen,lang,row,'extra',index));
+      const base=M.BANK?.[lang]||{};
+      (base.sentences||[]).forEach((row,index)=>addSentence(out,seen,lang,row,'starter',index));
+      ['stories','dialogues','jokes'].forEach(group=>{
+        (base[group]||[]).forEach((entry,entryIndex)=>{
+          (entry.lines||[]).forEach((line,lineIndex)=>addSentence(out,seen,lang,[group+'-'+entryIndex+'-'+lineIndex,line[0],line[1]||'',line[2]||'',entry.title||''],group,lineIndex));
+        });
+      });
+    });
+    return shuffle(out);
+  }
+  function buildSentenceSession(force=false){
+    if(!force&&sentenceSession&&sentenceSession.filter===filter&&sentenceSession.items.length)return sentenceSession;
+    const items=allSentenceItems();
+    sentenceSession={filter,items,index:0,correct:0,cycle:1};
+    return sentenceSession;
+  }
+  function sentenceWords(answer){
+    let words=shuffle(answer);
+    if(answer.length>1&&words.every((word,index)=>word===answer[index]))words=[...answer.slice(1),answer[0]];
+    return words;
+  }
+  function currentSentenceGame(){
+    const session=buildSentenceSession();
+    if(!session.items.length){
+      const fallback=M.buildMiniGame({type:'sentence-builder',filter,seed:'sentence-fallback:'+Date.now()});
+      return {...fallback,position:1,total:1,correct:0};
+    }
+    const sentence=session.items[session.index];
+    const d=M.getDisplay(sentence);
+    const answer=String(d.primary||'').split(/\s+/).filter(Boolean);
+    return {
+      id:'sentence-session:'+session.cycle+':'+session.index,
+      type:'sentence-builder',
+      lang:sentence.lang,
+      sentence,
+      answer,
+      words:sentenceWords(answer),
+      position:session.index+1,
+      total:session.items.length,
+      correct:session.correct
+    };
+  }
+  function advanceSentence(fromMix=false){
+    const session=buildSentenceSession();
+    if(!session.items.length)return;
+    session.index++;
+    if(session.index>=session.items.length){
+      session.items=shuffle(session.items);
+      session.index=0;
+      session.correct=0;
+      session.cycle++;
+    }
+    render('sentence-builder',{fromMix});
+  }
   function poolFor(purpose,lang=filter,topic='all'){
     const key=`${purpose}:${lang}:${topic}`;
     if(!pools.has(key))pools.set(key,P(B,{lang,topic,seed:`${key}:v1`}));
@@ -85,7 +163,16 @@
   }
   function sentenceHtml(game){
     const d=display(game.sentence);
-    return `<div class="game-board"><div class="feed-line"><strong>המשמעות:</strong> ${esc(d.translation)}</div><div class="sentence-answer" data-sentence-answer><span class="meta">המשפט שלך יופיע כאן</span></div><div class="word-bank">${game.words.map((word,i)=>`<button class="word-chip" type="button" data-sentence-word data-index="${i}" data-word="${esc(word)}">${esc(word)}</button>`).join('')}</div><div class="game-controls"><button class="game-btn primary" type="button" data-sentence-check>בדוק</button><button class="game-btn" type="button" data-sentence-clear>נקה</button></div><div class="game-feedback" data-sentence-feedback></div></div>`;
+    const dir=sentenceDirection(game.lang);
+    return `<div class="game-board sentence-builder-board">
+      <div class="sentence-progress" data-sentence-progress><strong>${game.position} / ${game.total}</strong><span>${game.correct} הצלחות בסבב</span></div>
+      <div class="sentence-prompt"><div class="feed-line"><strong>המשמעות:</strong> ${esc(d.translation)}</div>${game.sentence.scenario?`<small>${esc(game.sentence.scenario)}</small>`:''}</div>
+      <div class="sentence-audio-row"><button class="game-btn sentence-audio" type="button" data-audio-lang="${esc(game.lang)}" data-audio-text="${esc(game.sentence.target)}">🔊 שמע את המשפט</button></div>
+      <div class="sentence-answer" dir="${dir}" data-sentence-answer><span class="meta">המשפט שלך יופיע כאן</span></div>
+      <div class="word-bank sentence-word-bank" dir="${dir}" data-sentence-bank>${game.words.map((word,i)=>`<button class="word-chip" type="button" data-sentence-word data-index="${i}" data-word="${esc(word)}">${esc(word)}</button>`).join('')}</div>
+      <div class="game-controls"><button class="game-btn primary" type="button" data-sentence-check>בדוק</button><button class="game-btn" type="button" data-sentence-clear>נקה</button><button class="game-btn" type="button" data-sentence-hint>רמז</button><button class="game-btn" type="button" data-sentence-skip>דלג</button></div>
+      <div class="game-feedback" data-sentence-feedback></div>
+    </div>`;
   }
   function recallHtml(game){
     const shown=game.items.slice(0,3);
@@ -183,11 +270,13 @@
   }
 
   function render(type,{fromMix=false}={}){
+    if(sentenceAdvanceTimer){clearTimeout(sentenceAdvanceTimer);sentenceAdvanceTimer=null;}
     if(type==='flashcards'){renderCardRepository();return;}
     if(speedTimer){clearInterval(speedTimer);speedTimer=null;}
     seedCounter++;
     let game;
     if(type==='memory'||type==='matching'||type==='recall')game=wordGame(type);
+    else if(type==='sentence-builder')game=currentSentenceGame();
     else if(type==='speed'||type==='translation-rush')game={type,lang:filter,items:[]};
     else game=M.buildMiniGame({type,filter,seed:`games:${Date.now()}:${seedCounter}`});
     const stage=$('games-stage');
@@ -199,7 +288,10 @@
 
   function wireStage(type,game,fromMix){
     const stage=$('games-stage');
-    stage.querySelector('[data-new-game]')?.addEventListener('click',()=>render(type,{fromMix}));
+    stage.querySelector('[data-new-game]')?.addEventListener('click',()=>{
+      if(type==='sentence-builder')buildSentenceSession(true);
+      render(type,{fromMix});
+    });
     stage.querySelector('[data-mix-next]')?.addEventListener('click',()=>{
       if(mixIndex>=mixTypes.length-1){mixIndex=-1;stage.innerHTML='<div class="games-stage-empty"><strong>מסלול ה־5 דקות הושלם ✓</strong><br>אפשר לבחור תרגול נוסף או להתחיל שוב.</div>';return;}
       mixIndex++;render(mixTypes[mixIndex],{fromMix:true});
@@ -229,12 +321,43 @@
     }));
 
     const picked=[];
+    const refreshSentenceAnswer=()=>{
+      const answer=stage.querySelector('[data-sentence-answer]');
+      if(!answer)return;
+      answer.innerHTML=picked.length?picked.map((x,index)=>`<button class="word-chip picked-word" type="button" data-picked-index="${index}">${esc(x.word)}</button>`).join(''):'<span class="meta">המשפט שלך יופיע כאן</span>';
+      answer.querySelectorAll('[data-picked-index]').forEach(chip=>chip.addEventListener('click',()=>{
+        const index=Number(chip.dataset.pickedIndex);
+        const removed=picked.splice(index,1)[0];
+        if(removed?.btn)removed.btn.classList.remove('used');
+        refreshSentenceAnswer();
+      }));
+    };
     stage.querySelectorAll('[data-sentence-word]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(btn.classList.contains('used'))return;btn.classList.add('used');picked.push({word:btn.dataset.word,btn});
-      stage.querySelector('[data-sentence-answer]').innerHTML=picked.map(x=>`<span class="word-chip">${esc(x.word)}</span>`).join('');
+      if(btn.classList.contains('used'))return;
+      btn.classList.add('used');
+      picked.push({word:btn.dataset.word,btn});
+      refreshSentenceAnswer();
     }));
-    stage.querySelector('[data-sentence-clear]')?.addEventListener('click',()=>{picked.splice(0);stage.querySelectorAll('[data-sentence-word]').forEach(x=>x.classList.remove('used'));stage.querySelector('[data-sentence-answer]').innerHTML='<span class="meta">המשפט שלך יופיע כאן</span>';stage.querySelector('[data-sentence-feedback]').textContent='';});
-    stage.querySelector('[data-sentence-check]')?.addEventListener('click',()=>{const ok=picked.map(x=>x.word).join(' ')===game.answer.join(' ');stage.querySelector('[data-sentence-feedback]').textContent=ok?'מצוין — המשפט נכון ✓':'עוד לא. אפשר לשנות את הסדר ולנסות שוב.';});
+    stage.querySelector('[data-sentence-clear]')?.addEventListener('click',()=>{
+      picked.splice(0);
+      stage.querySelectorAll('[data-sentence-word]').forEach(x=>x.classList.remove('used'));
+      refreshSentenceAnswer();
+      stage.querySelector('[data-sentence-feedback]').textContent='';
+    });
+    stage.querySelector('[data-sentence-hint]')?.addEventListener('click',()=>{
+      const nextWord=game.answer[picked.length]||game.answer[0]||'';
+      stage.querySelector('[data-sentence-feedback]').textContent=nextWord?`רמז: המילה הבאה היא “${nextWord}”.`:'';
+    });
+    stage.querySelector('[data-sentence-skip]')?.addEventListener('click',()=>advanceSentence(fromMix));
+    stage.querySelector('[data-sentence-check]')?.addEventListener('click',()=>{
+      const feedback=stage.querySelector('[data-sentence-feedback]');
+      const ok=picked.map(x=>x.word).join(' ')===game.answer.join(' ');
+      if(!ok){feedback.textContent='עוד לא. אפשר ללחוץ על מילה במשפט כדי להחזיר אותה ולסדר מחדש.';return;}
+      buildSentenceSession().correct++;
+      stage.querySelectorAll('[data-sentence-word],[data-sentence-check],[data-sentence-clear],[data-sentence-hint],[data-sentence-skip]').forEach(x=>x.disabled=true);
+      feedback.textContent=fromMix?'מצוין — המשפט נכון ✓ אפשר להמשיך במסלול.':'מצוין — המשפט נכון ✓ המשפט הבא עולה...';
+      if(!fromMix)sentenceAdvanceTimer=setTimeout(()=>advanceSentence(false),850);
+    });
 
     stage.querySelector('[data-recall-ready]')?.addEventListener('click',event=>{stage.querySelector('[data-recall-list]').hidden=true;event.currentTarget.hidden=true;stage.querySelector('[data-recall-question]').hidden=false;});
     stage.querySelectorAll('[data-recall-option]').forEach(btn=>btn.addEventListener('click',()=>{stage.querySelectorAll('[data-recall-option]').forEach(x=>x.disabled=true);stage.querySelector('[data-recall-feedback]').textContent=btn.dataset.correct==='1'?'נכון — זו המילה שלא הופיעה ✓':'כמעט. נסה תרגול חדש כדי לבדוק שוב את הזיכרון.';}));
@@ -335,7 +458,9 @@
   }
 
   function setFilter(lang){
-    filter=M.LANGUAGE_CODES.includes(lang)?lang:'all';
+    const nextFilter=M.LANGUAGE_CODES.includes(lang)?lang:'all';
+    if(nextFilter!==filter)sentenceSession=null;
+    filter=nextFilter;
     document.querySelectorAll('[data-game-lang]').forEach(btn=>{const active=btn.dataset.gameLang===filter;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',active?'true':'false');});
     const url=new URL(location.href);if(filter==='all')url.searchParams.delete('lang');else url.searchParams.set('lang',filter);history.replaceState({},'',url);
   }
