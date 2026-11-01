@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="language-pages.css?v=1">
   <link rel="stylesheet" href="languages-feed.css?v=9">
+  <link rel="stylesheet" href="language-world.css?v=1">
 </head>
 <body>
 <div class="app language-feed-page">
@@ -65,6 +66,14 @@
 
   <section id="language-lessons-dashboard" class="language-lessons-dashboard" aria-label="מסלולי שיעורים"></section>
 
+  <section id="language-world" class="language-world-panel" aria-label="עולם ההרפתקאות בשפות">
+    <div id="language-world-root"></div>
+  </section>
+
+  <section id="language-coach" class="language-coach-panel" aria-label="המאמן האישי לשפות">
+    <div id="language-coach-root"></div>
+  </section>
+
   <section class="daily-path-card">
     <div>
       <span class="language-hub-eyebrow">מסלול יומי</span>
@@ -92,6 +101,7 @@
   <section class="feed-toolbar" aria-label="סינון וכלי הפיד">
     <div class="feed-filters" role="group" aria-label="בחר שפה בפיד">
       <button id="feed-filter-all" class="feed-filter active" type="button" data-feed-filter="all" aria-pressed="true">✨ הכול</button>
+      <button id="feed-filter-four" class="feed-filter" type="button" data-feed-filter="four" aria-pressed="false">🌐 ארבע יחד</button>
       <button id="feed-filter-ar" class="feed-filter" type="button" data-feed-filter="ar" aria-pressed="false">AR · ערבית</button>
       <button id="feed-filter-it" class="feed-filter" type="button" data-feed-filter="it" aria-pressed="false">IT · איטלקית</button>
       <button id="feed-filter-ru" class="feed-filter" type="button" data-feed-filter="ru" aria-pressed="false">RU · רוסית</button>
@@ -128,7 +138,10 @@
 <script src="language-feed-model.js?v=2"></script>
 <script src="language-four-feed-model.js?v=1"></script>
 <script src="language-lessons.js?v=2"></script>
-<script src="languages-feed.js?v=11"></script>
+<script src="language-world-model.js?v=1"></script>
+<script src="language-mastery.js?v=1"></script>
+<script src="language-world.js?v=1"></script>
+<script src="languages-feed.js?v=12"></script>
 <script src="language-audio.js?v=4"></script>
 
 <script>

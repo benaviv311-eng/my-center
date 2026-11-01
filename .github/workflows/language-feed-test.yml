@@ -12,9 +12,15 @@ on:
       - 'language-games.js'
       - 'language-games.css'
       - 'language-game-pool.js'
+      - 'language-world-model.js'
+      - 'language-mastery.js'
+      - 'language-world.js'
+      - 'language-world.css'
       - 'language-vocabulary-bank.js'
       - 'language-vocabulary-data-*.js'
       - 'tests/language-feed.test.js'
+      - 'tests/language-world.test.js'
+      - 'tests/language-world-ui.test.js'
       - '.github/workflows/language-feed-test.yml'
 jobs:
   test:
@@ -28,5 +34,12 @@ jobs:
           node --check languages-feed.js
           node --check language-game-pool.js
           node --check language-games.js
+          node --check language-world-model.js
+          node --check language-mastery.js
+          node --check language-world.js
       - name: Run feed and games behavior tests
         run: node tests/language-feed.test.js
+      - name: Run living world tests
+        run: |
+          node tests/language-world.test.js
+          node tests/language-world-ui.test.js
