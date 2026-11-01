@@ -41,7 +41,7 @@ test('library includes editorial insight treatment and clean reading navigation'
   const html=read('library.html');
   const css=read('library-premium.css');
   const js=read('library-premium-ui.js');
-  assert.match(html,/library-editorial-header/);
+  assert.match(html,/library-professional-masthead/);
   assert.match(css,/\.library-editorial-insight/);
   assert.match(css,/\.library-book-internal-nav/);
   assert.match(js,/decorateEditorialInsight/);
@@ -60,7 +60,7 @@ test('editorial redesign preserves all core library destinations and actions',()
 
 test('editorial layer is cache-busted and syntactically valid',()=>{
   const html=read('library.html');
-  assert.match(html,/library-premium\.css\?v=2/);
-  assert.match(html,/library-premium-ui\.js\?v=3/);
+  assert.match(html,/library-premium\.css\?v=3/);
+  assert.match(html,/library-premium-ui\.js\?v=4/);
   assert.doesNotThrow(()=>new vm.Script(read('library-premium-ui.js')));
 });

@@ -62,7 +62,7 @@
     document.querySelectorAll('#daily-books .daily-book').forEach(decorateBookCard);
     document.querySelectorAll('#library-books-grid .book-card').forEach(decorateBookCard);
   }
-  function enhanceDailySelection(){
+  function professionalizeDailySelection(){
     const cards=[...document.querySelectorAll('#daily-books .daily-book')];
     if(!cards.length)return;
     cards.forEach((card,index)=>{
@@ -159,6 +159,8 @@
     first.insertAdjacentElement('afterbegin',label);
   }
 
+  const enhanceDailySelection=professionalizeDailySelection;
+
   function ensureBookNav(card){
     if(card.querySelector('.library-book-internal-nav'))return;
     const nav=document.createElement('nav');
@@ -182,12 +184,21 @@
     let hero=card.querySelector('.library-book-premium-hero');
     if(!hero){hero=document.createElement('section');hero.className='library-book-premium-hero';card.insertBefore(hero,card.firstChild)}
     hero.innerHTML=
-      bookCoverHtml(id,rawTitle,category,'large')+
+      '<aside class="library-reading-sidebar">'+
+        bookCoverHtml(id,rawTitle,category,'large')+
+        '<div class="library-reading-meta">'+esc(category)+(parts.author?' · '+esc(parts.author):'')+'</div>'+
+      '</aside>'+
       '<div class="library-book-premium-copy"><span class="category">'+esc(category)+'</span><h2>'+esc(parts.title)+'</h2>'+
       (parts.author?'<div class="library-book-author">'+esc(parts.author)+'</div>':'')+
       '<p>תקציר, רעיונות מרכזיים, יישומים והערות אישיות — מסודרים לקריאה ולא רק לאחסון.</p></div>';
+    ensureReadingShell(hero);
     ensureBookNav(card);
   }
+  function ensureReadingShell(hero){
+    if(!hero)return;
+    hero.classList.add('library-reading-shell');
+  }
+
   function scrollBookSection(kind){
     let target=null;
     if(kind==='dynamic')target=$('library-book-dynamic');
@@ -216,7 +227,7 @@
 
   function refreshPresentation(){
     decorateCards();
-    enhanceDailySelection();
+    professionalizeDailySelection();
     renderShelves();
     decorateEditorialInsight();
   }
