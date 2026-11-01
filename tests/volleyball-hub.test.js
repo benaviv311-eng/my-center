@@ -85,6 +85,8 @@ test('volleyball page exposes population selection then sticky topic tabs and in
   assert.equal(exists('volleyball.html'),true);
   const html=read('volleyball.html');
   const css=read('volleyball.css');
+  assert.doesNotMatch(html,/vb-hero-players/,'hero should not include decorative side player images');
+  assert.doesNotMatch(html,/Paola_Egonu|pexels-photo-6203671/,'removed hero images must not remain in page markup');
   for(const id of ['volleyball-population-tabs','volleyball-population-topics','volleyball-topic-shell','volleyball-population-visual','volleyball-discovery','volleyball-feed','volleyball-feed-sentinel','volleyball-search']) assert.match(html,new RegExp(`id=["']${id}["']`));
   assert.match(css,/\.vb-topic-shell\s*\{[^}]*position:sticky/s);
   assert.doesNotMatch(html,/id=["']volleyball-topic-filter["']/);
