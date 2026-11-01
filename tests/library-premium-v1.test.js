@@ -7,11 +7,11 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 
-test('library premium V1 is wired without removing existing library views',()=>{
+test('premium library shell keeps core views and current editorial assets',()=>{
   const html=read('library.html');
-  assert.match(html,/library-premium\.css\?v=1/);
-  assert.match(html,/library-premium-ui\.js\?v=2/);
-  assert.match(html,/class="library-premium-hero"/);
+  assert.match(html,/library-premium\.css\?v=2/);
+  assert.match(html,/library-premium-ui\.js\?v=3/);
+  assert.match(html,/library-editorial-header/);
   assert.match(html,/id="library-continue-section"/);
   assert.match(html,/id="library-shelves"/);
   for(const view of ['today','books','archive','favorites']){
@@ -19,19 +19,17 @@ test('library premium V1 is wired without removing existing library views',()=>{
   }
 });
 
-test('premium library uses visual editorial imagery and responsive shelves',()=>{
+test('premium layer keeps responsive shelves and custom covers',()=>{
   const css=read('library-premium.css');
   const js=read('library-premium-ui.js');
-  assert.match(css,/\.library-premium-hero/);
-  assert.match(css,/\.library-cover/);
+  assert.match(css,/\.library-book-cover/);
   assert.match(css,/\.library-shelf-track/);
   assert.match(css,/@media\(max-width:/);
-  assert.match(js,/images\.unsplash\.com/);
-  assert.match(js,/library-cover/);
-  assert.match(js,/library-shelf/);
+  assert.match(js,/bookCoverHtml/);
+  assert.match(js,/renderShelves/);
 });
 
-test('premium enhancer adds continue-reading and richer book presentation',()=>{
+test('premium enhancer keeps continue-reading and richer book presentation',()=>{
   const js=read('library-premium-ui.js');
   assert.match(js,/library-premium-recent/);
   assert.match(js,/library-continue-list/);
@@ -49,18 +47,4 @@ test('premium redesign preserves existing core library behavior',()=>{
 
 test('premium library presentation script has valid JavaScript syntax',()=>{
   assert.doesNotThrow(()=>new vm.Script(read('library-premium-ui.js')));
-});
-
-
-test('premium library keeps a broad image pool and position-based visible variety',()=>{
-  const js=read('library-premium-ui.js');
-  const imageMatches=[...js.matchAll(/https:\/\/images\.unsplash\.com\/photo-[^'"]+/g)].map(m=>m[0]);
-  assert.ok(new Set(imageMatches).size>=10,'expected at least ten distinct editorial photos');
-  assert.match(js,/function imageForPosition/);
-  assert.match(js,/visibleIndex/);
-});
-
-test('library cache-busts the corrected image-variety layer',()=>{
-  const html=read('library.html');
-  assert.match(html,/library-premium-ui\.js\?v=2/);
 });
