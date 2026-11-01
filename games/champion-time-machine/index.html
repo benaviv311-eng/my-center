@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08192c">
+<title>מכונת הזמן של האלוף | משחק הבחירות</title>
+<style>
+:root{color-scheme:dark;--bg:#071524;--card:#0d2236;--surface:#132e44;--line:#294356;--white:#f1f8fc;--muted:#adc1ce;--gold:#ffc86b;--teal:#58d8c3;--rose:#ff8a9f;--blue:#82b9ff;--violet:#c5a2ff;--shadow:0 20px 60px #0005}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,"Noto Sans Hebrew",system-ui,sans-serif;background:radial-gradient(ellipse at 85% 0%,#1c3752 0%,transparent 44%),radial-gradient(ellipse at 0% 65%,#123b3b 0%,transparent 42%),var(--bg);color:var(--white);min-height:100vh;line-height:1.52}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit}button:disabled{opacity:.42;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.app{max-width:1420px;margin:auto;padding:20px clamp(12px,3vw,36px) 60px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:3px 0 18px}.brand{display:flex;gap:13px;align-items:center}.brandSymbol{font-size:27px;width:54px;height:54px;border:1px solid #5f8394;background:linear-gradient(145deg,#263f54,#112b3a);border-radius:17px;display:grid;place-items:center;box-shadow:0 0 35px #52ddc32b}.brand h1{font-size:clamp(20px,2.4vw,31px);margin:0;letter-spacing:-.7px}.tagline{font-size:13px;color:var(--muted);margin-top:2px}.headButtons{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid #405d70;background:#152e43;padding:11px 16px;border-radius:13px;font-weight:700;transition:transform .14s,border-color .14s,background .14s;text-align:center}.btn:hover:not(:disabled){transform:translateY(-2px);border-color:#9bc6ce;background:#203d52}.btn.primary{border-color:#e3b467;background:linear-gradient(135deg,#f6d494,#e9a743);color:#142335;box-shadow:0 7px 24px #f3b65025}.btn.primary:hover:not(:disabled){background:linear-gradient(135deg,#ffe1a5,#f3b45a)}.btn.ghost{background:transparent}.btn.small{padding:8px 12px;font-size:13px}.btn.big{font-size:17px;padding:15px 21px}.btn.wide{width:100%}.btn.warn{border-color:#ad5364;color:#ffc4cd}
+.screen{display:none}.screen.active{display:block}.panel{background:linear-gradient(157deg,#102b41f5,#0b1d30f5);border:1px solid #355268;border-radius:22px;box-shadow:var(--shadow);padding:clamp(15px,2vw,26px)}.intro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:22px;align-items:stretch;margin-top:10px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:2px;font-weight:900;color:var(--teal)}.display{font-size:clamp(34px,4.6vw,64px);line-height:1.1;letter-spacing:-2px;margin:14px 0 18px}.goldText{color:var(--gold)}.lead{font-size:clamp(15px,1.5vw,19px);color:#d0e0eb;max-width:630px}.features{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:27px 0}.feature{border:1px solid #33556b;border-radius:13px;background:#1633498f;padding:14px;font-size:14px}.feature strong{display:block;color:var(--white);margin-bottom:3px}.feature span{color:var(--muted)}
+.clockArt{min-height:190px;position:relative;display:grid;place-items:center;overflow:hidden;border-radius:20px;background:radial-gradient(circle at center,#2a5362 0%,#122c42 35%,#0a1b2d 73%);border:1px solid #395c6b}.clockCircle{height:160px;width:160px;border:4px solid #dbba79;border-radius:50%;box-shadow:0 0 0 13px #dabc7524,0 0 0 28px #80e8d013,0 0 50px #fbd39344;position:relative;display:grid;place-items:center}.clockCircle:before,.clockCircle:after{content:"";position:absolute;background:var(--gold);border-radius:3px;transform-origin:bottom center;bottom:50%;left:calc(50% - 2px);width:4px}.clockCircle:before{height:53px;transform:rotate(42deg)}.clockCircle:after{height:34px;transform:rotate(215deg);background:var(--teal)}.clockCenter{width:15px;height:15px;border-radius:50%;background:#fff3d0;z-index:1}.orbit{position:absolute;border:1px dashed #76d3ce75;border-radius:50%;height:265px;width:265px;transform:rotate(-30deg)}.floatingIcon{position:absolute;font-size:25px;filter:drop-shadow(0 5px 5px #0006)}.floatingIcon.a{top:13%;right:14%}.floatingIcon.b{bottom:14%;left:14%}.floatingIcon.c{top:21%;left:20%}
+label.fieldlabel{display:block;color:var(--muted);font-size:13px;margin-bottom:7px;font-weight:700}select,input{background:#081d30;border:1px solid #486576;border-radius:11px;padding:12px 13px;color:var(--white);width:100%;min-width:0}input::placeholder{color:#728d9f}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.nameFields{margin:15px 0}.nameFields .rowfield{display:flex;gap:8px;align-items:center;margin:8px 0}.nameFields .rowfield span{width:31px;color:var(--gold)}.fine{font-size:12px;color:var(--muted)}.sep{height:1px;background:var(--line);margin:19px 0}
+.gameSummary{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:17px}.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid #426076;border-radius:40px;background:#183347;padding:8px 12px;font-size:13px}.pill strong{color:var(--gold)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}.mainCol{display:grid;gap:16px}.sideCol{display:grid;gap:14px}.panelTitle{font-size:19px;font-weight:800;margin:0 0 12px}.sectionKicker{font-size:12px;color:var(--teal);letter-spacing:.4px;font-weight:800;margin-bottom:7px}.timeProgress{display:flex;gap:4px;margin:11px 0 16px;height:6px}.timeProgress span{flex:1;background:#2b4559;border-radius:8px}.timeProgress span.done{background:var(--teal)}.timeProgress span.current{background:var(--gold);box-shadow:0 0 10px #ffd78a75}
+.timelineScroll{overflow:auto;padding:0 0 8px;scrollbar-color:#4d7085 transparent}.timeline{min-width:890px}.timeRow{display:grid;grid-template-columns:116px repeat(var(--years,10),minmax(72px,1fr));gap:7px;margin-bottom:7px}.timeHead{font-size:12px;color:var(--muted);text-align:center;font-weight:700;padding:3px}.laneHead{display:flex;align-items:center;gap:7px;font-weight:800;font-size:13px;padding:7px 8px;border-radius:11px;background:#183246}.laneHead .emoji{font-size:20px}.timeCell{min-height:59px;position:relative;border:1px solid #2b4b60;border-radius:12px;background:#102a3a;display:flex;flex-direction:column;justify-content:space-between;padding:7px}.timeCell:before{content:"";position:absolute;top:47%;right:100%;width:8px;border-top:2px dashed #476577}.timeCell.ach{background:#233444}.timeCell.health{background:#173a3d}.timeCell.joy{background:#3d2f41}.timeCell.bond{background:#2c304c}.timeCell.future{opacity:.58}.timeCell.thisYear{border-color:#ebc77b;box-shadow:inset 0 0 0 1px #f5ca6a77,0 0 15px #e6bb4940;opacity:1}.timeCell.reachable{outline:2px solid #57daca99;outline-offset:-3px;opacity:1}.timeCell .number{font-size:11px;color:#9db3c2}.markerRow{display:flex;gap:3px;align-items:center;flex-wrap:wrap;min-height:19px}.mark{border:1px solid #bde4d9aa;background:#83d7ce;color:#0b2733;border-radius:5px;padding:1px 5px;font-size:10px;font-weight:900;white-space:nowrap}.mark.bot{background:#c6b9ff}.mark.gorer{background:#f4a4b2;border-color:#ffccd6;font-size:13px;padding:0px 4px}
+.turnCard{position:relative;overflow:hidden}.turnCard:before{content:"";position:absolute;height:110px;width:110px;border-radius:50%;background:var(--gold);opacity:.06;top:-60px;left:-40px}.turnHeader{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.turnName{font-size:clamp(22px,2.5vw,29px);font-weight:900}.turnHint{font-size:13px;color:var(--muted)}.statusLine{margin:13px 0;padding:11px 14px;border:1px solid #3e5c6f;border-radius:12px;background:#112c42;font-size:14px}.die{display:inline-grid;place-items:center;width:76px;height:76px;background:#faf6e8;border-radius:17px;color:#122334;font-size:38px;box-shadow:inset 0 -6px 0 #d9d3be,0 8px 25px #0005;font-weight:900;margin:9px}.dieArea{text-align:center}.choices{display:grid;gap:9px}.routeChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.route{border:1px solid #47677b;background:#183549;border-radius:15px;padding:16px 10px;display:grid;justify-items:center;gap:8px;min-height:114px}.route .routeIcon{font-size:29px}.route strong{font-size:14px}.route small{color:#b4cbd6;font-size:11px}.route:hover{border-color:var(--gold);background:#25465c}.choice{border:1px solid #49677b;border-radius:15px;padding:15px 17px;text-align:right;background:linear-gradient(115deg,#17384e,#112c40);display:flex;gap:16px;align-items:center;justify-content:space-between;transition:.15s}.choice:hover{border-color:#f3c780;background:#254556;transform:translateY(-2px)}.choice h4{font-size:16px;margin:0 0 5px}.choice p{font-size:13px;color:#bfd1db;margin:0}.impact{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-start;margin-top:9px}.chip{padding:3px 7px;border-radius:7px;background:#ffffff13;border:1px solid #ffffff20;font-size:11px;white-space:nowrap}.chip.plus{color:#9df2cb}.chip.minus{color:#ffb1bd}.chip.later{color:#ffd79b}.cardCopy{flex:1}.choiceArrow{font-size:24px;color:var(--gold)}.eventTitle{font-size:24px;font-weight:900;margin:6px 0}.eventText{color:#c5d6e0;font-size:15px;margin:0 0 18px}.gorerBox{background:linear-gradient(130deg,#442b43,#212d42);border:1px solid #cb7788;border-radius:16px;padding:18px;margin:16px 0}.gorerBox h3{margin:0 0 8px;color:#ffd1d5;font-size:21px}.gorerBox p{color:#f0d6df;margin:7px 0}.dealButtons{display:flex;gap:10px;flex-wrap:wrap}.logEntry{border-bottom:1px solid #29495a;padding:8px 0;font-size:12px;color:#c0d0d9}.logEntry:first-child{padding-top:0}.logEntry:last-child{border-bottom:0}.logEntry strong{color:var(--gold)}
+.player{border:1px solid #344f65;padding:12px;border-radius:14px;background:#10283b;position:relative}.player.active{border-color:var(--gold);box-shadow:0 0 0 1px #d3ac6250;background:#1b374c}.playerTop{display:flex;gap:9px;align-items:center;margin-bottom:10px}.avatar{width:34px;height:34px;border-radius:12px;background:var(--player,#67c7cf);display:grid;place-items:center;color:#0a2432;font-weight:900;flex-shrink:0}.playerName{font-weight:900;font-size:14px}.playerOrigin{color:var(--muted);font-size:11px}.stats{display:grid;gap:7px}.statRow{display:grid;grid-template-columns:65px 1fr 30px;gap:7px;align-items:center;font-size:11px}.statBar{height:7px;border-radius:15px;background:#2d4254;overflow:hidden}.statBar>span{height:100%;display:block;border-radius:15px}.statNumber{font-weight:800;text-align:left;font-variant-numeric:tabular-nums}.statName{white-space:nowrap}.lockedGoal{display:flex;align-items:center;gap:6px;font-size:11px;color:#a9bbca;margin-top:10px;border-top:1px solid #2d495d;padding-top:8px}.sideTitle{font-size:16px;font-weight:900;margin:0 0 13px}.logWrap{max-height:230px;overflow:auto}.tipBox{font-size:13px;color:#cbd6df;background:#19384a;border-radius:12px;padding:13px;border:1px solid #355a68}.tipBox b{color:var(--gold)}
+.modalBackdrop{position:fixed;inset:0;background:#02080dce;z-index:100;display:none;align-items:center;justify-content:center;padding:12px}.modalBackdrop.open{display:flex}.modal{max-width:720px;width:100%;max-height:90vh;overflow:auto;background:linear-gradient(135deg,#183448,#0c2235);border:1px solid #668597;border-radius:20px;padding:24px;box-shadow:0 25px 100px #000a}.modal h2{margin:0 0 12px;font-size:26px}.modal p,.modal li{color:#d3e0e8}.modal li{margin:8px 0}.modal .closeRow{text-align:left}.results{display:grid;gap:12px}.resultCard{display:grid;grid-template-columns:55px 1fr auto;gap:13px;align-items:center;padding:16px;background:#16344a;border:1px solid #426276;border-radius:15px}.resultCard.winner{border-color:var(--gold);background:linear-gradient(115deg,#324537,#16344a)}.rank{font-size:27px}.resultName{font-size:19px;font-weight:900}.resultTitle{font-size:13px;color:var(--teal);font-weight:800;margin-top:3px}.resultExplanation{font-size:12px;color:#b6c8d4;margin-top:3px}.bigScore{font-size:27px;font-weight:900;color:var(--gold);text-align:center}.goalScore{font-size:11px;color:#c9d6df;text-align:center}.endHead{text-align:center;padding:20px 8px}.endHead .trophy{font-size:56px;display:block;margin:5px}.endHead h2{font-size:clamp(28px,4vw,45px);margin:10px 0}.endHead p{color:#bdcfd8;margin:0 auto 18px;max-width:600px}.footer{padding:18px 0;text-align:center;color:#849dad;font-size:12px}.toast{position:fixed;bottom:24px;left:24px;max-width:370px;background:#f7d592;color:#193047;padding:13px 17px;border-radius:13px;z-index:130;box-shadow:0 16px 40px #0008;display:none;font-weight:700}.toast.show{display:block}.empty{text-align:center;color:var(--muted);padding:22px}
+@media(max-width:1040px){.layout{grid-template-columns:1fr}.sideCol{display:grid;grid-template-columns:1fr 1fr}.playerList{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+@media(max-width:720px){.intro{grid-template-columns:1fr}.intro>div:first-child{order:1}.intro>div:last-child{order:2}.app{padding:12px 10px 35px}.features{grid-template-columns:1fr 1fr}.layout{gap:11px}.sideCol{grid-template-columns:1fr}.playerList{grid-template-columns:1fr 1fr}.routeChoices{grid-template-columns:repeat(2,1fr)}.choice{padding:12px}.resultCard{grid-template-columns:38px 1fr auto;padding:12px}.modal{padding:17px}.formGrid{grid-template-columns:1fr 1fr}.gameSummary{gap:5px}.pill{font-size:11px;padding:6px 9px}}
+@media(max-width:410px){.playerList{grid-template-columns:1fr}.features{grid-template-columns:1fr}.formGrid{grid-template-columns:1fr 1fr}.headButtons .btn{font-size:11px;padding:7px 9px}.brand h1{font-size:20px}.brandSymbol{width:44px;height:44px}.routeChoices{grid-template-columns:1fr 1fr}.choice h4{font-size:14px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* --- TIME CHAMPION · STUDIO EDITION 02 --- */
+:root {
+  --bg:#080e22; --card:#111c35; --surface:#1d2b49; --line:#34445f;
+  --white:#f8f6f4; --muted:#aab9d1; --gold:#ffcd79; --teal:#68e9d6;
+  --rose:#ff8fa9; --blue:#90baff; --violet:#bba7ff;
+  --shadow:0 24px 76px rgba(1,3,16,.29);
+}
+html { scroll-padding-top:24px }
+body {
+  background:
+    radial-gradient(ellipse 700px 440px at 96% -5%,rgba(123,91,210,.20),transparent 74%),
+    radial-gradient(ellipse 630px 460px at -8% 52%,rgba(24,187,166,.12),transparent 75%),
+    radial-gradient(ellipse 520px 290px at 48% 108%,rgba(255,143,169,.09),transparent 78%),
+    #080e22;
+  color:var(--white);
+  font-family:"Heebo","Assistant","Noto Sans Hebrew",Arial,system-ui,sans-serif;
+  line-height:1.66;
+}
+body::before {content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.28;background-image:radial-gradient(rgba(200,211,242,.18) .75px,transparent .75px);background-size:21px 21px;mask-image:linear-gradient(125deg,transparent 4%,black 44%,transparent 94%)}
+.app {position:relative;z-index:1;max-width:1500px;padding:24px clamp(16px,3.5vw,54px) 64px}
+header {border-bottom:1px solid rgba(180,200,237,.12);padding:0 0 21px;margin-bottom:22px;min-height:66px}
+.brand {gap:15px}
+.brandSymbol {width:60px;height:60px;flex:0 0 auto;font-size:31px;border-radius:20px;border:1px solid rgba(255,203,125,.53);color:#ffdc9d;background:radial-gradient(circle at 30% 22%,#5b5368,#242441 50%,#151a30 100%);box-shadow:0 0 30px #e8b77a16,inset 0 0 14px #ffcc8424;transform:rotate(-6deg)}
+.brand h1 {font-size:clamp(21px,2.1vw,30px);letter-spacing:-.06em;line-height:1.25;font-weight:900}
+.tagline {color:#b1bcd4;font-size:13px;letter-spacing:.015em;margin-top:7px}
+.headButtons {gap:10px}
+.btn {border:1px solid rgba(171,192,224,.28);background:#253451cf;padding:12px 19px;border-radius:13px;font-weight:850;letter-spacing:-.015em;box-shadow:0 4px 12px rgba(3,9,28,.12);transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.btn:hover:not(:disabled) {transform:translateY(-2px);border-color:rgba(255,211,147,.7);background:#344663;box-shadow:0 10px 25px #080c2069}
+.btn:active:not(:disabled) {transform:translateY(0) scale(.99)}
+.btn.primary {color:#241d2b;border:1px solid #ffe0a8;background:linear-gradient(115deg,#ffebc2 0%,#ffd089 35%,#ffa96d 100%);box-shadow:0 9px 30px #ffae7739,inset 0 1px #fff6dd}
+.btn.primary:hover:not(:disabled) {background:linear-gradient(115deg,#fff1d7,#ffcf8a 50%,#ffb17a);box-shadow:0 14px 40px #ffae774a}
+.btn.ghost {background:rgba(35,47,75,.28);backdrop-filter:blur(6px)}
+.btn.small {font-size:13px;padding:10px 14px}
+.btn.big {min-height:54px;font-size:16px;padding:15px 22px}
+button:focus-visible,input:focus-visible,select:focus-visible {outline:3px solid #fff0bb;outline-offset:3px}
+.panel {position:relative;background:linear-gradient(142deg,rgba(29,43,76,.98),rgba(15,27,52,.97) 72%);border:1px solid rgba(166,192,236,.19);border-radius:24px;padding:clamp(18px,2.3vw,31px);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.035)}
+.panel::selection {background:#d79978;color:#0d1630}
+.intro {gap:22px;grid-template-columns:minmax(0,1.08fr) minmax(350px,.92fr);margin-top:6px}
+.intro>.panel:first-child {overflow:hidden;background:radial-gradient(ellipse 85% 62% at 0% 0%,rgba(159,113,195,.15),transparent 72%),linear-gradient(142deg,#202849,#101e3a 70%);border-color:#8b779b66}
+.intro>.panel:first-child:before {position:absolute;content:"";width:340px;height:340px;border:1px solid #ffffff0d;border-radius:50%;left:-160px;top:-220px;pointer-events:none}
+.intro>.panel:last-child {background:linear-gradient(155deg,#202c4b,#111e39 80%);border:1px solid #5f70905e;display:flex;flex-direction:column}
+.eyebrow {font-size:11px;letter-spacing:1.9px;text-transform:uppercase;color:#8df6de;font-weight:900}
+.intro .eyebrow {display:inline-flex;border:1px solid rgba(132,233,213,.30);padding:7px 12px;background:rgba(22,84,90,.23);border-radius:100px}
+.display {font-size:clamp(43px,5.25vw,83px);font-weight:1000;line-height:1.075;letter-spacing:-.085em;margin:23px 0 20px;text-shadow:0 8px 33px rgba(0,0,0,.18)}
+.goldText {color:#ffd18a;background:linear-gradient(115deg,#fff0b8 0%,#ffc37d 45%,#ff9a8c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lead {color:#c7d4e9;font-size:clamp(15px,1.45vw,18px);line-height:1.95;max-width:650px}
+.features {gap:12px;margin:30px 0 24px}
+.feature {position:relative;border:1px solid rgba(146,182,229,.17);border-radius:16px;background:rgba(115,143,193,.074);padding:17px 17px 18px;transition:transform .2s,border-color .2s}
+.feature:hover {transform:translateY(-3px);border-color:#d1a7a86d}
+.feature::before {content:"";position:absolute;right:17px;top:0;width:40px;height:2px;border-radius:3px;background:linear-gradient(90deg,#fcd299,transparent)}
+.feature strong {font-size:14px;margin:0 0 6px;color:#ffedd3}
+.feature span {font-size:12px;line-height:1.7;color:#adbed4}
+.clockArt {min-height:225px;border:1px solid #b7a2aa35;background:radial-gradient(ellipse at 50% 50%,#414363 0%,#212746 32%,#101b35 70%),repeating-linear-gradient(110deg,transparent 0 10px,#fff1 11px 12px);border-radius:21px;isolation:isolate}
+.clockArt::before {content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:repeating-conic-gradient(from 0deg,transparent 0 9deg,#ffffff12 9deg 9.5deg);opacity:.7;z-index:-1;animation:clockSpin 80s linear infinite}
+.clockArt::after {content:"הזמן לא מחכה לאף אחד";position:absolute;right:19px;bottom:15px;color:#c9c3d8;font-size:11px;font-weight:800;letter-spacing:.06em}
+.clockCircle {width:164px;height:164px;border:4px solid #ffd18d;box-shadow:0 0 0 13px #ffcd8022,0 0 0 29px #ffcd8010,0 0 70px #ffb78345,inset 0 0 45px #ffbc9f16;background:repeating-conic-gradient(from 0deg,#ffe5b55e 0 1deg,transparent 1deg 30deg);animation:floatClock 6s ease-in-out infinite}
+.clockCircle::before {height:52px;transform:rotate(42deg);width:5px}
+.clockCircle::after {height:39px;transform:rotate(217deg);background:#7af2de;width:4px}
+.clockCenter {box-shadow:0 0 0 5px #ffe2af3a}
+.orbit {height:310px;width:310px;border-color:#a9b7e66e;transform:rotate(15deg)}
+.floatingIcon {font-size:27px;filter:drop-shadow(0 5px 15px #000b);animation:floatClock 4s ease-in-out infinite}
+.floatingIcon.b {animation-delay:-1s}.floatingIcon.c {animation-delay:-2s}
+.panelTitle {font-size:21px;letter-spacing:-.04em;font-weight:900;color:#fff7ee}
+.intro>.panel:last-child .panelTitle {font-size:25px;margin-bottom:4px}
+.intro>.panel:last-child .turnHint {color:#a9bcd7;margin-bottom:19px}
+label.fieldlabel {color:#bdcae3;font-size:13px}
+select,input {background:#0c1932;border:1px solid #566680b0;border-radius:13px;min-height:51px;color:#fdfafa;padding:13px 14px;transition:background .2s,border-color .2s}
+select:hover,input:hover {border-color:#a8b2d7}
+select:focus,input:focus {background:#111f3b;border-color:#ffdb9f}
+input::placeholder {color:#7e8ea9}
+.formGrid {gap:11px}.nameFields{margin:21px 0 20px}.nameFields .rowfield {margin:10px 0}.nameFields .rowfield span {color:#fed696;font-weight:900}
+.intro #startBtn {margin-top:4px;min-height:61px;font-size:17px;border-radius:15px;letter-spacing:-.02em}
+.intro>.panel:last-child>.fine {line-height:1.8;margin:17px 2px 0;color:#9db3d1}
+.fine {color:#99aeca;line-height:1.75}
+.sep {background:linear-gradient(90deg,transparent,#8297b250,transparent);margin:22px 0}
+.gameSummary {gap:10px;margin-bottom:18px}
+.pill {border:1px solid #7385a544;background:#1c2e4bca;color:#c9d6e7;font-size:12px;font-weight:750;padding:9px 14px;box-shadow:inset 0 1px #ffffff09}
+.pill strong {color:#ffd395}
+.gameSummary .pill:first-child {background:linear-gradient(105deg,#f4c881,#f9a978);color:#211b2b;border:0;font-size:13px;font-weight:950}
+.gameSummary .pill:nth-child(2) {border-color:#a6a2ee75;background:#39345f5c}
+.layout {gap:20px;grid-template-columns:minmax(0,1fr) minmax(265px,310px)}.mainCol {gap:18px}.sideCol{gap:17px}
+.layout .mainCol>.panel:first-child {background:radial-gradient(ellipse at 100% 0%,rgba(61,96,158,.16),transparent 65%),linear-gradient(155deg,#192845,#111d37);overflow:hidden}
+.layout .mainCol>.panel:first-child::before {content:"";width:220px;height:220px;position:absolute;left:-130px;top:-120px;border:1px solid #fff1;border-radius:50%;pointer-events:none}
+.sectionKicker {font-weight:900;color:#84efd9;letter-spacing:.07em;font-size:11px;text-transform:uppercase}
+.timeProgress {height:8px;gap:5px;margin:20px 0 23px}
+.timeProgress span {background:#344665;box-shadow:inset 0 0 0 1px #7184aa10}
+.timeProgress span.done {background:linear-gradient(90deg,#74d3e2,#6ceac9)}
+.timeProgress span.current {background:linear-gradient(90deg,#fbdba4,#ff9a82);box-shadow:0 0 20px #ffc99e78}
+.timelineScroll {padding:4px 0 10px;scrollbar-width:thin;scrollbar-color:#7781a6 transparent}
+.timeline {min-width:810px}
+.timeRow {grid-template-columns:117px repeat(var(--years,10),minmax(67px,1fr));gap:7px;margin-bottom:9px;align-items:stretch}
+.timeHead {color:#aebbd2;font-size:11px;font-weight:800;letter-spacing:.012em;padding:7px 2px}
+.laneHead {display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;border:1px solid #8295b521;font-size:13px;background:#1a2d49;padding:11px 9px;border-radius:14px}
+.laneHead .emoji {font-size:20px}
+.timeCell {height:73px;min-height:73px;border:1px solid rgba(183,195,226,.12);background:rgba(26,42,71,.77);border-radius:15px;padding:8px;justify-content:space-between;box-shadow:inset 0 1px #ffffff0c;overflow:visible}
+.timeCell:before {z-index:0;top:50%;right:100%;width:8px;border-top:2px dashed #95a4b055}
+.timeCell.ach {background:linear-gradient(140deg,#513b3d80,#282944c2)}
+.timeCell.health {background:linear-gradient(140deg,#1a58577a,#1c344bc2)}
+.timeCell.joy {background:linear-gradient(140deg,#65365d75,#312847c2)}
+.timeCell.bond {background:linear-gradient(140deg,#403e7380,#263356c2)}
+.timeCell.future {opacity:.54;filter:saturate(.6)}
+.timeCell.thisYear {opacity:1;border:1.5px solid #ffd595;background:#29354c;box-shadow:0 0 0 2px #ffcd7e26,0 0 24px #fabb814a}
+.timeCell.reachable {opacity:1;outline:2px dashed #74edda;outline-offset:-5px;box-shadow:0 0 20px #78f8d42d}
+.timeCell .number {font-size:10px;color:#8da1c3;font-weight:850;line-height:1.25}
+.timeCell.thisYear .number {color:#ffdfb1}
+.markerRow {z-index:2;gap:3px;align-items:end}
+.mark {background:#c1f5eb;color:#17263c;border:0;border-radius:9px;font-size:10px;font-weight:900;padding:3px 5px;box-shadow:0 3px 7px #02081766;white-space:normal;overflow-wrap:anywhere}
+.mark.bot {background:#d7c4ff;color:#29234e}.mark.gorer{background:#ffc4d0;color:#502030;padding:3px 6px;border:none;box-shadow:0 0 10px #ff88a77a}
+.mainCol>.panel:first-child .fine {margin-top:11px;font-size:11px}
+.turnCard {border:1px solid rgba(255,207,133,.38);background:radial-gradient(circle at 0% 0%,#674b585c,transparent 38%),linear-gradient(145deg,#252b4d,#151f3a 74%);box-shadow:0 20px 85px #07081e7d,inset 0 1px #ffe7af12;min-height:310px}
+.turnCard:before {width:250px;height:250px;opacity:.05;top:-130px;left:-120px}
+.turnCard:after {content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(270deg,#f8c88c,#ff9e9c,#90c9df,transparent)}
+.turnName {font-size:clamp(25px,2.7vw,35px);letter-spacing:-.04em;font-weight:950;margin:3px 0}
+.turnHint {color:#aabbd5;line-height:1.7}
+.turnHeader .pill {border-color:#7acbbb5b;background:#173d4b89;color:#bff6de}
+.statusLine {margin:18px 0 19px;background:rgba(13,24,47,.6);border:1px solid #566d9466;color:#d0ddf0;border-radius:14px;padding:15px 17px;font-size:14px;line-height:1.8}
+.dieArea {padding:7px 0 3px}
+.die {width:85px;height:85px;border-radius:22px;background:linear-gradient(140deg,#fffae5,#ffedc7);font-size:43px;box-shadow:inset 0 -7px #e8d8b3,0 15px 30px #05091d91;animation:dieFloat 4.5s ease-in-out infinite}
+.dieArea .btn {min-width:255px;margin:4px 0 1px}
+.routeChoices {gap:12px;margin:23px 0 8px}
+.route {min-height:138px;border:1px solid #6b7e9b59;border-radius:16px;padding:17px 12px;background:linear-gradient(145deg,#2c3d60,#1d2d4c);transition:transform .2s,border-color .2s,box-shadow .2s;box-shadow:inset 0 1px #ffffff0d}
+.route:hover:not(:disabled) {background:linear-gradient(140deg,#394b73,#253960);border-color:#fed38c;transform:translateY(-4px);box-shadow:0 10px 25px #070d2a8a}
+.route .routeIcon {font-size:34px;filter:drop-shadow(0 4px 8px #0006)}
+.route strong {color:#f5f4fa;font-size:15px;letter-spacing:-.02em}.route small{color:#b9c9dc;line-height:1.5;font-size:11px}
+.eventTitle {font-size:clamp(25px,2.5vw,34px);margin:10px 0 6px;letter-spacing:-.035em;color:#fff1d9}
+.eventText {color:#c9d7e9;font-size:15px;line-height:1.9;margin:2px 0 18px}
+.choices {grid-template-columns:1fr;gap:11px}
+.choice {background:linear-gradient(110deg,rgba(54,65,105,.74),rgba(26,42,70,.9));border:1px solid #7081a361;border-radius:17px;padding:17px 20px;gap:15px;min-height:94px;transition:transform .19s,box-shadow .19s,border-color .19s}
+.choice:hover:not(:disabled) {transform:translateX(-4px);background:linear-gradient(100deg,#405379,#263a60);border-color:#f8d28e;box-shadow:0 9px 24px #090e2670}
+.choice h4 {font-size:16px;letter-spacing:-.015em;color:#fff6e9;margin:0 0 6px}.choice p {font-size:13px;color:#c2d0e3;line-height:1.6}
+.choiceArrow {font-size:32px;color:#ffce8b;align-self:center}
+.impact {gap:6px;margin-top:10px}
+.chip {font-size:11px;line-height:1.4;border-radius:9px;padding:5px 9px;background:#ffffff0b;border:1px solid #ffffff22;font-weight:800}
+.chip.plus {background:#4bcaa51b;color:#83f6d8;border-color:#70ebc93b}
+.chip.minus {background:#ff8ca81a;color:#ffb2c5;border-color:#ff9faf3b}
+.chip.later {background:#ffcf8117;color:#ffd28a;border-color:#fac88641}
+.gorerBox {background:radial-gradient(ellipse at 95% 0%,#7a3e7477,transparent 70%),linear-gradient(140deg,#40304e,#222c49);border:1px solid #e79ebc7f;border-radius:19px;padding:22px;margin:22px 0}
+.gorerBox h3 {font-size:25px;color:#ffe0ed}
+.gorerBox p {font-size:14px;color:#f3d6e8;line-height:1.7}
+.dealButtons .btn {min-width:170px}
+.sideCol>.panel {padding:21px;background:linear-gradient(165deg,#1d2c49,#111f39)}
+.sideTitle {font-size:17px;margin:0 0 16px;letter-spacing:-.025em;color:#fff3e2}
+.playerList {display:grid;gap:12px}
+.player {background:#14243f;border:1px solid #7485a43d;border-radius:16px;padding:15px;transition:background .2s,border-color .2s}
+.player.active {border:1px solid #ffce86;background:linear-gradient(145deg,#293651,#1a2c47);box-shadow:0 0 0 1px #ffcc822b,0 0 20px #ffc78712}
+.playerTop {gap:11px;margin-bottom:12px}
+.avatar {width:40px;height:40px;border-radius:13px;background:var(--player,#67c7cf);font-size:17px;box-shadow:inset 0 -4px #0000001c}
+.playerName {font-size:15px;color:#fff4e5}
+.playerOrigin {font-size:11px;line-height:1.5}
+.stats {gap:9px}
+.statRow {grid-template-columns:70px 1fr 31px;gap:8px;font-size:11px}
+.statBar {height:7px;background:#303e5b}
+.statBar>span {box-shadow:0 0 10px currentColor}
+.statNumber {font-size:12px;color:#edf0fa;font-weight:900}
+.lockedGoal {color:#a9b9d2;border-color:#576a894d;padding-top:10px;margin-top:13px;line-height:1.7}
+.logWrap {max-height:300px;padding-left:3px}
+.logEntry {font-size:12px;line-height:1.75;color:#aebfd8;border-color:#5c718747;padding:10px 0}
+.logEntry strong {color:#ffd390}
+.tipBox {background:linear-gradient(120deg,#28435c,#18324a);border:1px solid #82a3b94f;padding:16px 18px;border-radius:16px;color:#cfdaea;line-height:1.8}
+.tipBox b {color:#ffd18c}
+.modalBackdrop {background:#050a1aec;backdrop-filter:blur(9px);padding:16px}
+.modal {background:radial-gradient(circle at 0 0,#4b3b5c88,transparent 45%),linear-gradient(140deg,#233453,#121d37);max-width:760px;border:1px solid #bdabcc6e;border-radius:25px;box-shadow:0 40px 110px #010414bd;padding:30px}
+.modal h2 {color:#ffe1b0;font-size:28px}.modal p,.modal li{color:#d3dff0;line-height:1.9}
+.resultCard {border-radius:17px;background:linear-gradient(105deg,#243555,#182841);border:1px solid #8194b954;gap:16px;padding:21px}
+.resultCard.winner {background:linear-gradient(105deg,#64503d99,#292f4f 40%,#192b4a);border:1px solid #ffe1a7;box-shadow:0 10px 36px #ffbe7d1a}
+.rank {font-size:36px}.resultName {font-size:21px;color:#fff2dd}.resultTitle{color:#87f0dd;font-size:14px}.resultExplanation{color:#becce0;line-height:1.65;font-size:12px}
+.bigScore {color:#ffd292;font-size:34px;line-height:1.2}.goalScore {font-size:11px;color:#c4d2e5;line-height:1.6}
+.endHead {padding:42px 8px 28px;background:radial-gradient(ellipse at 50% 20%,#f5c56a21,transparent 55%);border-radius:20px;margin-bottom:15px}
+.endHead .trophy {font-size:78px;filter:drop-shadow(0 10px 20px #ffba6080);animation:floatClock 4s ease-in-out infinite}
+.endHead h2 {font-size:clamp(32px,4.4vw,56px);letter-spacing:-.05em;color:#fff5e6}
+.endHead p {line-height:1.8;color:#ced7e9}
+.footer {color:#889cba;font-size:12px;padding:26px 0;text-align:center}
+.toast {background:#ffe4ad;border:1px solid #fff3d3;color:#2e2540;border-radius:14px;font-size:13px}
+@keyframes floatClock {0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes clockSpin {to{transform:rotate(360deg)}}
+@keyframes dieFloat {0%,100%{transform:rotate(0)}50%{transform:rotate(4deg)}}
+@media(max-width:1120px){.layout{grid-template-columns:1fr}.sideCol{display:grid;grid-template-columns:1fr 1fr}.sideCol .tipBox{grid-column:span 2}.playerList{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}}
+@media(max-width:800px){.intro{grid-template-columns:1fr}.intro>.panel:first-child{order:1}.intro>.panel:last-child{order:2}.features{grid-template-columns:repeat(2,minmax(0,1fr))}.clockArt{min-height:210px}.mainCol{display:flex;flex-direction:column}.mainCol>.turnCard{order:0}.mainCol>.panel:first-child{order:1}.layout{gap:13px}.sideCol{gap:13px}}
+@media(max-width:600px){
+  .app{padding:13px 12px 45px}header{align-items:flex-start;gap:13px;margin-bottom:14px;padding-bottom:15px}
+  .brand{gap:11px}.brandSymbol{width:48px;height:48px;font-size:24px;border-radius:15px}.brand h1{font-size:21px}.tagline{font-size:11px;margin-top:5px}
+  .headButtons{margin-right:auto;justify-content:flex-start}.headButtons .btn{padding:8px 10px;font-size:11px}
+  .panel{padding:18px;border-radius:19px}.intro{gap:13px}.display{font-size:clamp(42px,11vw,64px);margin:21px 0 12px}.lead{font-size:14px;line-height:1.9}
+  .features{gap:9px;margin:24px 0 15px}.feature{padding:13px 11px}.feature strong{font-size:12px}.feature span{font-size:11px}
+  .clockArt{min-height:180px}.clockCircle{width:118px;height:118px}.clockCircle::before{height:40px}.clockCircle::after{height:26px}.orbit{width:230px;height:230px}
+  .intro>.panel:last-child .panelTitle{font-size:22px}.formGrid{grid-template-columns:1fr 1fr;gap:10px}.formGrid select{font-size:12px;min-height:46px;padding:9px 7px}
+  .gameSummary{gap:6px;margin-bottom:12px}.pill{padding:7px 9px;font-size:11px}.gameSummary .pill:first-child{font-size:11px}
+  .turnCard{min-height:0;padding:19px}.turnName{font-size:26px}.turnHeader{align-items:flex-start}.turnHeader .pill{font-size:11px}.statusLine{font-size:13px;padding:12px 13px;margin:14px 0}
+  .die{width:73px;height:73px;font-size:35px}.dieArea .btn{min-width:0;width:100%;max-width:320px}.routeChoices{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.route{min-height:112px;padding:13px 7px}.route .routeIcon{font-size:28px}.route strong{font-size:13px}.route small{font-size:10px}
+  .choice{padding:13px;min-height:0}.choice h4{font-size:14px}.choice p{font-size:12px}.choiceArrow{font-size:26px}
+  .eventTitle{font-size:26px}.eventText{font-size:14px}.impact{gap:4px}.chip{font-size:10px;padding:4px 6px}
+  .timeProgress{margin:14px 0}.timeline{min-width:630px}.timeRow{grid-template-columns:77px repeat(var(--years,10),minmax(43px,1fr));gap:5px;margin-bottom:6px}.laneHead{padding:7px 5px;font-size:11px;border-radius:11px}.laneHead .emoji{font-size:16px}
+  .timeHead{font-size:10px}.timeCell{height:65px;min-height:65px;padding:4px;border-radius:11px}.timeCell:before{width:5px}.timeCell .number{font-size:8px}.mark{font-size:8px;padding:2px 3px;border-radius:6px}.mark.gorer{font-size:10px;padding:1px 4px}
+  .sideCol{grid-template-columns:1fr}.sideCol .tipBox{grid-column:auto}.playerList{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sideCol>.panel{padding:17px}.player{padding:12px}.avatar{width:32px;height:32px;font-size:14px}.playerName{font-size:13px}.statRow{grid-template-columns:54px 1fr 23px;gap:4px;font-size:10px}.statNumber{font-size:10px}.lockedGoal{font-size:10px}
+  .resultCard{grid-template-columns:35px 1fr auto;gap:10px;padding:14px}.resultName{font-size:16px}.resultExplanation{font-size:11px}.rank{font-size:25px}.bigScore{font-size:25px}.goalScore{font-size:9px}.endHead .trophy{font-size:60px}
+  .footer{line-height:1.75;padding:18px 8px}.modal{padding:19px}.modal h2{font-size:23px}.modal p,.modal li{font-size:13px}
+}
+@media(max-width:390px){.brand h1{font-size:19px}.formGrid{grid-template-columns:1fr}.playerList{grid-template-columns:1fr}.features{grid-template-columns:1fr 1fr}.routeChoices{grid-template-columns:repeat(2,minmax(0,1fr))}.display{font-size:39px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* Prevent the life-map from making the mobile document itself scroll sideways. */
+.layout,.mainCol,.sideCol,.panel,.timelineScroll {min-width:0}
+.timelineScroll {width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
+@media(max-width:800px){
+  .mainCol{min-width:0;width:100%}
+  .mainCol>.panel{width:100%;min-width:0}
+  .intro>.panel:first-child{order:2}
+  .intro>.panel:last-child{order:1}
+}
+.startGuide {margin-top:auto;border-top:1px solid #a9b7d127;padding-top:22px;margin-bottom:0}
+.startGuideHead{font-size:11px;color:#9ddcca;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:11px}
+.startGuideSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.startGuideStep{border-radius:12px;background:#2634548c;border:1px solid #ffffff16;padding:12px 9px;min-height:86px}
+.startGuideStep .n{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;background:linear-gradient(120deg,#ffe2a8,#f9b181);color:#312640;font-weight:900;font-size:12px;margin-bottom:8px}
+.startGuideStep strong{display:block;font-size:12px;color:#f1edeb}.startGuideStep small{font-size:10px;line-height:1.6;color:#a2b5cd;display:block;margin-top:3px}
+@media(max-width:800px){.startGuide{margin-top:24px}.startGuideStep{min-height:82px}}
+@media(max-width:420px){.startGuideSteps{gap:5px}.startGuideStep{padding:9px 7px}.startGuideStep strong{font-size:11px}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><div class="brandSymbol">⌛</div><div><h1>מכונת הזמן של האלוף</h1><div class="tagline">לא בוחרים את הגורל. בוחרים את הדרך.</div></div></div><div class="headButtons"><button type="button" class="btn ghost small" id="helpBtn">📖 איך משחקים</button><button type="button" class="btn ghost small" id="newBtn" style="display:none">↻ משחק חדש</button></div></header>
+<section id="setupScreen" class="screen active">
+<div class="intro"><div class="panel"><span class="eyebrow">משחק אסטרטגי של בחירות והשלכות</span><h2 class="display">העתיד שלך.<br><span class="goldText">הבחירה שלך.</span></h2><p class="lead">מטרה סודית אחת מחכה לכל שחקן. בכל שנה תבחרו בין הישגיות, בריאות, שמחה וחברים. מה שתיקחו עכשיו עלול לעלות לכם בעתיד. כשתיגמר הדרך — הגורל יתגלה.</p><div class="features"><div class="feature"><strong>🔒 מטרות סודיות</strong><span>אף אחד, אפילו אתם, לא יודע מה הוגרל לו.</span></div><div class="feature"><strong>🧭 בחירות אמיתיות</strong><span>כל מסלול נותן משהו ודורש ויתור.</span></div><div class="feature"><strong>⏳ מחיר מאוחר</strong><span>החלטות חוזרות בעוד שנה או שנתיים.</span></div><div class="feature"><strong>🎭 הגורר</strong><span>דמות דמה שמפתה אתכם לקיצורי דרך.</span></div></div><div class="clockArt" aria-hidden="true"><div class="orbit"></div><div class="clockCircle"><div class="clockCenter"></div></div><span class="floatingIcon a">🏆</span><span class="floatingIcon b">💚</span><span class="floatingIcon c">🎉</span></div></div>
+<div class="panel"><h3 class="panelTitle">מתחילים מסע חדש</h3><p class="turnHint">בחרו הרכב משחק. הכללים נלמדים תוך כדי.</p><div class="formGrid"><div><label class="fieldlabel" for="mode">מצב משחק</label><select id="mode"><option value="solo">יחיד מול 2 יריבי מחשב</option><option value="local2">2 שחקנים יחד</option><option value="local3">3 שחקנים יחד</option><option value="local4">4 שחקנים יחד</option></select></div><div><label class="fieldlabel" for="length">משך מסע</label><select id="length"><option value="10">10 שנים — מלא</option><option value="8">8 שנים — מהיר</option><option value="12">12 שנים — ארוך</option></select></div></div><div class="nameFields" id="nameFields"></div><button class="btn primary wide big" id="startBtn">🚀 הפעילו את מכונת הזמן</button><p class="fine">כל שחקן יקבל נקודת פתיחה שונה ומטרה נסתרת. היעד הוא 100 נקודות במסלול האישי, והזוכה ייקבע בסוף המסע.</p><div id="resumeWrap" style="display:none"><div class="sep"></div><button id="resumeBtn" class="btn wide">↪ המשך משחק שמור</button></div><div class="startGuide" aria-label="איך נראית הדרך שלכם">
+<div class="startGuideHead">המסע שלכם בשלוש תחנות</div>
+<div class="startGuideSteps">
+<div class="startGuideStep"><span class="n">01</span><strong>מגרילים גורל</strong><small>מטרה אחת סודית לכל משתתף</small></div>
+<div class="startGuideStep"><span class="n">02</span><strong>בוחרים דרך</strong><small>כל החלטה משנה את העתיד</small></div>
+<div class="startGuideStep"><span class="n">03</span><strong>מגלים מי ניצח</strong><small>בסוף הזמן הכול נחשף</small></div>
+</div></div></div></div>
+</section>
+<section id="gameScreen" class="screen"><div class="gameSummary"><span class="pill" id="yearPill"></span><span class="pill" id="turnPill"></span><span class="pill">🏁 <strong>יעד: 100 נקודות</strong></span><span class="pill">🔒 המטרות ייחשפו בסיום</span></div><div class="layout"><div class="mainCol"><div class="panel"><div class="sectionKicker">מפת מסלולי החיים</div><h2 class="panelTitle" style="margin-bottom:3px">כל שנה היא צומת</h2><p class="turnHint">משנים מסלול צעד אחד ימינה או שמאלה; בשנה החמישית אפשר לקפוץ לכל מסלול. גללו את הלוח לצדדים במכשירים קטנים.</p><div id="timeProgress" class="timeProgress"></div><div class="timelineScroll"><div class="timeline" id="board"></div></div><div class="fine">🟣 שחקן מחשב · 🩵 שחקן אנושי · 🎭 הגורר</div></div><div class="panel turnCard" id="actionPanel" aria-live="polite"></div></div><div class="sideCol"><div class="panel"><h3 class="sideTitle">המסע של השחקנים</h3><div class="playerList" id="players"></div></div><div class="panel"><h3 class="sideTitle">📜 יומן הזמן</h3><div class="logWrap" id="log"></div></div><div class="tipBox"><b>זכרו:</b> צבירת נקודות בתחום אחד לא מבטלת מחיר בתחום אחר. יש החלטות שההשפעה שלהן מחכה לכם בעתיד.</div></div></div></section>
+<section id="endScreen" class="screen"><div class="panel"><div class="endHead"><span class="trophy">🏆</span><span class="eyebrow">מכונת הזמן עצרה</span><h2 id="winnerTitle"></h2><p id="winnerSub"></p></div><div class="results" id="results"></div><div class="sep"></div><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="btn primary big" id="playAgainBtn">↻ מסע חדש</button><button class="btn" id="detailsBtn">📜 הצג סיכום מסע</button></div></div></section>
+<footer class="footer">מכונת הזמן של האלוף · משחק בחירות, לא מבחן אישיות · נשמר אוטומטית במכשיר</footer>
+</div>
+<div class="modalBackdrop" id="modal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="closeRow"><button class="btn small" id="modalClose" aria-label="סגירה">✕ סגור</button></div><div id="modalBody"></div></div></div>
+<div id="toast" class="toast" role="status"></div>
+<script>
+(()=>{'use strict';
+const KEYS=['ach','health','joy','bond'];
+const META={ach:{label:'הישג',long:'הישגיות',icon:'🏆',color:'#ffc86b'},health:{label:'בריאות',long:'בריאות',icon:'💚',color:'#59d6aa'},joy:{label:'הנאה',long:'שמחה והנאה',icon:'🎉',color:'#ff98c0'},bond:{label:'חברים',long:'קשרים',icon:'🤝',color:'#aaa6ff'}};
+const LANES=KEYS;
+const GOALS=[{id:'pro',name:'אלוף ההישגים',desc:'להצליח במבחני הדרך — בלי לשרוף את הגוף.',calc:s=>s.ach+Math.floor(s.health*.15),rule:'הישגיות + 15% מהבריאות'},{id:'well',name:'אלוף הבריאות',desc:'לבנות חיים שיש בהם חוסן, תנועה והתאוששות.',calc:s=>s.health+Math.floor(s.joy*.15),rule:'בריאות + 15% מההנאה'},{id:'fun',name:'אלוף ההנאה',desc:'לשמור על שמחה, משחק ורגעים ששווה לזכור.',calc:s=>s.joy+Math.floor(s.bond*.15),rule:'הנאה + 15% מהקשרים'},{id:'team',name:'אלוף האנשים',desc:'להגיע רחוק בלי להשאיר את החברים מאחור.',calc:s=>s.bond+Math.floor(s.ach*.15),rule:'קשרים + 15% מההישגיות'},{id:'balance',name:'אלוף האיזון',desc:'לדאוג לכל תחומי החיים, לא רק לדבר אחד.',calc:s=>Math.round((s.ach+s.health+s.joy+s.bond)*.42),rule:'42% מסך ארבעת המדדים'}];
+const ORIGINS=[{name:'התחלה תחרותית',lane:0,base:{ach:24,health:12,joy:10,bond:11}},{name:'בסיס בריא',lane:1,base:{ach:9,health:26,joy:12,bond:10}},{name:'לב שמח',lane:2,base:{ach:10,health:11,joy:25,bond:15}},{name:'גב חברתי',lane:3,base:{ach:11,health:11,joy:13,bond:25}},{name:'נקודת זינוק מאוזנת',lane:1,base:{ach:15,health:15,joy:15,bond:15}},{name:'דרך לא פשוטה',lane:2,base:{ach:8,health:14,joy:19,bond:12}}];
+// Every card contains at least two meaningful choices. Delta order: achievement, health, joy, bonds.
+const EVENTS={
+ach:[
+{title:'מחנה האימונים',text:'המאמן מציע שבוע אינטנסיבי. הגוף מבקש לנוח, אבל האפשרות לפרוץ קדימה מפתה.',options:[['הולכים על הכל','קפיצה גדולה עכשיו; מחיר כבד בעוד שנתיים.',[25,-5,-5,-2],[0,-15,-8,0],2],['מתאמנים בחוכמה','התקדמות עקבית, עם מקום להתאוששות.',[16,4,0,1]],['לוקחים צעד אחורה','מפסידים קצת קצב, מרוויחים גוף ואנרגיה.',[4,12,6,0]]]},
+{title:'טורניר פתאומי',text:'יש מקום אחד בסגל. האם לצאת לתחרות שמגיעה בדיוק בזמן הלא נכון?',options:[['נרשמים מיד','הזדמנות גדולה, אבל לחץ מצטבר.',[23,-4,-3,2],[0,-8,-6,0],1],['נרשמים רק עם הכנה','פחות נקודות עכשיו, הרבה יותר שליטה.',[16,2,-1,3]],['נשארים לתמוך','מכינים חברים לתחרות ובונים קשרים.',[7,3,4,12]]]},
+{title:'עוד אימון או עוד חיים?',text:'שעתיים פנויות בלוח הזמנים. אפשר להשקיע אותן בצמיחה — או במשהו אחר.',options:[['עוד סשן מקצועי','תוספת הישגים, שחיקה שעוד תחזור.',[20,-3,-5,0],[0,-10,0,0],2],['אימון קצר ומדויק','מקסימום איכות, מינימום בזבוז.',[15,6,2,0]],['יום חופשי','אולי דווקא ההפסקה תביא רעיון טוב.',[3,8,12,2]]]},
+{title:'המבחן הגדול',text:'הגיע יום ההכרעה. צריך להחליט אם להמר על ביצוע שיא.',options:[['לוקחים סיכון','הישג נוצץ, התאוששות שנפגעת.',[27,-12,-2,0]],['נותנים ביצוע יציב','פחות זוהר, פחות מחיר.',[17,1,3,0]],['מפרגנים למתחרים','פחות הישג אישי, יותר אנשים לצדך.',[8,3,5,13]]]},
+{title:'כישרון או התמדה?',text:'כולם מדברים על הכישרון שלך. לא כולם רואים את השעות השקטות שמאחוריו.',options:[['משקיעים בעבודה','צמיחה איטית שנשארת לאורך זמן.',[16,2,0,2],[7,0,0,0],2],['מחפשים קיצור דרך','תוצאה מהירה, רווח שביר.',[24,-5,-6,0],[0,-9,-5,0],1],['מתאמנים עם חברים','התקדמות ושיתוף פעולה.',[12,2,5,9]]]},
+{title:'הצעה נוצצת',text:'מועדון גדול מזמין אותך לפרויקט מיוחד. זה נשמע כמו חלום, אבל דורש ויתורים.',options:[['אומרים כן לכל הדרישות','התקדמות מקצועית מול מחיר חברתי.',[26,-4,-6,-8],[0,-7,0,-6],2],['מציבים גבולות','פחות הזדמנות, יותר קיימות.',[16,5,3,4]],['מוותרים הפעם','ממשיכים בקצב האישי.',[5,8,11,8]]]},
+],
+health:[
+{title:'השינה שלפני',text:'מחר יום חשוב. הערב התארך והשעון מזכיר שכדאי כבר לעצור.',options:[['מכבים מסכים וישנים','התאוששות ששווה הרבה מחר.',[3,21,4,-1],[5,5,0,0],1],['נשארים עוד שעה','לא אסון, אבל פחות אנרגיה.',[7,9,5,0]],['לילה לבן','הכל עכשיו, החשבון אחר כך.',[12,-10,15,5],[0,-17,-5,0],1]]},
+{title:'הגוף מאותת',text:'משהו כואב. אפשר להקשיב לגוף או להעמיד פנים שהכל כרגיל.',options:[['מתאוששים באמת','קצת פחות עשייה, הרבה יותר בריאות.',[-2,25,2,2]],['מתאמנים בעומס מופחת','שומרים על התנועה ומאזנים.',[9,16,2,0]],['דוחפים בכל הכוח','נקודות הישג עכשיו, חשבון כפול מאוחר יותר.',[23,-10,0,0],[0,-17,-6,0],2]]},
+{title:'ארוחת הבחירה',text:'יום עמוס, ואפשר להזמין משהו מהיר או להקדיש זמן לאוכל מזין.',options:[['מכינים אוכל בבית','בריאות וקצת מיומנות חדשה.',[1,19,5,2]],['אוכלים ביחד','ארוחה טובה עם חברים.',[0,12,7,11]],['מדלגים על ארוחה','מרוויחים זמן עכשיו, משלמים אחר כך.',[12,-7,-2,0],[0,-11,0,0],1]]},
+{title:'מנוחה היא אימון',text:'לוח הזמנים צפוף, אבל יש הזדמנות נדירה לחצי יום חופש.',options:[['מנוחה מלאה','נקודות חוסן והתאוששות.',[0,24,8,2]],['הליכה עם חבר','בריאות וגם שיחה טובה.',[2,15,8,10]],['ממשיכים לעבוד','הספק מיידי על חשבון אנרגיה.',[19,-6,-3,0],[0,-13,0,0],1]]},
+{title:'הרגל קטן',text:'אפשר להתחיל הרגל חדש של עשר דקות ביום. הוא לא מבטיח קסמים, אבל מצטבר.',options:[['מתמידים בהרגל','תועלת עכשיו ותועלת מאוחרת.',[3,14,2,0],[0,12,2,0],2],['משלבים שותף','פחות אינטנסיבי, יותר מחויבות.',[4,12,5,9]],['מעדיפים שינוי גדול','זינוק שמגיע עם עייפות.',[13,16,-5,0],[0,-11,-5,0],2]]},
+{title:'שבוע התאוששות',text:'מישהו מציע להוריד קצב למשך שבוע. המחשבה על עצירה מלחיצה.',options:[['נותנים לגוף מרחב','התאוששות אמיתית וביטחון לטווח ארוך.',[-1,26,7,0]],['מורידים קצת עומס','פשרה שיש לה ערך.',[8,17,3,0]],['לא מורידים בכלל','הישגים עם חוב עתידי.',[21,-8,0,0],[0,-18,-6,0],2]]},
+],
+joy:[
+{title:'החיים קורים עכשיו',text:'חברים הזמינו אותך לערב שתזכור. בבוקר מחכה משימה חשובה.',options:[['יוצאים עד מאוחר','לילה מושלם, בוקר פחות.',[-3,-7,24,11],[0,-11,0,0],1],['יוצאים וחוזרים בזמן','גם הנאה וגם גבול.',[2,2,16,9]],['נשארים בבית','הישגים ומנוחה במקום בילוי.',[10,10,4,-3]]]},
+{title:'משחק בלי ניקוד',text:'מציעים לך לשחק רק בשביל הכיף, בלי שיפוט ובלי טבלה.',options:[['משחקים חופשי','שמחה ותנועה בלי לחץ.',[4,7,23,5]],['מארגנים טורניר','מעט יותר הישג, מעט פחות חופש.',[12,2,15,5]],['מוותרים בשביל לעבוד','עוד התקדמות, פחות הנאה.',[17,-1,-5,0]]]},
+{title:'תחביב חדש',text:'מתחשק לך ללמוד משהו שלא קשור להישגים. הדרך עדיין פתוחה.',options:[['מנסים בלי לחשוב','חוויה חדשה ואופק רחב.',[1,2,23,4]],['מזמינים חברים','הנאה וקשרים שנשארים.',[0,3,17,14]],['דוחים לאחר כך','זמן נוסף למטרה המקצועית.',[18,1,-7,0]]]},
+{title:'יום ללא תוכנית',text:'פתאום כל היום פנוי. אין חובה לנצל אותו בצורה מושלמת.',options:[['עושים משהו ספונטני','המון שמחה וקצת אי ודאות.',[0,0,26,4],[0,-8,0,0],1],['מתכננים טיול קצר','שילוב של מנוחה, הנאה וחברה.',[2,8,16,9]],['מנצלים לכל המשימות','יעילות גבוהה, שמחה נמוכה.',[19,-2,-6,-2]]]},
+{title:'למה בכלל התחלנו?',text:'העומס גרם לך לשכוח את הסיבה שבגללה יצאת לדרך.',options:[['חוזרים למה שאוהבים','מחזירים את הניצוץ.',[4,5,22,5]],['משתפים מישהו','הנאה דרך קשר אמיתי.',[0,4,17,16]],['ממשיכים בלי לעצור','דוחפים הישג — אבל מוותרים על שמחה.',[20,-5,-8,0]]]},
+{title:'רגע לנשום',text:'נוף יפה נפתח מולך. אפשר לעצור ולהרגיש את הרגע, או לרוץ למשימה הבאה.',options:[['עוצרים באמת','רגע שקט שממלא אותך.',[0,11,21,2]],['חולקים את הרגע','שמחה מתחלקת ומתרבה.',[0,7,16,14]],['רצים הלאה','רווח מהיר וקצת החמצה.',[17,-2,-5,-1]]]},
+],
+bond:[
+{title:'חבר צריך אותך',text:'חבר טוב מבקש עזרה בדיוק לפני משהו שתכננת לעצמך.',options:[['מגיעים עד הסוף','קשר עמוק, פחות זמן להישגים.',[-4,2,8,26]],['מוצאים פתרון משותף','עוזרים בלי לבטל את עצמך.',[6,1,5,17]],['אומרים שאין זמן','המשימות מתקדמות, הקשר נפגע.',[20,-1,-3,-12]]]},
+{title:'הצלחה קבוצתית',text:'הקבוצה הצליחה. אפשר לקחת את כל הקרדיט, או לחלוק אותו.',options:[['משתפים את ההצלחה','כולם גדלים יחד.',[8,1,7,22]],['לוקחים את הבמה','חשיפה מיידית, מחיר ביחסים.',[23,0,2,-12]],['מרימים אחרים','הקבוצה תחזיר לך בהמשך.',[4,3,8,15],[4,0,2,9],2]]},
+{title:'ויכוח בדרך',text:'נוצר עימות. נדמה שאתה צודק, אבל הדרך שבה תגיב תקבע מה יישאר.',options:[['מקשיבים באמת','קשר שנבנה דרך הבנה.',[0,4,4,23]],['מדברים ברור ומכבד','מציבים גבול בלי לשבור קשר.',[7,4,4,17]],['מתעקשים לנצח','ניצחון רגעי, נזק שיתגלה בהמשך.',[17,-4,-5,-7],[0,0,-4,-12],1]]},
+{title:'צוות חדש',text:'הציעו לך להצטרף ליוזמה עם אנשים שאינך מכיר.',options:[['מובילים יחד','קשרים והישגים חדשים.',[8,0,7,21]],['מצטרפים בקצב שלך','חיבור יציב ומאוזן.',[4,5,7,16]],['עובדים לבד','יותר שליטה אישית, פחות חיבורים.',[20,-2,0,-7]]]},
+{title:'זמן משפחה',text:'יש אירוע משפחתי ובאותו ערב הזדמנות מקצועית חשובה.',options:[['מגיעים למשפחה','קשר וזיכרונות משותפים.',[-3,3,11,25]],['מחלקים את הערב','שומרים על שני הצדדים.',[9,1,6,14]],['הולכים רק להזדמנות','קפיצה מקצועית, ריחוק חברתי.',[24,-2,-5,-9]]]},
+{title:'מי נמצא לידך?',text:'ביום פחות טוב אתה מגלה מי באמת איתך. עכשיו אתה יכול לבחור כיצד להגיב.',options:[['מחזקים את המעגל','הקרבה מחזירה כוח.',[0,7,10,21]],['מתחברים לאדם חדש','צעד אמיץ לקשר חדש.',[2,1,9,20]],['נסגרים ומסתערים על העבודה','שיפור הישגי עם מחיר ביחסים.',[22,-5,-6,-10]]]},
+]};
+const DEALS=[
+{title:'ההצלחה לא תחכה',text:'"רק הפעם תדחוף את עצמך עד הקצה. את החשבון כבר תשלם אחר כך."',now:[23,-4,0,0],later:[0,-16,-6,0],delay:2},
+{title:'אין זמן לישון',text:'"לילה אחד לא ישנה דבר. תחשוב כמה תספיק."',now:[17,-7,8,0],later:[0,-13,-5,0],delay:1},
+{title:'כל הבמה שלך',text:'"קח את כל הקרדיט. אף אחד לא יזכור את השאר."',now:[24,0,2,-8],later:[0,0,0,-13],delay:2},
+{title:'המסיבה לא נגמרת',text:'"רק עוד חגיגה אחת. אתה תרגיש נפלא."',now:[0,-5,25,7],later:[-7,-11,0,0],delay:1},
+{title:'המפגש שמחכה',text:'"כולם יתפעלו ממך אם תבטל כל דבר אחר."',now:[19,0,9,-8],later:[0,-7,0,-13],delay:2},
+{title:'קיצור דרך מתוק',text:'"אפשר לקבל הרבה עכשיו בלי להתאמץ."',now:[10,6,17,4],later:[-10,-13,-8,-6],delay:2},
+{title:'בלי לעצור',text:'"מנוחה זה למי שאין חלומות."',now:[22,-8,0,0],later:[0,-16,-7,0],delay:1},
+{title:'רק בשבילך',text:'"תן לאחרים לחכות. אתה קודם."',now:[16,2,9,-9],later:[0,0,-8,-12],delay:2}
+];
+const E=id=>document.getElementById(id);let state=null;let toastTimer=null;let modalOpen=false;
+const rnd=n=>Math.floor(Math.random()*n),clamp=n=>Math.max(0,Math.min(160,n));
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function dObj(arr){return Object.fromEntries(KEYS.map((k,i)=>[k,arr?.[i]||0]));}
+function setScreen(which){['setup','game','end'].forEach(id=>E(id+'Screen').classList.toggle('active',id===which));E('newBtn').style.display=which==='setup'?'none':'';}
+function toast(text){let t=E('toast');t.textContent=text;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
+function addLog(text){state.log.unshift({year:state.year,text});if(state.log.length>90)state.log.pop();}
+function save(){try{localStorage.setItem('time_champion_v1',JSON.stringify(state));}catch(e){}}
+function savedGame(){try{let s=JSON.parse(localStorage.getItem('time_champion_v1')||'null');return s&&s.version===1?s:null;}catch(e){return null;}}
+function showSetup(){setScreen('setup');E('resumeWrap').style.display=savedGame()?'block':'none';renderNames();}
+function startGame(){let mode=E('mode').value;let total=Number(E('length').value);let size=mode==='solo'?3:Number(mode.slice(-1));let humans=mode==='solo'?1:size;let goals=shuffle(GOALS),origins=shuffle(ORIGINS);let players=[];for(let i=0;i<size;i++){let p={id:i,name:(i<humans?(E('name'+i)?.value||'').trim():['נובה','אטלס'][i-humans])||`שחקן ${i+1}`,bot:i>=humans,origin:origins[i].name,lane:origins[i].lane,year:0,stats:{...origins[i].base},goal:goals[i].id,pending:[],history:[],roll:null,drawn:0};players.push(p);}state={version:1,total,year:1,idx:0,phase:'roll',mode,players,gorer:{lane:rnd(4),year:1},event:null,deal:null,lastLane:null,drawn:{ach:[],health:[],joy:[],bond:[]},log:[],stepCount:0};addLog('מכונת הזמן הופעלה. כל שחקן קיבל נקודת פתיחה ומטרה סודית.');for(let p of players)addLog(`${p.name}: ${p.origin}.`);prepTurn();render();driveBots();}
+function renderNames(){let mode=E('mode').value;let humans=mode==='solo'?1:Number(mode.slice(-1));E('nameFields').innerHTML='<label class="fieldlabel">שמות השחקנים</label>'+Array.from({length:humans},(_,i)=>`<div class="rowfield"><span>${i+1}.</span><input id="name${i}" maxlength="22" placeholder="${i===0?'השם שלך':`שחקן ${i+1}`}" value="${i===0?'':`שחקן ${i+1}`}" aria-label="שם שחקן ${i+1}"></div>`).join('')+(mode==='solo'?'<p class="fine">שני יריבי מחשב יצטרפו אוטומטית למסע.</p>':'');}
+function current(){return state.players[state.idx];}
+function applyStats(p,d,label,source){let changes=[];for(let k of KEYS){let diff=d[k]||0;if(diff){let old=p.stats[k];p.stats[k]=clamp(old+diff);let actual=p.stats[k]-old;if(actual)changes.push(`${META[k].label} ${actual>0?'+':''}${actual}`);}}if(changes.length){p.history.push({year:state.year,label,changes:changes.join(' · '),source});addLog(`${p.name}: ${label} (${changes.join(' · ')})`);} }
+function queueLater(p,arr,delay,label){if(!arr||!arr.some(Boolean))return;let due=state.year+delay;if(due>state.total){ // Obligations beyond the horizon settle at the end.
+ p.pending.push({due:state.total+1,delta:dObj(arr),label});
+}else p.pending.push({due,delta:dObj(arr),label});}
+function payDue(p){const now=p.pending.filter(x=>x.due<=state.year);p.pending=p.pending.filter(x=>x.due>state.year);for(const payment of now){applyStats(p,payment.delta,`⏳ הגיע החשבון: ${payment.label}`,'later');}}
+function prepTurn(){let p=current();state.phase='roll';state.event=null;state.deal=null;p.roll=null;payDue(p);save();}
+function rollPlayer(){if(state.phase!=='roll')return;let p=current();p.roll=1+rnd(6);state.phase='route';addLog(`${p.name} גלגל/ה ${p.roll} בקוביית הזמן.`);save();render();}
+function reachable(p){if(state.year===5)return LANES.map((_,i)=>i);return LANES.map((_,i)=>i).filter(i=>Math.abs(i-p.lane)<=1);}
+function chooseLane(lane){if(state.phase!=='route')return;let p=current();if(!reachable(p).includes(lane))return;p.lane=lane;p.year=state.year;state.lastLane=LANES[lane];let pool=EVENTS[state.lastLane];let used=state.drawn[state.lastLane];let options=pool.map((_,i)=>i).filter(i=>!used.includes(i));if(!options.length){state.drawn[state.lastLane]=[];options=pool.map((_,i)=>i);}let cardId=options[rnd(options.length)];state.drawn[state.lastLane].push(cardId);state.event={lane:state.lastLane,id:cardId};state.phase='event';save();render();}
+function pickOption(i){if(state.phase!=='event')return;let p=current(),card=EVENTS[state.event.lane][state.event.id];let option=card.options[i];if(!option)return;let now=dObj(option[2]);applyStats(p,now,option[0],'choice');if(option[3])queueLater(p,option[3],option[4],card.title);let mod=p.roll>=5?3:p.roll<=2?-3:0;if(mod){let k=state.event.lane;applyStats(p,{[k]:mod},mod>0?'🎲 רוח גבית מהזמן':'🎲 רוח נגדית מהזמן','chance');}if(p.lane===state.gorer.lane&&p.year===state.gorer.year){state.phase='deal';state.deal=rnd(DEALS.length);addLog(`🎭 הגורר פגש את ${p.name} והציע עסקה.`);}else nextTurn();save();render();driveBots();}
+function decideDeal(take){if(state.phase!=='deal')return;let p=current(),deal=DEALS[state.deal];if(take){applyStats(p,dObj(deal.now),`🎭 העסקה: ${deal.title}`,'deal');queueLater(p,deal.later,deal.delay,`עסקת הגורר — ${deal.title}`);}else{addLog(`${p.name} סירב/ה לעסקת הגורר: ${deal.title}.`);}nextTurn();save();render();driveBots();}
+function nextTurn(){if(state.idx<state.players.length-1){state.idx++;prepTurn();}else if(state.year>=state.total){finish();}else{state.phase='gorer';state.event=null;state.deal=null;addLog('הסתיימה שנה. עכשיו תור הגורר.');}}
+function rollGorer(){if(state.phase!=='gorer')return;let n=1+rnd(6),dir=n<=2?-1:n<=4?0:1;state.gorer.lane=Math.max(0,Math.min(3,state.gorer.lane+dir));state.year++;state.gorer.year=state.year;state.idx=0;addLog(`🎭 הגורר גלגל ${n} ועבר לשנה ${state.year}, מסלול ${META[LANES[state.gorer.lane]].label}.`);prepTurn();save();render();driveBots();}
+function settleFuture(){for(let p of state.players){for(let debt of p.pending){applyStats(p,debt.delta,`⌛ סגירת חשבון הזמן: ${debt.label}`,'later');}p.pending=[];}}
+function goalScore(p){let g=GOALS.find(x=>x.id===p.goal);let score=g.calc(p.stats);if(p.stats.health<12)score-=12;return Math.max(0,score);}
+function rankings(){return [...state.players].sort((a,b)=>goalScore(b)-goalScore(a)||Object.values(b.stats).reduce((s,v)=>s+v,0)-Object.values(a.stats).reduce((s,v)=>s+v,0));}
+function finish(){settleFuture();state.phase='end';addLog('השעון עצר. המטרות הסודיות נחשפות.');}
+function botMove(){if(!state||!current().bot)return;let p=current();if(state.phase==='roll'){rollPlayer();return;}if(state.phase==='route'){let routes=reachable(p); // Bots favor underdeveloped areas, but do not see the hidden goal.
+ let scores=routes.map(l=>{let stat=p.stats[LANES[l]];return{l,weight:95-stat+rnd(80)};}).sort((a,b)=>b.weight-a.weight);chooseLane(scores[0].l);return;}if(state.phase==='event'){let card=EVENTS[state.event.lane][state.event.id];let opts=card.options.map((o,i)=>{let d=o[2],later=o[3]||[0,0,0,0];let value=d.reduce((s,v,j)=>s+v*(j===1?1.2:1),0)+later.reduce((s,v)=>s+v*.45,0)+rnd(16);return{i,value};}).sort((a,b)=>b.value-a.value);pickOption(opts[0].i);return;}if(state.phase==='deal'){decideDeal(Math.random()<.38);return;}}
+let botTimer=null;function driveBots(){clearTimeout(botTimer);if(!state||state.phase==='end')return;if(current().bot&&['roll','route','event','deal'].includes(state.phase)){botTimer=setTimeout(()=>{botMove();driveBots();},300);} }
+function rowImpact(arr,later=false){if(!arr)return '';return arr.map((x,i)=>x?`<span class="chip ${later?'later':x>0?'plus':'minus'}">${later?'⏳ ':''}${META[KEYS[i]].icon} ${x>0?'+':''}${x}</span>`:'').join('');}
+function render(){if(!state)return;if(state.phase==='end'){renderEnd();return;}setScreen('game');E('yearPill').innerHTML=`⏳ שנה <strong>${state.year}</strong> מתוך ${state.total}`;E('turnPill').textContent=state.phase==='gorer'?'🎭 תור הגורר':`🎯 תור ${current().name}`;renderBoard();renderPlayers();renderAction();E('log').innerHTML=state.log.slice(0,17).map(x=>`<div class="logEntry"><strong>שנה ${x.year}</strong> · ${esc(x.text)}</div>`).join('')||'<div class="empty">היומן ריק</div>';E('timeProgress').innerHTML=Array.from({length:state.total},(_,i)=>`<span class="${i+1<state.year?'done':i+1===state.year?'current':''}"></span>`).join('');}
+function renderBoard(){let html='<div class="timeRow"><div class="timeHead">מסלולים ↙ זמן</div>';for(let y=1;y<=state.total;y++)html+=`<div class="timeHead">${y<=state.total?`שנה ${y}`:'·'}</div>`;html+='</div>';
+for(let l=0;l<4;l++){let k=LANES[l],m=META[k];html+=`<div class="timeRow"><div class="laneHead"><span class="emoji">${m.icon}</span>${m.label}</div>`;for(let year=1;year<=state.total;year++){let isNow=year===state.year;let marks=state.players.filter(p=>p.year===year&&p.lane===l).map(p=>`<span class="mark ${p.bot?'bot':''}" title="${esc(p.name)}">${esc(p.name.slice(0,7))}</span>`).join('');if(state.gorer.year===year&&state.gorer.lane===l)marks+='<span class="mark gorer" title="הגורר">🎭</span>';let reachableClass=state.phase==='route'&&isNow&&reachable(current()).includes(l)?'reachable':'';let faded=year>state.total?'future':year>state.year?'future':'';html+=`<div class="timeCell ${k} ${isNow?'thisYear':''} ${reachableClass} ${faded}"><span class="number">${year===5?'✦ צומת חופשית':year===state.total?'🏁 סיום':m.icon}</span><div class="markerRow">${marks}</div></div>`;}html+='</div>';}E('board').style.setProperty('--years',state.total);E('board').innerHTML=html;
+// Keep the current year in view inside the board's own horizontal scroller.
+let sc=E('board').parentElement,active=E('board').querySelector('.timeCell.thisYear');
+if(sc&&active&&sc.scrollWidth>sc.clientWidth){requestAnimationFrame(()=>{let parent=sc.getBoundingClientRect(),tile=active.getBoundingClientRect(),margin=20;if(tile.left<parent.left+margin)sc.scrollLeft+=tile.left-parent.left-margin;else if(tile.right>parent.right-margin)sc.scrollLeft+=tile.right-parent.right+margin;});}}
+function renderPlayers(){let colors=['#58d8c3','#ffc86b','#caa8ff','#ff99ad'];E('players').innerHTML=state.players.map((p,i)=>`<div class="player ${state.idx===i?'active':''}"><div class="playerTop"><div class="avatar" style="--player:${colors[i]}">${esc(p.name[0]||'ש')}</div><div style="min-width:0"><div class="playerName">${esc(p.name)} ${p.bot?'🤖':''}</div><div class="playerOrigin">${esc(p.origin)}</div></div></div><div class="stats">${KEYS.map(k=>`<div class="statRow"><span class="statName">${META[k].icon} ${META[k].label}</span><div class="statBar"><span style="width:${Math.min(100,p.stats[k]/130*100)}%;background:${META[k].color}"></span></div><span class="statNumber">${p.stats[k]}</span></div>`).join('')}</div><div class="lockedGoal">🔒 מטרה נעולה · ${p.pending.length?'⏳ '+p.pending.length+' השלכות בדרך':'אין חובות פתוחים'}</div></div>`).join('');}
+function cardHeader(p,label){return `<div class="sectionKicker">${label}</div><div class="turnHeader"><div><div class="turnName">${esc(p.name)} ${p.bot?'🤖':''}</div><div class="turnHint">שנה ${state.year} · התחלה: ${esc(p.origin)}</div></div><span class="pill">🧭 ${META[LANES[p.lane]].label}</span></div>`;}
+function renderAction(){let a=E('actionPanel');if(state.phase==='gorer'){a.innerHTML=`<div class="sectionKicker">אחרי כולם — תור הגורר</div><h2 class="eventTitle">🎭 הגורר מתקדם בזמן</h2><p class="eventText">כל השחקנים סיימו את השנה. כעת מגלגלים עבור הגורר, והוא ימתין במסלול חדש לשנה הבאה. מי שיפגוש אותו יידרש לבחור אם לקבל את העסקה.</p><div class="dieArea"><div class="die">🎲</div><div><button class="btn primary big" data-action="gorer">גלגלו עבור הגורר</button></div></div>`;return;}
+let p=current(),botNote=p.bot?'<div class="statusLine">🤖 המחשב משחק את תורו אוטומטית. הוא לא יודע מה המטרה הסודית שלו.</div>':'';
+if(state.phase==='roll'){a.innerHTML=cardHeader(p,'תור חדש · שלב 1 מתוך 3')+botNote+`<div class="statusLine">השנה מתחילה בקוביית הזמן. היא יכולה להוסיף או לגרוע 3 נקודות בתחום שבו תבחרו לפעול. הבחירה עצמה חשובה הרבה יותר.</div><div class="dieArea"><div class="die">🎲</div><div><button class="btn primary big" data-action="roll" ${p.bot?'disabled':''}>🎲 גלגלו את קוביית הזמן</button></div></div>`;return;}
+if(state.phase==='route'){let r=reachable(p);a.innerHTML=cardHeader(p,'בחירת מסלול · שלב 2 מתוך 3')+botNote+`<div class="statusLine">🎲 יצא <b>${p.roll}</b> · ${p.roll>=5?'רוח גבית: +3 נקודות במסלול שתבחרו':p.roll<=2?'רוח נגדית: −3 נקודות במסלול שתבחרו':'זמן יציב, ללא שינוי נוסף'}. בחרו לאן לפנות. ${state.year===5?'השנה זהו צומת חופשי — אפשר להגיע לכל מסלול.':'אפשר להישאר במסלול הנוכחי או לעבור למסלול סמוך.'}</div><div class="routeChoices">${r.map(l=>`<button class="route" data-action="lane" data-lane="${l}" ${p.bot?'disabled':''}><span class="routeIcon">${META[LANES[l]].icon}</span><strong>${META[LANES[l]].long}</strong><small>${state.gorer.lane===l&&state.gorer.year===state.year?'🎭 הגורר מחכה כאן':'בחירה וקלף אירוע'}</small></button>`).join('')}</div>`;return;}
+if(state.phase==='event'){let m=META[state.event.lane],card=EVENTS[state.event.lane][state.event.id];a.innerHTML=cardHeader(p,'כרטיס החלטה · שלב 3 מתוך 3')+botNote+`<div class="sectionKicker" style="margin-top:17px">${m.icon} מסלול ${m.long}</div><h2 class="eventTitle">${esc(card.title)}</h2><p class="eventText">${esc(card.text)}</p><div class="choices">${card.options.map((o,i)=>`<button class="choice" data-action="choose" data-option="${i}" ${p.bot?'disabled':''}><div class="cardCopy"><h4>${esc(o[0])}</h4><p>${esc(o[1])}</p><div class="impact">${rowImpact(o[2])}${rowImpact(o[3],true)}</div></div><span class="choiceArrow">‹</span></button>`).join('')}</div><p class="fine" style="margin-bottom:0">⏳ השפעות עם סימון שעון יחולו בעוד שנה או שנתיים. אם הזמן ייגמר לפני כן, הן יחושבו בסיום.</p>`;return;}
+if(state.phase==='deal'){let d=DEALS[state.deal];a.innerHTML=cardHeader(p,'המפגש עם הגורר')+botNote+`<div class="gorerBox"><h3>🎭 ${esc(d.title)}</h3><p>${esc(d.text)}</p><p><strong>לקבל עכשיו:</strong></p><div class="impact">${rowImpact(d.now)}</div><p><strong>לשלם בעוד ${d.delay} ${d.delay===1?'שנה':'שנים'}:</strong></p><div class="impact">${rowImpact(d.later,true)}</div></div><div class="dealButtons"><button class="btn primary big" data-action="take" ${p.bot?'disabled':''}>מקבלים את העסקה</button><button class="btn big" data-action="refuse" ${p.bot?'disabled':''}>מסרבים וממשיכים</button></div><p class="fine">אם החשבון יגיע אחרי סיום המסע, הוא ייפרע בסיום. אין עסקאות בלי מחיר.</p>`;return;}}
+function renderEnd(){setScreen('end');let r=rankings(),top=goalScore(r[0]);let ties=r.filter(p=>goalScore(p)===top);E('winnerTitle').textContent=ties.length>1?'יש לנו תיקו!':`${r[0].name} זוכה/ה בתואר!`;E('winnerSub').textContent=ties.length>1?'כמה מסלולים שונים הגיעו לאותה תוצאה. זו דרך מצוינת לסיים מסע משותף.':`הגורל שנחשף היה: ${GOALS.find(g=>g.id===r[0].goal).name}. לא תמיד מי שהוביל במדד אחד ניצח.`;E('results').innerHTML=r.map((p,i)=>{let g=GOALS.find(x=>x.id===p.goal),score=goalScore(p);return `<div class="resultCard ${i===0?'winner':''}"><div class="rank">${['🥇','🥈','🥉','✨'][i]}</div><div><div class="resultName">${esc(p.name)} ${p.bot?'🤖':''}</div><div class="resultTitle">🔓 ${g.name}</div><div class="resultExplanation">${g.desc} · חישוב: ${g.rule}${p.stats.health<12?' · קנס 12 נק׳ על בריאות קריטית':''}</div><div class="impact" style="margin-top:7px">${KEYS.map(k=>`<span class="chip">${META[k].icon} ${p.stats[k]}</span>`).join('')}</div></div><div><div class="bigScore">${score}</div><div class="goalScore">מתוך יעד 100</div><div class="goalScore">${score>=100?'✓ היעד הושג':'נשארו '+(100-score)}</div></div></div>`;}).join('');}
+function showRules(){openModal(`<h2 id="modalTitle">📖 איך משחקים?</h2><p><strong>המטרה:</strong> להגיע לכמה שיותר נקודות במסלול הגורל הסודי שהוגרל לך. יעד הדוגמה הוא 100, אבל גם אם איש לא מגיע אליו — יהיה מנצח.</p><ol><li><b>גורל נסתר:</b> כל שחקן מקבל נקודת פתיחה ומטרה אקראיות. המטרה נשארת מוסתרת אפילו מבעליה עד סוף המשחק.</li><li><b>כל שנה:</b> מגלגלים קוביית זמן, בוחרים מסלול סמוך ואז אחת משלוש החלטות. בשנה החמישית אפשר לפנות לכל מסלול.</li><li><b>ארבעה תחומים:</b> 🏆 הישגיות, 💚 בריאות, 🎉 הנאה, 🤝 קשרים. בחירה טובה בתחום אחד יכולה לפגוע באחר.</li><li><b>השלכות:</b> ⏳ ליד נקודות פירושו שהתוצאה תחול רק בעוד שנה או שנתיים. גם חובות שנקבעו מעבר לסיום המשחק נגבים בזמן הסיכום.</li><li><b>הגורר:</b> אחרי שכל השחקנים סיימו שנה, מגלגלים עבור הגורר. אם שחקן נכנס למשבצת שבה הוא מחכה, מקבלים הצעת עסקה שאפשר לקבל או לסרב לה.</li><li><b>ניצחון:</b> בסיום מספר השנים שנבחר, חושפים את המטרות. לכל מטרה חישוב ניקוד משלה; מי שצבר את הניקוד הגבוה ביותר לפי המטרה שלו מנצח.</li></ol><p class="fine">משחק של 2–4 משתתפים על אותו מכשיר, או מצב יחיד מול יריבי מחשב. כל פעולה נשמרת אוטומטית. זהו משחק דמיוני על החלטות ופשרות, לא המלצה בריאותית אישית.</p>`);}
+function showJourney(){if(!state)return;let html='<h2 id="modalTitle">📜 סיפור המסע</h2>';for(let p of state.players){html+=`<h3>${esc(p.name)} · ${GOALS.find(x=>x.id===p.goal).name}</h3>`;html+=`<div>${p.history.length?p.history.map(h=>`<div class="logEntry"><strong>שנה ${h.year}: </strong>${esc(h.label)} — ${esc(h.changes)}</div>`).join(''):'אין עדיין החלטות מתועדות.'}</div>`;}openModal(html);}
+function openModal(html){E('modalBody').innerHTML=html;E('modal').classList.add('open');modalOpen=true;E('modalClose').focus();}
+function closeModal(){E('modal').classList.remove('open');modalOpen=false;}
+function askNew(){if(state&&state.phase!=='end'&&!confirm('למחוק את המסע הנוכחי ולהתחיל מחדש?'))return;clearTimeout(botTimer);state=null;try{localStorage.removeItem('time_champion_v1');}catch(e){}showSetup();}
+E('mode').addEventListener('change',renderNames);E('startBtn').addEventListener('click',startGame);E('helpBtn').addEventListener('click',showRules);E('newBtn').addEventListener('click',askNew);E('playAgainBtn').addEventListener('click',askNew);E('detailsBtn').addEventListener('click',showJourney);E('resumeBtn').addEventListener('click',()=>{state=savedGame();if(!state)return;render();driveBots();});E('modalClose').addEventListener('click',closeModal);E('modal').addEventListener('click',ev=>{if(ev.target===E('modal'))closeModal();});document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&modalOpen)closeModal();});
+E('actionPanel').addEventListener('click',ev=>{let btn=ev.target.closest('button[data-action]');if(!btn||btn.disabled||!state)return;let a=btn.dataset.action;if(a==='roll')rollPlayer();if(a==='lane')chooseLane(Number(btn.dataset.lane));if(a==='choose')pickOption(Number(btn.dataset.option));if(a==='take')decideDeal(true);if(a==='refuse')decideDeal(false);if(a==='gorer')rollGorer();});
+renderNames();showSetup();
+})();
+</script>
+</body>
+</html>
