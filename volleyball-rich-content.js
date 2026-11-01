@@ -267,15 +267,7 @@ function addInlinePhotos(){
 }
 
 function installPhotoRails(){
-  if(typeof document==='undefined'||document.querySelector('.vb-pro-rail'))return;
-  ['right','left'].forEach((side,index)=>{const rail=document.createElement('aside');rail.className=`vb-pro-rail vb-pro-rail-${side}`;rail.setAttribute('aria-label','רגעים מכדורעף נשים מקצועני');rail.innerHTML=galleryHtml(PROFESSIONAL_WOMEN_GALLERY[index],'vb-pro-photo-rail');document.body.appendChild(rail);});
-  let step=2;
-  setInterval(()=>{
-    document.querySelectorAll('.vb-pro-rail').forEach((rail,index)=>rail.innerHTML=galleryHtml(PROFESSIONAL_WOMEN_GALLERY[(step+index)%PROFESSIONAL_WOMEN_GALLERY.length],'vb-pro-photo-rail'));
-    const hero=document.querySelector('.vb-hero-player:first-child'),image=PROFESSIONAL_WOMEN_GALLERY[step%PROFESSIONAL_WOMEN_GALLERY.length];
-    if(hero){hero.href=image.creditUrl;const img=hero.querySelector('img'),caption=hero.querySelector('span');if(img){img.src=image.imageUrl;img.alt=image.alt;}if(caption)caption.textContent=`${image.playerName} · ${image.license}`;}
-    step=(step+1)%PROFESSIONAL_WOMEN_GALLERY.length;
-  },9000);
+  // Side photo rails were intentionally removed from the volleyball hub.
 }
 
 function installRichContentUI(){
