@@ -11,8 +11,6 @@ on:
       - 'library-book-links.js'
       - 'library-premium.css'
       - 'library-premium-ui.js'
-      - 'library-premium.css'
-      - 'library-premium-ui.js'
       - 'book.html'
       - 'book-page.js'
       - 'book-page.css'
@@ -30,6 +28,8 @@ on:
       - 'library-discovery.js'
       - 'library-discovery-ui.js'
       - 'library-book-links.js'
+      - 'library-premium.css'
+      - 'library-premium-ui.js'
       - 'book.html'
       - 'book-page.js'
       - 'book-page.css'
@@ -53,6 +53,7 @@ jobs:
       - run: node tests/library-discovery.test.js
       - run: node tests/library-integration.test.js
       - run: node tests/library-premium-v1.test.js
+      - run: node tests/library-editorial-v2.test.js
       - run: node tests/book-reading.test.js
       - run: node tests/book-page.test.js
       - run: node tests/book-infinite-feed.test.js
