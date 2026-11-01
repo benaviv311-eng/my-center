@@ -3,3 +3,16 @@
 
 .rush-panel{display:grid;gap:14px}.rush-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rush-mode{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 8px;font:inherit;font-weight:800;cursor:pointer}.rush-mode.active{background:#22313e;color:#fff;border-color:#22313e}.rush-rules{padding:10px 12px;border-radius:12px;background:#f7f4ed;color:var(--muted);font-weight:700}.rush-question{display:grid;gap:10px}.rush-panel .game-primary{text-align:center;font-size:36px}.rush-panel .game-secondary{text-align:center}.rush-panel .speed-options{margin-top:4px}.rush-panel .speed-option{min-height:56px;font-weight:800}
 @media(max-width:650px){.rush-modes{grid-template-columns:1fr}.rush-panel .speed-options{grid-template-columns:1fr 1fr}}
+
+/* Sentence builder: target-language direction + continuous sentence session */
+.sentence-builder-board{gap:14px}
+.sentence-progress{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 12px;border-radius:12px;background:#f7f4ed;color:var(--muted);font-size:13px}
+.sentence-progress strong{color:var(--text);font-size:15px}
+.sentence-prompt{display:grid;gap:5px}
+.sentence-prompt small{color:var(--muted)}
+.sentence-audio-row{display:flex}
+.sentence-answer[dir="ltr"],.sentence-word-bank[dir="ltr"]{direction:ltr;text-align:left;justify-content:flex-start}
+.sentence-answer[dir="rtl"],.sentence-word-bank[dir="rtl"]{direction:rtl;text-align:right;justify-content:flex-start}
+.sentence-answer .picked-word{cursor:pointer}
+.sentence-audio{font-weight:800}
+@media(max-width:650px){.sentence-progress{align-items:flex-start}.sentence-progress span{font-size:12px}}
