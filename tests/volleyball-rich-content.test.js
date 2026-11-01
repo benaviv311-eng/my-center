@@ -128,6 +128,13 @@ test('professional women gallery has a large rotating set of licensed intense ma
   }
 });
 
+test('volleyball hub does not install fixed side photo rails',()=>{
+  const rich=fs.readFileSync(path.join(root,'volleyball-rich-content.js'),'utf8');
+  const css=fs.readFileSync(path.join(root,'volleyball-rich-content.css'),'utf8');
+  assert.doesNotMatch(rich,/document\.createElement\('aside'\).*vb-pro-rail/s);
+  assert.doesNotMatch(css,/\.vb-pro-rail\{/);
+});
+
 test('volleyball page loads the enrichment, deep feed, gallery, pinned drills and full drill-detail layers',()=>{
   const html=fs.readFileSync(path.join(root,'volleyball.html'),'utf8');
   assert.match(html,/volleyball-rich-content\.js/);
