@@ -3,9 +3,18 @@
 
   const HERO_IMAGE='https://images.unsplash.com/photo-1743300873236-39e755465c7a?auto=format&fit=crop&fm=jpg&q=82&w=1800';
   const EDITORIAL_IMAGES=[
-    'https://images.unsplash.com/photo-1756037020659-6f9d3418f6b6?auto=format&fit=crop&fm=jpg&q=76&w=1000',
-    'https://images.unsplash.com/photo-1767102060241-130cb9260718?auto=format&fit=crop&fm=jpg&q=76&w=1000',
-    HERO_IMAGE
+    'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1550399105-c4db5fb85c18?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&fm=jpg&q=76&w=1000',
+    'https://images.unsplash.com/photo-1474932430478-367dbb6832c1?auto=format&fit=crop&fm=jpg&q=76&w=1000'
   ];
   const recentKey='library-premium-recent';
   const $=id=>document.getElementById(id);
@@ -16,11 +25,14 @@
   };
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
+  function imageForPosition(visibleIndex=0,offset=0){
+    return EDITORIAL_IMAGES[(Number(visibleIndex)+Number(offset)+EDITORIAL_IMAGES.length)%EDITORIAL_IMAGES.length];
+  }
   function imageFor(key,offset=0){
     return EDITORIAL_IMAGES[(hash(key)+offset)%EDITORIAL_IMAGES.length];
   }
-  function coverHtml(key,title,offset=0){
-    return '<div class="library-cover" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="'+imageFor(key,offset)+'"></div>';
+  function coverHtml(key,title,visibleIndex=0,offset=0){
+    return '<div class="library-cover" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="'+imageForPosition(visibleIndex,offset)+'"></div>';
   }
   function protectImage(img){
     if(!img||img.dataset.libraryImageGuard)return;
@@ -32,7 +44,7 @@
     const id=card.dataset.bookId||'book-'+index;
     const title=(card.querySelector('h3,strong')?.textContent||'ספר').trim();
     card.dataset.premiumDecorated='1';
-    card.insertAdjacentHTML('afterbegin',coverHtml(id,title,index));
+    card.insertAdjacentHTML('afterbegin',coverHtml(id,title,index,0));
     protectImage(card.querySelector('.library-cover img'));
   }
   function decorateCards(){
@@ -69,7 +81,7 @@
       const books=groups.get(name);
       return '<section class="library-shelf"><div class="library-shelf-head"><div><h3>'+esc(name)+'</h3><small>'+books.length+' ספרים ורעיונות</small></div></div><div class="library-shelf-track">'+books.map(book=>
         '<button type="button" class="library-shelf-book library-open-book" data-book-id="'+esc(book.id)+'">'+
-          coverHtml(book.id,book.title,book.index+1)+
+          coverHtml(book.id,book.title,book.index,4)+
           '<span class="library-shelf-book-copy"><strong>'+esc(book.title)+'</strong><small>'+esc(book.category||'ספר')+'</small></span>'+
         '</button>'
       ).join('')+'</div></section>';
@@ -104,7 +116,7 @@
     section.hidden=!recent.length;
     list.innerHTML=recent.map((book,index)=>
       '<button type="button" class="library-continue-card library-open-book" data-book-id="'+esc(book.id)+'">'+
-        coverHtml(book.id,book.title,index+2)+
+        coverHtml(book.id,book.title,index,8)+
         '<span><strong>'+esc(book.title)+'</strong><small>'+(esc(book.category)||'נפתח לאחרונה')+'</small><small>המשך לקרוא ←</small></span>'+
       '</button>'
     ).join('');
@@ -123,7 +135,7 @@
       hero.className='library-book-premium-hero';
       card.insertBefore(hero,card.firstChild);
     }
-    hero.innerHTML=coverHtml(title,title,3)+'<div class="library-book-premium-copy"><span class="category">'+esc(category)+'</span><h2>'+esc(title)+'</h2><p>תקציר, רעיונות, יישומים וחיבורים — במקום אחד.</p></div>';
+    hero.innerHTML='<div class="library-cover" aria-hidden="true"><img loading="lazy" decoding="async" alt="" src="'+imageFor(title,3)+'"></div>'+'<div class="library-book-premium-copy"><span class="category">'+esc(category)+'</span><h2>'+esc(title)+'</h2><p>תקציר, רעיונות, יישומים וחיבורים — במקום אחד.</p></div>';
     protectImage(hero.querySelector('img'));
   }
 
@@ -163,8 +175,8 @@
     strip.className='library-photo-strip';
     strip.setAttribute('aria-label','אווירת קריאה ולמידה');
     strip.innerHTML=
-      '<figure><img loading="lazy" alt="חלל קריאה חם עם ספרים" src="'+EDITORIAL_IMAGES[2]+'"><figcaption>Brooke Balentine · Unsplash</figcaption></figure>'+
-      '<figure><img loading="lazy" alt="ספרייה מודרנית עם מדפי ספרים" src="'+EDITORIAL_IMAGES[1]+'"><figcaption>Fer Troulik · Unsplash</figcaption></figure>';
+      '<figure><img loading="lazy" alt="חלל קריאה חם עם ספרים" src="'+EDITORIAL_IMAGES[10]+'"><figcaption>Unsplash · קריאה ולמידה</figcaption></figure>'+
+      '<figure><img loading="lazy" alt="ספרייה מודרנית עם מדפי ספרים" src="'+EDITORIAL_IMAGES[5]+'"><figcaption>Unsplash · ספרייה</figcaption></figure>';
     random.insertAdjacentElement('afterend',strip);
     strip.querySelectorAll('img').forEach(protectImage);
   }
