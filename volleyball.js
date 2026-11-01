@@ -280,7 +280,7 @@ function initVolleyballHub(){
   if(typeof document==='undefined'||!window.VOLLEYBALL_TOPICS)return;
 
   const tabs=document.getElementById('volleyball-population-tabs');
-  const visual=document.getElementById('volleyball-population-visual');
+
   const worldTitle=document.getElementById('volleyball-population-title');
   const worldSummary=document.getElementById('volleyball-population-summary');
   const topicShell=document.getElementById('volleyball-topic-shell');
@@ -392,14 +392,10 @@ function initVolleyballHub(){
 
   const populationOptions=[{id:'all',label:'הכול',icon:'🏐'},...window.VOLLEYBALL_POPULATIONS];
   tabs.innerHTML=populationOptions.map((p,index)=>`<button class="vb-pop-tab${index===0?' active':''}" type="button" data-population="${p.id}" aria-pressed="${index===0?'true':'false'}"><span>${p.icon||'🏐'}</span>${p.label}</button>`).join('');
-
-  function renderAllVisuals(){
-    const chosen=['women','men','youth-girls'];
-    visual.innerHTML=`<div class="vb-player-collage">${chosen.map(id=>{const v=VOLLEYBALL_VISUALS[id];return `<a href="${v.creditUrl}" target="_blank" rel="noopener" class="vb-player-shot"><img src="${v.imageUrl}" alt="${v.alt}" loading="lazy"><span>${v.credit}</span></a>`;}).join('')}</div>`;
+  function renderAllWorld(){
     worldTitle.textContent='כל עולם הכדורעף';
     worldSummary.textContent='פיד אחד שמחבר גברים, נשים, נוער ויסודי עם טכניקה, טקטיקה, מדע, פיזיולוגיה, תרגילים, ניתוח משחק, מחקר ועוד.';
   }
-
   function renderTopicTabs(){
     const topicOptions=[{id:'all',label:'הכול',icon:'🏐'},...getPopulationTopics(window.VOLLEYBALL_TOPICS,population)];
     topicPanel.innerHTML=topicOptions.map(item=>`<button type="button" class="vb-topic-tab${item.id===topic?' active':''}" data-topic="${item.id}" aria-pressed="${item.id===topic?'true':'false'}"><span>${item.icon||'•'}</span>${item.label}</button>`).join('');
@@ -410,10 +406,8 @@ function initVolleyballHub(){
   function renderPopulationWorld(){
     const selected=window.VOLLEYBALL_POPULATIONS.find(item=>item.id===population);
     if(!selected){
-      renderAllVisuals();
+      renderAllWorld();
     }else{
-      const v=VOLLEYBALL_VISUALS[selected.id];
-      visual.innerHTML=`<a href="${v.creditUrl}" target="_blank" rel="noopener" class="vb-player-shot vb-player-shot-single"><img src="${v.imageUrl}" alt="${v.alt}" loading="lazy"><span>צילום: ${v.credit}</span></a>`;
       worldTitle.textContent=selected.label;
       worldSummary.textContent=selected.summary;
     }
