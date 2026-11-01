@@ -62,8 +62,10 @@ test('infinite feed remains deterministic',()=>{
   assert.deepEqual(a,b);assert.ok(a.length);
 });
 
-test('page keeps player stage and infinite-scroll sentinel',()=>{
+test('page keeps a clean text-first population intro and infinite-scroll sentinel',()=>{
   const html=read('volleyball.html');
-  assert.match(html,/id=["']volleyball-population-visual["']/);
+  const js=read('volleyball.js');
+  assert.doesNotMatch(html,/id=["']volleyball-population-visual["']/);
+  assert.doesNotMatch(js,/visual\.innerHTML=.*vb-player-shot/s);
   assert.match(html,/id=["']volleyball-feed-sentinel["']/);
 });
