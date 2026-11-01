@@ -54,6 +54,7 @@ jobs:
       - run: node tests/library-integration.test.js
       - run: node tests/library-premium-v1.test.js
       - run: node tests/library-editorial-v2.test.js
+      - run: node tests/library-professional-v3.test.js
       - run: node tests/book-reading.test.js
       - run: node tests/book-page.test.js
       - run: node tests/book-infinite-feed.test.js
