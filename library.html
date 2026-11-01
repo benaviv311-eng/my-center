@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ספריית הלמידה שלי | המרכז שלי</title>
-<meta name="theme-color" content="#f7f3ea">
+<title>הספרייה שלי | המרכז שלי</title>
+<meta name="theme-color" content="#18211b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,15 +14,32 @@
 <link rel="apple-touch-icon" href="app-icon-192.png">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="library-discovery.css">
+<link rel="stylesheet" href="library-premium.css?v=1">
 <link rel="stylesheet" href="site-chat.css?v=2">
 <link rel="stylesheet" href="site-editor-ui.css?v=1"></head>
-<body>
-<div class="app">
+<body class="library-premium-page">
+<div class="app library-premium-app">
   <div class="back"><a class="btn small" href="index.html">← חזרה לבית</a></div>
-  <div class="page-title">
-    <h1>📚 ספריית הלמידה שלי</h1>
-    <div class="subtitle">ספרים · תיאוריות · פסיכולוגיה · רעיונות · יישום · גילוי רנדומלי</div>
-  </div>
+
+  <section class="library-premium-hero">
+    <div class="library-premium-hero-media" aria-hidden="true">
+      <img src="https://images.unsplash.com/photo-1743300873236-39e755465c7a?auto=format&fit=crop&fm=jpg&q=82&w=1800" alt="">
+    </div>
+    <div class="library-premium-hero-content">
+      <p class="library-premium-kicker">PERSONAL LEARNING LIBRARY</p>
+      <h1>הספרייה שלי</h1>
+      <p class="library-premium-hero-copy">ספרים, רעיונות וכלים שאני רוצה לקחת איתי הלאה — לקריאה, לאימון, להוראה ולחיים.</p>
+      <div class="library-premium-search">
+        <input id="library-search" class="search" type="search" placeholder="🔍 חפש ספר, רעיון, תיאוריה או נושא...">
+      </div>
+      <div class="library-premium-hero-actions">
+        <button type="button" data-library-hero-action="learn">📚 אני רוצה ללמוד</button>
+        <button type="button" data-library-hero-action="practical">🎯 תן לי כלי מעשי</button>
+        <button type="button" data-library-hero-action="surprise">✨ תפתיע אותי</button>
+      </div>
+    </div>
+    <a class="library-photo-credit" href="https://unsplash.com/photos/warm-lighting-illuminates-a-modern-reading-space-CIIflD2YaKY" target="_blank" rel="noreferrer">צילום: Brooke Balentine · Unsplash</a>
+  </section>
 
   <div class="library-tabs">
     <button class="library-tab active" data-library-view="today">🏠 היום</button>
@@ -31,30 +48,35 @@
     <button class="library-tab" data-library-view="favorites">♥ מועדפים</button>
   </div>
 
-  <input id="library-search" class="search" type="search" placeholder="🔍 חפש ספר, רעיון, תיאוריה או נושא...">
   <div id="library-status">טוען את הספרייה…</div>
 
   <section id="library-view-today" class="library-view">
-    <section class="hero">
-      <strong>ארבעת הספרים של היום</strong>
-      <p>הבחירה היומית נשמרת לפי התאריך בישראל. אפשר לפתוח כל ספר ולעבור למסלול למידה מלא בגלילה.</p>
+    <section id="library-continue-section" class="library-premium-section" hidden>
+      <div class="library-premium-section-head">
+        <div><h2>ממשיך לקרוא</h2><p>הספרים שפתחת לאחרונה, בדיוק מהמקום שבו עצרת.</p></div>
+      </div>
+      <div id="library-continue-list" class="library-continue-list"></div>
     </section>
-    <div id="daily-books" class="daily-books"></div>
+
+    <section class="library-featured-section">
+      <div class="library-featured-heading">
+        <div><p class="library-premium-kicker">TODAY'S SELECTION</p><h2>בחירת היום</h2><p>ארבעה ספרים שנבחרו עבורך היום מתוך הספרייה.</p></div>
+        <small id="library-date"></small>
+      </div>
+      <div id="daily-books" class="daily-books"></div>
+    </section>
 
     <section id="library-random-section" class="section">
       <div class="discovery-hero">
-        <h2>🎲 מצב רנדומלי — תן לספרייה להוביל אותך</h2>
-        <p>בכל ערבוב תקבל נאגטס קצרים מספרים שונים: תובנות, הבחנות ורעיונות מרכזיים — עם יותר נושאים ופחות חזרה על אותו רעיון.</p>
+        <h2>תן לספרייה להוביל אותך</h2>
+        <p>ערבוב חכם של רעיונות, הבחנות וכלים מספרים שונים — כדי לפגוש משהו שלא חיפשת בעצמך.</p>
         <div class="discovery-actions">
           <button id="library-randomize" class="btn">🎲 ערבב הכול</button>
           <button id="library-random-top" class="btn">✨ משהו שלא חשבתי עליו</button>
         </div>
       </div>
       <div class="discovery-heading">
-        <div>
-          <h2>נאגטס מכל הספרייה</h2>
-          <small>תובנות קצרות ממגוון ספרים ונושאים · לחץ כדי להעמיק בספר</small>
-        </div>
+        <div><h2>רעיונות מכל הספרייה</h2><small>תובנות קצרות ממגוון ספרים ונושאים · לחץ כדי להעמיק בספר</small></div>
         <small id="library-discovery-count"></small>
       </div>
       <div id="library-discovery-feed" class="discovery-feed"></div>
@@ -62,13 +84,17 @@
     </section>
 
     <section class="section">
-      <div class="section-head"><h2>נאגטס מהספרים של היום</h2><small id="library-date"></small></div>
+      <div class="section-head"><h2>מה לקחת מספרי היום</h2></div>
       <div id="daily-feed" class="feed"></div>
       <button id="library-load-more" class="load-more">טען עוד מהבנק</button>
     </section>
   </section>
 
   <section id="library-view-books" class="library-view hidden">
+    <section class="library-shelves-section">
+      <div class="library-shelves-heading"><div><p class="library-premium-kicker">EXPLORE</p><h2>מדפים</h2><p>גלה ספרים לפי העולם שמעניין אותך עכשיו.</p></div></div>
+      <div id="library-shelves"></div>
+    </section>
     <div class="section-head"><h2>כל הספרים</h2><small id="library-book-count"></small></div>
     <div id="library-books-grid" class="book-grid"></div>
   </section>
@@ -94,14 +120,11 @@
       <div><span id="library-book-category" class="category"></span><h2 id="library-book-title"></h2></div>
       <button id="library-book-close" class="book-close" aria-label="סגור">×</button>
     </div>
-
     <div class="book-tools">
       <button id="library-book-refresh-all" class="btn primary">🔄 רענן הכול</button>
       <button id="library-book-random" class="btn">🎲 רנדומלי</button>
     </div>
-
     <div id="library-book-dynamic" class="learning-scroll"></div>
-
     <div class="book-static">
       <section class="book-static-section"><h3>📖 תקציר הספר</h3><p id="library-book-summary"></p></section>
       <section class="book-static-section"><h3>💡 רעיונות מרכזיים</h3><ul id="library-book-ideas"></ul></section>
@@ -129,6 +152,7 @@
 <script src="library-discovery.js"></script>
 <script src="library-discovery-ui.js"></script>
 <script src="library-book-links.js"></script>
+<script src="library-premium-ui.js?v=1"></script>
 <script src="mobile-app-shell.js?v=1"></script>
 <script src="site-editor-ui.js?v=1"></script>
 <script src="site-chat.js?v=2"></script></body>
