@@ -1,3 +1,4 @@
+const vm=require('node:vm');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -44,4 +45,8 @@ test('premium redesign preserves existing core library behavior',()=>{
   for(const token of ['renderToday','renderBooks','renderDiscovery','renderArchive','renderFavorites','openBook','library-book-note']){
     assert.ok(ui.includes(token),token+' should remain');
   }
+});
+
+test('premium library presentation script has valid JavaScript syntax',()=>{
+  assert.doesNotThrow(()=>new vm.Script(read('library-premium-ui.js')));
 });
