@@ -50,3 +50,17 @@ test('premium redesign preserves existing core library behavior',()=>{
 test('premium library presentation script has valid JavaScript syntax',()=>{
   assert.doesNotThrow(()=>new vm.Script(read('library-premium-ui.js')));
 });
+
+
+test('premium library keeps a broad image pool and position-based visible variety',()=>{
+  const js=read('library-premium-ui.js');
+  const imageMatches=[...js.matchAll(/https:\/\/images\.unsplash\.com\/photo-[^'"]+/g)].map(m=>m[0]);
+  assert.ok(new Set(imageMatches).size>=10,'expected at least ten distinct editorial photos');
+  assert.match(js,/function imageForPosition/);
+  assert.match(js,/visibleIndex/);
+});
+
+test('library cache-busts the corrected image-variety layer',()=>{
+  const html=read('library.html');
+  assert.match(html,/library-premium-ui\.js\?v=2/);
+});
