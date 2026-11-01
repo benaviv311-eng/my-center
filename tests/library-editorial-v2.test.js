@@ -41,7 +41,7 @@ test('library includes editorial insight treatment and clean reading navigation'
   const html=read('library.html');
   const css=read('library-premium.css');
   const js=read('library-premium-ui.js');
-  assert.match(html,/library-editorial-header/);
+  assert.match(html,/library-professional-masthead/);
   assert.match(css,/\.library-editorial-insight/);
   assert.match(css,/\.library-book-internal-nav/);
   assert.match(js,/decorateEditorialInsight/);
