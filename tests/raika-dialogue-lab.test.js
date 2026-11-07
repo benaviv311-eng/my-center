@@ -50,6 +50,14 @@ test('dialogue builder rejects fewer than two participants and missing required 
   }), /לפחות שתי דמויות/);
 
   assert.throws(() => buildDialogue({
+    characters: [raika, raika],
+    location: 'דוג׳ו אינאזומה',
+    activity: 'אימון',
+    dynamic: 'rivalry',
+    primaryTone: 'tense'
+  }), /דמויות שונות/);
+
+  assert.throws(() => buildDialogue({
     characters: [raika, okane],
     location: '',
     activity: 'אימון',
@@ -78,6 +86,12 @@ test('tone remix keeps the original premise and source untouched while creating 
   assert.match(result.text, /הצעה בלבד/);
   const withNote = buildToneRemix({ title: 'בדיקה', body: 'רגע קצר', characterNames: ['ראיקה', 'אוקנה'], note: 'בלי השפלה אישית' }, 'comedic');
   assert.match(withNote.text, /בלי השפלה אישית/);
+
+  const unknown = buildToneRemix({
+    title: 'רגע במאפייה', body: 'ראיקה וקומוגי במאפייה.',
+    characterNames: ['ראיקה', 'קומוגי'], unverifiedCharacters: ['קומוגי']
+  }, 'comedic');
+  assert.match(unknown.text, /קומוגי אינם מופיעים כרגע במאגר הדמויות/);
 });
 
 test('tone remix requires an existing scene or idea to preserve', () => {
