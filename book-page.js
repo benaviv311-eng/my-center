@@ -423,7 +423,16 @@ function refreshAll(mode){
   toast(isReaderPrototype()?'קיבלת סט פרקים חדש לגמרי':mode==='surprise'?'פתחתי זוויות חדשות':mode==='random'?'נוצר מסלול קריאה רנדומלי חדש':'כל חלקי הספר רועננו');
   if(mode==='surprise')$('book-reading-body').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function resolveBook(books){const params=new URLSearchParams(window.location.search),key=params.get('book');if(!key)return null;return books.find(book=>String(book.id)===key||String(book.slug||'')===key)||null}
+function resolveBook(books){
+  const params=new URLSearchParams(window.location.search),key=params.get('book');
+  if(!key)return null;
+  const exact=books.find(book=>String(book.id)===key||String(book.slug||'')===key);
+  if(exact)return exact;
+  if(key==='logically-fallacious'&&window.BookFallacies){
+    return books.find(book=>window.BookFallacies.isTargetBook(book))||null;
+  }
+  return null;
+}
 
 async function loadBook(){
   try{
