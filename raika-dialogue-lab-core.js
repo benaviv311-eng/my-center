@@ -172,6 +172,8 @@
     });
     if (characters.length < 2) throw new Error('יש לבחור לפחות שתי דמויות.');
     if (characters.length > 3) throw new Error('אפשר לבחור עד שלוש דמויות.');
+    const characterKeys = characters.map(function (item) { return item && item.id ? String(item.id) : nameOf(item); });
+    if (new Set(characterKeys).size !== characterKeys.length) throw new Error('יש לבחור דמויות שונות.');
     const location = clean(options.location);
     const activity = clean(options.activity);
     const dynamic = clean(options.dynamic);
@@ -321,6 +323,8 @@
       'דיאלוג מוצע:',
       dialogueText,
       clean(item.note) ? '\\nכיוון נוסף: ' + clean(item.note) : '',
+      Array.isArray(item.unverifiedCharacters) && item.unverifiedCharacters.length
+        ? '\\nהערת אימות: ' + item.unverifiedCharacters.join(', ') + ' אינם מופיעים כרגע במאגר הדמויות ויש לאמת את כרטיסיהם.' : '',
       '',
       'כיוון לסיום:',
       tones.includes('קומי') ? 'לסיים בתגובה קטנה או בהיפוך מצחיק שנובע מהסיטואציה, בלי למחוק את מה שקרה.' :
@@ -341,7 +345,8 @@
       isCanon: false,
       sourceTitle: sourceTitle,
       characters: Array.isArray(item.characters) ? item.characters.slice() : [],
-      characterNames: names
+      characterNames: names,
+      unverifiedCharacters: Array.isArray(item.unverifiedCharacters) ? item.unverifiedCharacters.slice() : []
     };
   }
 
