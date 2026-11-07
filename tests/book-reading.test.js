@@ -22,6 +22,9 @@ chapters.forEach(chapter => {
   assert.ok(Array.isArray(chapter.supportBlocks), 'chapter should expose supporting learning blocks');
   assert.ok(chapter.deep && chapter.deep.sections.length >= 4, 'deep expansion should be structured');
   assert.ok(chapter.deep.takeaway, 'deep expansion should end with a takeaway');
+  assert.ok(chapter.bodyParagraphs.every(text=>!/(?:הפרק הזה מתמקד|נקודת המוצא היא התקציר|בתוך Sample Book|בסופו של דבר, הקריאה בפרק הזה)/.test(text)), 'reading must not repeat meta-introductions');
+  assert.ok(chapter.bodyParagraphs.some(text=>/משוב|הרגלים|למידה|שיפור/.test(text)), 'reading should use book-specific material');
+  assert.ok(chapter.deep.sections.every(section=>section.paragraphs.every(text=>!/(?:כדי להבין אותו באמת|ההעמקה כאן מפרקת את הרעיון|בהקשר הרחב של הספר, נקודת הייחוס)/.test(text))), 'deep reading should avoid generic template filler');
 });
 
 const takeaways = reading.buildTakeaways(sample, chapters);
@@ -74,3 +77,6 @@ keyChapters.forEach(chapter=>{
   assert.ok(chapter.keySentences.length >= 3, 'chapter should surface several key sentences when the book bank has enough material');
   assert.ok(chapter.keySentences.every(sentence=>!/^הפרק הזה|^דרך מועילה|^כדי להעמיק|^בסופו של דבר/.test(sentence)), 'key sentences should not be explanatory meta-text about the chapter');
 });
+
+const sparse=reading.buildReadingChapters({id:'sparse',title:'Sparse',content:{}},{seed:'sparse'});
+assert.ok(sparse.every(ch=>ch.bodyParagraphs.every(text=>!text.includes('הספר Sparse עוסק ברעיונות'))), 'missing source content must not be dressed up as invented claims');

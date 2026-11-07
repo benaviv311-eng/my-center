@@ -256,6 +256,7 @@ function renderReading(seed,options){
   setupChapterObserver();
   setupReaderPrototype();
   updateReadingProgress();
+  window.dispatchEvent(new CustomEvent('book:content-ready',{detail:{book:state.book,chapters}}));
 }
 function setupChapterObserver(){
   if(state.chapterObserver)state.chapterObserver.disconnect();

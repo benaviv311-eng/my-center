@@ -28,8 +28,25 @@
       <button id="book-random" class="btn">🎲 רנדומלי</button>
       <button id="book-surprise" class="btn">✨ משהו שלא חשבתי עליו</button>
       <button id="book-key-points-toggle" class="btn">⭐ לנקודות החשובות</button>
+      <button id="book-search-toggle" class="btn book-search-trigger" type="button" aria-expanded="false" aria-controls="book-search-panel">🔎 חיפוש בפרקים ובמושגים</button>
     </div>
   </header>
+
+  <section id="book-search-panel" class="book-search-panel hidden" aria-label="חיפוש בכל הספר">
+    <div class="book-search-head">
+      <div>
+        <span class="reading-eyebrow">מפתח הספר</span>
+        <h2>למצוא רעיון, פרק או מושג</h2>
+        <p>חיפוש בכל חומר הספר הזמין, גם בנושאים שאינם מוצגים כרגע במסלול הקריאה.</p>
+      </div>
+      <button id="book-search-close" class="book-search-close" type="button" aria-label="סגור חיפוש">×</button>
+    </div>
+    <label class="book-search-label" for="book-search-input">מה מעניין אותך?</label>
+    <input id="book-search-input" class="book-search-input" type="search" autocomplete="off" placeholder="למשל: סוגי אישיות ביונג, אינטואיציה, החלטות…">
+    <p id="book-search-count" class="book-search-count" aria-live="polite"></p>
+    <div id="book-search-results" class="book-search-results" aria-live="polite"></div>
+    <article id="book-search-detail" class="book-search-detail hidden" aria-live="polite"></article>
+  </section>
 
   <section id="book-key-points-section" class="book-key-points-section" aria-live="polite">
     <div class="book-key-points-head">
@@ -168,7 +185,10 @@
 <script src="book-structure-ui.js"></script>
 <script src="book-infinite-feed.js"></script>
 <script src="book-reading.js"></script>
+<script src="book-search.js"></script>
 <script src="book-page.js"></script>
+<script src="book-search-guides.js"></script>
+<script src="book-search-ui.js"></script>
 <script src="book-original-content.js"></script>
 <script src="book-original-content-ui.js"></script>
 <script src="site-editor-ui.js?v=1"></script>

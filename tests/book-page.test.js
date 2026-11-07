@@ -27,6 +27,11 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   'book-random',
   'book-surprise',
   'book-key-points-toggle',
+  'book-search-toggle',
+  'book-search-panel',
+  'book-search-input',
+  'book-search-results',
+  'book-search-detail',
   'book-key-points-section',
   'book-key-points-list',
   'book-learning-points-section',
@@ -55,7 +60,7 @@ const html = fs.readFileSync(path.join(root, 'book.html'), 'utf8');
   assert.ok(html.includes(`id="${id}"`), `book.html should contain ${id}`);
 });
 
-['library-discovery.js', 'book-structure.js', 'book-structure-ui.js', 'book-structure.css', 'book-reading.js', 'book-page.js', 'book-page.css'].forEach(file => {
+['library-discovery.js', 'book-structure.js', 'book-structure-ui.js', 'book-structure.css', 'book-reading.js', 'book-page.js', 'book-page.css', 'book-search.js', 'book-search-ui.js'].forEach(file => {
   assert.ok(html.includes(file), `book.html should load ${file}`);
 });
 
@@ -89,6 +94,7 @@ assert.ok(js.includes('book-reading-progress'), 'book page should update reading
 assert.ok(js.includes('data-source-expand'), 'book page should preserve source provenance expansion');
 assert.ok(js.includes('URLSearchParams'), 'book page should resolve a book from the URL');
 assert.ok(js.includes('book-surprise'), 'book page should support surprise learning');
+assert.ok(js.includes('book:content-ready'), 'book page should refresh search indexes when chapters change');
 
 const structureUi = fs.readFileSync(path.join(root, 'book-structure-ui.js'), 'utf8');
 assert.ok(structureUi.includes('BookStructure'), 'universal UI should use the shared structure model');

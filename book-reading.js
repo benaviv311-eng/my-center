@@ -69,19 +69,25 @@
   }
 
   function mainParagraphs(book,title,anchor,summary,concept,index){
-    const bookTitle=str(book&&book.title)||'הספר';
-    const conceptTitle=concept?str(concept.title):'';
-    const conceptExplanation=concept?str(concept.explanation):'';
-    const anchorText=str(anchor)||title;
-    return [
-      `הפרק הזה מתמקד ב־${anchorText}. בתוך ${bookTitle}, זהו ציר קריאה שמאפשר להבין את החומר לא רק כרעיון בודד אלא כחלק ממערכת רחבה יותר. נקודת המוצא היא התקציר של הספר: ${summary} במקום להסתפק במשפט אחד, כדאי לשים לב למה שהרעיון מבקש לשנות בדרך שבה אנחנו מפרשים מצב, בוחרים פעולה או מעריכים תוצאה.`,
-      `דרך מועילה לקרוא את ${anchorText} היא לפרק אותו לשלושה חלקים: מה אנחנו מבחינים בו, איזו משמעות אנחנו נותנים לו, ומה אנחנו עושים בעקבות המשמעות הזאת. הפירוק הזה לא טוען שהמחבר משתמש דווקא במילים האלו; הוא נועד להפוך את החומר לקריא וליישומי. כאשר מפרידים בין תצפית, פרשנות ופעולה, קל יותר לזהות איפה נמצאת נקודת השינוי המרכזית.`,
-      conceptTitle
-        ? `כאן אפשר לחבר גם את המושג המקצועי ${conceptTitle}. ${conceptExplanation||`זהו מושג שעוזר להרחיב את ההבנה של ${anchorText}.`} החיבור הזה הוא הרחבה מקצועית ולא בהכרח מונח שמופיע בספר עצמו. הערך שלו הוא בכך שהוא נותן שפה נוספת לבחון את הרעיון, להשוות בין מצבים ולזהות מתי העיקרון עובד היטב ומתי הוא דורש הסתייגות.`
-        : `כדי להעמיק, כדאי לחבר את הרעיון למושגים נוספים מתחומי למידה, פסיכולוגיה, קבלת החלטות או אימון. חיבור כזה אינו מחליף את הספר; הוא יוצר שכבת הבנה נוספת. המטרה היא לראות אילו תנאים מחזקים את הרעיון, אילו תנאים מחלישים אותו, ואיזה מידע נוסף היה גורם לנו לשנות את המסקנה.`,
-      `דוגמה פשוטה: נניח שאדם רוצה לשפר התנהגות, יכולת או החלטה שחוזרת שוב ושוב. במקום לשאול רק “האם הצלחתי?”, אפשר לשאול מה היה הרמז למצב, מה בחרתי לעשות, איזה משוב קיבלתי, ומה אני משנה בניסיון הבא. כך ${anchorText} עובר מרעיון מופשט למסגרת עבודה. במגרש, בכיתה או בחיי היום־יום, השאלה החשובה היא לא רק מה נכון באופן כללי אלא מה אפשר לבדוק בפעולה קטנה וברורה.`,
-      `בסופו של דבר, הקריאה בפרק הזה אמורה להשאיר שתי שכבות במקביל: הבנה של הרעיון כפי שהוא משויך לחומר הספר, ויכולת להשתמש בו מחוץ לספר בלי להפוך אותו לכלל קשיח. השלב הבא הוא לבדוק את ${anchorText} מול מקרה אמיתי, לחפש גם ראיה שתומכת בו וגם ראיה שמאתגרת אותו, ואז לנסח מה באמת כדאי לקחת ממנו. זו הדרך להפוך קריאה לזיכרון שימושי ולא רק למידע שחולף.`
-    ];
+    const c=content(book),pool=keySentencePool(book),anchorText=str(anchor)||title;
+    const tokens=new Set(keyTokens(anchorText));
+    const score=text=>keyTokens(text).reduce((total,token)=>total+(tokens.has(token)?1:0),0);
+    const ranked=pool.map((text,i)=>({text,score:score(text),i}))
+      .sort((a,b)=>b.score-a.score||a.i-b.i);
+    const result=[],seen=new Set();
+    function add(text){
+      const value=str(text),key=value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+      if(value.length<12||seen.has(key))return;
+      seen.add(key);result.push(value);
+    }
+    if(index===0)add(c.summary);
+    if(arr(c.ideas).includes(anchorText)||arr(c.feed_posts).includes(anchorText))add(anchorText);
+    ranked.filter(item=>item.score>0).forEach(item=>add(item.text));
+    // When no source passage uses the topic's exact vocabulary, show the
+    // available book material without inventing an explanation of that topic.
+    if(result.length<3)ranked.forEach(item=>add(item.text));
+    if(result.length<3)add(c.summary);
+    return result.slice(0,6);
   }
 
   function supportBlocks(anchor,concept,index){
@@ -121,48 +127,23 @@
   }
 
   function deepMaterial(book,title,anchor,summary,concept){
-    const bookTitle=str(book&&book.title)||'הספר';
-    const conceptTitle=concept?str(concept.title):'';
-    const conceptExplanation=concept?str(concept.explanation):'';
-    const conceptExample=concept?str(concept.example):'';
-    const conceptApplication=concept?str(concept.application):'';
+    const c=content(book);
+    const paragraphs=mainParagraphs(book,title,anchor,summary,concept,1);
+    const otherIdeas=arr(c.ideas).filter(text=>text!==anchor).slice(0,3);
+    const topics=arr(c.topics).filter(text=>text!==anchor).slice(0,3);
+    const conceptExplanation=str(concept&&concept.explanation);
+    const conceptExample=str(concept&&concept.example);
+    const conceptApplication=str(concept&&concept.application);
+    const sourceSections=[
+      {heading:'הרעיונות והטענות',paragraphs:paragraphs.slice(0,3)},
+      {heading:'קשרים בתוך הספר',paragraphs:otherIdeas.concat(topics).slice(0,4)},
+      {heading:concept?`מושג מקצועי קשור · ${str(concept.title)}`:'מושגים קשורים',paragraphs:[conceptExplanation,conceptExample].filter(Boolean)},
+      {heading:'יישום ובדיקה',paragraphs:[conceptApplication].filter(Boolean)}
+    ];
     return {
       title:`העמקה · ${title}`,
-      sections:[
-        {heading:'הסבר מעמיק',paragraphs:[
-          `${anchor} הוא רעיון שכדאי לקרוא כתהליך ולא כסיסמה. כדי להבין אותו באמת, צריך לשאול מה קורה לפניו, מה קורה במהלכו ומה משתנה אחריו. ${bookTitle} מספק את נקודת המוצא דרך החומר שכבר משויך אליו, אבל ההעמקה כאן מפרקת את הרעיון בשפה לימודית חדשה ולא מעתיקה קטעים ארוכים מהמקור.`,
-          `המשמעות המעשית היא לחפש מנגנון. אם ${anchor} משפיע על התנהגות או על חשיבה, מה בדיוק מתווך את ההשפעה? האם מדובר בקשב, בציפייה, בהרגל, במשוב, בסביבה, ברגש או בהחלטה? עצם השאלה הזאת מאלצת אותנו לעבור מטענה כללית להסבר שאפשר לבדוק, להשוות ולשנות.`
-        ]},
-        {heading:'הקשר רחב',paragraphs:[
-          `בהקשר הרחב של הספר, נקודת הייחוס היא: ${summary} לכן ${anchor} אינו עומד לבד. הוא מקבל משמעות דרך היחסים בינו לבין שאר הרעיונות והנושאים בספר. לפעמים רעיון אחד מסביר את הבעיה, רעיון אחר מציע דרך פעולה, ורעיון שלישי עוזר להבין למה אותה דרך אינה עובדת תמיד.`,
-          `קריאה כזאת מונעת מצב שבו לוקחים משפט אחד והופכים אותו לכלל אוניברסלי. במקום זאת, בונים מפה: מהי הבעיה שהרעיון מתייחס אליה, מהו המנגנון האפשרי, אילו תנאים חשובים, ואיזו תוצאה היינו מצפים לראות אם ההסבר נכון.`
-        ]},
-        {heading:'חיבור מקצועי',paragraphs:[
-          conceptTitle
-            ? `מושג מקצועי שיכול להאיר את הפרק הוא ${conceptTitle}. ${conceptExplanation} חשוב לסמן שהחיבור הזה הוא הרחבה מקצועית קשורה; הוא לא בהכרח מונח שהמחבר עצמו משתמש בו. השימוש בו מאפשר להשוות את הרעיון שבספר לידע נוסף ולשאול שאלות מדויקות יותר.`
-            : `אפשר לחבר את הפרק למושגים מקצועיים מעולמות הפסיכולוגיה, הלמידה וקבלת ההחלטות. המטרה אינה להעמיס שמות, אלא למצוא מושג שמסביר חלק מהמנגנון. ברגע שיש מושג כזה, אפשר לחפש דוגמאות, גבולות, ראיות סותרות ויישומים מדויקים יותר.`,
-          conceptTitle
-            ? `כאשר משתמשים ב־${conceptTitle}, כדאי לשאול האם הוא באמת מוסיף הסבר או רק נותן שם חדש למה שכבר ידענו. מושג טוב צריך לעזור לנבא משהו, לשנות פעולה או לזהות פרט שלא היה ברור קודם.`
-            : `מושג מקצועי מועיל הוא כזה שמוסיף יכולת הבחנה: הוא עוזר להבדיל בין שני מצבים שנראו קודם זהים, או מציע משתנה שאפשר לשנות. אם החיבור לא עושה אחד מהדברים האלה, הוא כנראה קישוט ולא כלי.`
-        ]},
-        {heading:'דוגמה ויישום',paragraphs:[
-          conceptExample
-            ? `דוגמה קשורה: ${conceptExample} עכשיו אפשר לחזור ל־${anchor} ולשאול מה מתוך הדוגמה ניתן להעביר למצב שלך ומה לא. העברה טובה אינה חיקוי; היא התאמה של העיקרון לתנאים חדשים.`
-            : `נניח שאתה פוגש מצב חוזר באימון, בעבודה או בלמידה שבו התוצאה אינה משתפרת. במקום להוסיף עוד מאותו דבר, השתמש ב־${anchor} כעדשה: הגדר מה אתה רואה, מה אתה מניח, מה הפעולה הנוכחית ומהו משוב אחד שיאפשר לדעת אם השינוי עובד.`,
-          conceptApplication
-            ? `יישום אפשרי: ${conceptApplication} כדי להפוך זאת לניסוי קטן, קבע מראש סימן הצלחה אחד, זמן בדיקה קצר, ומה תעשה אם התוצאה אינה כפי שציפית. כך היישום נשאר גמיש ולא הופך לדוגמה שמוכיחה את עצמה.`
-            : `בחר פעולה אחת שאפשר לבצע היום. היא צריכה להיות קטנה מספיק כדי לנסות, ברורה מספיק כדי לדעת אם בוצעה, ומדידה מספיק כדי לקבל עליה משוב. לאחר מכן שאל לא רק “האם זה עבד?” אלא “מה למדתי על התנאים שבהם זה עובד?”.`
-        ]},
-        {heading:'מגבלה או נקודת מבט אחרת',paragraphs:[
-          `כל רעיון חזק עלול להפוך למסוכן כאשר משתמשים בו ללא הקשר. גם ${anchor} יכול להיות מועיל במצב אחד ופחות מתאים במצב אחר. יש הבדל בין עיקרון שמסביר נטייה לבין חוק שקובע מה תמיד יקרה. לכן כדאי להיזהר מהכללה מהירה, מסיבה כוזבת ומבחירת דוגמאות שמתאימות רק למה שכבר רצינו להאמין.`,
-          `דרך טובה לבדוק את הגבול היא לשאול: איזה מקרה היה גורם לי לשנות את דעתי? מה חסר לי כדי להיות בטוח יותר? האם יש הסבר חלופי לאותה תוצאה? השאלות האלה אינן מחלישות את הרעיון; הן מחדדות את התחום שבו הוא באמת שימושי.`
-        ]},
-        {heading:'שאלות למחשבה',paragraphs:[
-          `איפה בחיים שלך ${anchor} מופיע באופן הכי ברור? מה אתה עושה היום באופן אוטומטי שאפשר לבחון מחדש דרך הרעיון הזה? איזו דוגמה מהניסיון שלך דווקא סותרת אותו? ומהי פעולה אחת קטנה שתאפשר לך לבדוק אותו במקום רק להסכים איתו?`,
-          `לבסוף, נסח את הרעיון במשפט אחד במילים שלך. אם אינך יכול להסביר אותו בלי להשתמש בניסוח של הספר, כנראה שעדיין לא הפכת אותו לידע שלך. לאחר מכן נסח גם משפט שני: “הרעיון הזה פחות מתאים כאשר…”. שני המשפטים יחד מייצרים הבנה מאוזנת יותר.`
-        ]}
-      ],
-      takeaway:`העיקר: השתמש ב־${anchor} כעדשה לבדיקה וללמידה, לא ככלל קשיח. חבר אותו להקשר, חפש מנגנון, בדוק יישום קטן והשאר מקום לראיות שמאתגרות את המסקנה.`
+      sections:sourceSections.filter(section=>section.paragraphs.length),
+      takeaway:conceptApplication||paragraphs[0]||'אין עדיין מספיק חומר משויך לנושא הזה כדי להציג סיכום מפורט.'
     };
   }
 
