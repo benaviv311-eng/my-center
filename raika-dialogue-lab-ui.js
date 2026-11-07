@@ -297,7 +297,7 @@
         status: 'idea',
         title: state.lastDialogue.title,
         summary: dialogueTextarea ? dialogueTextarea.value : state.lastDialogue.text,
-        characters: state.lastDialogue.characters,
+        characters: state.lastDialogue.characters.filter(function (id) { return characters().some(function (character) { return character.id === id; }); }),
         tags: ['dialogue-lab', 'proposal'],
         saved: true
       };
