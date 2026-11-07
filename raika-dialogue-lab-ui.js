@@ -210,11 +210,11 @@
       if (found) return found.title;
       return characterId === 'komugi' ? 'קומוגי' : characterId;
     });
-    var unknownCharacters = (card.characters || []).filter(function (characterId) {
-      return !characters().some(function (character) { return character.id === characterId; });
-    }).map(function (characterId) { return characterId === 'komugi' ? 'קומוגי' : characterId; });
     var manualNames = panel.querySelector('[data-rdl-participants]').value.trim();
     if (manualNames) names = parseNames(manualNames);
+    var unknownCharacters = names.filter(function (name) {
+      return !characters().some(function (character) { return character.title === name; });
+    });
     return {
       title: card.title || 'רעיון מחדר הכותבים',
       body: card.body || card.summary || '',
