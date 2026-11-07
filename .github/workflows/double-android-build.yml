@@ -1,0 +1,58 @@
+name: DOUBLE Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android-double/**"
+      - ".github/workflows/double-android-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools"
+
+      - name: Install Android 36 SDK
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Set up Gradle 9.6
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.6.0"
+
+      - name: Build debug APK and release AAB
+        run: |
+          gradle -p android-double --stacktrace assembleDebug bundleRelease
+
+      - name: Collect outputs
+        run: |
+          mkdir -p build-output
+          cp android-double/app/build/outputs/apk/debug/app-debug.apk build-output/DOUBLE-debug.apk
+          cp android-double/app/build/outputs/bundle/release/app-release.aab build-output/DOUBLE-release-unsigned.aab
+          sha256sum build-output/* > build-output/SHA256SUMS.txt
+
+      - name: Upload Android build
+        uses: actions/upload-artifact@v4
+        with:
+          name: DOUBLE-Android-v1
+          path: build-output/
+          if-no-files-found: error
+          retention-days: 30
