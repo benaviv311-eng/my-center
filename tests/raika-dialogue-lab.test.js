@@ -76,6 +76,8 @@ test('tone remix keeps the original premise and source untouched while creating 
   assert.match(result.text, /דיאלוג מוצע/);
   assert.match(result.text, /קומוגי/);
   assert.match(result.text, /הצעה בלבד/);
+  const withNote = buildToneRemix({ title: 'בדיקה', body: 'רגע קצר', characterNames: ['ראיקה', 'אוקנה'], note: 'בלי השפלה אישית' }, 'comedic');
+  assert.match(withNote.text, /בלי השפלה אישית/);
 });
 
 test('tone remix requires an existing scene or idea to preserve', () => {
