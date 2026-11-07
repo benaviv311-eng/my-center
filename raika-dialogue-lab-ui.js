@@ -20,7 +20,9 @@
   }
 
   function places() {
-    return Array.isArray(window.RAIKA_DATA && window.RAIKA_DATA.world) ? window.RAIKA_DATA.world : [];
+    var allowed = ['sakura', 'sakuranbo-school', 'inazuma-dojo', 'lion-kingdom', 'medoshi-mountain', 'evil-lions-mountain'];
+    return Array.isArray(window.RAIKA_DATA && window.RAIKA_DATA.world)
+      ? window.RAIKA_DATA.world.filter(function (place) { return allowed.indexOf(place.id) >= 0; }) : [];
   }
 
   function charOptions(includeBlank) {
@@ -102,6 +104,10 @@
     var customName = document.getElementById('rdl-character-custom').value.trim();
     var customCharacter = false;
     if (customName) {
+      if (selected.length >= 3) {
+        document.getElementById('rdl-status').textContent = 'אפשר לבחור עד שלוש דמויות. הסר דמות אחת לפני הוספת דמות ידנית.';
+        return;
+      }
       selected.push({ title: customName, missingProfile: true });
       customCharacter = true;
     }
@@ -201,15 +207,20 @@
     }
     var names = (card.characters || []).map(function (characterId) {
       var found = characters().find(function (character) { return character.id === characterId; });
-      return found ? found.title : characterId;
+      if (found) return found.title;
+      return characterId === 'komugi' ? 'קומוגי' : characterId;
     });
+    var unknownCharacters = (card.characters || []).filter(function (characterId) {
+      return !characters().some(function (character) { return character.id === characterId; });
+    }).map(function (characterId) { return characterId === 'komugi' ? 'קומוגי' : characterId; });
     var manualNames = panel.querySelector('[data-rdl-participants]').value.trim();
     if (manualNames) names = parseNames(manualNames);
     return {
       title: card.title || 'רעיון מחדר הכותבים',
       body: card.body || card.summary || '',
-      characters: card.characters || [],
+      characters: (card.characters || []).filter(function (characterId) { return characters().some(function (character) { return character.id === characterId; }); }),
       characterNames: names,
+      unverifiedCharacters: unknownCharacters,
       note: panel.querySelector('[data-rdl-tone-note]').value.trim()
     };
   }
@@ -223,12 +234,14 @@
     var participants = participantsNode ? participantsNode.textContent.trim() : '';
     var names = parseNames(panel.querySelector('[data-rdl-participants]').value.trim() || participants);
     if (!names.length) names = ['דמות ראשונה', 'דמות שנייה'];
+    var unknownNames = names.filter(function (name) { return !characters().some(function (character) { return character.title === name; }); });
     return {
       title: titleNode ? titleNode.textContent.trim() : 'סצנה מחדר הכותבים',
       body: body,
       participants: participants,
       characterNames: names,
       characters: knownCharacterIds(names),
+      unverifiedCharacters: unknownNames,
       note: panel.querySelector('[data-rdl-tone-note]').value.trim()
     };
   }
