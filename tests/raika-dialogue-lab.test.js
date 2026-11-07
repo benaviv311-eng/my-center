@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildDialogue, buildToneRemix } = require('../raika-dialogue-lab.js');
+const { buildDialogue, buildToneRemix } = require('../raika-dialogue-lab-core.js');
 
 const raika = {
   id: 'raika',
@@ -80,4 +80,19 @@ test('tone remix keeps the original premise and source untouched while creating 
 
 test('tone remix requires an existing scene or idea to preserve', () => {
   assert.throws(() => buildToneRemix({ title: '', body: '' }, 'comedic'), /סצנה או רעיון/);
+});
+
+test('dialogue builder labels a manually entered participant and custom location as unverified', () => {
+  const result = buildDialogue({
+    characters: [raika, { title: 'קומוגי', missingProfile: true }],
+    location: 'המאפייה של קומוגי',
+    locationVerified: false,
+    activity: 'עזרה במאפייה',
+    dynamic: 'teasing',
+    primaryTone: 'comedic',
+    customCharacter: true
+  });
+  assert.ok(result.warnings.some((warning) => warning.includes('המיקום הוזן ידנית')));
+  assert.ok(result.warnings.some((warning) => warning.includes('דמות נוספת הוזנה ידנית')));
+  assert.deepEqual(result.unverifiedCharacters, ['קומוגי']);
 });
