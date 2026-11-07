@@ -320,6 +320,7 @@
       '',
       'דיאלוג מוצע:',
       dialogueText,
+      clean(item.note) ? '\\nכיוון נוסף: ' + clean(item.note) : '',
       '',
       'כיוון לסיום:',
       tones.includes('קומי') ? 'לסיים בתגובה קטנה או בהיפוך מצחיק שנובע מהסיטואציה, בלי למחוק את מה שקרה.' :
@@ -338,7 +339,9 @@
       status: 'idea',
       type: 'idea',
       isCanon: false,
-      sourceTitle: sourceTitle
+      sourceTitle: sourceTitle,
+      characters: Array.isArray(item.characters) ? item.characters.slice() : [],
+      characterNames: names
     };
   }
 
