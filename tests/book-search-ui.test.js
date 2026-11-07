@@ -14,4 +14,20 @@ const escaped=UI.makeResultsMarkup([{id:'x',kind:'topic',title:'<script>alert(1)
 assert.ok(!escaped.includes('<script>'),'user-originated text must be escaped');
 assert.ok(escaped.includes('&lt;script&gt;'),'unsafe tags should render as text');
 
+assert.equal(
+  UI.makeBookPlaceholder({title:'הרגלים אטומיים',content:{topics:['בניית הרגלים','סביבה והרגלים']}}),
+  'למשל: בניית הרגלים · סביבה והרגלים',
+  'search examples should come from the open book rather than a fixed Jung-specific example'
+);
+assert.equal(
+  UI.makeBookPlaceholder({title:'Psychological Types',content:{topics:[{title:'חשיבה מוחצנת'},'חישה מופנמת']}}),
+  'למשל: חשיבה מוחצנת · חישה מופנמת',
+  'topics represented as objects should remain readable'
+);
+assert.equal(
+  UI.makeBookPlaceholder({title:'ספר ללא נושאים',content:{topics:[]}}),
+  'חפש פרק, רעיון או מושג בספר הזה…',
+  'books without suitable topics need a neutral placeholder'
+);
+
 console.log('book search UI rendering tests: OK');

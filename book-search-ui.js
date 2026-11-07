@@ -9,6 +9,16 @@
   const groups={guide:'טיפוסי אישיות והעמקה',chapter:'פרקים', 'chapter-source':'פרקים נוספים במאגר',topic:'נושאים',idea:'רעיונות מרכזיים',passage:'קטעי תוכן',point:'נקודות ללמידה',concept:'מושגים מקצועיים'};
   const order=['guide','chapter','chapter-source','topic','idea','concept','point','passage'];
 
+  function makeBookPlaceholder(book){
+    const topics=book&&book.content&&book.content.topics;
+    const examples=(Array.isArray(topics)?topics:[])
+      .map(topic=>typeof topic==='string'?topic:topic&&typeof topic==='object'?(topic.title||topic.name||topic.heading||''):'')
+      .map(topic=>String(topic).replace(/\s+/g,' ').trim())
+      .filter(topic=>topic.length>=3&&topic.length<=52);
+    const unique=[...new Set(examples)].slice(0,2);
+    return unique.length?`למשל: ${unique.join(' · ')}`:'חפש פרק, רעיון או מושג בספר הזה…';
+  }
+
   function makeResultsMarkup(entries){
     if(!Array.isArray(entries)||!entries.length)return '<p class="book-search-empty">לא נמצאו תוצאות. נסה ביטוי אחר או מונח קצר יותר.</p>';
     const kinds=[...new Set(entries.map(entry=>entry.kind))].sort((a,b)=>{
@@ -93,6 +103,7 @@
       const chapters=event.detail&&event.detail.chapters;
       const Search=root.BookSearch,D=root.LibraryDiscovery;
       if(!Search||!book)return;
+      input.placeholder=makeBookPlaceholder(book);
       const concepts=D&&D.matchConcepts&&Array.isArray(D.LEARNING_CONCEPTS)?D.matchConcepts(book,D.LEARNING_CONCEPTS.length):[];
       const guides=root.BookSearchGuides?root.BookSearchGuides.forBook(book):[];
       index=Search.buildBookIndex(book,chapters,concepts,guides);
@@ -105,5 +116,5 @@
     if(root.document.readyState==='loading')root.document.addEventListener('DOMContentLoaded',install,{once:true});
     else install();
   }
-  return {makeResultsMarkup,makeDetailMarkup};
+  return {makeResultsMarkup,makeDetailMarkup,makeBookPlaceholder};
 });
