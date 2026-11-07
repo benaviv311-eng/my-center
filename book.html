@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="book-page.css">
 <link rel="stylesheet" href="book-structure.css">
 <link rel="stylesheet" href="book-feed.css">
+<link rel="stylesheet" href="book-fallacies.css?v=20261107">
 <link rel="stylesheet" href="site-chat.css?v=2">
 <link rel="stylesheet" href="site-editor-ui.css?v=1"></head>
 <body class="editorial-book">
@@ -29,6 +30,7 @@
       <button id="book-surprise" class="btn">✨ משהו שלא חשבתי עליו</button>
       <button id="book-key-points-toggle" class="btn">⭐ לנקודות החשובות</button>
       <button id="book-search-toggle" class="btn book-search-trigger" type="button" aria-expanded="false" aria-controls="book-search-panel">🔎 חיפוש בפרקים ובמושגים</button>
+      <button id="book-fallacies-toggle" class="btn book-fallacies-trigger" type="button" aria-expanded="false" aria-controls="book-fallacies-section" hidden>⚠️ מילון הכשלים · 238 ערכים</button>
     </div>
   </header>
 
@@ -46,6 +48,25 @@
     <p id="book-search-count" class="book-search-count" aria-live="polite"></p>
     <div id="book-search-results" class="book-search-results" aria-live="polite"></div>
     <article id="book-search-detail" class="book-search-detail hidden" aria-live="polite"></article>
+  </section>
+
+  <section id="book-fallacies-section" class="book-fallacies-section" aria-label="מילון הכשלים הלוגיים" hidden>
+    <div class="book-fallacies-heading">
+      <div>
+        <span class="reading-eyebrow">מפתח מקצועי · Logically Fallacious</span>
+        <h2>לזהות את הכשל. להבין את הטיעון.</h2>
+        <p>238 ערכים במפתח המקוון הרשמי, עם שמות בעברית ובאנגלית, חיפוש, מיון ודוגמאות לימודיות. זהו מפתח המאגר הציבורי — <strong>לא</strong> כל 300+ הכשלים שנכללים במהדורת הספר המודפסת.</p>
+      </div>
+      <button id="book-fallacies-close" type="button" aria-label="סגור את מילון הכשלים">×</button>
+    </div>
+    <label for="book-fallacies-input" class="book-fallacies-label">איזה כשל תרצה להבין?</label>
+    <input id="book-fallacies-input" type="search" autocomplete="off" placeholder="למשל: איש קש, התנהגות עדר, Strawman, Post Hoc…">
+    <div id="book-fallacies-filters" class="book-fallacies-filters" aria-label="סינון לפי סוג הכשל"></div>
+    <p id="book-fallacies-count" class="book-fallacies-count" aria-live="polite"></p>
+    <article id="book-fallacies-detail" class="book-fallacies-detail" aria-live="polite" hidden></article>
+    <div id="book-fallacies-results" class="book-fallacies-results"></div>
+    <button id="book-fallacies-more" class="book-fallacies-more" type="button" hidden>הצג עוד ערכים</button>
+    <p class="book-fallacies-source">מפתח המקור: <a href="https://www.logicallyfallacious.com/fallacies" target="_blank" rel="noopener noreferrer">Logically Fallacious — Logical Fallacies List</a>. תוכן הלימוד בעברית נכתב בנפרד ומסומן ככזה.</p>
   </section>
 
   <section id="book-key-points-section" class="book-key-points-section" aria-live="polite">
@@ -183,12 +204,15 @@
 <script src="library-discovery.js"></script>
 <script src="book-structure.js"></script>
 <script src="book-structure-ui.js"></script>
+<script src="book-fallacies-data.js?v=20261107"></script>
+<script src="book-fallacies.js?v=20261107"></script>
 <script src="book-infinite-feed.js"></script>
 <script src="book-reading.js"></script>
 <script src="book-search.js"></script>
 <script src="book-page.js"></script>
 <script src="book-search-guides.js"></script>
 <script src="book-search-ui.js?v=20261107topics"></script>
+<script src="book-fallacies-ui.js?v=20261107"></script>
 <script src="book-original-content.js"></script>
 <script src="book-original-content-ui.js"></script>
 <script src="site-editor-ui.js?v=1"></script>

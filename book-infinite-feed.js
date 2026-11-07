@@ -1,8 +1,11 @@
 (function(root,factory){
-  const api=factory(root&&root.LibraryDiscovery);
+  const isNode=typeof module!=='undefined'&&module.exports;
+  const catalog=(root&&root.BookFallaciesData)||(isNode?require('./book-fallacies-data.js'):null);
+  const fallacyModel=(root&&root.BookFallacies)||(isNode?require('./book-fallacies.js'):null);
+  const api=factory(root&&root.LibraryDiscovery,catalog,fallacyModel);
   if(typeof module!=='undefined'&&module.exports) module.exports=api;
   if(root) root.BookInfiniteFeed=api;
-})(typeof window!=='undefined'?window:globalThis,function(discovery){
+})(typeof window!=='undefined'?window:globalThis,function(discovery,catalog,fallacyModel){
   'use strict';
 
   const LOGICAL_FALLACIES=[
@@ -52,6 +55,13 @@
     return (c.topics||[]).slice(0,6).map((title,index)=>({id:`topic-${index}`,title:str(title),type:'🧩 מונח',explanation:`מושג מרכזי ללמידה מתוך עולם התוכן של הספר: ${title}.`,application:`בדוק איך ${title} מופיע במקרה אמיתי מחייך.`}));
   }
   function matchedFallacies(book){
+    if(catalog&&fallacyModel&&fallacyModel.isTargetBook(book)){
+      return catalog.ENTRIES.filter(entry=>entry.kind==='fallacy').map(entry=>({
+        id:entry.id,title:entry.title,englishTitle:entry.englishTitle,
+        definition:entry.definition||'ערך במפתח הכשלים המקוון. פתח את מילון הכשלים בראש עמוד הספר להסבר המקורי ולקישור למאגר הרשמי.',
+        example:entry.example||'',sourceUrl:entry.sourceUrl
+      }));
+    }
     const text=bookText(book);
     const scored=LOGICAL_FALLACIES.map(f=>({f,score:(FALLACY_KEYWORDS[f.id]||[]).reduce((n,k)=>n+(text.includes(k)?1:0),0)}));
     scored.sort((a,b)=>b.score-a.score||hash(str(book&&book.slug)+a.f.id)-hash(str(book&&book.slug)+b.f.id));
@@ -77,7 +87,7 @@
     suggestionTopics.forEach((topic,i)=>pool.push(item(book,'suggestion',i,'💡 לאן להעמיק מכאן',`כדאי להעמיק בנושא “${topic}” ולבדוק אילו תיאוריות, מחקרים או גישות נוספות מסבירים אותו.`,{typeLabel:'הצעה',deepText:`חפש גם נקודת מבט שמאתגרת את הדרך שבה הספר מציג את ${topic}.`})));
     fallacies.forEach((f,i)=>{
       const topic=topicFor(book,`${seed}|fallacy|${i}`);
-      pool.push(item(book,'fallacy',i,`⚠️ ${f.title}`,f.definition,{englishTitle:f.englishTitle,typeLabel:'כשל לוגי',example:f.example,deepText:`חיבור לספר: בזמן שחושבים על “${topic}”, בדוק האם הטיעון נשען על ראיות או מחליק אל ${f.title}.`}));
+      pool.push(item(book,'fallacy',i,`⚠️ ${f.title}`,f.definition,{englishTitle:f.englishTitle,typeLabel:'כשל לוגי',example:f.example,sourceLabel:f.sourceUrl?'הרחבה מקצועית · מאגר Logically Fallacious':'הרחבה מקצועית',deepText:`חיבור לספר: בזמן שחושבים על “${topic}”, בדוק האם הטיעון נשען על ראיות או מחליק אל ${f.title}.`}));
     });
     topics.forEach((topic,i)=>{
       pool.push(item(book,'question',100+i,'❓ בדוק את עצמך',`איך היית מסביר את “${topic}” למישהו שלא מכיר את הספר, בלי להשתמש במונחים של הספר עצמו?`,{typeLabel:'שאלה'}));
