@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#0b1324" />
-<title>טיימר האימון של בן — עריכה בתוך כל סט</title>
+<title>טיימר האימון של בן — רצף מקורי, 3 סבבים</title>
 <style>
 :root{color-scheme:dark;--bg:#080e1b;--panel:#111c2e;--panel2:#17253c;--line:#2b3a50;--muted:#a6b5c8;--lime:#b7f05a;--cyan:#79d9f8;--orange:#ffc06b;--white:#f3f7ff;--red:#fe8b8b;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#1a3150 0,transparent 53%),var(--bg);color:var(--white);font-size:16px}button,input,select{font:inherit}button{border:0;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}button:disabled{opacity:.35;cursor:not-allowed}.wrap{max-width:900px;margin:auto;padding:18px 16px 50px}header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}.brand{font-size:13px;letter-spacing:.08em;color:var(--lime);font-weight:800}.subbrand{font-size:13px;color:var(--muted);margin-top:4px}.settings-btn{background:var(--panel2);border:1px solid var(--line);color:white;padding:12px 16px;border-radius:14px;white-space:nowrap}.topline{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.pill{border:1px solid var(--line);background:#18253a;color:#cbd9e9;border-radius:100px;padding:7px 12px;font-size:13px;font-weight:750}.pill.accent{border-color:#578a31;background:#243e27;color:#dbffac}.main{border:1px solid var(--line);border-radius:27px;padding:20px 19px 22px;background:linear-gradient(155deg,#132239,#0e192a);box-shadow:0 12px 60px #0004}.current-name{font-size:clamp(29px,7vw,53px);font-weight:850;line-height:1.15;letter-spacing:-.035em;margin-top:22px;margin-bottom:9px;min-height:1.2em}.phase-subtitle{color:var(--muted);font-size:16px}.timer{font-size:clamp(88px,22vw,152px);letter-spacing:-.085em;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;line-height:1.3;font-weight:850;margin:6px 0 0;text-shadow:0 0 25px #9fff3012}.timer.is-rest{color:var(--cyan)}.timer.is-transition{color:var(--orange)}.timer.is-work{color:var(--lime)}.timer.is-finished{color:var(--lime)}.timefooter{border-radius:14px;background:#0b1627;padding:13px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:13px;border:1px solid #223449}.timefooter b{font-variant-numeric:tabular-nums;font-size:23px;direction:ltr}.tiny{font-size:13px;color:var(--muted)}.bar{height:10px;background:#2b374a;border-radius:100px;overflow:hidden}.bar>div{height:100%;width:0%;background:linear-gradient(90deg,#84d9e3,#b7f05a);border-radius:100px;transition:width .2s}.next{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--muted);margin:12px 1px 0;align-items:center}.next strong{color:#fff}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:17px 0 12px}.btn{min-height:56px;border-radius:15px;background:#243249;border:1px solid #334760;color:#eaf3ff;font-weight:750}.btn.prime{background:var(--lime);color:#18210c;border-color:var(--lime);font-size:21px}.btn.strong{background:#243e29;color:#ddffaa;border-color:#4c7844}.btn.alt{background:#17243a}.btn.full{grid-column:1/-1}.smcontrols{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}.smcontrols button{background:transparent;color:#ccd7e5;border:1px solid #31415a;border-radius:12px;padding:9px 12px;min-height:43px;font-size:13px;font-weight:650}.statrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0}.stat{padding:15px 10px;text-align:center;background:#121e30;border:1px solid var(--line);border-radius:17px}.stat b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.stat small{color:var(--muted);font-size:12px}.hint{color:var(--muted);font-size:13px;line-height:1.6;margin:15px 0}.live{font-size:12px;padding:7px 10px;background:#193328;border-radius:11px;color:#bdedc6;display:inline-block}.notice{color:#ffdcac;background:#382817;border:1px solid #6c522c;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.6;margin-top:12px}dialog{width:min(850px,calc(100vw - 16px));max-height:93dvh;padding:0;border-radius:22px;border:1px solid var(--line);background:#0d1626;color:var(--white);box-shadow:0 30px 100px #000a}dialog::backdrop{background:#010810cf}.dlg-head{position:sticky;top:0;background:#101b2d;border-bottom:1px solid var(--line);padding:17px;display:flex;align-items:center;justify-content:space-between;z-index:2}.dlg-head h2{font-size:21px;margin:0}.dlg-scroll{padding:17px;max-height:calc(93dvh - 155px);overflow:auto}.dlg-foot{position:sticky;bottom:0;background:#111c2e;border-top:1px solid var(--line);padding:12px 17px;display:flex;gap:10px}.dlg-foot button{flex:1}.group{padding:16px 14px;background:#121e30;border-radius:15px;border:1px solid var(--line);margin-bottom:14px}.group h3{margin:0 0 14px;font-size:18px}.formrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:6px;color:#c8d8e8;font-size:12px}.field input,.field select{min-width:0;width:100%;border-radius:10px;border:1px solid #41546d;background:#0d182a;color:#fff;padding:10px 9px;min-height:43px;font-size:17px;direction:ltr;text-align:center}.ex-row{padding:13px 0;border-top:1px solid #2b3b50}.ex-name{font-weight:800;margin-bottom:9px}.ex-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.toggle{display:flex;align-items:center;gap:8px;color:#d5e1ef;font-size:14px;padding:5px 0}.toggle input{accent-color:#b7f05a;width:19px;height:19px}.dlg-foot .btn{min-height:51px}.status{font-size:13px;color:var(--muted);margin:10px 2px;min-height:20px}.screen-reader{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}.hide{display:none!important}@media(max-width:450px){.main{padding:16px 12px}.controls .btn{font-size:16px}.current-name{min-height:55px}.formrow{grid-template-columns:repeat(2,1fr)}.stat b{font-size:18px}.stat{padding:12px 5px}.timer{font-size:clamp(82px,21vw,117px)}.dlg-scroll{padding:10px}.ex-fields{gap:5px}.field{font-size:11px}}
@@ -18,27 +18,27 @@
 </head>
 <body>
 <div class="wrap">
-<header><div><div class="brand">BEN TRAINING / VOICE COACH</div><div class="subbrand">טיימר אימון — עריכה בתוך כל סט</div></div><button class="settings-btn" id="editButton">⚙ עריכת סטים ותרגילים</button></header>
-<section class="quicksettings" aria-label="שינוי מספר הסטים לכל התרגילים"><div><strong>🔁 כמה סטים בכל מקטע?</strong><small>אפשר לשנות את מספר הסטים לכל מקטע, ולערוך או להוסיף תרגילים בכל סט בנפרד.</small></div><div class="quickrow"><label for="globalSets">מספר סטים</label><input id="globalSets" aria-label="מספר הסטים לכל התרגילים" type="number" inputmode="numeric" min="1" max="12" step="1" value="3"><button id="applyAllSets" type="button">✓ החל על כל המקטעים</button></div></section><button type="button" class="editor-shortcut" id="editQuickButton">✏️ הוסף וערוך תרגילים בתוך כל סט</button>
+<header><div><div class="brand">BEN TRAINING / VOICE COACH</div><div class="subbrand">טיימר אימון — הרצף המקורי</div></div><button class="settings-btn" id="editButton">⚙ עריכת סטים ותרגילים</button></header>
+<section class="quicksettings" aria-label="שינוי מספר הסטים לכל התרגילים"><div><strong>🔁 כמה סבבים בכל רצף?</strong><small>3 סבבים לכל רצף. אפשר לשנות את מספר הסבבים ולערוך כל סבב בנפרד.</small></div><div class="quickrow"><label for="globalSets">מספר סבבים</label><input id="globalSets" aria-label="מספר הסבבים לכל הרצפים" type="number" inputmode="numeric" min="1" max="12" step="1" value="3"><button id="applyAllSets" type="button">✓ החל על שני הרצפים</button></div></section><button type="button" class="editor-shortcut" id="editQuickButton">✏️ הוסף וערוך תרגילים בתוך כל סט</button>
 <section class="main" aria-label="טיימר האימון">
-<div class="topline"><span id="sequenceTag" class="pill accent">רצף 1 מתוך 2</span><span id="setTag" class="pill">סט 1 מתוך 3</span><span id="exerciseTag" class="pill">תרגיל 1 מתוך 5</span></div>
+<div class="topline"><span id="sequenceTag" class="pill accent">רצף 1 מתוך 2</span><span id="setTag" class="pill">סבב 1 מתוך 3</span><span id="exerciseTag" class="pill">תרגיל 1 מתוך 5</span></div>
 <div class="current-name" id="phaseName">מוכן לאימון?</div><div class="phase-subtitle" id="phaseDetails">אפשר לערוך ולהוסיף תרגילים בתוך כל סט ברצף</div>
-<div id="countdown" class="timer is-work" role="timer" aria-live="off">03:00</div>
-<div class="timefooter"><span>⏱ זמן שנותר לאימון כולו</span><b id="totalRemaining">49:40</b></div>
+<div id="countdown" class="timer is-work" role="timer" aria-live="off">02:00</div>
+<div class="timefooter"><span>⏱ זמן שנותר לאימון כולו</span><b id="totalRemaining">31:25</b></div>
 <div class="bar"><div id="progressFill"></div></div>
 <div class="next"><span>הבא בתור</span><strong id="nextLabel">מנוחה בין סטים</strong></div>
 <div class="controls"><button class="btn prime full" id="playButton">▶ התחל אימון</button><button class="btn strong hide" id="finishedButton">✓ סיימתי את התרגיל</button><button class="btn alt hide" id="skipButton">דלג לשלב הבא</button></div>
 <div class="smcontrols"><button id="soundButton">🔊 בדיקת שמע</button><button id="voiceButton">🎙 קריינות: פועלת</button><button id="micButton">🎤 פקודת ״סיימתי״: כבויה</button><button id="resetButton">↺ התחל מחדש</button></div>
 <div class="status" id="status" aria-live="polite"></div>
 </section>
-<div class="statrow"><div class="stat"><b id="statSets">3</b><small>סטים לכל מקטע</small></div><div class="stat"><b id="statExercises">11</b><small>תרגילים בכל הסטים</small></div><div class="stat"><b id="statDuration">49:40</b><small>משך מתוכנן</small></div></div>
-<p class="hint">ההגדרות נשמרות במכשיר הזה. פתח עריכת סטים ותרגילים כדי לשנות שמות, זמנים, סדר וליצור תרגילים חדשים בכל סט. ברגליים: Hora Hold, Half Squat, Duck Walk. מומלץ להשאיר את המסך פתוח במהלך האימון.</p>
+<div class="statrow"><div class="stat"><b id="statSets">3</b><small>סבבים בכל רצף</small></div><div class="stat"><b id="statExercises">33</b><small>תרגילים בכל הסטים</small></div><div class="stat"><b id="statDuration">31:25</b><small>משך מתוכנן</small></div></div>
+<p class="hint">ההגדרות נשמרות במכשיר הזה. פתח עריכת סטים ותרגילים כדי לשנות שמות, זמנים, סדר וליצור תרגילים חדשים בכל סט. ברצף הראשון: שק איגרוף, Hors stne, הליכת ברווז, שכיבות סמיכה איזומטריות, זחילת זיקית. מומלץ להשאיר את המסך פתוח במהלך האימון.</p>
 <div id="fileNote" class="notice hide">בפתיחה מקובץ מקומי, חלק מהדפדפנים מגבילים שימוש במיקרופון. הטיימר והלחצנים ממשיכים לעבוד כרגיל.</div>
 </div>
 <dialog id="settingsDialog" aria-label="הגדרות אימון"><div class="dlg-head"><h2>⚙ עריכת סטים ותרגילים</h2><button class="btn" style="min-height:42px;padding:0 14px" id="closeButton">סגור</button></div><div class="dlg-scroll"><p class="hint" style="margin-top:0">בתוך כל מקטע תראה את כל הסטים, ובתוך כל סט את רשימת התרגילים. אפשר לשנות שמות וזמנים, להוסיף, למחוק ולהזיז תרגילים. ניתן גם להוסיף מקטע תרגול שלם. שמור בסוף.</p><div id="editorContent"></div><div class="editor-duration"><span>⏱ משך האימון המתוכנן</span><strong id="editDuration">—</strong></div><div class="group"><h3>קול ותצוגה</h3><label class="toggle"><input type="checkbox" id="editVoice"> קריינות בעברית במהלך האימון</label><label class="toggle"><input type="checkbox" id="editCountdownVoice"> ספירה בקול ב־3, 2, 1 בסיום תרגיל או מנוחה</label><label class="toggle"><input type="checkbox" id="editAnnounceSets"> להקריא את מספר הסט בתחילת כל סט (בנוסף לפתיחת הרצף)</label><label class="toggle"><input type="checkbox" id="editCountdown10"> להודיע בקול כשנותרו 10 שניות</label></div><button id="restoreButton" class="btn alt" style="width:100%;margin-bottom:10px">אפס תרגילים, זמנים וסטים לברירת המחדל</button></div><div class="dlg-foot"><button class="btn alt" id="cancelButton">ביטול</button><button class="btn prime" id="saveButton">שמור שינויים</button></div></dialog>
 <script>
 (()=>{'use strict';
-const STORAGE='ben_workout_timer_custom_sets_v2';
+const STORAGE='ben_workout_timer_original_rounds_v3';
 const OLD_STORAGE='ben_workout_timer_stacked_sets_v1';
 const $=id=>document.getElementById(id);
 const copy=x=>JSON.parse(JSON.stringify(x));
@@ -47,31 +47,29 @@ const group=(name,items,sets=3,rest=60)=>({name,rest,sets:Array.from({length:set
 const DEFAULTS={
  sequences:[
   {name:'רצף ראשון',transition:10,groups:[
-   group('שק איגרוף',[ex('שק איגרוף',180)]),
-   group('רגליים',[ex('Hora Hold',60),ex('Half Squat',45),ex('Duck Walk',30)]),
-   group('שכיבות סמיכה — אחיזה איזומטרית',[ex('שכיבות סמיכה — אחיזה איזומטרית',30)]),
-   group('הליכת זיקית',[ex('הליכת זיקית',30)])
+   group('תרגילי הרצף',[
+    ex('שק איגרוף',120),
+    ex('Hors stne',60),
+    ex('הליכת ברווז (Duck Walk)',30),
+    ex('החזקת שכיבת סמיכה איזומטרית',30),
+    ex('זחילת זיקית (Chameleon Crawl)',30)
+   ],3,60)
   ]},
   {name:'רצף שני',transition:10,groups:[
-   group('דדליפט — אחזקה',[ex('דדליפט — אחזקה',20)]),
-   group('דדליפט — 6 חזרות',[ex('דדליפט — 6 חזרות',45)]),
-   group('מתח — אחזקה',[ex('מתח — אחזקה',20)]),
-   group('מתח — מקסימום חזרות',[ex('מתח — מקסימום חזרות',45)]),
-   group('פלאנק על האמות',[ex('פלאנק על האמות',30)]),
-   group('הליכת סרטן',[ex('הליכת סרטן',30)])
+   group('תרגילי הרצף',[
+    ex('החזקת דדליפט (Deadlift Hold)',20),
+    ex('דדליפט — 6 חזרות',45),
+    ex('החזקת מתח (Pull-up Hold)',20),
+    ex('מתח — מקסימום חזרות',40),
+    ex('פלאנק על האמות (Forearm Plank)',30),
+    ex('הליכת סרטן (Crab Walk)',30)
+   ],3,60)
   ]}
  ],voice:true,spokenCountdown:true,tenSeconds:true,announceSets:false
 };
 const num=(x,min,max,def)=>{if(x===null||x===undefined||String(x).trim()==='')return def;const n=Number(x);return Number.isFinite(n)?Math.min(max,Math.max(min,Math.round(n))):def};
 function validConfig(x){return x&&Array.isArray(x.sequences)&&x.sequences.length>0&&x.sequences.length<=8&&x.sequences.every(s=>s&&typeof s.name==='string'&&Array.isArray(s.groups)&&s.groups.length>0&&s.groups.length<=40&&s.groups.every(g=>g&&typeof g.name==='string'&&g.name.trim().length>0&&Array.isArray(g.sets)&&g.sets.length>0&&g.sets.length<=12&&g.sets.every(set=>Array.isArray(set)&&set.length>0&&set.length<=30&&set.every(e=>typeof e.name==='string'&&e.name.trim().length>0&&Number.isFinite(e.seconds)&&e.seconds>=5&&e.seconds<=1800))))}
-function migrateOld(c){try{if(!c||!Array.isArray(c.sequences)||c.sequences.length!==2)return null;let result=copy(DEFAULTS);const oldA=c.sequences[0].exercises||[];const oldB=c.sequences[1].exercises||[];
- const toGroup=(e)=>group(e.name,[ex(e.name,num(e.seconds,5,1800,30))],num(e.sets,1,12,3),num(e.rest,0,600,60));
- if(oldA.length>=5){const legs=group('רגליים',[ex('Hora Hold',num(oldA[1].seconds,5,1800,60)),ex('Half Squat',45),ex('Duck Walk',num(oldA[2].seconds,5,1800,30))],num(oldA[1].sets,1,12,3),num(oldA[1].rest,0,600,60));result.sequences[0].groups=[toGroup(oldA[0]),legs,...oldA.slice(3).map(toGroup)]}
- if(oldB.length)result.sequences[1].groups=oldB.map(toGroup);
- result.sequences.forEach((s,i)=>{s.transition=num(c.sequences[i]?.transition,0,300,10)});
- for(const f of ['voice','spokenCountdown','tenSeconds','announceSets'])if(typeof c[f]==='boolean')result[f]=c[f];return result;
- }catch(e){return null}}
-function load(){try{const c=JSON.parse(localStorage.getItem(STORAGE));if(validConfig(c))return c;const old=JSON.parse(localStorage.getItem(OLD_STORAGE));const migrated=migrateOld(old);if(migrated&&validConfig(migrated))return migrated}catch(e){}return copy(DEFAULTS)}
+function load(){try{const saved=JSON.parse(localStorage.getItem(STORAGE));if(validConfig(saved))return saved}catch(e){}return copy(DEFAULTS)}
 let config=load(),draft=null,stages=[],index=0,secsRemaining=0,mode='idle',deadline=0,handle=null,audioCtx=null,wakeLock=null,recognition=null,micEnabled=false,lastCommand=0,lastTickWhole=null;
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(config))}catch(e){}}
 function fmt(n){n=Math.max(0,Math.ceil(n));const h=Math.floor(n/3600),m=Math.floor(n%3600/60),s=n%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
@@ -101,9 +99,9 @@ function announce(s){if(!s)return;if(s.type==='work'){
  say(`${firstInSeq?config.sequences[s.si].name+'. ':''}${setIntro}${s.name}. ${wordTime(s.seconds)}.`);beep('start');
  }else if(s.type==='rest'){say(`מנוחה. ${wordTime(s.seconds)}.`);beep('rest')}else{say(`מעבר. ${wordTime(s.seconds)}.`);beep('rest')}}
 function maybeLast(left,s){if(left===10&&config.tenSeconds&&s.seconds>12)say('עוד עשר שניות');if(left<=3&&left>0){beep('count');if(config.spokenCountdown)say(['','אחת','שתיים','שלוש'][left])}}
-function render(){const s=current(),idle=mode==='idle',finished=mode==='finished',paused=mode==='paused',running=mode==='running';const shown=s||stages[stages.length-1];if(shown){const seq=config.sequences[shown.si],g=seq.groups[shown.gi];$('sequenceTag').textContent=seq.name;$('setTag').textContent=`סט ${shown.zi+1} מתוך ${g.sets.length}`;$('exerciseTag').textContent=`${g.name} · ${shown.gi+1}/${seq.groups.length}`}
+function render(){const s=current(),idle=mode==='idle',finished=mode==='finished',paused=mode==='paused',running=mode==='running';const shown=s||stages[stages.length-1];if(shown){const seq=config.sequences[shown.si],g=seq.groups[shown.gi];$('sequenceTag').textContent=seq.name;$('setTag').textContent=`סבב ${shown.zi+1} מתוך ${g.sets.length}`;$('exerciseTag').textContent=`${g.name} · ${shown.gi+1}/${seq.groups.length}`}
  $('phaseName').textContent=finished?'כל הכבוד! סיימת את האימון':idle?'מוכן לאימון?':shown?.type==='work'?shown.name:shown?.name||'';
- $('phaseDetails').textContent=finished?'כל הסטים הושלמו':idle?'3 סטים בכל מקטע — אפשר לערוך כל סט בנפרד':shown?.type==='work'?`${fmt(shown.seconds)} לתרגיל · סט ${shown.zi+1} מתוך ${shown.setCount} · תרגיל ${shown.ei+1}/${shown.exCount}`:shown?.type==='rest'?`הבא: ${shown.to}`:`הבא: ${shown.to}`;
+ $('phaseDetails').textContent=finished?'כל הסטים הושלמו':idle?'3 סבבים לכל רצף — אפשר לערוך כל סבב בנפרד':shown?.type==='work'?`${fmt(shown.seconds)} לתרגיל · סט ${shown.zi+1} מתוך ${shown.setCount} · תרגיל ${shown.ei+1}/${shown.exCount}`:shown?.type==='rest'?`הבא: ${shown.to}`:`הבא: ${shown.to}`;
  $('countdown').textContent=finished?'00:00':fmt(secsRemaining);$('countdown').className='timer is-'+(finished?'finished':shown?.type||'work');$('totalRemaining').textContent=fmt(remaining());const total=totalDuration(stages);$('progressFill').style.width=`${finished?100:Math.min(100,Math.max(0,(1-remaining()/Math.max(1,total))*100))}%`;
  $('nextLabel').textContent=finished?'—':next()?.type==='work'?`${next().name} · סט ${next().zi+1}`:next()?.type==='rest'?'מנוחה בין סטים':next()?.type==='transition'?`מעבר אל ${next().to}`:'סיום האימון';
  $('playButton').textContent=idle||finished?'▶ התחל אימון':paused?'▶ המשך אימון':'⏸ השהה';$('finishedButton').classList.toggle('hide',!running||shown?.type!=='work');$('skipButton').classList.toggle('hide',!running&&!paused);$('editButton').disabled=running||paused;$('editQuickButton').disabled=running||paused;
@@ -156,7 +154,7 @@ $('editorContent').addEventListener('click',e=>{const target=e.target.closest('b
 });
 function saveEditor(){if(!draft)return;document.querySelectorAll('#editorContent input[data-field]').forEach(el=>updateDraftFieldIfUnchanged(el));draft.voice=$('editVoice').checked;draft.spokenCountdown=$('editCountdownVoice').checked;draft.announceSets=$('editAnnounceSets').checked;draft.tenSeconds=$('editCountdown10').checked;if(!validConfig(draft)){alert('בדוק שלכל סט יש לפחות תרגיל אחד, עם שם וזמן תקינים');return}config=copy(draft);persist();draft=null;$('settingsDialog').close();reset();status('השינויים נשמרו — אפשר להתחיל את האימון')}
 function updateDraftFieldIfUnchanged(el){if(el.dataset.field==='setCount')return;updateDraftField(el)}
-$('applyAllSets').onclick=()=>{if(mode==='running'||mode==='paused'){status('כדי לשנות סטים, התחל מחדש את האימון');return}const n=num($('globalSets').value,1,12,3);$('globalSets').value=String(n);config.sequences.forEach(seq=>seq.groups.forEach(g=>setCount(g,n)));persist();reset();status(`עודכן: ${n} סטים לכל מקטע. אפשר לערוך כל סט בנפרד`)};
+$('applyAllSets').onclick=()=>{if(mode==='running'||mode==='paused'){status('כדי לשנות סטים, התחל מחדש את האימון');return}const n=num($('globalSets').value,1,12,3);$('globalSets').value=String(n);config.sequences.forEach(seq=>seq.groups.forEach(g=>setCount(g,n)));persist();reset();status(`עודכן: ${n} סבבים בכל רצף. אפשר לערוך כל סבב בנפרד`)};
 $('editButton').onclick=openEditor;$('editQuickButton').onclick=openEditor;$('closeButton').onclick=()=>$('settingsDialog').close();$('cancelButton').onclick=()=>$('settingsDialog').close();$('saveButton').onclick=saveEditor;
 $('restoreButton').onclick=()=>{if(confirm('להחזיר את כל התרגילים, הזמנים והסטים לברירת המחדל?')){config=copy(DEFAULTS);persist();draft=null;$('settingsDialog').close();reset();status('ברירות המחדל שוחזרו')}};
 $('playButton').onclick=()=>{if(mode==='running')pause();else if(mode==='paused')resume();else start()};$('finishedButton').onclick=done;$('skipButton').onclick=()=>advance();$('resetButton').onclick=()=>{if(mode==='running'&&!confirm('להתחיל את האימון מחדש?'))return;reset()};$('soundButton').onclick=testSound;
